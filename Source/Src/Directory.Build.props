@@ -1,0 +1,24 @@
+<Project>
+    <!-- 
+    Import the next higher level Directory.Build.props file. 
+   -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+    <!-- 
+    Define Source-Level properties
+   -->
+    <PropertyGroup Label="SourceGlobals">
+        <Configurations>Debug;Release;Package</Configurations>
+        <TargetFrameworks>net9.0;net8.0;net6.0;netstandard2.0</TargetFrameworks>
+        <Version>1.0.0</Version>
+        <Authors>Kevin Zehrer</Authors>
+        <Copyright>Copyright © 2024-2025 Kevin Zehrer. All rights reserved.</Copyright>
+        <Product>KZDev PrimeTime</Product>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)'=='Package' ">
+        <IsPacking>true</IsPacking>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(IsPacking)'=='' AND '$(Configuration)'!='Package' ">
+        <IsPacking>false</IsPacking>
+    </PropertyGroup>
+</Project>

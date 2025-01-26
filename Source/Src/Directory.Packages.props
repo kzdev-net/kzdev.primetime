@@ -1,0 +1,9 @@
+<Project>
+    <!-- 
+    Import the next higher level Directory.Packages.props file. 
+   -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Packages.props', '$(MSBuildThisFileDirectory)..\'))" />
+    <!-- 
+    Define source code project package version properties
+   -->
+</Project>
