@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178
@@ -41,6 +41,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FrameworkTests", "Framework
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StandardTests", "StandardTests", "{90C913DA-C6AD-42DC-909E-82F689BB3864}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Perf", "Perf", "{A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D}"
+	ProjectSection(SolutionItems) = preProject
+		Perf\Directory.Build.props = Perf\Directory.Build.props
+		Perf\Directory.Packages.props = Perf\Directory.Packages.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dev", "Dev", "{B2C3D4E5-F6A7-4B8C-9D0E-1F2A3B4C5D6E}"
+	ProjectSection(SolutionItems) = preProject
+		Dev\Directory.Build.props = Dev\Directory.Build.props
+		Dev\Directory.Packages.props = Dev\Directory.Packages.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +93,8 @@ Global
 		{4F18A193-6063-433E-82E2-7FB18D7E96B2} = {2F46BA00-679F-410D-9C2A-76E38ECE083D}
 		{3C57343E-A696-4A70-92A8-03F6908E3F6F} = {2F46BA00-679F-410D-9C2A-76E38ECE083D}
 		{90C913DA-C6AD-42DC-909E-82F689BB3864} = {2F46BA00-679F-410D-9C2A-76E38ECE083D}
+		{A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D} = {FB9B1591-9D0B-4398-A3E8-1A0AB2968663}
+		{B2C3D4E5-F6A7-4B8C-9D0E-1F2A3B4C5D6E} = {FB9B1591-9D0B-4398-A3E8-1A0AB2968663}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Src\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems*{b8c031ab-dfb9-4a50-8531-9fb4f7b928a8}*SharedItemsImports = 13

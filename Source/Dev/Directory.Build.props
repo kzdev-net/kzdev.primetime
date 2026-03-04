@@ -1,0 +1,12 @@
+<Project>
+    <!--
+    Import the next higher level Directory.Build.props file.
+    -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+    <!--
+    Dev folder: development/example projects. Not packable.
+    -->
+    <PropertyGroup Label="DevGlobals">
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+</Project>
