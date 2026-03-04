@@ -5,7 +5,4 @@
     <ItemGroup>
         <PackageReference Include="xunit.v3.extensibility.core" />
     </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <PackageReference Include="System.Collections.Immutable" />
-    </ItemGroup>
 </Project>
