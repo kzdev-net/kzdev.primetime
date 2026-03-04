@@ -8,5 +8,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <UseArtifactsOutput>true</UseArtifactsOutput>
+        <ArtifactsPath>$(MSBuildThisFileDirectory)..\artifacts</ArtifactsPath>
     </PropertyGroup>
 </Project>
