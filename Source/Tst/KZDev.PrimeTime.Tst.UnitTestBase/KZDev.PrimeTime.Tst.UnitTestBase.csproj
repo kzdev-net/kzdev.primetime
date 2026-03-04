@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <ProjectReference Include="..\KZDev.PrimeTime.Tst.TestBase\KZDev.PrimeTime.Tst.TestBase.csproj" />
+    </ItemGroup>
+</Project>

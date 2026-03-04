@@ -1,15 +1,18 @@
 <Project>
-    <!-- 
-    Define Source-Level properties
-   -->
-    <PropertyGroup Label="SourceGlobals">
-        <Configurations>Debug;Release</Configurations>
-        <TargetFrameworks>net9.0;net8.0;net6.0;netcoreapp3.1</TargetFrameworks>
-        <IsPackable>false</IsPackable>
-        <RootNamespace>KZDev.PerfUtils.Tests</RootNamespace>
-    </PropertyGroup>
-    <!-- 
-    Import the next higher level Directory.Build.props file. 
-   -->
+    <!--
+    Import the next higher level Directory.Build.props file first.
+    -->
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
+    <!--
+    Define Test-Level properties (override or set for Tst).
+    -->
+    <PropertyGroup Label="TestGlobals">
+        <Configurations>Debug;Release</Configurations>
+        <TargetFrameworks>net9.0;net8.0;net6.0</TargetFrameworks>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>KZDev.PrimeTime.Tests</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage" />
+    </ItemGroup>
 </Project>
