@@ -1,0 +1,91 @@
+{
+    "metadata": [
+        {
+            "src": [
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime/release_net8.0",
+                    "dest": "api",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net8.0"
+                    },
+                    "files": [
+                        "**/*.dll"
+                    ]
+                },
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime.NodaTime/release_net8.0",
+                    "dest": "api",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net8.0"
+                    },
+                    "files": [
+                        "**/*.dll"
+                    ]
+                },
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime.SystemClock/release_net8.0",
+                    "dest": "api",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net8.0"
+                    },
+                    "files": [
+                        "**/*.dll"
+                    ]
+                }
+            ],
+            "dest": "api",
+            "filter": "filterConfig.yml",
+            "outputFormat": "mref",
+            "memberLayout": "separatePages",
+            "enumSortOrder": "declaringOrder",
+            "allowCompilationErrors": false
+        }
+    ],
+    "build": {
+        "markdownEngineProperties": {
+            "markdigExtensions": [ "footnotes", "attributes" ]
+        },
+        "content": [
+            {
+                "files": [
+                    "**/*.{md,yml}"
+                ],
+                "exclude": [
+                    "_site/**"
+                ]
+            }
+        ],
+        "resource": [
+            {
+                "files": [
+                    "images/**",
+                    "articles/*.html"
+                ]
+            }
+        ],
+        "output": "_site",
+        "sitemap": {
+            "baseUrl": "https://kzdev-net.github.io/kzdev.primetime/",
+            "priority": 0.1,
+            "changefreq": "monthly"
+        },
+        "template": [
+            "default",
+            "modern"
+        ],
+        "postProcessors": [ "ExtractSearchIndex" ],
+        "xref": [
+            "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json"
+        ],
+        "globalMetadata": {
+            "_appName": "KZDev PrimeTime",
+            "_appTitle": "KZDev.PrimeTime",
+            "_disableContribution": true,
+            "_enableSearch": true,
+            "pdf": false
+        }
+    }
+}
