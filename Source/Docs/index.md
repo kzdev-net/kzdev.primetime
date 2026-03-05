@@ -6,7 +6,7 @@ _layout: landing
 
 **KZDev.PrimeTime** provides time and scheduling utilities for .NET.
 
-See the [API Reference](api/) and [Reference](Reference/CronNotes.md) for details.
+See the [API Reference](xref:PrimeTime) and [Reference](Reference/CronNotes.md) for details.
 
 ## Packages
 
@@ -17,4 +17,4 @@ See the [API Reference](api/) and [Reference](Reference/CronNotes.md) for detail
 ## Documentation
 
 - [Cron and scheduling notes](Reference/CronNotes.md)
-- [API Reference](api/)
+- [API Reference](xref:PrimeTime)
