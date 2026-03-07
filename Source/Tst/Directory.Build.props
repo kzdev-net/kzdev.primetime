@@ -8,11 +8,11 @@
     -->
     <PropertyGroup Label="TestGlobals">
         <Configurations>Debug;Release</Configurations>
-        <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net8.0;net481</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <RootNamespace>KZDev.PrimeTime.Tests</RootNamespace>
     </PropertyGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' != 'net481'">
         <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage" />
     </ItemGroup>
 </Project>
