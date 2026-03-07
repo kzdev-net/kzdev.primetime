@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsTestProject>true</IsTestProject>
+        <OutputType>Exe</OutputType>
+        <UseAppHost>true</UseAppHost>
+        <GenerateProgramFile>false</GenerateProgramFile>
+        <!-- Match SystemClock targets to avoid type identity issues. -->
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AwesomeAssertions" />
+        <PackageReference Include="coverlet.collector">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit.v3" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Src\KZDev.PrimeTime.SystemClock\KZDev.PrimeTime.SystemClock.csproj" />
+        <ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+</Project>
