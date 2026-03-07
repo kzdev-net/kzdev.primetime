@@ -75,7 +75,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         PropertyInfo? prop = typeof(ITimer).GetProperty("Id");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(int));
+        prop.PropertyType.Should().Be(typeof(int));
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         PropertyInfo? prop = typeof(ITimer).GetProperty("State");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(TimerState));
+        prop.PropertyType.Should().Be(typeof(TimerState));
     }
 
     #endregion ITimer contract
@@ -147,7 +147,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         PropertyInfo? prop = typeof(IIntervalTimer).GetProperty("ElapsedTime");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(long));
+        prop.PropertyType.Should().Be(typeof(long));
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         PropertyInfo? prop = typeof(IIntervalTimer).GetProperty("TimeUntilNextCallback");
         prop.Should().NotBeNull();
-        prop!.PropertyType.Should().Be(typeof(long));
+        prop.PropertyType.Should().Be(typeof(long));
     }
 
     #endregion IIntervalTimer contract

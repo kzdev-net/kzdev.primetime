@@ -4,7 +4,6 @@
 using System.Reflection;
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
-using Xunit;
 
 namespace KZDev.PrimeTime.UnitTests;
 
@@ -32,7 +31,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     {
         Type? primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.Should().NotBeNull();
-        primeTimeInterfaceType!.IsInterface.Should().BeTrue();
+        primeTimeInterfaceType.IsInterface.Should().BeTrue();
     }
 
     /// <summary>
@@ -43,7 +42,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     {
         Type? primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.Should().NotBeNull();
-        MethodInfo[] methods = primeTimeInterfaceType!.GetMethods();
+        MethodInfo[] methods = primeTimeInterfaceType.GetMethods();
         bool hasSleep = methods.Any(m => m.Name == "Sleep");
         bool hasDelayAsync = methods.Any(m => m.Name == "DelayAsync");
         hasSleep.Should().BeTrue();
@@ -58,7 +57,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     /// </returns>
     private static Type? GetIPrimeTimeType()
     {
-        Assembly? coreAssembly = AppDomain.CurrentDomain.GetAssemblies()
+        Assembly coreAssembly = AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == "KZDev.PrimeTime") ?? Assembly.Load(new AssemblyName("KZDev.PrimeTime"));
 
         return coreAssembly.GetType("KZDev.PrimeTime.IPrimeTime");
