@@ -25,7 +25,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that the core library assembly exposes the IPrimeTime interface type.
+    ///   Verifies that the core library assembly exposes the <see cref="IPrimeTime"/> interface type.
     /// </summary>
     [Fact]
     public void CoreAssembly_ExposesIPrimeTimeInterface()
@@ -36,7 +36,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that IPrimeTime declares the expected delay method names.
+    ///   Verifies that <see cref="IPrimeTime"/> declares Sleep and DelayAsync methods.
     /// </summary>
     [Fact]
     public void IPrimeTime_DeclaresDelayMethods()
