@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -10,5 +10,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\ITimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IIntervalTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IDayTimeTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\TimerState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\ConcurrentTriggerProcessing.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\SkippedTimeBehavior.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\DuplicateTimeBehavior.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\TimerCallbackExecutionContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\TimerOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\IntervalTimerOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\DayTimeTimerOptions.cs" />
   </ItemGroup>
 </Project>

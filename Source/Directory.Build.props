@@ -10,5 +10,6 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <UseArtifactsOutput>true</UseArtifactsOutput>
         <ArtifactsPath>$(MSBuildThisFileDirectory)..\artifacts</ArtifactsPath>
+        <RootNamespace>KZDev.PrimeTime</RootNamespace>
     </PropertyGroup>
 </Project>

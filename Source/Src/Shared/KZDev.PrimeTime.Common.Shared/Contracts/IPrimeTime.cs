@@ -1,8 +1,8 @@
-﻿namespace PrimeTime
+namespace KZDev.PrimeTime
 {
     //################################################################################
     /// <summary>
-    /// The interface for the PrimeTime library time passing and timer services
+    /// The interface for the PrimeTime library for time passing and timer services
     /// </summary>
     public interface IPrimeTime
     {
@@ -26,7 +26,7 @@
         /// Suspends the current thread for the specified number of milliseconds.
         /// </summary>
         /// <param name="sleepMilliseconds">
-        /// he number of milliseconds for which the thread is suspended. If the value of the 
+        /// The number of milliseconds for which the thread is suspended. If the value of the 
         /// sleepMilliseconds argument is zero, the thread relinquishes the remainder
         /// of its time slice to any thread of equal priority that is ready to run. 
         /// If there are no other threads of equal priority that are ready to run, 
