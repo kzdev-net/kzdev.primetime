@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="..\..\Src\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Shared" />
+
     <PropertyGroup>
         <IsTestProject>true</IsTestProject>
         <OutputType>Exe</OutputType>

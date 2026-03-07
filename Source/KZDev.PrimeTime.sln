@@ -154,5 +154,6 @@ Global
 		Src\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems*{b7c10aeb-3b76-4ff2-a1a8-6d2af4397ce4}*SharedItemsImports = 13
 		Src\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems*{b8c031ab-dfb9-4a50-8531-9fb4f7b928a8}*SharedItemsImports = 13
 		Src\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems*{eaffe189-cc21-4d14-a8c1-b78141951c7b}*SharedItemsImports = 5
+		Src\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems*{f4a5b6c7-d8e9-4f0a-b1c2-3d4e5f6a7b8c}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
