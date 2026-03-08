@@ -7,8 +7,9 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.SystemClock.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/> (Phase 2).
-///   Verifies that all "now" members return values consistent with a known time source and with each other.
+///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/> (Phases 2 and 4).
+///   Verifies that all "now" members (including time-only and date-only on .NET) return values
+///   consistent with a known time source and with each other.
 /// </summary>
 public class UsingIPrimeSystemClock : UnitTestBase
 {
