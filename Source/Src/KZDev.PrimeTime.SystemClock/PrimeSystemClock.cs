@@ -3,7 +3,8 @@ namespace KZDev.PrimeTime
     //################################################################################
     /// <summary>
     ///   Production implementation of <see cref="IPrimeSystemClock"/> that delegates "now"
-    ///   to the BCL (<see cref="DateTimeOffset.UtcNow"/>, local time, and time zone).
+    ///   to a <see cref="TimeProvider"/> time source (e.g. <see cref="TimeProvider.System"/>),
+    ///   analogous to the NodaTime stack using an IClock abstraction.
     /// </summary>
     /// <remarks>
     ///   Delay and time-cancellation members (Sleep, DelayAsync, GetTimeCancellationToken,
@@ -16,32 +17,55 @@ namespace KZDev.PrimeTime
             "Sleep, DelayAsync, and time-based cancellation are not yet implemented on PrimeSystemClock. " +
             "They will be added in a later phase.";
 
+        private readonly TimeProvider _timeProvider;
+
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="PrimeSystemClock"/> class using
+        ///   <see cref="TimeProvider.System"/> as the time source.
+        /// </summary>
+        public PrimeSystemClock ()
+            : this(TimeProvider.System)
+        {
+        }
+
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="PrimeSystemClock"/> class with the
+        ///   specified time provider.
+        /// </summary>
+        /// <param name="timeProvider">
+        ///   The time provider used to obtain the current UTC and local time.
+        /// </param>
+        public PrimeSystemClock (TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        }
+
         #region IPrimeSystemClock Implementation
 
         /// <inheritdoc />
-        public DateTimeOffset LocalNow => DateTimeOffset.Now;
+        public DateTimeOffset LocalNow => _timeProvider.GetLocalNow();
 
         /// <inheritdoc />
-        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+        public DateTimeOffset UtcNow => _timeProvider.GetUtcNow();
 
         /// <inheritdoc />
-        public DateTime LocalDateTimeNow => DateTime.Now;
+        public DateTime LocalDateTimeNow => _timeProvider.GetLocalNow().LocalDateTime;
 
         /// <inheritdoc />
-        public DateTime UtcDateTimeNow => DateTime.UtcNow;
+        public DateTime UtcDateTimeNow => _timeProvider.GetUtcNow().UtcDateTime;
 
 #if NET
         /// <inheritdoc />
-        public TimeOnly LocalNowTime => TimeOnly.FromDateTime(DateTime.Now);
+        public TimeOnly LocalNowTime => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
 
         /// <inheritdoc />
-        public TimeOnly UtcNowTime => TimeOnly.FromDateTime(DateTime.UtcNow);
+        public TimeOnly UtcNowTime => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 
         /// <inheritdoc />
-        public DateOnly LocalNowDate => DateOnly.FromDateTime(DateTime.Now);
+        public DateOnly LocalNowDate => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
 
         /// <inheritdoc />
-        public DateOnly UtcNowDate => DateOnly.FromDateTime(DateTime.UtcNow);
+        public DateOnly UtcNowDate => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 #endif
 
         #endregion IPrimeSystemClock Implementation

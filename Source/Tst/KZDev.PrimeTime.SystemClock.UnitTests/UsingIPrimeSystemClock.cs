@@ -10,8 +10,9 @@ namespace KZDev.PrimeTime.SystemClock.UnitTests;
 ///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/> (Phases 2 and 4).
 ///   Verifies that all "now" members (including time-only and date-only on .NET) return values
 ///   consistent with a known time source and with each other.
+///   On .NET, includes deterministic tests using FakeTimeProvider (Microsoft.Extensions.Time.Testing).
 /// </summary>
-public class UsingIPrimeSystemClock : UnitTestBase
+public partial class UsingIPrimeSystemClock : UnitTestBase
 {
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeSystemClock"/> class.
@@ -42,6 +43,31 @@ public class UsingIPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         clock.Should().NotBeNull();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeSystemClock"/> constructed with an explicit
+    ///   <see cref="TimeProvider"/> uses that provider for "now" values.
+    /// </summary>
+    [Fact]
+    public void PrimeSystemClock_WithTimeProvider_UsesProviderForNow ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock(TimeProvider.System);
+        DateTimeOffset before = TimeProvider.System.GetUtcNow().AddSeconds(-1);
+        DateTimeOffset after = TimeProvider.System.GetUtcNow().AddSeconds(1);
+        clock.UtcNow.Should().BeAfter(before).And.BeBefore(after);
+        clock.LocalNow.Should().BeAfter(TimeProvider.System.GetLocalNow().AddSeconds(-2)).
+            And.BeBefore(TimeProvider.System.GetLocalNow().AddSeconds(2));
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeSystemClock"/> throws when given a null time provider.
+    /// </summary>
+    [Fact]
+    public void PrimeSystemClock_WithNullTimeProvider_ThrowsArgumentNullException ()
+    {
+        Action act = () => _ = new PrimeSystemClock(null!);
+        act.Should().Throw<ArgumentNullException>().WithParameterName("timeProvider");
     }
 
     /// <summary>
