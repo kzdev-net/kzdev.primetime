@@ -19,7 +19,7 @@ public class UsingIPrimeClock : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    public UsingIPrimeClock(ITestOutputHelper xUnitTestOutputHelper)
+    public UsingIPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -28,7 +28,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   Verifies that <see cref="IPrimeClock"/> extends <see cref="IPrimeTime"/>.
     /// </summary>
     [Fact]
-    public void IPrimeClock_ExtendsIPrimeTime()
+    public void IPrimeClock_ExtendsIPrimeTime ()
     {
         typeof(IPrimeClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
     }
@@ -37,7 +37,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   Verifies that <see cref="PrimeClock"/> implements <see cref="IPrimeClock"/>.
     /// </summary>
     [Fact]
-    public void PrimeClock_ImplementsIPrimeClock()
+    public void PrimeClock_ImplementsIPrimeClock ()
     {
         IPrimeClock clock = new PrimeClock();
         clock.Should().NotBeNull();
@@ -49,7 +49,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   and time/date components match the zoned values.
     /// </summary>
     [Fact]
-    public void StubClock_NowMembersAreConsistentWithFixedInstant()
+    public void StubClock_NowMembersAreConsistentWithFixedInstant ()
     {
         Instant instant = Instant.FromUtc(2025, 3, 7, 12, 0);
         DateTimeZone utc = DateTimeZone.Utc;
@@ -75,7 +75,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   instant; date must match exactly (same calendar day).
     /// </summary>
     [Fact]
-    public void PrimeClock_UtcNowMembersAreConsistent()
+    public void PrimeClock_UtcNowMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
         ZonedDateTime utcNow = clock.UtcNow;
@@ -97,7 +97,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   are internally consistent.
     /// </summary>
     [Fact]
-    public void PrimeClock_LocalNowMembersAreConsistent()
+    public void PrimeClock_LocalNowMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
         ZonedDateTime localZonedNow = clock.LocalZonedNow;
@@ -111,7 +111,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   Verifies that all "now" values from <see cref="PrimeClock"/> are recent (within the last 5 seconds).
     /// </summary>
     [Fact]
-    public void PrimeClock_NowMembersAreRecent()
+    public void PrimeClock_NowMembersAreRecent ()
     {
         IPrimeClock clock = new PrimeClock();
         Instant before = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(5));
@@ -125,7 +125,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   <see cref="NotSupportedException"/> on <see cref="PrimeClock"/> in this phase.
     /// </summary>
     [Fact]
-    public void PrimeClock_Sleep_ThrowsNotSupportedException()
+    public void PrimeClock_Sleep_ThrowsNotSupportedException ()
     {
         IPrimeClock clock = new PrimeClock();
         Action act = () => clock.Sleep(TimeSpan.Zero);
@@ -137,7 +137,7 @@ public class UsingIPrimeClock : UnitTestBase
     ///   <see cref="NotSupportedException"/> on <see cref="PrimeClock"/> in this phase.
     /// </summary>
     [Fact]
-    public void PrimeClock_DelayAsync_ThrowsNotSupportedException()
+    public void PrimeClock_DelayAsync_ThrowsNotSupportedException ()
     {
         IPrimeClock clock = new PrimeClock();
         Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);
@@ -153,7 +153,7 @@ public class UsingIPrimeClock : UnitTestBase
         private readonly Instant _instant;
         private readonly DateTimeZone _localZone;
 
-        internal StubPrimeClock(Instant instant, DateTimeZone localZone)
+        internal StubPrimeClock (Instant instant, DateTimeZone localZone)
         {
             _instant = instant;
             _localZone = localZone;
@@ -169,35 +169,35 @@ public class UsingIPrimeClock : UnitTestBase
         public LocalDate LocalNowDate => LocalZonedNow.Date;
         public LocalDate UtcNowDate => UtcNow.Date;
 
-        public void Sleep(TimeSpan sleepTime) => throw new NotSupportedException();
-        public void Sleep(int sleepMilliseconds) => throw new NotSupportedException();
-        public Task DelayAsync(TimeSpan delayTime) => throw new NotSupportedException();
-        public Task DelayAsync(int millisecondsDelay) => throw new NotSupportedException();
-        public Task DelayAsync(TimeSpan delayTime, CancellationToken cancellationToken) =>
+        public void Sleep (TimeSpan sleepTime) => throw new NotSupportedException();
+        public void Sleep (int sleepMilliseconds) => throw new NotSupportedException();
+        public Task DelayAsync (TimeSpan delayTime) => throw new NotSupportedException();
+        public Task DelayAsync (int millisecondsDelay) => throw new NotSupportedException();
+        public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken) =>
+        public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public CancellationToken GetTimeCancellationToken(TimeSpan cancelTime) =>
+        public CancellationToken GetTimeCancellationToken (TimeSpan cancelTime) =>
             throw new NotSupportedException();
-        public CancellationToken GetTimeCancellationToken(int cancelMilliseconds) =>
+        public CancellationToken GetTimeCancellationToken (int cancelMilliseconds) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(TimeSpan cancelTime, CancellationToken cancellationToken) =>
+        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(int cancelMilliseconds, CancellationToken cancellationToken) =>
+        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(
+        public CancellationToken LinkTimeCancellationToken (
             int cancelMilliseconds,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(
+        public CancellationToken LinkTimeCancellationToken (
             TimeSpan cancelTime,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(TimeSpan cancelTime, params CancellationToken[] cancellationTokens) =>
+        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken(int cancelMilliseconds, params CancellationToken[] cancellationTokens) =>
+        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, params CancellationToken[] cancellationTokens) =>
             throw new NotSupportedException();
     }
 }

@@ -28,7 +28,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   Verifies that <see cref="IPrimeSystemClock"/> extends <see cref="IPrimeTime"/>.
     /// </summary>
     [Fact]
-    public void IPrimeSystemClock_ExtendsIPrimeTime()
+    public void IPrimeSystemClock_ExtendsIPrimeTime ()
     {
         typeof(IPrimeSystemClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
     }
@@ -37,7 +37,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   Verifies that <see cref="PrimeSystemClock"/> implements <see cref="IPrimeSystemClock"/>.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_ImplementsIPrimeSystemClock()
+    public void PrimeSystemClock_ImplementsIPrimeSystemClock ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         clock.Should().NotBeNull();
@@ -48,7 +48,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   and UtcNowTime/UtcNowDate match the time/date components of UtcDateTimeNow.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_UtcNowMembersAreConsistent()
+    public void PrimeSystemClock_UtcNowMembersAreConsistent ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         DateTimeOffset utcNow = clock.UtcNow;
@@ -69,7 +69,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   and LocalNowTime/LocalNowDate match the time/date components of LocalDateTimeNow.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_LocalNowMembersAreConsistent()
+    public void PrimeSystemClock_LocalNowMembersAreConsistent ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         DateTimeOffset localNow = clock.LocalNow;
@@ -89,7 +89,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   Verifies that all "now" values are recent (within the last 5 seconds).
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_NowMembersAreRecent()
+    public void PrimeSystemClock_NowMembersAreRecent ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
@@ -104,7 +104,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   <see cref="NotSupportedException"/> on <see cref="PrimeSystemClock"/> in this phase.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_Sleep_ThrowsNotSupportedException()
+    public void PrimeSystemClock_Sleep_ThrowsNotSupportedException ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         Action act = () => clock.Sleep(TimeSpan.Zero);
@@ -116,7 +116,7 @@ public class UsingIPrimeSystemClock : UnitTestBase
     ///   <see cref="NotSupportedException"/> on <see cref="PrimeSystemClock"/> in this phase.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_DelayAsync_ThrowsNotSupportedException()
+    public void PrimeSystemClock_DelayAsync_ThrowsNotSupportedException ()
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);

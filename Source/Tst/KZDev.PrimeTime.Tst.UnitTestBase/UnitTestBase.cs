@@ -16,7 +16,7 @@ public abstract class UnitTestBase : TestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    protected UnitTestBase(ITestOutputHelper xUnitTestOutputHelper)
+    protected UnitTestBase (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }

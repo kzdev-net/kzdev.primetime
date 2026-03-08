@@ -25,7 +25,7 @@ public abstract class TestBase
     ///   Writes a line of text to the output.
     /// </summary>
     /// <param name="message">The message to write to the output.</param>
-    protected void TestWriteLine(string message)
+    protected void TestWriteLine (string message)
     {
         XUnitTestOutputHelper.WriteLine(message);
     }
@@ -36,7 +36,7 @@ public abstract class TestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    protected TestBase(ITestOutputHelper xUnitTestOutputHelper)
+    protected TestBase (ITestOutputHelper xUnitTestOutputHelper)
     {
         Debug.Assert(xUnitTestOutputHelper is not null, "xUnitTestOutputHelper is null");
         XUnitTestOutputHelper = xUnitTestOutputHelper;

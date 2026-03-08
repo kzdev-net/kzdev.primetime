@@ -18,7 +18,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    public UsingIPrimeTimeContract(ITestOutputHelper xUnitTestOutputHelper)
+    public UsingIPrimeTimeContract (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -27,7 +27,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     ///   Verifies that the core library assembly exposes the <see cref="IPrimeTime"/> interface type.
     /// </summary>
     [Fact]
-    public void CoreAssembly_ExposesIPrimeTimeInterface()
+    public void CoreAssembly_ExposesIPrimeTimeInterface ()
     {
         Type? primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.Should().NotBeNull();
@@ -38,7 +38,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     ///   Verifies that <see cref="IPrimeTime"/> declares Sleep and DelayAsync methods.
     /// </summary>
     [Fact]
-    public void IPrimeTime_DeclaresDelayMethods()
+    public void IPrimeTime_DeclaresDelayMethods ()
     {
         Type? primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.Should().NotBeNull();
@@ -55,7 +55,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     /// <returns>
     ///   The <see cref="Type"/> of IPrimeTime if found; otherwise, <c>null</c>.
     /// </returns>
-    private static Type? GetIPrimeTimeType()
+    private static Type? GetIPrimeTimeType ()
     {
         Assembly coreAssembly = AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == "KZDev.PrimeTime") ?? Assembly.Load(new AssemblyName("KZDev.PrimeTime"));

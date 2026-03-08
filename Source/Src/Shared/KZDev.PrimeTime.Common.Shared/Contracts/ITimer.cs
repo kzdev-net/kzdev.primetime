@@ -89,7 +89,7 @@ namespace KZDev.PrimeTime
         /// will be set to <c>false</c>. No further callbacks will be made, and the timer
         /// can not be restarted.
         /// </summary>
-        void Cancel();
+        void Cancel ();
         //--------------------------------------------------------------------------------
         /// <summary>
         /// Calling this method will stop the timer registration from signalling any further
@@ -100,7 +100,7 @@ namespace KZDev.PrimeTime
         /// <c>true</c> if the timer was stopped, <c>false</c> if the timer was already
         /// stopped (or inactive) and no action was taken.
         /// </returns>
-        bool Stop();
+        bool Stop ();
         //--------------------------------------------------------------------------------
         /// <summary>
         /// Calling this method will restart the timer if it is not already running. This
@@ -110,7 +110,7 @@ namespace KZDev.PrimeTime
         /// <c>true</c> if the timer was started, <c>false</c> if the timer was already
         /// running and no action was taken, or if the timer has been cancelled or disposed.
         /// </returns>
-        bool Start();
+        bool Start ();
         //--------------------------------------------------------------------------------
     }
     //################################################################################
