@@ -185,13 +185,11 @@ public class UsingIPrimeClock : UnitTestBase
             throw new NotSupportedException();
         public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken (
-            int cancelMilliseconds,
+        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException();
-        public CancellationToken LinkTimeCancellationToken (
-            TimeSpan cancelTime,
+        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException();

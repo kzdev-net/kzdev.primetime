@@ -96,16 +96,14 @@ namespace KZDev.PrimeTime
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (
-            int cancelMilliseconds,
+        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (
-            TimeSpan cancelTime,
+        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
