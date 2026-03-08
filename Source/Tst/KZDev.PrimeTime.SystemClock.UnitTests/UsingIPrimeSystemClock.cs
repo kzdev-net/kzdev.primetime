@@ -53,15 +53,19 @@ public class UsingIPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         DateTimeOffset utcNow = clock.UtcNow;
         DateTime utcDateTimeNow = clock.UtcDateTimeNow;
+#if NET
         TimeOnly utcNowTime = clock.UtcNowTime;
         DateOnly utcNowDate = clock.UtcNowDate;
+#endif
 
         utcNow.Offset.Should().Be(TimeSpan.Zero);
         utcNow.UtcDateTime.Should().BeCloseTo(utcDateTimeNow, TimeSpan.FromMilliseconds(50));
         utcDateTimeNow.Kind.Should().Be(DateTimeKind.Utc);
+#if NET
         long timeTicks = Math.Abs(TimeOnly.FromDateTime(utcDateTimeNow).Ticks - utcNowTime.Ticks);
         timeTicks.Should().BeLessThan(TimeSpan.TicksPerSecond, "time-of-day from UtcDateTimeNow and UtcNowTime should be within 1 second");
         DateOnly.FromDateTime(utcDateTimeNow).Should().Be(utcNowDate);
+#endif
     }
 
     /// <summary>
@@ -74,15 +78,19 @@ public class UsingIPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         DateTimeOffset localNow = clock.LocalNow;
         DateTime localDateTimeNow = clock.LocalDateTimeNow;
+#if NET
         TimeOnly localNowTime = clock.LocalNowTime;
         DateOnly localNowDate = clock.LocalNowDate;
+#endif
 
         localNow.Offset.Should().Be(TimeZoneInfo.Local.GetUtcOffset(localNow.DateTime));
         localNow.DateTime.Should().BeCloseTo(localDateTimeNow, TimeSpan.FromMilliseconds(50));
         localDateTimeNow.Kind.Should().Be(DateTimeKind.Local);
+#if NET
         long localTimeTicks = Math.Abs(TimeOnly.FromDateTime(localDateTimeNow).Ticks - localNowTime.Ticks);
         localTimeTicks.Should().BeLessThan(TimeSpan.TicksPerSecond, "time-of-day from LocalDateTimeNow and LocalNowTime should be within 1 second");
         DateOnly.FromDateTime(localDateTimeNow).Should().Be(localNowDate);
+#endif
     }
 
     /// <summary>
