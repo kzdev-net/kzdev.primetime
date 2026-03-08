@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NodaTime" />
+  </ItemGroup>
+
   <Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />
 
 </Project>
