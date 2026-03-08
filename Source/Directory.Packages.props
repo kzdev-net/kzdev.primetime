@@ -1,18 +1,18 @@
 <Project>
-    <!-- 
+  <!-- 
     Define repository level package version properties
    -->
-    <ItemGroup Label="PackageVersions" Condition="'$(TargetFramework)' == 'net10.0'">
-        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
-        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
-    </ItemGroup>
-    <ItemGroup Label="PackageVersions" Condition="'$(TargetFramework)' != 'net10.0'">
-        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageVersion Include="NodaTime" Version="3.1.9" />
-    </ItemGroup>
+  <ItemGroup Label="PackageVersions" Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+  </ItemGroup>
+  <ItemGroup Label="PackageVersions" Condition="'$(TargetFramework)' != 'net10.0'">
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="NodaTime" Version="3.3.1" />
+  </ItemGroup>
 </Project>
