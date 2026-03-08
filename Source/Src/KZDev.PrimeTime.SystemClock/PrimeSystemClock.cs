@@ -8,15 +8,12 @@ namespace KZDev.PrimeTime
     /// </summary>
     /// <remarks>
     ///   Delay and time-cancellation members (Sleep, DelayAsync, GetTimeCancellationToken,
-    ///   LinkTimeCancellationToken from <see cref="IPrimeTime"/>) are not yet implemented
-    ///   and throw <see cref="NotSupportedException"/> until implemented in a later phase.
+    ///   LinkTimeCancellationToken) delegate to the BCL (Thread.Sleep, Task.Delay,
+    ///   CancellationTokenSource with a timer), so they use system time rather than the provider's
+    ///   time. For deterministic tests, use the test clock implementation from Phase 12.
     /// </remarks>
     public sealed class PrimeSystemClock : IPrimeSystemClock
     {
-        private const string DelayNotImplementedMessage =
-            "Sleep, DelayAsync, and time-based cancellation are not yet implemented on PrimeSystemClock. " +
-            "They will be added in a later phase.";
-
         private readonly TimeProvider _timeProvider;
 
         /// <summary>
@@ -73,74 +70,134 @@ namespace KZDev.PrimeTime
         #region IPrimeTime Implementation
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public void Sleep (TimeSpan sleepTime) => throw new NotSupportedException(DelayNotImplementedMessage);
+        public void Sleep (TimeSpan sleepTime)
+        {
+            Thread.Sleep(sleepTime);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public void Sleep (int sleepMilliseconds) => throw new NotSupportedException(DelayNotImplementedMessage);
+        public void Sleep (int sleepMilliseconds)
+        {
+            Thread.Sleep(sleepMilliseconds);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public Task DelayAsync (TimeSpan delayTime) => throw new NotSupportedException(DelayNotImplementedMessage);
+        public Task DelayAsync (TimeSpan delayTime)
+        {
+            return Task.Delay(delayTime);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public Task DelayAsync (int millisecondsDelay) => throw new NotSupportedException(DelayNotImplementedMessage);
+        public Task DelayAsync (int millisecondsDelay)
+        {
+            return Task.Delay(millisecondsDelay);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken)
+        {
+            return Task.Delay(delayTime, cancellationToken);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken)
+        {
+            return Task.Delay(millisecondsDelay, cancellationToken);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken GetTimeCancellationToken (TimeSpan cancelTime) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        public CancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
+        {
+            return new CancellationTokenSource(cancelTime);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken GetTimeCancellationToken (int cancelMilliseconds) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        public CancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
+        {
+            return new CancellationTokenSource(cancelMilliseconds);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is disposed automatically when the linked token is canceled.
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
+        {
+            CancellationTokenSource timeCts = new(cancelTime);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
+            linkedCts.Token.Register(static state => ((CancellationTokenSource)state!).Dispose(), timeCts);
+            return linkedCts;
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is disposed automatically when the linked token is canceled.
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
+        {
+            CancellationTokenSource timeCts = new(cancelMilliseconds);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
+            linkedCts.Token.Register(static state => ((CancellationTokenSource)state!).Dispose(), timeCts);
+            return linkedCts;
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds,
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1,
-            CancellationToken token2) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+            CancellationToken token2)
+        {
+            CancellationTokenSource timeCts = new(cancelMilliseconds);
+            return CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime,
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1,
-            CancellationToken token2) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+            CancellationToken token2)
+        {
+            CancellationTokenSource timeCts = new(cancelTime);
+            return CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+            params CancellationToken[] cancellationTokens)
+        {
+            CancellationTokenSource timeCts = new(cancelTime);
+            CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];
+            all[0] = timeCts.Token;
+            Array.Copy(cancellationTokens, 0, all, 1, cancellationTokens.Length);
+            return CancellationTokenSource.CreateLinkedTokenSource(all);
+        }
 
         /// <inheritdoc />
-        /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, params CancellationToken[] cancellationTokens) =>
-            throw new NotSupportedException(DelayNotImplementedMessage);
+        /// <remarks>
+        ///   The returned linked source is the only object the caller disposes. The internal
+        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
+        /// </remarks>
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+            params CancellationToken[] cancellationTokens)
+        {
+            CancellationTokenSource timeCts = new(cancelMilliseconds);
+            CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];
+            all[0] = timeCts.Token;
+            Array.Copy(cancellationTokens, 0, all, 1, cancellationTokens.Length);
+            return CancellationTokenSource.CreateLinkedTokenSource(all);
+        }
 
         #endregion IPrimeTime Implementation
     }

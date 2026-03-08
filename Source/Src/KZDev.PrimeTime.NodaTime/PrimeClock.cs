@@ -108,46 +108,48 @@ namespace KZDev.PrimeTime
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken GetTimeCancellationToken (TimeSpan cancelTime) =>
+        public CancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken GetTimeCancellationToken (int cancelMilliseconds) =>
+        public CancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds,
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime,
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1,
             CancellationToken token2) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens) =>
+        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+            params CancellationToken[] cancellationTokens) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         /// <inheritdoc />
         /// <exception cref="NotSupportedException">Not implemented in this phase.</exception>
-        public CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, params CancellationToken[] cancellationTokens) =>
+        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+            params CancellationToken[] cancellationTokens) =>
             throw new NotSupportedException(DelayNotImplementedMessage);
 
         #endregion IPrimeTime Implementation

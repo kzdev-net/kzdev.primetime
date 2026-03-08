@@ -134,27 +134,4 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
         clock.LocalNow.Should().BeAfter(before.ToLocalTime().AddSeconds(-2)).And.BeBefore(after.ToLocalTime().AddSeconds(2));
     }
 
-    /// <summary>
-    ///   Verifies that <see cref="IPrimeTime.Sleep(TimeSpan)"/> throws
-    ///   <see cref="NotSupportedException"/> on <see cref="PrimeSystemClock"/> in this phase.
-    /// </summary>
-    [Fact]
-    public void PrimeSystemClock_Sleep_ThrowsNotSupportedException ()
-    {
-        IPrimeSystemClock clock = new PrimeSystemClock();
-        Action act = () => clock.Sleep(TimeSpan.Zero);
-        act.Should().Throw<NotSupportedException>();
-    }
-
-    /// <summary>
-    ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan)"/> throws
-    ///   <see cref="NotSupportedException"/> on <see cref="PrimeSystemClock"/> in this phase.
-    /// </summary>
-    [Fact]
-    public void PrimeSystemClock_DelayAsync_ThrowsNotSupportedException ()
-    {
-        IPrimeSystemClock clock = new PrimeSystemClock();
-        Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);
-        act.Should().ThrowAsync<NotSupportedException>();
-    }
 }

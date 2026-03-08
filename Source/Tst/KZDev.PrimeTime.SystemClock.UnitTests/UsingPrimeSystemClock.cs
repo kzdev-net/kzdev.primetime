@@ -1,0 +1,300 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
+// Unit tests for PrimeSystemClock (SUT). Delays and time-based cancellation use system time;
+// full determinism comes with PrimeTestSystemClock (Phase 12).
+
+using AwesomeAssertions;
+using KZDev.PrimeTime.Tests;
+
+namespace KZDev.PrimeTime.SystemClock.UnitTests;
+
+/// <summary>
+///   Unit tests for <see cref="PrimeSystemClock"/> (IPrimeTime delay and time-cancellation members).
+///   Different test genres are grouped in regions.
+/// </summary>
+public class UsingPrimeSystemClock : UnitTestBase
+{
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="UsingPrimeSystemClock"/> class.
+    /// </summary>
+    /// <param name="xUnitTestOutputHelper">
+    ///   The xUnit test output helper that can be used to output test messages.
+    /// </param>
+    public UsingPrimeSystemClock (ITestOutputHelper xUnitTestOutputHelper)
+        : base(xUnitTestOutputHelper)
+    {
+    }
+
+    #region Sleep
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.Sleep(TimeSpan)"/> with zero completes immediately
+    ///   and does not throw.
+    /// </summary>
+    [Fact]
+    public void Sleep_TimeSpanZero_CompletesWithoutThrowing ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        Action act = () => clock.Sleep(TimeSpan.Zero);
+        act.Should().NotThrow();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.Sleep(int)"/> with zero completes immediately
+    ///   and does not throw.
+    /// </summary>
+    [Fact]
+    public void Sleep_MillisecondsZero_CompletesWithoutThrowing ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        Action act = () => clock.Sleep(0);
+        act.Should().NotThrow();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.Sleep(TimeSpan)"/> with a short duration
+    ///   suspends for at least that duration (within timing tolerance).
+    /// </summary>
+    [Fact]
+    public void Sleep_TimeSpan_SuspendsForAtLeastDuration ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        TimeSpan sleepDuration = TimeSpan.FromMilliseconds(30);
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        clock.Sleep(sleepDuration);
+        DateTimeOffset after = DateTimeOffset.UtcNow;
+        (after - before).Should().BeGreaterThanOrEqualTo(sleepDuration.Subtract(TimeSpan.FromMilliseconds(20)));
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.Sleep(int)"/> with a short duration in ms
+    ///   suspends for at least that duration (within timing tolerance).
+    /// </summary>
+    [Fact]
+    public void Sleep_Milliseconds_SuspendsForAtLeastDuration ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        const int sleepMs = 30;
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        clock.Sleep(sleepMs);
+        DateTimeOffset after = DateTimeOffset.UtcNow;
+        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(sleepMs - 20);
+    }
+
+    #endregion Sleep
+
+    #region DelayAsync
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan)"/> with zero completes
+    ///   without throwing.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_TimeSpanZero_CompletesWithoutThrowing ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);
+        await act.Should().NotThrowAsync();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(int)"/> with zero completes
+    ///   without throwing.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_MillisecondsZero_CompletesWithoutThrowing ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        Func<Task> act = async () => await clock.DelayAsync(0);
+        await act.Should().NotThrowAsync();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan)"/> with a short duration
+    ///   completes after approximately that duration.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_TimeSpan_CompletesAfterDuration ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        TimeSpan delay = TimeSpan.FromMilliseconds(40);
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        await clock.DelayAsync(delay);
+        DateTimeOffset after = DateTimeOffset.UtcNow;
+        (after - before).Should().BeGreaterThanOrEqualTo(delay.Subtract(TimeSpan.FromMilliseconds(25)));
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(int)"/> with a short duration in ms
+    ///   completes after approximately that duration.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_Milliseconds_CompletesAfterDuration ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        const int delayMs = 40;
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        await clock.DelayAsync(delayMs);
+        DateTimeOffset after = DateTimeOffset.UtcNow;
+        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(delayMs - 25);
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan, CancellationToken)"/>
+    ///   throws <see cref="OperationCanceledException"/> when the token is cancelled before
+    ///   the delay completes.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_TimeSpanWithToken_CancelledEarly_ThrowsOperationCanceledException ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource cts = new();
+        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
+            cts.Token, TestContext.Current.CancellationToken).Token;
+        Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(10), linked);
+        cts.Cancel();
+        Func<Task> act = async () => await delayTask;
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.DelayAsync(int, CancellationToken)"/>
+    ///   throws <see cref="OperationCanceledException"/> when the token is cancelled before
+    ///   the delay completes.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_MillisecondsWithToken_CancelledEarly_ThrowsOperationCanceledException ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource cts = new();
+        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
+            cts.Token, TestContext.Current.CancellationToken).Token;
+        Task delayTask = clock.DelayAsync(10_000, linked);
+        cts.Cancel();
+        Func<Task> act = async () => await delayTask;
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    #endregion DelayAsync
+
+    #region GetTimeCancellationToken
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.GetTimeCancellationToken(TimeSpan)"/> returns
+    ///   a source whose token becomes cancelled after the specified time.
+    /// </summary>
+    [Fact]
+    public async Task GetTimeCancellationToken_TimeSpan_ExpiresAfterTime ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        TimeSpan cancelAfter = TimeSpan.FromMilliseconds(50);
+        using CancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
+        timeCts.Token.IsCancellationRequested.Should().BeFalse();
+        await clock.DelayAsync(cancelAfter.Add(TimeSpan.FromMilliseconds(20)), TestContext.Current.CancellationToken);
+        timeCts.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.GetTimeCancellationToken(int)"/> returns
+    ///   a source whose token becomes cancelled after the specified milliseconds.
+    /// </summary>
+    [Fact]
+    public async Task GetTimeCancellationToken_Milliseconds_ExpiresAfterTime ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        const int cancelAfterMs = 50;
+        using CancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
+        timeCts.Token.IsCancellationRequested.Should().BeFalse();
+        await clock.DelayAsync(cancelAfterMs + 20, TestContext.Current.CancellationToken);
+        timeCts.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    #endregion GetTimeCancellationToken
+
+    #region LinkTimeCancellationToken
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(TimeSpan, CancellationToken)"/>
+    ///   returns a source whose token cancels when either the time expires or the linked token is cancelled.
+    /// </summary>
+    [Fact]
+    public async Task LinkTimeCancellationToken_TimeSpanAndToken_CancelsWhenLinkedCancels ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource userCts = new();
+        using CancellationTokenSource linkedSource =
+            clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), userCts.Token);
+        linkedSource.Token.IsCancellationRequested.Should().BeFalse();
+        userCts.Cancel();
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(TimeSpan, CancellationToken, CancellationToken)"/>
+    ///   returns a source whose token cancels when the time expires or either linked token is cancelled.
+    /// </summary>
+    [Fact]
+    public void LinkTimeCancellationToken_TimeSpanAndTwoTokens_CancelsWhenOneTokenCancels ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource cts1 = new();
+        using CancellationTokenSource cts2 = new();
+        using CancellationTokenSource linkedSource =
+            clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), cts1.Token, cts2.Token);
+        linkedSource.Token.IsCancellationRequested.Should().BeFalse();
+        cts1.Cancel();
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(TimeSpan, CancellationToken[])"/>
+    ///   returns a source whose token cancels when the time expires or any of the linked tokens is cancelled.
+    /// </summary>
+    [Fact]
+    public void LinkTimeCancellationToken_TimeSpanAndParams_CancelsWhenOneTokenCancels ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource cts1 = new();
+        using CancellationTokenSource cts2 = new();
+        using CancellationTokenSource linkedSource =
+            clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), cts1.Token, cts2.Token);
+        linkedSource.Token.IsCancellationRequested.Should().BeFalse();
+        cts2.Cancel();
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(int, CancellationToken)"/>
+    ///   returns a source whose token cancels when either the time expires or the linked token is cancelled.
+    /// </summary>
+    [Fact]
+    public void LinkTimeCancellationToken_MillisecondsAndToken_CancelsWhenLinkedCancels ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource userCts = new();
+        using CancellationTokenSource linkedSource = clock.LinkTimeCancellationToken(10_000, userCts.Token);
+        linkedSource.Token.IsCancellationRequested.Should().BeFalse();
+        userCts.Cancel();
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that a linked time cancellation source's token expires after the specified time
+    ///   when the linked token is not cancelled.
+    /// </summary>
+    [Fact]
+    public async Task LinkTimeCancellationToken_ExpiresAfterTimeWhenLinkedNotCancelled ()
+    {
+        IPrimeSystemClock clock = new PrimeSystemClock();
+        using CancellationTokenSource neverCancelled = new();
+        using CancellationTokenSource linkedSource =
+            clock.LinkTimeCancellationToken(TimeSpan.FromMilliseconds(50), neverCancelled.Token);
+        linkedSource.Token.IsCancellationRequested.Should().BeFalse();
+        await clock.DelayAsync(TimeSpan.FromMilliseconds(80), TestContext.Current.CancellationToken);
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+    }
+
+    #endregion LinkTimeCancellationToken
+}

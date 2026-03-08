@@ -82,128 +82,148 @@ namespace KZDev.PrimeTime
 
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that expires after the specified time
+        ///   Returns a cancellation token source whose token expires after the specified time.
+        ///   The caller is responsible for disposing the returned source when no longer needed.
         /// </summary>
         /// <param name="cancelTime">
-        /// The TimeSpan time to wait before cancelling the token
+        ///   The time to wait before cancelling the token.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source that will cancel after the specified time. Caller must dispose.
         /// </returns>
-        CancellationToken GetTimeCancellationToken (TimeSpan cancelTime);
+        CancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that expires after the specified time
+        ///   Returns a cancellation token source whose token expires after the specified time.
+        ///   The caller is responsible for disposing the returned source when no longer needed.
         /// </summary>
         /// <param name="cancelMilliseconds">
-        /// The number of milliseconds to wait before cancelling the token
+        ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source that will cancel after the specified time. Caller must dispose.
         /// </returns>
-        CancellationToken GetTimeCancellationToken (int cancelMilliseconds);
+        CancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation token
-        /// and the provided expiration time, either of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when either the
+        ///   specified time elapses or the given cancellation token is cancelled. The caller
+        ///   is responsible for disposing the returned source when no longer needed.
+        ///   Implementations create an internal time-based source that is not disposed when
+        ///   the returned linked source is disposed (BCL limitation); be aware of this when
+        ///   creating many linked time tokens.
         /// </summary>
         /// <param name="cancelTime">
-        /// The TimeSpan time to wait before cancelling the token
+        ///   The time to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to link to the time cancellation token
+        ///   The cancellation token to link; when it is cancelled, the returned source is cancelled.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
+        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation token
-        /// and the provided expiration time, either of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when either the
+        ///   specified time elapses or the given cancellation token is cancelled. The caller
+        ///   is responsible for disposing the returned source when no longer needed.
+        ///   Implementations create an internal time-based source that is not disposed when
+        ///   the returned linked source is disposed (BCL limitation); be aware of this when
+        ///   creating many linked time tokens.
         /// </summary>
         /// <param name="cancelMilliseconds">
-        /// The number of milliseconds to wait before cancelling the token
+        ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to link to the time cancellation token
+        ///   The cancellation token to link; when it is cancelled, the returned source is cancelled.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
+        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation tokens
-        /// and the provided expiration time, any of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when the specified
+        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
+        ///   for disposing the returned source when no longer needed. Implementations create
+        ///   an internal time-based source that is not disposed when the returned linked source
+        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
         /// </summary>
         /// <param name="cancelMilliseconds">
-        /// The number of milliseconds to wait before cancelling the token
+        ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <param name="token1">
-        /// The first cancellation token to link to the time cancellation token
+        ///   The first cancellation token to link.
         /// </param>
         /// <param name="token2">
-        /// The second cancellation token to link to the time cancellation token
+        ///   The second cancellation token to link.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1, CancellationToken token2);
+        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+            CancellationToken token1, CancellationToken token2);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation tokens
-        /// and the provided expiration time, any of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when the specified
+        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
+        ///   for disposing the returned source when no longer needed. Implementations create
+        ///   an internal time-based source that is not disposed when the returned linked source
+        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
         /// </summary>
         /// <param name="cancelTime">
-        /// The TimeSpan time to wait before cancelling the token
+        ///   The time to wait before cancelling the token.
         /// </param>
         /// <param name="token1">
-        /// The first cancellation token to link to the time cancellation token
+        ///   The first cancellation token to link.
         /// </param>
         /// <param name="token2">
-        /// The second cancellation token to link to the time cancellation token
+        ///   The second cancellation token to link.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1, CancellationToken token2);
+        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+            CancellationToken token1, CancellationToken token2);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation tokens
-        /// and the provided expiration time, any of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when the specified
+        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
+        ///   for disposing the returned source when no longer needed. Implementations create
+        ///   an internal time-based source that is not disposed when the returned linked source
+        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
         /// </summary>
         /// <param name="cancelTime">
-        /// The TimeSpan time to wait before cancelling the token
+        ///   The time to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationTokens">
-        /// The cancellation tokens to link to the time cancellation token
+        ///   The cancellation tokens to link.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens);
+        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+            params CancellationToken[] cancellationTokens);
         //--------------------------------------------------------------------------------
         /// <summary>
-        /// Returns a cancellation token that encompasses the passed cancellation tokens
-        /// and the provided expiration time, any of which will trigger the cancellation
-        /// of the returned token
+        ///   Returns a cancellation token source whose token is cancelled when the specified
+        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
+        ///   for disposing the returned source when no longer needed. Implementations create
+        ///   an internal time-based source that is not disposed when the returned linked source
+        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
         /// </summary>
         /// <param name="cancelMilliseconds">
-        /// The number of milliseconds to wait before cancelling the token
+        ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationTokens">
-        /// The cancellation tokens to link to the time cancellation token
+        ///   The cancellation tokens to link.
         /// </param>
         /// <returns>
-        /// A cancellation token that expires after the specified time
+        ///   A cancellation token source. Caller must dispose.
         /// </returns>
-        CancellationToken LinkTimeCancellationToken (int cancelMilliseconds, params CancellationToken[] cancellationTokens);
+        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+            params CancellationToken[] cancellationTokens);
         //--------------------------------------------------------------------------------
 
         #endregion CancellationToken

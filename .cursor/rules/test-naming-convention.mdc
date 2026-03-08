@@ -1,0 +1,31 @@
+---
+description: Unit test naming convention — Using{TypeUnderTest} classes, ScenarioOrSetup_Action_Result methods
+globs: "**/*.UnitTests/**/*.cs"
+alwaysApply: false
+---
+
+# Test naming convention
+
+When writing or adding unit tests in this project, follow this naming convention.
+
+## Test class and file names
+
+- **Pattern:** `Using{TypeUnderTest}`
+- **Examples:** `UsingPrimeSystemClock`, `UsingIPrimeSystemClock`, `UsingPrimeClock`
+- The test class name and the primary test file name should match this pattern (e.g. `UsingPrimeSystemClock.cs`).
+- Additional test files for the same class under test may be partials or related files (e.g. `UsingIPrimeSystemClock.NetCore.cs`, `PrimeSystemClockDelaysAndCancellation.cs` as partials of `UsingIPrimeSystemClock`).
+
+## Test method names
+
+- **Pattern:** `ScenarioOrSetup_Action_Result`
+- Use PascalCase. Separate the three parts with a single underscore (`_`).
+  - **ScenarioOrSetup:** Subject or context (e.g. scenario or setup).
+  - **Action:** What is exercised (e.g. method or behavior).
+  - **Result:** Expected outcome or observed behavior.
+- **Examples:**
+  - `Sleep_WithTimeSpanZero_CompletesWithoutThrowing`
+  - `DelayAsync_WithTimeSpanWithToken_CancelledEarly_ThrowsOperationCanceledException`
+  - `Interface_IPrimeSystemClock_ExtendsIPrimeTime`
+  - `Constructor_WithNullTimeProvider_ThrowsArgumentNullException`
+
+Apply this convention to all new test classes and test methods; when touching existing tests, align names with this pattern where practical.
