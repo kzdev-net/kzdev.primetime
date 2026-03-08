@@ -5,6 +5,7 @@
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
+#pragma warning disable HAA0601
 
 namespace KZDev.PrimeTime.SystemClock.UnitTests;
 

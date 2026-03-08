@@ -15,4 +15,9 @@
     <ItemGroup Condition="'$(TargetFramework)' != 'net481'">
         <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage" />
     </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="NodaTime.Testing" />
+    </ItemGroup>
+
 </Project>
