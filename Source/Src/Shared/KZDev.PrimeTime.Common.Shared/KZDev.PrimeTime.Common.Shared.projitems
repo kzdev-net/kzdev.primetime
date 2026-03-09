@@ -9,6 +9,7 @@
     <Import_RootNamespace>KZDev.PrimeTime.Common.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)TimeCancellationTokenSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\ITimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IIntervalTimer.cs" />

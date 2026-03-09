@@ -82,73 +82,68 @@ namespace KZDev.PrimeTime
 
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token expires after the specified time.
-        ///   The caller is responsible for disposing the returned source when no longer needed.
+        ///   Returns a disposable wrapper whose token expires after the specified time. The
+        ///   caller is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelTime">
         ///   The time to wait before cancelling the token.
         /// </param>
         /// <returns>
-        ///   A cancellation token source that will cancel after the specified time. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/> that will cancel after the specified time. Caller must dispose.
         /// </returns>
-        CancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime);
+        TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token expires after the specified time.
-        ///   The caller is responsible for disposing the returned source when no longer needed.
+        ///   Returns a disposable wrapper whose token expires after the specified time. The
+        ///   caller is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelMilliseconds">
         ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <returns>
-        ///   A cancellation token source that will cancel after the specified time. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/> that will cancel after the specified time. Caller must dispose.
         /// </returns>
-        CancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds);
+        TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when either the
-        ///   specified time elapses or the given cancellation token is cancelled. The caller
-        ///   is responsible for disposing the returned source when no longer needed.
-        ///   Implementations create an internal time-based source that is not disposed when
-        ///   the returned linked source is disposed (BCL limitation); be aware of this when
-        ///   creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when either the specified
+        ///   time elapses or the given cancellation token is cancelled. Disposing the
+        ///   returned instance disposes all underlying sources (including internal time-based
+        ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelTime">
         ///   The time to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationToken">
-        ///   The cancellation token to link; when it is cancelled, the returned source is cancelled.
+        ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
+        TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when either the
-        ///   specified time elapses or the given cancellation token is cancelled. The caller
-        ///   is responsible for disposing the returned source when no longer needed.
-        ///   Implementations create an internal time-based source that is not disposed when
-        ///   the returned linked source is disposed (BCL limitation); be aware of this when
-        ///   creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when either the specified
+        ///   time elapses or the given cancellation token is cancelled. Disposing the
+        ///   returned instance disposes all underlying sources (including internal time-based
+        ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelMilliseconds">
         ///   The number of milliseconds to wait before cancelling the token.
         /// </param>
         /// <param name="cancellationToken">
-        ///   The cancellation token to link; when it is cancelled, the returned source is cancelled.
+        ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
+        TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when the specified
-        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
-        ///   for disposing the returned source when no longer needed. Implementations create
-        ///   an internal time-based source that is not disposed when the returned linked source
-        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when the specified time
+        ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
+        ///   disposes all underlying sources (including internal time-based sources). The caller
+        ///   is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelMilliseconds">
         ///   The number of milliseconds to wait before cancelling the token.
@@ -160,17 +155,16 @@ namespace KZDev.PrimeTime
         ///   The second cancellation token to link.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1, CancellationToken token2);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when the specified
-        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
-        ///   for disposing the returned source when no longer needed. Implementations create
-        ///   an internal time-based source that is not disposed when the returned linked source
-        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when the specified time
+        ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
+        ///   disposes all underlying sources (including internal time-based sources). The caller
+        ///   is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelTime">
         ///   The time to wait before cancelling the token.
@@ -182,17 +176,16 @@ namespace KZDev.PrimeTime
         ///   The second cancellation token to link.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1, CancellationToken token2);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when the specified
-        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
-        ///   for disposing the returned source when no longer needed. Implementations create
-        ///   an internal time-based source that is not disposed when the returned linked source
-        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when the specified time
+        ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
+        ///   disposes all underlying sources (including internal time-based sources). The caller
+        ///   is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelTime">
         ///   The time to wait before cancelling the token.
@@ -201,17 +194,16 @@ namespace KZDev.PrimeTime
         ///   The cancellation tokens to link.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             params CancellationToken[] cancellationTokens);
         //--------------------------------------------------------------------------------
         /// <summary>
-        ///   Returns a cancellation token source whose token is cancelled when the specified
-        ///   time elapses or any of the given tokens is cancelled. The caller is responsible
-        ///   for disposing the returned source when no longer needed. Implementations create
-        ///   an internal time-based source that is not disposed when the returned linked source
-        ///   is disposed (BCL limitation); be aware of this when creating many linked time tokens.
+        ///   Returns a disposable wrapper whose token is cancelled when the specified time
+        ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
+        ///   disposes all underlying sources (including internal time-based sources). The caller
+        ///   is responsible for disposing the returned instance when no longer needed.
         /// </summary>
         /// <param name="cancelMilliseconds">
         ///   The number of milliseconds to wait before cancelling the token.
@@ -220,9 +212,9 @@ namespace KZDev.PrimeTime
         ///   The cancellation tokens to link.
         /// </param>
         /// <returns>
-        ///   A cancellation token source. Caller must dispose.
+        ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
         /// </returns>
-        CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             params CancellationToken[] cancellationTokens);
         //--------------------------------------------------------------------------------
 

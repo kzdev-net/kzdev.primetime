@@ -106,97 +106,77 @@ namespace KZDev.PrimeTime
         }
 
         /// <inheritdoc />
-        public CancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
+        public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
         {
-            return new CancellationTokenSource(cancelTime);
+            CancellationTokenSource cts = new(cancelTime);
+            return new TimeCancellationTokenSource(cts);
         }
 
         /// <inheritdoc />
-        public CancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
+        public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
         {
-            return new CancellationTokenSource(cancelMilliseconds);
+            CancellationTokenSource cts = new(cancelMilliseconds);
+            return new TimeCancellationTokenSource(cts);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is disposed automatically when the linked token is canceled.
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
+        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
         {
             CancellationTokenSource timeCts = new(cancelTime);
             CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-            linkedCts.Token.Register(static state => ((CancellationTokenSource)state!).Dispose(), timeCts);
-            return linkedCts;
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is disposed automatically when the linked token is canceled.
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
+        public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
         {
             CancellationTokenSource timeCts = new(cancelMilliseconds);
             CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-            linkedCts.Token.Register(static state => ((CancellationTokenSource)state!).Dispose(), timeCts);
-            return linkedCts;
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             CancellationToken token1,
             CancellationToken token2)
         {
             CancellationTokenSource timeCts = new(cancelMilliseconds);
-            return CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             CancellationToken token1,
             CancellationToken token2)
         {
             CancellationTokenSource timeCts = new(cancelTime);
-            return CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
             params CancellationToken[] cancellationTokens)
         {
             CancellationTokenSource timeCts = new(cancelTime);
             CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];
             all[0] = timeCts.Token;
             Array.Copy(cancellationTokens, 0, all, 1, cancellationTokens.Length);
-            return CancellationTokenSource.CreateLinkedTokenSource(all);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(all);
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   The returned linked source is the only object the caller disposes. The internal
-        ///   time-based source is not disposed when the returned source is disposed (BCL limitation).
-        /// </remarks>
-        public CancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
             params CancellationToken[] cancellationTokens)
         {
             CancellationTokenSource timeCts = new(cancelMilliseconds);
             CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];
             all[0] = timeCts.Token;
             Array.Copy(cancellationTokens, 0, all, 1, cancellationTokens.Length);
-            return CancellationTokenSource.CreateLinkedTokenSource(all);
+            CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(all);
+            return new TimeCancellationTokenSource(linkedCts, [timeCts]);
         }
 
         #endregion IPrimeTime Implementation

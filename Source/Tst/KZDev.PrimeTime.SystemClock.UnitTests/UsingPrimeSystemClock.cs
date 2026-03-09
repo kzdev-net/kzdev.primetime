@@ -120,7 +120,7 @@ public class UsingPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         TimeSpan delay = TimeSpan.FromMilliseconds(40);
         DateTimeOffset before = DateTimeOffset.UtcNow;
-        await clock.DelayAsync(delay);
+        await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).Should().BeGreaterThanOrEqualTo(delay.Subtract(TimeSpan.FromMilliseconds(25)));
     }
@@ -135,7 +135,7 @@ public class UsingPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         const int delayMs = 40;
         DateTimeOffset before = DateTimeOffset.UtcNow;
-        await clock.DelayAsync(delayMs);
+        await clock.DelayAsync(delayMs, TestContext.Current.CancellationToken);
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(delayMs - 25);
     }
@@ -152,7 +152,9 @@ public class UsingPrimeSystemClock : UnitTestBase
         using CancellationTokenSource cts = new();
         CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
             cts.Token, TestContext.Current.CancellationToken).Token;
+#pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(10), linked);
+#pragma warning restore xUnit1051
         cts.Cancel();
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -170,7 +172,9 @@ public class UsingPrimeSystemClock : UnitTestBase
         using CancellationTokenSource cts = new();
         CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
             cts.Token, TestContext.Current.CancellationToken).Token;
+#pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(10_000, linked);
+#pragma warning restore xUnit1051
         cts.Cancel();
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -189,9 +193,10 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         TimeSpan cancelAfter = TimeSpan.FromMilliseconds(50);
-        using CancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
+        using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        await clock.DelayAsync(cancelAfter.Add(TimeSpan.FromMilliseconds(20)), TestContext.Current.CancellationToken);
+        TimeSpan additionalDelayForCancellation = TimeSpan.FromMilliseconds(80);
+        await clock.DelayAsync(cancelAfter.Add(additionalDelayForCancellation), TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
 
@@ -204,9 +209,10 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         const int cancelAfterMs = 50;
-        using CancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
+        using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        await clock.DelayAsync(cancelAfterMs + 20, TestContext.Current.CancellationToken);
+        const int additionalDelayForCancellationMs = 80;
+        await clock.DelayAsync(cancelAfterMs + additionalDelayForCancellationMs, TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
 
@@ -223,7 +229,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource userCts = new();
-        using CancellationTokenSource linkedSource =
+        using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), userCts.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
         userCts.Cancel();
@@ -241,7 +247,7 @@ public class UsingPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource cts1 = new();
         using CancellationTokenSource cts2 = new();
-        using CancellationTokenSource linkedSource =
+        using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), cts1.Token, cts2.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
         cts1.Cancel();
@@ -258,7 +264,7 @@ public class UsingPrimeSystemClock : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource cts1 = new();
         using CancellationTokenSource cts2 = new();
-        using CancellationTokenSource linkedSource =
+        using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), cts1.Token, cts2.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
         cts2.Cancel();
@@ -274,7 +280,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource userCts = new();
-        using CancellationTokenSource linkedSource = clock.LinkTimeCancellationToken(10_000, userCts.Token);
+        using TimeCancellationTokenSource linkedSource = clock.LinkTimeCancellationToken(10_000, userCts.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
         userCts.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
@@ -289,10 +295,10 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource neverCancelled = new();
-        using CancellationTokenSource linkedSource =
+        using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromMilliseconds(50), neverCancelled.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
-        await clock.DelayAsync(TimeSpan.FromMilliseconds(80), TestContext.Current.CancellationToken);
+        await clock.DelayAsync(TimeSpan.FromMilliseconds(140), TestContext.Current.CancellationToken);
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
 
