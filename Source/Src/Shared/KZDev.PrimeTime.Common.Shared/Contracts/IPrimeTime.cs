@@ -2,7 +2,9 @@ namespace KZDev.PrimeTime
 {
     //################################################################################
     /// <summary>
-    /// The interface for the PrimeTime library for time passing and timer services
+    ///   The interface for the PrimeTime library for time passing and timer services.
+    ///   Implementations may clamp very large or out-of-range values for sleep, delay, and
+    ///   time-based cancellation; see the implementing type for specific limits.
     /// </summary>
     public interface IPrimeTime
     {
