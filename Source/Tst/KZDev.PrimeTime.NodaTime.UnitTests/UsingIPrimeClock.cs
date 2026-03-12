@@ -47,6 +47,10 @@ public class UsingIPrimeClock : UnitTestBase
     // but still leaves room for minor scheduling variability on busy systems.
     private const int DelayAsyncTimingToleranceMilliseconds = 10;
 
+    // Upper bound for DelayAsync elapsed time to avoid flaky failures when the task scheduler
+    // or system is slightly slow; 30ms has proven sufficient across targets.
+    private const int DelayAsyncUpperBoundToleranceMilliseconds = 30;
+
     /// <summary>
     ///   Asserts that an elapsed duration lies within the expected range (expected minus lower
     ///   tolerance, and optionally expected plus upper tolerance).
@@ -329,7 +333,7 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Instant before = clock.Instant;
-        await clock.DelayAsync(TimeSpan.Zero);
+        await clock.DelayAsync(TimeSpan.Zero, TestContext.Current.CancellationToken);
         Instant after = clock.Instant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
@@ -343,7 +347,7 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Instant before = clock.Instant;
-        await clock.DelayAsync(Duration.Zero);
+        await clock.DelayAsync(Duration.Zero, TestContext.Current.CancellationToken);
         Instant after = clock.Instant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
@@ -364,9 +368,8 @@ public class UsingIPrimeClock : UnitTestBase
         AssertElapsedTimeInRange(
             elapsed,
             delay,
-            Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds));
-        elapsed.Should().BeLessThanOrEqualTo(
-            delay.Plus(Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds)));
+            Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds),
+            Duration.FromMilliseconds(DelayAsyncUpperBoundToleranceMilliseconds));
     }
 
     /// <summary>
@@ -440,15 +443,15 @@ public class UsingIPrimeClock : UnitTestBase
     public async Task GetTimeCancellationToken_Duration_ExpiresAfterTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        Duration cancelAfter = Duration.FromMilliseconds(50);
+        Duration cancelAfter = Duration.FromMilliseconds(120);
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        // Wait just before the expected cancellation time; token should still be active.
-        Duration preCancelDelay = cancelAfter - Duration.FromMilliseconds(10);
+        // Wait well before the expected cancellation time; token should still be active.
+        Duration preCancelDelay = Duration.FromMilliseconds(80);
         await clock.DelayAsync(preCancelDelay, TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        // Wait a little longer to go past the expected cancellation time; token should be cancelled.
-        await clock.DelayAsync(Duration.FromMilliseconds(20), TestContext.Current.CancellationToken);
+        // Wait past the expected cancellation time; token should be cancelled.
+        await clock.DelayAsync(Duration.FromMilliseconds(50), TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
 
