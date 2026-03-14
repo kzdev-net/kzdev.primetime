@@ -19,10 +19,14 @@ public class UsingLocalTimeOfDay : UnitTestBase
     ///   Initializes a new instance of the <see cref="UsingLocalTimeOfDay"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">The xUnit test output helper.</param>
+    #region Constructors/Finalizers
+
     public UsingLocalTimeOfDay (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Verifies that <see cref="LocalTimeOfDay"/> can be constructed from a

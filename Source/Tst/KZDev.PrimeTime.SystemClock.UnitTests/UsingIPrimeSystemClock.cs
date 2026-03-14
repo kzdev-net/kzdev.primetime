@@ -19,12 +19,15 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
-
     /// </param>
+    #region Constructors/Finalizers
+
     public UsingIPrimeSystemClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeSystemClock"/> extends <see cref="IPrimeTime"/>.

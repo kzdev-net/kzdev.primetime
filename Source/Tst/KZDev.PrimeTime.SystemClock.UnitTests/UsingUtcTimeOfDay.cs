@@ -19,10 +19,14 @@ public class UsingUtcTimeOfDay : UnitTestBase
     ///   Initializes a new instance of the <see cref="UsingUtcTimeOfDay"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">The xUnit test output helper.</param>
+    #region Constructors/Finalizers
+
     public UsingUtcTimeOfDay (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Verifies that <see cref="UtcTimeOfDay"/> can be constructed from a

@@ -16,6 +16,8 @@ namespace KZDev.PrimeTime
     {
         private readonly TimeProvider _timeProvider;
 
+        #region Constructors/Finalizers
+
         /// <summary>
         ///   Initializes a new instance of the <see cref="PrimeSystemClock"/> class using
         ///   <see cref="TimeProvider.System"/> as the time source.
@@ -36,6 +38,10 @@ namespace KZDev.PrimeTime
         {
             _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         }
+
+        #endregion Constructors/Finalizers
+
+        #region Interface Implementations
 
         #region IPrimeSystemClock Implementation
 
@@ -350,6 +356,8 @@ namespace KZDev.PrimeTime
                 cancellationToken);
 
         #endregion IPrimeSystemClock — Interval timers
+
+        #endregion Interface Implementations
     }
     //################################################################################
 }

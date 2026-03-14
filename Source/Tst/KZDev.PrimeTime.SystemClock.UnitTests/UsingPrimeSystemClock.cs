@@ -15,6 +15,8 @@ namespace KZDev.PrimeTime.SystemClock.UnitTests;
 /// </summary>
 public class UsingPrimeSystemClock : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeSystemClock"/> class.
     /// </summary>
@@ -25,6 +27,8 @@ public class UsingPrimeSystemClock : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     #region Sleep
 

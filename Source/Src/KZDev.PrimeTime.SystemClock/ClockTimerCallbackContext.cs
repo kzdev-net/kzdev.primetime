@@ -15,19 +15,8 @@ namespace KZDev.PrimeTime
         [ExcludeFromCodeCoverage]
         private string DisplayValue => $"{Registration.Id} (Registered @ {Registration.RegisteredTime})";
 
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Gets the optional state object passed when the timer was registered.
-        /// </summary>
-        public object? CallbackState { get; }
+        #region Constructors/Finalizers
 
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Gets the timer registration instance for this callback.
-        /// </summary>
-        public IClockTimer Registration { get; }
-
-        //--------------------------------------------------------------------------------
         /// <summary>
         ///   Initializes a new instance of the <see cref="ClockTimerCallbackContext"/> struct.
         /// </summary>
@@ -43,36 +32,53 @@ namespace KZDev.PrimeTime
             CallbackState = callbackState;
         }
 
-        //--------------------------------------------------------------------------------
+        #endregion Constructors/Finalizers
+
+        /// <summary>
+        ///   Gets the optional state object passed when the timer was registered.
+        /// </summary>
+        public object? CallbackState { get; }
+
+        /// <summary>
+        ///   Gets the timer registration instance for this callback.
+        /// </summary>
+        public IClockTimer Registration { get; }
+
+        #region Overrides
+
         /// <inheritdoc />
         public override bool Equals (object? obj) =>
             obj is ClockTimerCallbackContext other && Equals(other);
 
-        //--------------------------------------------------------------------------------
         /// <inheritdoc />
         public override int GetHashCode () => Registration.GetHashCode();
 
-        //--------------------------------------------------------------------------------
+        #endregion Overrides
+
+        #region Interface Implementations
+
         /// <inheritdoc />
         public bool Equals (ClockTimerCallbackContext other) =>
             ReferenceEquals(Registration, other.Registration) &&
             Equals(CallbackState, other.CallbackState);
 
-        //--------------------------------------------------------------------------------
+        #endregion Interface Implementations
+
+        #region Operators
+
         /// <summary>
         ///   Equality operator.
         /// </summary>
         public static bool operator == (ClockTimerCallbackContext left, ClockTimerCallbackContext right) =>
             left.Equals(right);
 
-        //--------------------------------------------------------------------------------
         /// <summary>
         ///   Inequality operator.
         /// </summary>
         public static bool operator != (ClockTimerCallbackContext left, ClockTimerCallbackContext right) =>
             !left.Equals(right);
 
-        //--------------------------------------------------------------------------------
+        #endregion Operators
     }
     //################################################################################
 }

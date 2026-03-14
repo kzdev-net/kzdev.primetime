@@ -22,10 +22,14 @@ public class UsingCommonTimerContracts : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
+    #region Constructors/Finalizers
+
     public UsingCommonTimerContracts (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     #region IRegisteredTimer contract
 

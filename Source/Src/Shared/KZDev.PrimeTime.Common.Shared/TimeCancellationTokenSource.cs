@@ -20,6 +20,8 @@ namespace KZDev.PrimeTime
         private readonly CancellationTokenSource[]? _additionalToDispose;
         private int _disposed;
 
+        #region Constructors/Finalizers
+
         /// <summary>
         ///   Initializes a new instance of the <see cref="TimeCancellationTokenSource"/> class.
         /// </summary>
@@ -39,6 +41,8 @@ namespace KZDev.PrimeTime
             _primary = primary ?? throw new ArgumentNullException(nameof(primary));
             _additionalToDispose = additionalToDispose;
         }
+
+        #endregion Constructors/Finalizers
 
         /// <summary>
         ///   Gets the cancellation token associated with the primary source.
@@ -102,6 +106,8 @@ namespace KZDev.PrimeTime
             _primary.Cancel(throwOnFirstException);
         }
 
+        #region Interface Implementations
+
         /// <inheritdoc />
         public void Dispose ()
         {
@@ -115,6 +121,8 @@ namespace KZDev.PrimeTime
             }
             GC.SuppressFinalize(this);
         }
+
+        #endregion Interface Implementations
     }
     //################################################################################
 }

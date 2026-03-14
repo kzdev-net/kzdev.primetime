@@ -10,6 +10,8 @@ namespace KZDev.PrimeTime.Tests;
 /// </summary>
 public abstract class UnitTestBase : TestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UnitTestBase"/> class.
     /// </summary>
@@ -20,4 +22,6 @@ public abstract class UnitTestBase : TestBase
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 }

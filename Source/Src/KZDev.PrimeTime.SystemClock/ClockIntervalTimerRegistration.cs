@@ -59,6 +59,79 @@ namespace KZDev.PrimeTime
         private int _callbacksRunning;
         private bool _cancelRequested;
 
+        #region Constructors/Finalizers
+
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
+        /// </summary>
+        /// <param name="clock">
+        ///   The system clock used for scheduling and time.
+        /// </param>
+        /// <param name="initialCallbackTime">
+        ///   Delay until the first callback.
+        /// </param>
+        /// <param name="repeatInterval">
+        ///   Interval between subsequent callbacks, or <see cref="Timeout.InfiniteTimeSpan"/> for
+        ///   one-shot.
+        /// </param>
+        /// <param name="callbackKind">
+        ///   The kind of callback (sync/async, with or without context/token).
+        /// </param>
+        /// <param name="callback">
+        ///   The delegate to invoke on each tick.
+        /// </param>
+        /// <param name="callbackState">
+        ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
+        /// </param>
+        /// <param name="options">
+        ///   Timer options (reset-after-callback, execution context, local time). May be
+        ///   <c>null</c> for defaults.
+        /// </param>
+        /// <param name="cancellationToken">
+        ///   Token to cancel the registration.
+        /// </param>
+        internal ClockIntervalTimerRegistration (
+            IPrimeSystemClock clock,
+            TimeSpan initialCallbackTime,
+            TimeSpan repeatInterval,
+            IntervalTimerCallbackKind callbackKind,
+            Delegate callback,
+            object? callbackState,
+            IntervalTimerOptions? options,
+            CancellationToken cancellationToken)
+        {
+            _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            _callbackKind = callbackKind;
+            _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+            _callbackState = callbackState;
+            _initialCallbackTime = initialCallbackTime;
+            _repeatInterval = repeatInterval;
+            IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
+            IsResetAfterCallback = opts.ResetIntervalAfterCallback;
+            IsLocalTimeRepresentation = opts.LocalTimeRepresentation;
+            _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
+            _cancellationToken = cancellationToken;
+            Id = Interlocked.Increment(ref _nextId);
+            RegisteredTime = IsLocalTimeRepresentation ? clock.LocalNow : clock.UtcNow;
+            _lastCallbackUtc = null;
+            _nextCallbackUtc = null;
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                _cancelRegistration = cancellationToken.Register(OnCancelRequested);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    _cancelRequested = true;
+                    _state = TimerState.Cancelled;
+                    return;
+                }
+            }
+
+            _state = TimerState.Active;
+            ScheduleNext(initialCallbackTime);
+        }
+
+        #endregion Constructors/Finalizers
 
         /// <inheritdoc />
         public int Id { get; }
@@ -144,76 +217,6 @@ namespace KZDev.PrimeTime
                     return (long)(next - now).TotalMilliseconds;
                 }
             }
-        }
-
-        /// <summary>
-        ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
-        /// </summary>
-        /// <param name="clock">
-        ///   The system clock used for scheduling and time.
-        /// </param>
-        /// <param name="initialCallbackTime">
-        ///   Delay until the first callback.
-        /// </param>
-        /// <param name="repeatInterval">
-        ///   Interval between subsequent callbacks, or <see cref="Timeout.InfiniteTimeSpan"/> for
-        ///   one-shot.
-        /// </param>
-        /// <param name="callbackKind">
-        ///   The kind of callback (sync/async, with or without context/token).
-        /// </param>
-        /// <param name="callback">
-        ///   The delegate to invoke on each tick.
-        /// </param>
-        /// <param name="callbackState">
-        ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
-        /// </param>
-        /// <param name="options">
-        ///   Timer options (reset-after-callback, execution context, local time). May be
-        ///   <c>null</c> for defaults.
-        /// </param>
-        /// <param name="cancellationToken">
-        ///   Token to cancel the registration.
-        /// </param>
-        internal ClockIntervalTimerRegistration (
-            IPrimeSystemClock clock,
-            TimeSpan initialCallbackTime,
-            TimeSpan repeatInterval,
-            IntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            IntervalTimerOptions? options,
-            CancellationToken cancellationToken)
-        {
-            _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            _callbackKind = callbackKind;
-            _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-            _callbackState = callbackState;
-            _initialCallbackTime = initialCallbackTime;
-            _repeatInterval = repeatInterval;
-            IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
-            IsResetAfterCallback = opts.ResetIntervalAfterCallback;
-            IsLocalTimeRepresentation = opts.LocalTimeRepresentation;
-            _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
-            _cancellationToken = cancellationToken;
-            Id = Interlocked.Increment(ref _nextId);
-            RegisteredTime = IsLocalTimeRepresentation ? clock.LocalNow : clock.UtcNow;
-            _lastCallbackUtc = null;
-            _nextCallbackUtc = null;
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                _cancelRegistration = cancellationToken.Register(OnCancelRequested);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _cancelRequested = true;
-                    _state = TimerState.Cancelled;
-                    return;
-                }
-            }
-
-            _state = TimerState.Active;
-            ScheduleNext(initialCallbackTime);
         }
 
         private void OnCancelRequested ()
@@ -391,6 +394,8 @@ namespace KZDev.PrimeTime
             }
         }
 
+        #region Interface Implementations
+
         /// <inheritdoc />
         public bool Change (TimeSpan interval) =>
             Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
@@ -475,5 +480,7 @@ namespace KZDev.PrimeTime
                 _timer = null;
             }
         }
+
+        #endregion Interface Implementations
     }
 }

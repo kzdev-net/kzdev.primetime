@@ -13,23 +13,16 @@ namespace KZDev.PrimeTime.Tests;
 public abstract class TestBase
 {
     /// <summary>
-    ///   The test output helper that can be used to output test messages.
-    /// </summary>
-    protected ITestOutputHelper XUnitTestOutputHelper { [DebuggerStepThrough] get; }
-
-    /// <summary>
     ///   The default time box for explicit tests.
     /// </summary>
     protected static readonly TimeSpan DefaultExplicitTestTimeBox = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    ///   Writes a line of text to the output.
+    ///   The test output helper that can be used to output test messages.
     /// </summary>
-    /// <param name="message">The message to write to the output.</param>
-    protected void TestWriteLine (string message)
-    {
-        XUnitTestOutputHelper.WriteLine(message);
-    }
+    protected ITestOutputHelper XUnitTestOutputHelper { [DebuggerStepThrough] get; }
+
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="TestBase"/> class.
@@ -41,5 +34,16 @@ public abstract class TestBase
     {
         Debug.Assert(xUnitTestOutputHelper is not null, "xUnitTestOutputHelper is null");
         XUnitTestOutputHelper = xUnitTestOutputHelper;
+    }
+
+    #endregion Constructors/Finalizers
+
+    /// <summary>
+    ///   Writes a line of text to the output.
+    /// </summary>
+    /// <param name="message">The message to write to the output.</param>
+    protected void TestWriteLine (string message)
+    {
+        XUnitTestOutputHelper.WriteLine(message);
     }
 }

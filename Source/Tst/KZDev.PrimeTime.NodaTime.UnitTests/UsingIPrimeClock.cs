@@ -22,10 +22,14 @@ public class UsingIPrimeClock : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
+    #region Constructors/Finalizers
+
     public UsingIPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     // Use a short sleep so tests remain fast, but keep it above typical timer/scheduler resolution
     // (≈1–15ms on most platforms) so that elapsed time can be measured reliably and deterministically.

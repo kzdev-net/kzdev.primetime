@@ -15,6 +15,8 @@ namespace KZDev.PrimeTime
     {
         private readonly TimeOnly _value;
 
+        #region Constructors/Finalizers
+
         /// <summary>
         ///   Initializes a new instance of the <see cref="UtcTimeOfDay"/> struct from a
         ///   <see cref="TimeOnly"/> value.
@@ -25,13 +27,14 @@ namespace KZDev.PrimeTime
             _value = time;
         }
 
+        #endregion Constructors/Finalizers
+
         /// <summary>
         ///   Gets the underlying <see cref="TimeOnly"/> value.
         /// </summary>
         public TimeOnly Value => _value;
 
-        /// <inheritdoc />
-        public bool Equals (UtcTimeOfDay other) => _value == other._value;
+        #region Overrides
 
         /// <inheritdoc />
         public override bool Equals (object? obj) => obj is UtcTimeOfDay other && Equals(other);
@@ -42,6 +45,17 @@ namespace KZDev.PrimeTime
         /// <inheritdoc />
         public override string ToString () => _value.ToString();
 
+        #endregion Overrides
+
+        #region Interface Implementations
+
+        /// <inheritdoc />
+        public bool Equals (UtcTimeOfDay other) => _value == other._value;
+
+        #endregion Interface Implementations
+
+        #region Operators
+
         /// <summary>
         ///   Returns a value indicating whether two <see cref="UtcTimeOfDay"/> instances are equal.
         /// </summary>
@@ -51,6 +65,8 @@ namespace KZDev.PrimeTime
         ///   Returns a value indicating whether two <see cref="UtcTimeOfDay"/> instances are not equal.
         /// </summary>
         public static bool operator != (UtcTimeOfDay left, UtcTimeOfDay right) => !left.Equals(right);
+
+        #endregion Operators
     }
     //################################################################################
 }

@@ -18,10 +18,14 @@ public class UsingIPrimeTimeContract : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
+    #region Constructors/Finalizers
+
     public UsingIPrimeTimeContract (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Verifies that the core library assembly exposes the <see cref="IPrimeTime"/> interface type.

@@ -42,10 +42,14 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper for diagnostic output.
     /// </param>
+    #region Constructors/Finalizers
+
     public UsingIPrimeSystemClockIntervalTimers (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     #region One-shot
 

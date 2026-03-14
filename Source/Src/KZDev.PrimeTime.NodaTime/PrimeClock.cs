@@ -19,6 +19,8 @@ namespace KZDev.PrimeTime
         private readonly IClock _clock;
         private readonly DateTimeZone _systemDefaultZone;
 
+        #region Constructors/Finalizers
+
         /// <summary>
         ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
         ///   <see cref="SystemClock.Instance"/> and the BCL system default time zone.
@@ -43,6 +45,79 @@ namespace KZDev.PrimeTime
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _systemDefaultZone = systemDefaultZone ?? throw new ArgumentNullException(nameof(systemDefaultZone));
         }
+
+        #endregion Constructors/Finalizers
+
+        /// <summary>
+        ///   Gets the system default time zone for use as the local zone. Prefers the BCL
+        ///   provider's GetSystemDefault() when the system default is mapped; otherwise
+        ///   falls back to <see cref="BclDateTimeZone.ForSystemDefault"/>, which wraps
+        ///   <see cref="TimeZoneInfo.Local"/> and succeeds even when the BCL provider
+        ///   has no mapping (e.g. for some Windows zones like "Mid-Atlantic Standard Time").
+        /// </summary>
+        /// <returns>
+        ///   A <see cref="DateTimeZone"/> representing the system default (local) time zone.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///   The system does not provide a time zone (can be thrown by the fallback).
+        /// </exception>
+        private static DateTimeZone GetSystemDefaultTimeZone ()
+        {
+            try
+            {
+                return DateTimeZoneProviders.Bcl.GetSystemDefault();
+            }
+            catch (DateTimeZoneNotFoundException)
+            {
+                return BclDateTimeZone.ForSystemDefault();
+            }
+        }
+
+        /// <summary>
+        ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use with BCL
+        ///   delay and cancellation APIs. Negative or zero duration maps to
+        ///   <see cref="TimeSpan.Zero"/>. Durations greater than
+        ///   <see cref="TimeSpan.MaxValue"/> are clamped to <see cref="TimeSpan.MaxValue"/>
+        ///   to avoid <see cref="OverflowException"/> from <see cref="Duration.ToTimeSpan"/>.
+        /// </summary>
+        private static TimeSpan ToTimeSpanForDelay (Duration duration)
+        {
+            if (duration <= Duration.Zero)
+            {
+                return TimeSpan.Zero;
+            }
+
+            if (duration >= MaxDurationForDelay)
+            {
+                return TimeSpan.MaxValue;
+            }
+
+            return duration.ToTimeSpan();
+        }
+
+        /// <summary>
+        ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use when creating
+        ///   <see cref="CancellationTokenSource"/> instances. Negative or zero duration maps to
+        ///   <see cref="TimeSpan.Zero"/>. Durations greater than <see cref="int.MaxValue"/>
+        ///   milliseconds are clamped to that value (as a <see cref="TimeSpan"/>), because
+        ///   <see cref="CancellationTokenSource"/> only accepts delays up to that limit.
+        /// </summary>
+        private static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
+        {
+            if (duration <= Duration.Zero)
+            {
+                return TimeSpan.Zero;
+            }
+
+            if (duration >= MaxDurationForCancellationToken)
+            {
+                return TimeSpan.FromMilliseconds(int.MaxValue);
+            }
+
+            return duration.ToTimeSpan();
+        }
+
+        #region Interface Implementations
 
         #region IPrimeClock Implementation
 
@@ -215,78 +290,7 @@ namespace KZDev.PrimeTime
 
         #endregion IPrimeTime Implementation
 
-        #region Helpers
-
-        /// <summary>
-        ///   Gets the system default time zone for use as the local zone. Prefers the BCL
-        ///   provider's GetSystemDefault() when the system default is mapped; otherwise
-        ///   falls back to <see cref="BclDateTimeZone.ForSystemDefault"/>, which wraps
-        ///   <see cref="TimeZoneInfo.Local"/> and succeeds even when the BCL provider
-        ///   has no mapping (e.g. for some Windows zones like "Mid-Atlantic Standard Time").
-        /// </summary>
-        /// <returns>
-        ///   A <see cref="DateTimeZone"/> representing the system default (local) time zone.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        ///   The system does not provide a time zone (can be thrown by the fallback).
-        /// </exception>
-        private static DateTimeZone GetSystemDefaultTimeZone ()
-        {
-            try
-            {
-                return DateTimeZoneProviders.Bcl.GetSystemDefault();
-            }
-            catch (DateTimeZoneNotFoundException)
-            {
-                return BclDateTimeZone.ForSystemDefault();
-            }
-        }
-
-        /// <summary>
-        ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use with BCL
-        ///   delay and cancellation APIs. Negative or zero duration maps to
-        ///   <see cref="TimeSpan.Zero"/>. Durations greater than
-        ///   <see cref="TimeSpan.MaxValue"/> are clamped to <see cref="TimeSpan.MaxValue"/>
-        ///   to avoid <see cref="OverflowException"/> from <see cref="Duration.ToTimeSpan"/>.
-        /// </summary>
-        private static TimeSpan ToTimeSpanForDelay (Duration duration)
-        {
-            if (duration <= Duration.Zero)
-            {
-                return TimeSpan.Zero;
-            }
-
-            if (duration >= MaxDurationForDelay)
-            {
-                return TimeSpan.MaxValue;
-            }
-
-            return duration.ToTimeSpan();
-        }
-
-        /// <summary>
-        ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use when creating
-        ///   <see cref="CancellationTokenSource"/> instances. Negative or zero duration maps to
-        ///   <see cref="TimeSpan.Zero"/>. Durations greater than <see cref="int.MaxValue"/>
-        ///   milliseconds are clamped to that value (as a <see cref="TimeSpan"/>), because
-        ///   <see cref="CancellationTokenSource"/> only accepts delays up to that limit.
-        /// </summary>
-        private static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
-        {
-            if (duration <= Duration.Zero)
-            {
-                return TimeSpan.Zero;
-            }
-
-            if (duration >= MaxDurationForCancellationToken)
-            {
-                return TimeSpan.FromMilliseconds(int.MaxValue);
-            }
-
-            return duration.ToTimeSpan();
-        }
-
-        #endregion Helpers
+        #endregion Interface Implementations
     }
     //################################################################################
 }
