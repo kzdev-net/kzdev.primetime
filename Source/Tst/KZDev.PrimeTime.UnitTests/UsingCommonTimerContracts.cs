@@ -27,79 +27,79 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
     }
 
-    #region ITimer contract
+    #region IRegisteredTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="ITimer"/> is an interface and extends <see cref="IDisposable"/>.
+    ///   Verifies that <see cref="IRegisteredTimer"/> is an interface and extends <see cref="IDisposable"/>.
     /// </summary>
     [Fact]
-    public void ITimer_ExistsAndIsInterface ()
+    public void IRegisteredTimer_ExistsAndIsInterface ()
     {
-        typeof(ITimer).IsInterface.Should().BeTrue();
-        typeof(ITimer).GetInterfaces().Should().Contain(typeof(IDisposable));
+        typeof(IRegisteredTimer).IsInterface.Should().BeTrue();
+        typeof(IRegisteredTimer).GetInterfaces().Should().Contain(typeof(IDisposable));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="ITimer"/> declares all required properties (Id, IsCancelled, State, etc.).
+    ///   Verifies that <see cref="IRegisteredTimer"/> declares all required properties (Id, IsCancelled, State, etc.).
     /// </summary>
     [Fact]
-    public void ITimer_DeclaresRequiredProperties ()
+    public void IRegisteredTimer_DeclaresRequiredProperties ()
     {
-        Type timerType = typeof(ITimer);
+        Type timerType = typeof(IRegisteredTimer);
         string[] requiredProperties = ["Id", "IsCancelled", "IsTimeOfDay", "IsRepeating", "IsLocalTimeRepresentation",
             "IsActive", "State", "CallbacksProcessing", "Enabled"];
         foreach (string name in requiredProperties)
         {
             PropertyInfo? prop = timerType.GetProperty(name);
-            prop.Should().NotBeNull($"ITimer should declare property {name}");
+            prop.Should().NotBeNull($"IRegisteredTimer should declare property {name}");
         }
     }
 
     /// <summary>
-    ///   Verifies that <see cref="ITimer"/> declares Cancel, Stop, and Start methods.
+    ///   Verifies that <see cref="IRegisteredTimer"/> declares Cancel, Stop, and Start methods.
     /// </summary>
     [Fact]
-    public void ITimer_DeclaresRequiredMethods ()
+    public void IRegisteredTimer_DeclaresRequiredMethods ()
     {
-        Type timerType = typeof(ITimer);
+        Type timerType = typeof(IRegisteredTimer);
         timerType.GetMethod("Cancel").Should().NotBeNull();
         timerType.GetMethod("Stop").Should().NotBeNull();
         timerType.GetMethod("Start").Should().NotBeNull();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="ITimer.Id"/> is of type <see cref="int"/>.
+    ///   Verifies that <see cref="IRegisteredTimer.Id"/> is of type <see cref="int"/>.
     /// </summary>
     [Fact]
-    public void ITimer_Id_IsInt ()
+    public void IRegisteredTimer_Id_IsInt ()
     {
-        PropertyInfo? prop = typeof(ITimer).GetProperty("Id");
+        PropertyInfo? prop = typeof(IRegisteredTimer).GetProperty("Id");
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(int));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="ITimer.State"/> is of type <see cref="TimerState"/>.
+    ///   Verifies that <see cref="IRegisteredTimer.State"/> is of type <see cref="TimerState"/>.
     /// </summary>
     [Fact]
-    public void ITimer_State_IsTimerState ()
+    public void IRegisteredTimer_State_IsTimerState ()
     {
-        PropertyInfo? prop = typeof(ITimer).GetProperty("State");
+        PropertyInfo? prop = typeof(IRegisteredTimer).GetProperty("State");
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(TimerState));
     }
 
-    #endregion ITimer contract
+    #endregion IRegisteredTimer contract
 
     #region IDayTimeTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IDayTimeTimer"/> extends <see cref="ITimer"/>.
+    ///   Verifies that <see cref="IDayTimeTimer"/> extends <see cref="IRegisteredTimer"/>.
     /// </summary>
     [Fact]
-    public void IDayTimeTimer_ExtendsITimer ()
+    public void IDayTimeTimer_ExtendsIRegisteredTimer ()
     {
-        typeof(IDayTimeTimer).GetInterfaces().Should().Contain(typeof(ITimer));
+        typeof(IDayTimeTimer).GetInterfaces().Should().Contain(typeof(IRegisteredTimer));
     }
 
     /// <summary>
@@ -119,12 +119,12 @@ public class UsingCommonTimerContracts : UnitTestBase
     #region IIntervalTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IIntervalTimer"/> extends <see cref="ITimer"/>.
+    ///   Verifies that <see cref="IIntervalTimer"/> extends <see cref="IRegisteredTimer"/>.
     /// </summary>
     [Fact]
-    public void IIntervalTimer_ExtendsITimer ()
+    public void IIntervalTimer_ExtendsIRegisteredTimer ()
     {
-        typeof(IIntervalTimer).GetInterfaces().Should().Contain(typeof(ITimer));
+        typeof(IIntervalTimer).GetInterfaces().Should().Contain(typeof(IRegisteredTimer));
     }
 
     /// <summary>

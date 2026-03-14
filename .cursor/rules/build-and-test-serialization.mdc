@@ -1,0 +1,31 @@
+---
+description: Serialize builds and test runs in this workspace; never run parallel builds; wait and report progress to the user.
+globs: "**/*.sln,**/*.csproj,**/Directory.Build.props"
+alwaysApply: true
+---
+
+# Build and test serialization
+
+When you run a **build** (e.g. `dotnet build`, MSBuild, or IDE build) or a **test run** (e.g. `dotnet test`, test runner CLI) in this workspace, follow these rules so long-running work does not cause parallel builds or confuse the user.
+
+## No parallel builds or test runs
+
+- **One at a time in this workspace.** Do not start another build or another test run (project-level, solution-level, or different scope) while a build or test run is already in progress in the same workspace. Parallel builds in the same codebase can cause file locks, inconsistent state, and hard-to-diagnose failures.
+- **Same “space” = same workspace root.** Any build or test run that targets this repository (this solution or any of its projects) counts as the same space. Do not start a project-level build and then a solution-level build in parallel, or vice versa.
+- **Wait for completion before starting the next.** If you need to run a build or test, and one is already running, **wait for it to finish** (do not run it “in the background” and then start another). Only after the current run completes (success or failure) may you start another build or test.
+
+## Communicate waiting to the user
+
+- **Do not leave the user thinking the agent is stuck.** If you are waiting for a long-running build or test:
+  - Post a **short, visible message** in the chat before or while waiting, for example:
+    - “Running the build now; this may take a minute. I’ll wait for it to finish before doing anything else.”
+    - “Build is still running. I’m waiting for it to complete before running tests.”
+    - “Waiting for the test run to finish before proceeding.”
+  - You may repeat a brief status update if the wait is long (e.g. every 30–60 seconds of real time), so the user knows the agent is actively waiting and not hung.
+- **Avoid “running in the background” then starting another build/test.** Do not say that the build or test is “running in the background” and then start a second build or test in the same workspace. Either run the command and **wait** for it to complete, or explicitly tell the user you are waiting and only proceed (including any further build/test) after the first run has finished.
+
+## Summary
+
+- **Serial:** At most one build or one test run in progress at a time for this workspace.
+- **Wait:** Do not start another build/test until the current one has completed.
+- **Inform:** Tell the user when you are waiting so they know the agent is not hung.

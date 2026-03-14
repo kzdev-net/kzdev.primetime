@@ -180,6 +180,176 @@ namespace KZDev.PrimeTime
         }
 
         #endregion IPrimeTime Implementation
+
+        #region IPrimeSystemClock — Interval timers
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+                IntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+                IntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+                IntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            Func<CancellationToken, ValueTask> callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+                IntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+                IntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                IntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                IntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                IntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Func<CancellationToken, ValueTask> callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                IntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                IntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        #endregion IPrimeSystemClock — Interval timers
     }
     //################################################################################
 }

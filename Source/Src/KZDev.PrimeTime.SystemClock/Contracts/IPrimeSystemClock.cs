@@ -64,6 +64,125 @@ namespace KZDev.PrimeTime
 
         #endregion IPrimeSystemClock — Now (time-only and date-only)
 #endif
+
+        #region IPrimeSystemClock — Interval timers
+
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback.
+        /// </summary>
+        /// <param name="callbackTime">Time until the first callback.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+        /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
+        /// </summary>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
+        /// </summary>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with an asynchronous callback.
+        /// </summary>
+        /// <param name="callbackTime">Time until the first callback.</param>
+        /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+        /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+        /// <param name="timerOptions">Optional timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer; also passed to the callback.</param>
+        /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
+        IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            Func<CancellationToken, ValueTask> callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
+        /// </summary>
+        IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback).
+        /// </summary>
+        /// <param name="callbackTime">Time until the first callback.</param>
+        /// <param name="repeatInterval">Interval for subsequent callbacks; <see cref="Timeout.InfiniteTimeSpan"/> for one-shot.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="timerOptions">Optional timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context).
+        /// </summary>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
+        /// </summary>
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
+        /// </summary>
+        IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Func<CancellationToken, ValueTask> callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback with context).
+        /// </summary>
+        IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+            TimeSpan repeatInterval,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+
+        #endregion IPrimeSystemClock — Interval timers
     }
     //################################################################################
 }
