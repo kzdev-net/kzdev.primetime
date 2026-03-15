@@ -465,16 +465,18 @@ namespace KZDev.PrimeTime
         #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
         /// <inheritdoc />
-        /// <remarks>
-        ///   Time-of-day timer implementation is provided in Phase 11. This method throws
-        ///   <see cref="NotSupportedException"/> until then.
-        /// </remarks>
         public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
             Action callback,
             DayTimeTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException(
-                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+            new PrimeClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                PrimeClockIntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
 
         /// <inheritdoc />
         public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
@@ -482,8 +484,14 @@ namespace KZDev.PrimeTime
             object? state = null,
             DayTimeTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException(
-                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+            new PrimeClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                PrimeClockIntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
 
         /// <inheritdoc />
         public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
@@ -491,16 +499,28 @@ namespace KZDev.PrimeTime
             object? state = null,
             DayTimeTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException(
-                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+            new PrimeClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
 
         /// <inheritdoc />
         public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
             Func<CancellationToken, ValueTask> callback,
             DayTimeTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException(
-                "RegisterAsyncTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+            new PrimeClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
 
         /// <inheritdoc />
         public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
@@ -508,8 +528,14 @@ namespace KZDev.PrimeTime
             object? state = null,
             DayTimeTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException(
-                "RegisterAsyncTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+            new PrimeClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                PrimeClockIntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
 
         #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
