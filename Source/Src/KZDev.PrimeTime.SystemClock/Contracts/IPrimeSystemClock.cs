@@ -183,6 +183,105 @@ namespace KZDev.PrimeTime
         //--------------------------------------------------------------------------------
 
         #endregion IPrimeSystemClock — Interval timers
+
+#if NET
+        #region IPrimeSystemClock — Day-time timers
+
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and state.
+        /// </summary>
+        IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
+        /// </summary>
+        IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback.
+        /// </summary>
+        IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
+        /// </summary>
+        IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer that fires at the given UTC time each day (sync callback).
+        /// </summary>
+        IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a UTC time-of-day timer with a callback that receives context and state.
+        /// </summary>
+        IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a UTC time-of-day timer with a callback that receives context and cancellation token.
+        /// </summary>
+        IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a UTC time-of-day timer with an asynchronous callback.
+        /// </summary>
+        IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a UTC time-of-day timer with an asynchronous callback that receives context and cancellation token.
+        /// </summary>
+        IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+
+        #endregion IPrimeSystemClock — Day-time timers
+#endif
     }
     //################################################################################
 }

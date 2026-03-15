@@ -357,6 +357,158 @@ namespace KZDev.PrimeTime
 
         #endregion IPrimeSystemClock — Interval timers
 
+#if NET
+        #region IPrimeSystemClock — Day-time timers
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new ClockDayTimeTimerRegistration(
+                this,
+                timeOfDay,
+                IntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        #endregion IPrimeSystemClock — Day-time timers
+#endif
+
         #endregion Interface Implementations
     }
     //################################################################################
