@@ -219,6 +219,179 @@ namespace KZDev.PrimeTime
         //--------------------------------------------------------------------------------
 
         #endregion IPrimeClock — Time cancellation (Duration)
+
+        #region IPrimeClock — Interval timers (RegisterTimer)
+
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback.
+        /// </summary>
+        /// <param name="callbackTime">Duration until the first callback.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+        /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with an asynchronous callback.
+        /// </summary>
+        /// <param name="callbackTime">Duration until the first callback.</param>
+        /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+        /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+        /// <param name="timerOptions">Optional timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer; also passed to the callback.</param>
+        /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
+        IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Func<CancellationToken, ValueTask> callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback).
+        /// </summary>
+        /// <param name="callbackTime">Duration until the first callback.</param>
+        /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="timerOptions">Optional timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context).
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Func<CancellationToken, ValueTask> callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback with context).
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+
+        #endregion IPrimeClock — Interval timers (RegisterTimer)
+
+        #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <param name="cancellationToken">Optional token to cancel the timer.</param>
+        /// <returns>An <see cref="IPrimeClockTimerRegistration"/> supporting <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/>.</returns>
+        IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and state.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
+        /// </summary>
+        IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default);
+        //--------------------------------------------------------------------------------
+
+        #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
     }
     //################################################################################
 }

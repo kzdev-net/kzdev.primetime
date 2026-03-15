@@ -290,6 +290,229 @@ namespace KZDev.PrimeTime
 
         #endregion IPrimeTime Implementation
 
+        #region IPrimeClock — Interval timers (RegisterTimer)
+
+        private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : NoRepeatSentinel,
+                PrimeClockIntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : NoRepeatSentinel,
+                PrimeClockIntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : NoRepeatSentinel,
+                PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Func<CancellationToken, ValueTask> callback,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : NoRepeatSentinel,
+                PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            bool repeat = false,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeat ? callbackTime : NoRepeatSentinel,
+                PrimeClockIntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                PrimeClockIntervalTimerCallbackKind.SimpleAction,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                PrimeClockIntervalTimerCallbackKind.ContextAction,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Func<CancellationToken, ValueTask> callback,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+                callback,
+                null,
+                timerOptions,
+                cancellationToken);
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+            Duration repeatInterval,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            IntervalTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            new PrimeClockIntervalTimerRegistration(
+                this,
+                callbackTime,
+                repeatInterval,
+                PrimeClockIntervalTimerCallbackKind.ContextAsync,
+                callback,
+                state,
+                timerOptions,
+                cancellationToken);
+
+        #endregion IPrimeClock — Interval timers (RegisterTimer)
+
+        #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
+        /// <inheritdoc />
+        /// <remarks>
+        ///   Time-of-day timer implementation is provided in Phase 11. This method throws
+        ///   <see cref="NotSupportedException"/> until then.
+        /// </remarks>
+        public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action<PrimeClockTimerCallbackContext> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+            Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                "RegisterTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                "RegisterAsyncTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+
+        /// <inheritdoc />
+        public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+            Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException(
+                "RegisterAsyncTimeOfDay is not yet implemented. Use Phase 11 implementation.");
+
+        #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
         #endregion Interface Implementations
     }
     //################################################################################
