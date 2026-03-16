@@ -17,7 +17,7 @@ namespace KZDev.PrimeTime
     ///   <see cref="IPrimeTestSystemClock.SetTime"/>, <see cref="IPrimeTestSystemClock.Advance"/>,
     ///   and <see cref="IPrimeTestSystemClock.RunFor"/> for deterministic tests.
     /// </summary>
-    public sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
+    internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
     {
         private readonly IPrimeSystemClock _clock;
 

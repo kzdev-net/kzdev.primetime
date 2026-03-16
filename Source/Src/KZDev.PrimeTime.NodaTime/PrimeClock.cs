@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime
     ///   Task.Delay, CancellationTokenSource with a timer); for deterministic tests use
     ///   the test clock from a later phase.
     /// </summary>
-    public sealed class PrimeClock : IPrimeClock
+    internal sealed class PrimeClock : IPrimeClock
     {
         private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
         private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
