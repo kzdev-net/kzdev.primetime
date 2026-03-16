@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Description>Common contracts and types for KZDev.PrimeTime (IPrimeTime, timer contracts, options). Add KZDev.PrimeTime.SystemClock and/or KZDev.PrimeTime.NodaTime for clock implementations.</Description>
   </PropertyGroup>
 
   <ItemGroup>

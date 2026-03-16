@@ -2,6 +2,14 @@
 
 This is the repository for the ['KZDev.PrimeTime'](https://www.nuget.org/packages/KZDev.PrimeTime) nuget package that contains ...
 
+## Using the library
+
+- **KZDev.PrimeTime** (this package) provides shared contracts and types: `IPrimeTime`, timer interfaces, options, and enums. Clock selection is left to the host.
+- For a BCL/system clock implementation, add **KZDev.PrimeTime.SystemClock** and use `IPrimeSystemClock` / `PrimeSystemClock`.
+- For a NodaTime-based clock, add **KZDev.PrimeTime.NodaTime** and use `IPrimeClock` / `PrimeClock`.
+
+Reference the main package plus the stack package(s) you need so you can use either or both clock stacks.
+
 ## Features
 
 
