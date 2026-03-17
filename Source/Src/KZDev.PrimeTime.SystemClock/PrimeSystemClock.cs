@@ -142,8 +142,7 @@ namespace KZDev.PrimeTime
         }
 
         /// <inheritdoc />
-        public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
-            CancellationToken token1,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
             CancellationToken token2)
         {
             CancellationTokenSource timeCts = new(cancelMilliseconds);
@@ -152,8 +151,7 @@ namespace KZDev.PrimeTime
         }
 
         /// <inheritdoc />
-        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
-            CancellationToken token1,
+        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
             CancellationToken token2)
         {
             CancellationTokenSource timeCts = new(cancelTime);
@@ -162,8 +160,7 @@ namespace KZDev.PrimeTime
         }
 
         /// <inheritdoc />
-        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
-            params CancellationToken[] cancellationTokens)
+        public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens)
         {
             CancellationTokenSource timeCts = new(cancelTime);
             CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];

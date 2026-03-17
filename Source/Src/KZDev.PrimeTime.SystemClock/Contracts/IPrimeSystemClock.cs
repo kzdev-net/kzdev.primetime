@@ -77,20 +77,16 @@ namespace KZDev.PrimeTime
         /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
         /// <param name="cancellationToken">Optional token to cancel the timer.</param>
         /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
-            Action callback,
-            bool repeat = false,
-            IntervalTimerOptions? timerOptions = null,
+        IClockIntervalTimer RegisterTimer (TimeSpan callbackTime, Action callback,
+            bool repeat = false, IntervalTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default);
         //--------------------------------------------------------------------------------
         /// <summary>
         ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
         /// </summary>
         IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
-            Action<ClockTimerCallbackContext> callback,
-            object? state = null,
-            bool repeat = false,
-            IntervalTimerOptions? timerOptions = null,
+            Action<ClockTimerCallbackContext> callback, object? state = null,
+            bool repeat = false, IntervalTimerOptions? timerOptions = null,
             CancellationToken cancellationToken = default);
         //--------------------------------------------------------------------------------
         /// <summary>
