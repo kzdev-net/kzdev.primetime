@@ -77,6 +77,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.Instant;
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
         Duration elapsed = firedAt!.Value - start;
@@ -326,7 +327,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             ShortDelay + Duration.FromSeconds(1),
             () => { },
             cancellationToken: TestContext.Current.CancellationToken);
-        Action act = () => timer.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
+        AssertChangeToRepeatingThrows(timer);
+    }
+
+    private static void AssertChangeToRepeatingThrows (IPrimeClockTimerRegistration registration)
+    {
+        Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
         act.Should().Throw<InvalidOperationException>();
     }
 
@@ -459,6 +465,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         bool fired = signal.Wait((WaitMargin + ShortDelay + Duration.FromSeconds(1)).ToTimeSpan(),
             TestContext.Current.CancellationToken);
         fired.Should().BeTrue("callback should fire within timeout when using Unsafe option");
+        clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
 

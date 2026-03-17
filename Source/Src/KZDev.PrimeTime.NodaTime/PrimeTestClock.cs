@@ -412,12 +412,13 @@ namespace KZDev.PrimeTime
                     }
                 });
 
-                return tcs.Task.ContinueWith(
+                _ = tcs.Task.ContinueWith(
                     (_, r) => ((CancellationTokenRegistration)r!).Dispose(),
                     reg,
                     CancellationToken.None,
                     TaskContinuationOptions.None,
                     TaskScheduler.Default);
+                return tcs.Task;
             }
 
             return tcs.Task;

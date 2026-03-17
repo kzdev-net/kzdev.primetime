@@ -71,6 +71,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         }, cancellationToken: TestContext.Current.CancellationToken);
         DateTimeOffset start = clock.UtcNow;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
@@ -300,7 +301,12 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(1), () => { },
             cancellationToken: TestContext.Current.CancellationToken);
-        Action act = () => timer.Change(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(50));
+        AssertChangeToRepeatingThrows(timer);
+    }
+
+    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
+    {
+        Action act = () => registration.Change(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(50));
         act.Should().Throw<InvalidOperationException>();
     }
 
@@ -430,6 +436,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
             cancellationToken: TestContext.Current.CancellationToken);
         bool fired = signal.Wait(WaitMargin + ShortDelay + TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
         fired.Should().BeTrue("callback should fire within timeout when using Unsafe option");
+        clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
 

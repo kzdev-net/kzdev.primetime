@@ -32,7 +32,8 @@ public abstract class TestBase
     /// </param>
     protected TestBase (ITestOutputHelper xUnitTestOutputHelper)
     {
-        Debug.Assert(xUnitTestOutputHelper is not null, "xUnitTestOutputHelper is null");
+        if (xUnitTestOutputHelper is null)
+            throw new ArgumentNullException(nameof(xUnitTestOutputHelper));
         XUnitTestOutputHelper = xUnitTestOutputHelper;
     }
 

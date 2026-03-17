@@ -272,31 +272,37 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   Verifies that Sleep(Duration) completes when virtual time is advanced by the sleep duration (deterministic).
     /// </summary>
     [Fact]
-    public void Sleep_Duration_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
+    public async Task Sleep_Duration_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         bool sleepCompleted = false;
-        using ManualResetEventSlim sleepRegistered = new(false);
-
-        Task sleepTask = Task.Run(() =>
+        ManualResetEventSlim sleepRegistered = new(false);
+        try
         {
-            sleepRegistered.Set();
-            clock.Sleep(Duration.FromSeconds(5));
-            sleepCompleted = true;
-        });
+            Task sleepTask = Task.Run(() =>
+            {
+                sleepRegistered.Set();
+                clock.Sleep(Duration.FromSeconds(5));
+                sleepCompleted = true;
+            }, TestContext.Current.CancellationToken);
 
-        sleepRegistered.Wait(SleepTestRealTimeTimeout.ToTimeSpan()).Should().BeTrue(
-            "sleep task should register before advance");
-        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-        while (!sleepCompleted && sw.Elapsed < SleepTestRealTimeTimeout.ToTimeSpan())
-        {
-            clock.Advance(Duration.FromSeconds(5));
-            Thread.Sleep(0);
-        }
+            sleepRegistered.Wait(SleepTestRealTimeTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue(
+                "sleep task should register before advance");
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+            while (!sleepCompleted && sw.Elapsed < SleepTestRealTimeTimeout.ToTimeSpan())
+            {
+                clock.Advance(Duration.FromSeconds(5));
+                Thread.Sleep(0);
+            }
         sleepCompleted.Should().BeTrue(
             "sleep should have completed within the real-time timeout so that virtual advance could complete the delay");
-        sleepTask.Wait(SleepTestRealTimeTimeout.ToTimeSpan()).Should().BeTrue();
+        await sleepTask;
+        }
+        finally
+        {
+            sleepRegistered.Dispose();
+        }
     }
 
     /// <summary>
@@ -318,16 +324,38 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   Verifies that DelayAsync(Duration) completes when virtual time is advanced by the delay duration.
     /// </summary>
     [Fact]
-    public void DelayAsync_Duration_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
+    public async Task DelayAsync_Duration_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        Task delayTask = clock.DelayAsync(Duration.FromSeconds(3));
+        Task delayTask = clock.DelayAsync(Duration.FromSeconds(3), TestContext.Current.CancellationToken);
 
         delayTask.IsCompleted.Should().BeFalse();
         clock.Advance(Duration.FromSeconds(3));
-        delayTask.Wait(TimeSpan.FromSeconds(1)).Should().BeTrue();
+        await delayTask;
         delayTask.Status.Should().Be(TaskStatus.RanToCompletion);
+    }
+
+    /// <summary>
+    ///   Verifies that DelayAsync(Duration, CancellationToken) throws
+    ///   <see cref="OperationCanceledException"/> when the cancellation token is triggered during the delay.
+    /// </summary>
+    [Fact]
+    public async Task DelayAsync_Duration_WhenTokenCancelledDuringDelay_ThrowsOperationCanceledException ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using CancellationTokenSource cts = new();
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+            cts.Token, TestContext.Current.CancellationToken);
+        CancellationToken linked = linkedCts.Token;
+#pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
+        Task delayTask = clock.DelayAsync(Duration.FromSeconds(10), linked);
+#pragma warning restore xUnit1051
+        delayTask.IsCompleted.Should().BeFalse();
+        cts.Cancel();
+        Func<Task> act = async () => await delayTask;
+        await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
     #endregion DelayAsync (Duration) driven by virtual time
@@ -366,7 +394,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         using (IPrimeClockTimerRegistration registration = clock.RegisterTimer(
             Duration.FromSeconds(2),
             () => fireCount++,
-            false))
+            false,
+            cancellationToken: TestContext.Current.CancellationToken))
         {
             fireCount.Should().Be(0);
             clock.Advance(Duration.FromSeconds(1));
@@ -390,7 +419,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         using (IPrimeClockTimerRegistration registration = clock.RegisterTimer(
             Duration.FromSeconds(1),
             () => fireCount++,
-            repeat: true))
+            repeat: true,
+            cancellationToken: TestContext.Current.CancellationToken))
         {
             clock.Advance(Duration.FromSeconds(1));
             fireCount.Should().Be(1);
@@ -416,7 +446,10 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int fireCount = 0;
         LocalTime twoAm = new LocalTime(2, 0, 0);
-        using (IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(twoAm, () => fireCount++))
+        using (IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(
+            twoAm,
+            () => fireCount++,
+            cancellationToken: TestContext.Current.CancellationToken))
         {
             clock.Advance(Duration.FromHours(1));
             fireCount.Should().Be(0);
