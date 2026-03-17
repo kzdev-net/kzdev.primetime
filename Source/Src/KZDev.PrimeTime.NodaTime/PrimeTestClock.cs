@@ -29,10 +29,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
     private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
 
-    /// <summary>
-    ///   Occurs when the clock's current time has changed.
-    /// </summary>
-    public event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
@@ -72,6 +69,13 @@ public sealed class PrimeTestClock : IPrimeTestClock
         _now = initialInstant;
         _zone = zone ?? throw new ArgumentNullException(nameof(zone));
     }
+
+    #endregion Constructors/Finalizers
+
+    /// <summary>
+    ///   Occurs when the clock's current time has changed.
+    /// </summary>
+    public event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
 
     private static DateTimeZone GetSystemDefaultTimeZone ()
     {

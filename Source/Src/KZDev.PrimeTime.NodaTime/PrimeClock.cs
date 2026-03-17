@@ -15,6 +15,7 @@ internal sealed class PrimeClock : IPrimeClock
 {
     private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
     private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
+    private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
     private readonly IClock _clock;
     private readonly DateTimeZone _systemDefaultZone;
@@ -291,8 +292,6 @@ internal sealed class PrimeClock : IPrimeClock
     #endregion IPrimeTime Implementation
 
     #region IPrimeClock — Interval timers (RegisterTimer)
-
-    private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,

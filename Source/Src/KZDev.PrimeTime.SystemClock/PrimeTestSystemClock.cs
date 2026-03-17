@@ -28,10 +28,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
     private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
 #endif
 
-    /// <summary>
-    ///   Occurs when the clock's current time has changed.
-    /// </summary>
-    public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeTestSystemClock"/> class
@@ -53,6 +50,13 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
     {
         _utcNow = initialUtcTime;
     }
+
+    #endregion Constructors/Finalizers
+
+    /// <summary>
+    ///   Occurs when the clock's current time has changed.
+    /// </summary>
+    public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
 
     #region IPrimeTestSystemClock Implementation
 
