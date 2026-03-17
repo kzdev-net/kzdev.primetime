@@ -1,8 +1,8 @@
 #if NET
 
-namespace KZDev.PrimeTime
-{
-    /// <summary>
+namespace KZDev.PrimeTime;
+
+/// <summary>
     ///   Implementation of <see cref="IClockDayTimeTimer"/> used by <see cref="PrimeSystemClock"/>.
     /// </summary>
     internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
@@ -468,6 +468,4 @@ namespace KZDev.PrimeTime
 
         #endregion IRegisteredTimer Implementation
     }
-}
-
 #endif

@@ -5,30 +5,29 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KZDev.PrimeTime
+namespace KZDev.PrimeTime;
+
+/// <summary>
+///   Extension methods for adding PrimeTime system clock services to an
+///   <see cref="IServiceCollection"/>.
+/// </summary>
+public static class PrimeSystemClockServiceCollectionExtensions
 {
     /// <summary>
-    ///   Extension methods for adding PrimeTime system clock services to an
-    ///   <see cref="IServiceCollection"/>.
+    ///   Adds the default <see cref="IPrimeSystemClock"/> implementation
+    ///   (<see cref="PrimeSystemClock"/>) as a singleton in the service collection.
     /// </summary>
-    public static class PrimeSystemClockServiceCollectionExtensions
-    {
-        /// <summary>
-        ///   Adds the default <see cref="IPrimeSystemClock"/> implementation
-        ///   (<see cref="PrimeSystemClock"/>) as a singleton in the service collection.
-        /// </summary>
-        /// <param name="services">
-        ///   The <see cref="IServiceCollection"/> to add the service to.
-        /// </param>
-        /// <returns>
-        ///   The <see cref="IServiceCollection"/> for chaining further registrations.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="services"/> is <c>null</c>.
-        /// </exception>
-        public static IServiceCollection AddPrimeSystemClock (this IServiceCollection services) =>
-            services is null ?
-                throw new ArgumentNullException(nameof(services)) :
-                services.AddSingleton<IPrimeSystemClock, PrimeSystemClock>();
-    }
+    /// <param name="services">
+    ///   The <see cref="IServiceCollection"/> to add the service to.
+    /// </param>
+    /// <returns>
+    ///   The <see cref="IServiceCollection"/> for chaining further registrations.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="services"/> is <c>null</c>.
+    /// </exception>
+    public static IServiceCollection AddPrimeSystemClock (this IServiceCollection services) =>
+        services is null ?
+            throw new ArgumentNullException(nameof(services)) :
+            services.AddSingleton<IPrimeSystemClock, PrimeSystemClock>();
 }

@@ -1,8 +1,8 @@
 #if NET
 
-namespace KZDev.PrimeTime
-{
-    //################################################################################
+namespace KZDev.PrimeTime;
+
+//################################################################################
     /// <summary>
     ///   Registration for a time-of-day timer created on an <see cref="IPrimeSystemClock"/>,
     ///   supporting change of the target time of day.
@@ -33,7 +33,6 @@ namespace KZDev.PrimeTime
         bool Change (UtcTimeOfDay newTimeOfDay);
         //--------------------------------------------------------------------------------
     }
-    //################################################################################
-}
+//################################################################################
 
 #endif

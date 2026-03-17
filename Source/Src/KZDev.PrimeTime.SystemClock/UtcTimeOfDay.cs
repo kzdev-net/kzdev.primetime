@@ -1,8 +1,8 @@
 #if NET
 
-namespace KZDev.PrimeTime
-{
-    //################################################################################
+namespace KZDev.PrimeTime;
+
+//################################################################################
     /// <summary>
     ///   Represents a time of day in UTC, as a <see cref="TimeOnly"/> wrapper with semantic
     ///   meaning for use in day-time timers and scheduling.
@@ -68,7 +68,6 @@ namespace KZDev.PrimeTime
 
         #endregion Operators
     }
-    //################################################################################
-}
+//################################################################################
 
 #endif

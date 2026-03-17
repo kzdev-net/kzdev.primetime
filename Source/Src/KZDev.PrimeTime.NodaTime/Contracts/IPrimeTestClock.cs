@@ -1,96 +1,95 @@
 using NodaTime;
 
-namespace KZDev.PrimeTime
+namespace KZDev.PrimeTime;
+
+//################################################################################
+/// <summary>
+///   Extends <see cref="IPrimeTestTime"/> and <see cref="IPrimeClock"/> with
+///   test-controllable time: set current instant or local time, advance by a duration,
+///   run for a duration, and start/stop automatic advancement with an optional rate.
+///   All "now" values, delays, time-based cancellation, and timers are driven by this
+///   virtual time so tests are deterministic.
+/// </summary>
+public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
-    //################################################################################
+    //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Extends <see cref="IPrimeTestTime"/> and <see cref="IPrimeClock"/> with
-    ///   test-controllable time: set current instant or local time, advance by a duration,
-    ///   run for a duration, and start/stop automatic advancement with an optional rate.
-    ///   All "now" values, delays, time-based cancellation, and timers are driven by this
-    ///   virtual time so tests are deterministic.
+    ///   Occurs when the clock's current time has changed (e.g. after
+    ///   <see cref="SetInstant"/>, <see cref="SetTime"/>, <see cref="SetLocalTime"/>,
+    ///   <see cref="Advance"/>, <see cref="RunFor"/>, or automatic advancement from
+    ///   <see cref="Start"/>).
     /// </summary>
-    public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
-    {
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Occurs when the clock's current time has changed (e.g. after
-        ///   <see cref="SetInstant"/>, <see cref="SetTime"/>, <see cref="SetLocalTime"/>,
-        ///   <see cref="Advance"/>, <see cref="RunFor"/>, or automatic advancement from
-        ///   <see cref="Start"/>).
-        /// </summary>
-        event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Sets the current instant (UTC) of the clock to the specified value. When the
-        ///   clock is not running, this is the instant returned by <see cref="IPrimeClock.Instant"/>
-        ///   and related members.
-        /// </summary>
-        /// <param name="instant">
-        ///   The new current instant on the global timeline.
-        /// </param>
-        void SetInstant (Instant instant);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Sets the current UTC time of the clock to the specified BCL value. Equivalent
-        ///   to <see cref="SetInstant"/> with the instant corresponding to
-        ///   <paramref name="utcTime"/>.
-        /// </summary>
-        /// <param name="utcTime">
-        ///   The new current UTC time.
-        /// </param>
-        void SetTime (DateTimeOffset utcTime);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Sets the current time of the clock to the specified local date and time,
-        ///   interpreted in the clock's default (local) time zone.
-        /// </summary>
-        /// <param name="localDateTime">
-        ///   The new current local date and time.
-        /// </param>
-        void SetLocalTime (LocalDateTime localDateTime);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Advances the clock's virtual time by the specified duration. Pending delays
-        ///   (Sleep, DelayAsync) that are due by the new time complete, time-based
-        ///   cancellation tokens that expire by the new time are cancelled, and any
-        ///   interval or day-time timers that are due are invoked.
-        /// </summary>
-        /// <param name="duration">
-        ///   The amount of virtual time to add to the current instant.
-        /// </param>
-        void Advance (Duration duration);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Advances the clock's virtual time by the specified duration, processing all
-        ///   due delays, time cancellations, and timer callbacks. Equivalent to
-        ///   <see cref="Advance"/> for a single step of the given duration.
-        /// </summary>
-        /// <param name="duration">
-        ///   The amount of virtual time to advance.
-        /// </param>
-        void RunFor (Duration duration);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Starts automatic advancement of virtual time at the given rate (e.g. 1 second
-        ///   of real time = <paramref name="rate"/> of virtual time). When the clock is
-        ///   running, <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>.
-        /// </summary>
-        /// <param name="rate">
-        ///   The amount of virtual time that elapses per real second, or <c>null</c> to
-        ///   use 1 second of virtual time per real second.
-        /// </param>
-        void Start (Duration? rate = null);
-        //--------------------------------------------------------------------------------
-        /// <summary>
-        ///   Stops automatic advancement of virtual time.
-        /// </summary>
-        /// <returns>
-        ///   <c>true</c> if the clock was running and is now stopped; <c>false</c> if
-        ///   the clock was not running.
-        /// </returns>
-        bool Stop ();
-        //--------------------------------------------------------------------------------
-    }
-    //################################################################################
+    event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Sets the current instant (UTC) of the clock to the specified value. When the
+    ///   clock is not running, this is the instant returned by <see cref="IPrimeClock.Instant"/>
+    ///   and related members.
+    /// </summary>
+    /// <param name="instant">
+    ///   The new current instant on the global timeline.
+    /// </param>
+    void SetInstant (Instant instant);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Sets the current UTC time of the clock to the specified BCL value. Equivalent
+    ///   to <see cref="SetInstant"/> with the instant corresponding to
+    ///   <paramref name="utcTime"/>.
+    /// </summary>
+    /// <param name="utcTime">
+    ///   The new current UTC time.
+    /// </param>
+    void SetTime (DateTimeOffset utcTime);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Sets the current time of the clock to the specified local date and time,
+    ///   interpreted in the clock's default (local) time zone.
+    /// </summary>
+    /// <param name="localDateTime">
+    ///   The new current local date and time.
+    /// </param>
+    void SetLocalTime (LocalDateTime localDateTime);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Advances the clock's virtual time by the specified duration. Pending delays
+    ///   (Sleep, DelayAsync) that are due by the new time complete, time-based
+    ///   cancellation tokens that expire by the new time are cancelled, and any
+    ///   interval or day-time timers that are due are invoked.
+    /// </summary>
+    /// <param name="duration">
+    ///   The amount of virtual time to add to the current instant.
+    /// </param>
+    void Advance (Duration duration);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Advances the clock's virtual time by the specified duration, processing all
+    ///   due delays, time cancellations, and timer callbacks. Equivalent to
+    ///   <see cref="Advance"/> for a single step of the given duration.
+    /// </summary>
+    /// <param name="duration">
+    ///   The amount of virtual time to advance.
+    /// </param>
+    void RunFor (Duration duration);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Starts automatic advancement of virtual time at the given rate (e.g. 1 second
+    ///   of real time = <paramref name="rate"/> of virtual time). When the clock is
+    ///   running, <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>.
+    /// </summary>
+    /// <param name="rate">
+    ///   The amount of virtual time that elapses per real second, or <c>null</c> to
+    ///   use 1 second of virtual time per real second.
+    /// </param>
+    void Start (Duration? rate = null);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Stops automatic advancement of virtual time.
+    /// </summary>
+    /// <returns>
+    ///   <c>true</c> if the clock was running and is now stopped; <c>false</c> if
+    ///   the clock was not running.
+    /// </returns>
+    bool Stop ();
+    //--------------------------------------------------------------------------------
 }
+//################################################################################
