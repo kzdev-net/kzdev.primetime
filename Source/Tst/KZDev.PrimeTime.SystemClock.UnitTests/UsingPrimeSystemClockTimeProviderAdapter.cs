@@ -117,14 +117,12 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
-        using (ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan))
-        {
-            fired.Should().Be(0);
-            clock.Advance(TimeSpan.FromMinutes(5));
-            fired.Should().Be(0);
-            clock.Advance(TimeSpan.FromMinutes(10));
-            fired.Should().Be(1);
-        }
+        using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
+        fired.Should().Be(0);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        fired.Should().Be(0);
+        clock.Advance(TimeSpan.FromMinutes(10));
+        fired.Should().Be(1);
     }
 
     /// <summary>
@@ -138,15 +136,13 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
-        using (ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5)))
-        {
-            clock.Advance(TimeSpan.FromMinutes(5));
-            fired.Should().Be(1);
-            clock.Advance(TimeSpan.FromMinutes(5));
-            fired.Should().Be(2);
-            clock.Advance(TimeSpan.FromMinutes(5));
-            fired.Should().Be(3);
-        }
+        using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        clock.Advance(TimeSpan.FromMinutes(5));
+        fired.Should().Be(1);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        fired.Should().Be(2);
+        clock.Advance(TimeSpan.FromMinutes(5));
+        fired.Should().Be(3);
     }
 
     #endregion CreateTimer driven by test clock

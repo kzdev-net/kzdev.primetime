@@ -1,5 +1,7 @@
 #if NET
 
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 /// <summary>
@@ -106,13 +108,13 @@ namespace KZDev.PrimeTime;
         #endregion Constructors/Finalizers
 
         /// <inheritdoc />
-        public int Id { get; }
+        public int Id { [DebuggerStepThrough] get; }
         /// <inheritdoc />
-        public DateTimeOffset RegisteredTime { get; }
+        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
         /// <inheritdoc />
         public bool IsTimeOfDay => true;
         /// <inheritdoc />
-        public bool IsLocalTimeRepresentation { get; }
+        public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
         /// <inheritdoc />
         public bool IsRepeating => true;
         /// <inheritdoc />
@@ -127,11 +129,11 @@ namespace KZDev.PrimeTime;
         /// <inheritdoc />
         public bool CallbacksProcessing => _callbacksRunning > 0;
         /// <inheritdoc />
-        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
+        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
         /// <inheritdoc />
-        public SkippedTimeBehavior SkippedTimeBehavior { get; }
+        public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
         /// <inheritdoc />
-        public DuplicateTimeBehavior DuplicateTimeBehavior { get; }
+        public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
         /// <inheritdoc />
         public bool Enabled
         {

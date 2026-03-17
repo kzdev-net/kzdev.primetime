@@ -370,12 +370,10 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        using (TimeCancellationTokenSource tcs = clock.GetTimeCancellationToken(Duration.FromSeconds(2)))
-        {
-            tcs.IsCancellationRequested.Should().BeFalse();
-            clock.Advance(Duration.FromSeconds(2));
-            tcs.IsCancellationRequested.Should().BeTrue();
-        }
+        using TimeCancellationTokenSource tcs = clock.GetTimeCancellationToken(Duration.FromSeconds(2));
+        tcs.IsCancellationRequested.Should().BeFalse();
+        clock.Advance(Duration.FromSeconds(2));
+        tcs.IsCancellationRequested.Should().BeTrue();
     }
 
     #endregion Time cancellation (Duration) driven by virtual time
@@ -391,20 +389,18 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using (IPrimeClockTimerRegistration registration = clock.RegisterTimer(
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(
             Duration.FromSeconds(2),
             () => fireCount++,
             false,
-            cancellationToken: TestContext.Current.CancellationToken))
-        {
-            fireCount.Should().Be(0);
-            clock.Advance(Duration.FromSeconds(1));
-            fireCount.Should().Be(0);
-            clock.Advance(Duration.FromSeconds(1));
-            fireCount.Should().Be(1);
-            clock.Advance(Duration.FromSeconds(10));
-            fireCount.Should().Be(1);
-        }
+            cancellationToken: TestContext.Current.CancellationToken);
+        fireCount.Should().Be(0);
+        clock.Advance(Duration.FromSeconds(1));
+        fireCount.Should().Be(0);
+        clock.Advance(Duration.FromSeconds(1));
+        fireCount.Should().Be(1);
+        clock.Advance(Duration.FromSeconds(10));
+        fireCount.Should().Be(1);
     }
 
     /// <summary>
@@ -416,19 +412,17 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using (IPrimeClockTimerRegistration registration = clock.RegisterTimer(
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(
             Duration.FromSeconds(1),
             () => fireCount++,
             repeat: true,
-            cancellationToken: TestContext.Current.CancellationToken))
-        {
-            clock.Advance(Duration.FromSeconds(1));
-            fireCount.Should().Be(1);
-            clock.Advance(Duration.FromSeconds(1));
-            fireCount.Should().Be(2);
-            clock.Advance(Duration.FromSeconds(2));
-            fireCount.Should().Be(4);
-        }
+            cancellationToken: TestContext.Current.CancellationToken);
+        clock.Advance(Duration.FromSeconds(1));
+        fireCount.Should().Be(1);
+        clock.Advance(Duration.FromSeconds(1));
+        fireCount.Should().Be(2);
+        clock.Advance(Duration.FromSeconds(2));
+        fireCount.Should().Be(4);
     }
 
     #endregion Interval timer driven by virtual time
@@ -446,16 +440,14 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int fireCount = 0;
         LocalTime twoAm = new LocalTime(2, 0, 0);
-        using (IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(
             twoAm,
             () => fireCount++,
-            cancellationToken: TestContext.Current.CancellationToken))
-        {
-            clock.Advance(Duration.FromHours(1));
-            fireCount.Should().Be(0);
-            clock.Advance(Duration.FromHours(1));
-            fireCount.Should().Be(1);
-        }
+            cancellationToken: TestContext.Current.CancellationToken);
+        clock.Advance(Duration.FromHours(1));
+        fireCount.Should().Be(0);
+        clock.Advance(Duration.FromHours(1));
+        fireCount.Should().Be(1);
     }
 
     #endregion Day-time timer driven by virtual time

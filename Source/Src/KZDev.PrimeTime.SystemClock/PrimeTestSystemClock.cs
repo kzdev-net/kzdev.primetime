@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace KZDev.PrimeTime;
@@ -920,8 +921,8 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private sealed class PendingDelay
     {
-        public DateTimeOffset DueUtc { get; }
-        public TaskCompletionSource<bool> TaskCompletionSource { get; }
+        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
+        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
 
         public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> tcs, CancellationToken? cancellationToken)
         {
@@ -937,7 +938,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private sealed class TimeExpiryEntry
     {
-        public DateTimeOffset ExpireUtc { get; }
+        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
         private readonly TimeCancellationTokenSource _wrapper;
 
         public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
@@ -1024,8 +1025,8 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
             }
         }
 
-        public int Id { get; }
-        public DateTimeOffset RegisteredTime { get; }
+        public int Id { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
         public bool IsTimeOfDay => false;
         public bool IsRepeating => RepeatInterval != Timeout.InfiniteTimeSpan && RepeatInterval > TimeSpan.Zero;
         public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
@@ -1409,8 +1410,8 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
         private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
-        public int Id { get; }
-        public DateTimeOffset RegisteredTime { get; }
+        public int Id { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
         public bool IsTimeOfDay => true;
         public bool IsLocalTimeRepresentation => IsLocal;
         public bool IsRepeating => true;
@@ -1418,9 +1419,9 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         public bool IsActive =>
             State != TimerState.Cancelled && State != TimerState.Disposed && _enabledDayTime;
         public bool CallbacksProcessing => CallbacksRunning > 0;
-        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
-        public SkippedTimeBehavior SkippedTimeBehavior { get; }
-        public DuplicateTimeBehavior DuplicateTimeBehavior { get; }
+        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
+        public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
+        public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
 
         public bool Enabled
         {

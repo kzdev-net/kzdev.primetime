@@ -1,9 +1,12 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
 /// The timer options for setting up callback timers.
 /// </summary>
+[DebuggerStepThrough]
 public abstract record TimerOptions
 {
     //--------------------------------------------------------------------------------

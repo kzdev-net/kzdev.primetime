@@ -1,5 +1,7 @@
 #if NET
 
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
@@ -32,7 +34,7 @@ namespace KZDev.PrimeTime;
         /// <summary>
         ///   Gets the underlying <see cref="TimeOnly"/> value.
         /// </summary>
-        public TimeOnly Value => _value;
+        public TimeOnly Value { [DebuggerStepThrough] get => _value; }
 
         #region Overrides
 

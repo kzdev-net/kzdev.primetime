@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 /// <summary>
@@ -134,16 +136,16 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     #endregion Constructors/Finalizers
 
     /// <inheritdoc />
-    public int Id { get; }
+    public int Id { [DebuggerStepThrough] get; }
     /// <inheritdoc />
-    public DateTimeOffset RegisteredTime { get; }
+    public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsTimeOfDay => false;
     /// <inheritdoc />
-    public bool IsResetAfterCallback { get; }
+    public bool IsResetAfterCallback { [DebuggerStepThrough] get; }
     /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { get; }
+    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsRepeating => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;

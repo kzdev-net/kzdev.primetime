@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -118,19 +119,19 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
     #endregion Constructors/Finalizers
 
     /// <inheritdoc />
-    public int Id { get; }
+    public int Id { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
-    public Instant RegisteredInstant { get; }
+    public Instant RegisteredInstant { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsTimeOfDay => false;
 
     /// <inheritdoc />
-    public bool IsResetAfterCallback { get; }
+    public bool IsResetAfterCallback { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { get; }
+    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsRepeating =>

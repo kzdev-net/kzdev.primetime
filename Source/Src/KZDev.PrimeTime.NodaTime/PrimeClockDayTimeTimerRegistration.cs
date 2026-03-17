@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -84,10 +85,10 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
     #endregion Constructors/Finalizers
 
     /// <inheritdoc />
-    public int Id { get; }
+    public int Id { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
-    public Instant RegisteredInstant { get; }
+    public Instant RegisteredInstant { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsTimeOfDay => true;
@@ -96,7 +97,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
     public bool IsResetAfterCallback => false;
 
     /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { get; }
+    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool IsRepeating => true;
@@ -117,13 +118,13 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
     public bool CallbacksProcessing => _callbacksRunning > 0;
 
     /// <inheritdoc />
-    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
+    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
-    public SkippedTimeBehavior SkippedTimeBehavior { get; }
+    public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
-    public DuplicateTimeBehavior DuplicateTimeBehavior { get; }
+    public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
 
     /// <inheritdoc />
     public bool Enabled

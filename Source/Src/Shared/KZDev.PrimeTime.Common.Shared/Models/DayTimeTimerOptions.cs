@@ -1,9 +1,12 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
 /// Timer options for setting up time-of-day callback timers.
 /// </summary>
+[DebuggerStepThrough]
 public record DayTimeTimerOptions : TimerOptions
 {
     //--------------------------------------------------------------------------------

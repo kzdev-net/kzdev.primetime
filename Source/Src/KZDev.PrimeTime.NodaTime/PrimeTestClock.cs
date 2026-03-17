@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NodaTime;
 using NodaTime.TimeZones;
@@ -917,8 +918,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private sealed class PendingDelay
     {
-        public Instant DueInstant { get; }
-        public TaskCompletionSource<bool> TaskCompletionSource { get; }
+        public Instant DueInstant { [DebuggerStepThrough] get; }
+        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
 
         public PendingDelay (
             Instant dueInstant,
@@ -937,7 +938,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private sealed class TimeExpiryEntry
     {
-        public Instant ExpireInstant { get; }
+        public Instant ExpireInstant { [DebuggerStepThrough] get; }
         private readonly TimeCancellationTokenSource _wrapper;
 
         public TimeExpiryEntry (
@@ -1026,8 +1027,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        public int Id { get; }
-        public Instant RegisteredInstant { get; }
+        public int Id { [DebuggerStepThrough] get; }
+        public Instant RegisteredInstant { [DebuggerStepThrough] get; }
         public bool IsTimeOfDay => false;
         public bool IsRepeating =>
             RepeatInterval > Duration.Zero && RepeatInterval != NoRepeatSentinel;
@@ -1411,19 +1412,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        public int Id { get; }
-        public Instant RegisteredInstant { get; }
+        public int Id { [DebuggerStepThrough] get; }
+        public Instant RegisteredInstant { [DebuggerStepThrough] get; }
         public bool IsTimeOfDay => true;
         public bool IsResetAfterCallback => false;
-        public bool IsLocalTimeRepresentation { get; }
+        public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
         public bool IsRepeating => true;
         public bool IsCancelled => State == TimerState.Cancelled;
         public bool IsActive =>
             State != TimerState.Cancelled && State != TimerState.Disposed && _enabledDayTime;
         public bool CallbacksProcessing => CallbacksRunning > 0;
-        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
-        public SkippedTimeBehavior SkippedTimeBehavior { get; }
-        public DuplicateTimeBehavior DuplicateTimeBehavior { get; }
+        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
+        public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
+        public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
 
         public bool Enabled
         {

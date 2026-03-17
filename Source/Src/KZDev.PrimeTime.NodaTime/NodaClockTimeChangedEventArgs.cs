@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -6,6 +7,7 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Provides data for the <see cref="IPrimeTestClock.ClockEvents"/> event.
 /// </summary>
+[DebuggerStepThrough]
 public sealed class NodaClockTimeChangedEventArgs : EventArgs
 {
     #region Constructors/Finalizers
