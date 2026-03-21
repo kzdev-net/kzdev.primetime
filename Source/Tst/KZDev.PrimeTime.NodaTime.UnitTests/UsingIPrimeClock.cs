@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
+using AwesomeAssertions.Specialized;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
 using NodaTime.Testing;
@@ -421,15 +422,19 @@ public class UsingIPrimeClock : UnitTestBase
 #pragma warning disable xUnit1051 // xUnit1051 warns if TestContext.Current.CancellationToken is not passed directly, but it is already included in the linked token used here.
         Task delayTask = clock.DelayAsync(Duration.FromSeconds(10), linked);
 #pragma warning restore xUnit1051
+#if NET
+        await cts.CancelAsync();
+#else
         cts.Cancel();
+#endif
         Func<Task> act = async () => await delayTask;
-        var throwAssertion = await act.Should().ThrowAsync<OperationCanceledException>();
+        ExceptionAssertions<OperationCanceledException>? throwAssertion = await act.Should().ThrowAsync<OperationCanceledException>();
 #if NET5_0_OR_GREATER
         throwAssertion.Which.CancellationToken.Should().Be(linked);
 #endif
     }
 
-    #endregion DelayAsync (IPrimeTime and Duration)
+#endregion DelayAsync (IPrimeTime and Duration)
 
     #region GetTimeCancellationToken (Duration)
 

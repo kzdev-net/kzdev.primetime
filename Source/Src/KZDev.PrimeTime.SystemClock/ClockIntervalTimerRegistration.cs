@@ -1,3 +1,6 @@
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
+
 using System.Diagnostics;
 
 namespace KZDev.PrimeTime;
@@ -44,7 +47,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     private readonly Delegate _callback;
     private readonly object? _callbackState;
     private readonly CancellationToken _cancellationToken;
-    private readonly CancellationTokenRegistration _cancelRegistration;
+    private CancellationTokenRegistration _cancelRegistration;
 #if NET10_OR_GREATER
     private readonly Lock _gate = new();
 #else
