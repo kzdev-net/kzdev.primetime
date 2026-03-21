@@ -244,8 +244,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
                 sleepCompleted = true;
             }, TestContext.Current.CancellationToken);
 
-            sleepRegistered.Wait(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken).Should().BeTrue(
-                "sleep task should register before advance");
+            sleepRegistered.Wait(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken).Should().BeTrue("sleep task should register before advance");
             // Advance virtual time until the sleep completes (task may register late under parallel load). Poll with
             // yields so the task gets CPU; cap real time to avoid hanging.
             System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
@@ -254,9 +253,8 @@ public class UsingPrimeTestSystemClock : UnitTestBase
                 clock.Advance(TimeSpan.FromSeconds(5));
                 Thread.Sleep(0);
             }
-        sleepCompleted.Should().BeTrue(
-            "sleep should have completed within the real-time timeout so that virtual advance could complete the delay");
-        await sleepTask;
+            sleepCompleted.Should().BeTrue("sleep should have completed within the real-time timeout so that virtual advance could complete the delay");
+            await sleepTask;
         }
         finally
         {
@@ -305,8 +303,8 @@ public class UsingPrimeTestSystemClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         using CancellationTokenSource cts = new();
-        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, TestContext.Current.CancellationToken);
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
+            TestContext.Current.CancellationToken);
         CancellationToken linked = linkedCts.Token;
 #pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(10), linked);
@@ -348,11 +346,9 @@ public class UsingPrimeTestSystemClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         int fireCount = 0;
-        using IClockIntervalTimer registration = clock.RegisterTimer(
-            TimeSpan.FromSeconds(2),
+        using IClockIntervalTimer registration = clock.RegisterTimer(TimeSpan.FromSeconds(2),
             () => fireCount++,
-            false,
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken);
         fireCount.Should().Be(0);
         clock.Advance(TimeSpan.FromSeconds(1));
         fireCount.Should().Be(0);
@@ -371,11 +367,10 @@ public class UsingPrimeTestSystemClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         int fireCount = 0;
-        using IClockIntervalTimer registration = clock.RegisterTimer(
-            TimeSpan.FromSeconds(1),
+        using IClockIntervalTimer registration = clock.RegisterTimer(TimeSpan.FromSeconds(1),
             () => fireCount++,
-            repeat: true,
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken,
+            repeat: true);
         clock.Advance(TimeSpan.FromSeconds(1));
         fireCount.Should().Be(1);
         clock.Advance(TimeSpan.FromSeconds(1));
@@ -399,8 +394,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
         IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
         int fireCount = 0;
         UtcTimeOfDay twoAm = new(new TimeOnly(2, 0, 0));
-        using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(
-            twoAm,
+        using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(twoAm,
             () => fireCount++,
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Advance(TimeSpan.FromHours(1));

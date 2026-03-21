@@ -41,8 +41,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockDayTimeTimerRegistration"/> class.
     /// </summary>
-    internal PrimeClockDayTimeTimerRegistration (
-        IPrimeClock clock,
+    internal PrimeClockDayTimeTimerRegistration (IPrimeClock clock,
         LocalTime timeOfDay,
         PrimeClockIntervalTimerCallbackKind callbackKind,
         Delegate callback,
@@ -359,21 +358,18 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
                 InvokeSync(() => ((Action)_callback)());
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextAction:
-                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext>)_callback)(
-                    new PrimeClockTimerCallbackContext(this, _callbackState)));
+                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState)));
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
-                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext, CancellationToken>)_callback)(
-                    new PrimeClockTimerCallbackContext(this, _callbackState), _cancellationToken));
+                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext, CancellationToken>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                    _cancellationToken));
                 break;
             case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken));
+                RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken));
                 return;
             case PrimeClockIntervalTimerCallbackKind.ContextAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(
-                        new PrimeClockTimerCallbackContext(this, _callbackState), _cancellationToken));
+                RunAsyncAndScheduleAfter(() => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                    _cancellationToken));
                 return;
             default:
                 throw new InvalidOperationException($"Unsupported callback kind: {_callbackKind}");
@@ -388,8 +384,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
             ScheduleNextFromAsync();
             return;
         }
-        vt.AsTask().ContinueWith(
-            (_, state) =>
+        vt.AsTask().ContinueWith((_, state) =>
             {
                 ((PrimeClockDayTimeTimerRegistration)state!).ScheduleNextFromAsync();
             },

@@ -189,11 +189,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action callback,
+        CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
             IntervalTimerCallbackKind.SimpleAction,
@@ -205,12 +204,11 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
             IntervalTimerCallbackKind.ContextAction,
@@ -222,12 +220,11 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
             IntervalTimerCallbackKind.ContextActionWithToken,
@@ -239,11 +236,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
             IntervalTimerCallbackKind.SimpleAsync,
@@ -255,12 +251,11 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
             IntervalTimerCallbackKind.ContextAsync,
@@ -273,10 +268,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Action callback,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
             IntervalTimerCallbackKind.SimpleAction,
@@ -289,11 +283,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
             IntervalTimerCallbackKind.ContextAction,
@@ -306,11 +299,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
             IntervalTimerCallbackKind.ContextActionWithToken,
@@ -323,10 +315,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Func<CancellationToken, ValueTask> callback,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
             IntervalTimerCallbackKind.SimpleAsync,
@@ -339,11 +330,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockIntervalTimerRegistration(
-            this,
+        IntervalTimerOptions? timerOptions = null) =>
+        new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
             IntervalTimerCallbackKind.ContextAsync,
@@ -360,10 +350,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAction,
             callback,
@@ -374,11 +363,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAction,
             callback,
@@ -389,11 +377,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
@@ -404,10 +391,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<CancellationToken, ValueTask> callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
@@ -418,11 +404,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAsync,
             callback,
@@ -433,10 +418,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAction,
             callback,
@@ -447,11 +431,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAction,
             callback,
@@ -462,11 +445,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
@@ -477,10 +459,9 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<CancellationToken, ValueTask> callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
@@ -491,11 +472,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default) =>
-        new ClockDayTimeTimerRegistration(
-            this,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAsync,
             callback,

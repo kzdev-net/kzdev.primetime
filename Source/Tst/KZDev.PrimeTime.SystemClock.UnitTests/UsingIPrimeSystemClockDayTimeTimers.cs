@@ -85,13 +85,13 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+            TestContext.Current.CancellationToken,
             new DayTimeTimerOptions
             {
                 ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunConcurrently,
                 SkippedTimeBehavior = SkippedTimeBehavior.RunAfter,
                 DuplicateTimeBehavior = DuplicateTimeBehavior.RunFirst
-            },
-            cancellationToken: TestContext.Current.CancellationToken);
+            });
         timer.Id.Should().BeGreaterThan(0);
         timer.IsTimeOfDay.Should().BeTrue();
         timer.IsRepeating.Should().BeTrue();
@@ -168,12 +168,12 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
         object? receivedState = null;
         IClockTimer? receivedReg = null;
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, ctx =>
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, callbackContext =>
         {
-            receivedState = ctx.CallbackState;
-            receivedReg = ctx.Registration;
+            receivedState = callbackContext.CallbackState;
+            receivedReg = callbackContext.Registration;
             signal.Set();
-        }, state, cancellationToken: TestContext.Current.CancellationToken);
+        }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
@@ -304,7 +304,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
-            timerOptions: null, cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken, timerOptions: null);
         timer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);
         timer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);
         timer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunLast);

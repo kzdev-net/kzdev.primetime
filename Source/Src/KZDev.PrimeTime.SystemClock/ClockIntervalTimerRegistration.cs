@@ -92,8 +92,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     /// <param name="cancellationToken">
     ///   Token to cancel the registration.
     /// </param>
-    internal ClockIntervalTimerRegistration (
-        IPrimeSystemClock clock,
+    internal ClockIntervalTimerRegistration (IPrimeSystemClock clock,
         TimeSpan initialCallbackTime,
         TimeSpan repeatInterval,
         IntervalTimerCallbackKind callbackKind,
@@ -315,23 +314,20 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
                 InvokeSync(() => ((Action)_callback)());
                 break;
             case IntervalTimerCallbackKind.ContextAction:
-                InvokeSync(() => ((Action<ClockTimerCallbackContext>)_callback)(
-                    new ClockTimerCallbackContext(this, _callbackState)));
+                InvokeSync(() => ((Action<ClockTimerCallbackContext>)_callback)(new ClockTimerCallbackContext(this, _callbackState)));
                 break;
             case IntervalTimerCallbackKind.ContextActionWithToken:
-                InvokeSync(() => ((Action<ClockTimerCallbackContext, CancellationToken>)_callback)(
-                    new ClockTimerCallbackContext(this, _callbackState), _cancellationToken));
+                InvokeSync(() => ((Action<ClockTimerCallbackContext, CancellationToken>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
+                    _cancellationToken));
                 break;
             case IntervalTimerCallbackKind.SimpleAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
+                RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
                     resetAfter,
                     isRepeating);
                 return;
             case IntervalTimerCallbackKind.ContextAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(
-                        new ClockTimerCallbackContext(this, _callbackState), _cancellationToken),
+                RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
+                    _cancellationToken),
                     resetAfter,
                     isRepeating);
                 return;
@@ -350,8 +346,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             OnAsyncCallbackCompleted(resetAfter, isRepeating);
             return;
         }
-        vt.AsTask().ContinueWith(
-            (_, state) =>
+        vt.AsTask().ContinueWith((_, state) =>
             {
                 (ClockIntervalTimerRegistration reg, bool ra, bool rep) =
                     ((ClockIntervalTimerRegistration, bool, bool))state!;
@@ -410,8 +405,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             if (_disposed || _state == TimerState.Cancelled)
                 return false;
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
-                throw new InvalidOperationException(
-                    "Cannot change a non-repeating timer to a repeating timer.");
+                throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
             _initialCallbackTime = nextInterval;
             _repeatInterval = repeatInterval;
             if (_state == TimerState.Completed)

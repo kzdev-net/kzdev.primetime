@@ -1,10 +1,8 @@
-// Copyright (c) Kevin Zehrer
-// Licensed under the MIT License. See LICENSE file in the project root for full license information.
-//
-// Unit tests for IPrimeSystemClock interval timers (Phase 8). Uses real time; full determinism
-// comes with PrimeTestSystemClock (Phase 12).
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.SystemClock.UnitTests;
@@ -90,12 +88,12 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         object? receivedState = null;
         IClockTimer? receivedReg = null;
 
-        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, ctx =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, callbackContext =>
         {
-            receivedState = ctx.CallbackState;
-            receivedReg = ctx.Registration;
+            receivedState = callbackContext.CallbackState;
+            receivedReg = callbackContext.Registration;
             signal.Set();
-        }, state, cancellationToken: TestContext.Current.CancellationToken);
+        }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
@@ -115,7 +113,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         cts.Cancel();
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
-            timerOptions: null, cancellationToken: cts.Token);
+            cts.Token, timerOptions: null);
         signal.Wait(ShortDelay + CallbackSettle, TestContext.Current.CancellationToken).Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
         timer.IsCancelled.Should().BeTrue();
@@ -185,14 +183,14 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         List<DateTimeOffset> times = new();
 
-        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, ctx =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
         {
             times.Add(clock.UtcNow);
             count++;
             if (count >= 2)
                 signal.Set();
-        }, timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true },
-            cancellationToken: TestContext.Current.CancellationToken);
+        }, TestContext.Current.CancellationToken,
+            timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true });
         signal.Wait(WaitMargin + ShortDelay + RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(1);
         (times[1] - times[0]).Should().BeCloseTo(RepeatInterval, TimingTolerance);
@@ -376,12 +374,12 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
 
-        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay, (ctx, ct) =>
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay, (callbackContext, ct) =>
         {
-            receivedState = ctx.CallbackState;
+            receivedState = callbackContext.CallbackState;
             signal.Set();
             return default;
-        }, state, cancellationToken: TestContext.Current.CancellationToken);
+        }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
     }
@@ -399,8 +397,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         List<DateTimeOffset> callbackStarts = new();
         ManualResetEventSlim signal = new(false);
 
-        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(
-            ShortDelay,
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay,
             RepeatInterval,
             async (ct) =>
             {
@@ -409,8 +406,8 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
                 if (callbackStarts.Count >= 2)
                     signal.Set();
             },
-            timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true },
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken,
+            timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true });
         // Time until second callback: ShortDelay + first callback (asyncWork) + RepeatInterval; WaitMargin for timing tolerance.
         signal.Wait(ShortDelay + asyncWork + RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         callbackStarts.Count.Should().BeGreaterThan(1);
@@ -432,8 +429,8 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
-            timerOptions: new IntervalTimerOptions { CallbackExecutionContext = TimerCallbackExecutionContext.Unsafe },
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken,
+            timerOptions: new IntervalTimerOptions { CallbackExecutionContext = TimerCallbackExecutionContext.Unsafe });
         bool fired = signal.Wait(WaitMargin + ShortDelay + TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
         fired.Should().BeTrue("callback should fire within timeout when using Unsafe option");
         clock.Sleep(CallbackSettle);

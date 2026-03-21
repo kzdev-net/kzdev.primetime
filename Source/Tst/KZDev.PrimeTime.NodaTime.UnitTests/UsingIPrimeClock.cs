@@ -71,8 +71,7 @@ public class UsingIPrimeClock : UnitTestBase
     /// <param name="upperTolerance">
     ///   Optional allowed excess; if set, elapsed must be at most expected plus this value.
     /// </param>
-    private static void AssertElapsedTimeInRange (
-        Duration elapsed,
+    private static void AssertElapsedTimeInRange (Duration elapsed,
         Duration expected,
         Duration lowerTolerance,
         Duration? upperTolerance = null)
@@ -266,8 +265,7 @@ public class UsingIPrimeClock : UnitTestBase
         clock.Sleep(sleepDuration);
         Instant after = clock.Instant;
         Duration elapsed = after - before;
-        AssertElapsedTimeInRange(
-            elapsed,
+        AssertElapsedTimeInRange(elapsed,
             sleepDuration,
             Duration.FromMilliseconds(SleepTimingToleranceMilliseconds),
             Duration.FromMilliseconds(SleepUpperBoundToleranceMilliseconds));
@@ -318,8 +316,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant before = clock.Instant;
         clock.Sleep(sleepDuration);
         Instant after = clock.Instant;
-        AssertElapsedTimeInRange(
-            after - before,
+        AssertElapsedTimeInRange(after - before,
             sleepDuration,
             Duration.FromMilliseconds(SleepTimingToleranceMilliseconds));
     }
@@ -369,8 +366,7 @@ public class UsingIPrimeClock : UnitTestBase
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
         Instant after = clock.Instant;
         Duration elapsed = after - before;
-        AssertElapsedTimeInRange(
-            elapsed,
+        AssertElapsedTimeInRange(elapsed,
             delay,
             Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds),
             Duration.FromMilliseconds(DelayAsyncUpperBoundToleranceMilliseconds));
@@ -404,8 +400,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant before = clock.Instant;
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
         Instant after = clock.Instant;
-        AssertElapsedTimeInRange(
-            after - before,
+        AssertElapsedTimeInRange(after - before,
             delay,
             Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds));
     }
@@ -420,8 +415,8 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource cts = new();
-        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, TestContext.Current.CancellationToken);
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
+            TestContext.Current.CancellationToken);
         CancellationToken linked = linkedCts.Token;
 #pragma warning disable xUnit1051 // xUnit1051 warns if TestContext.Current.CancellationToken is not passed directly, but it is already included in the linked token used here.
         Task delayTask = clock.DelayAsync(Duration.FromSeconds(10), linked);
@@ -541,8 +536,7 @@ public class UsingIPrimeClock : UnitTestBase
         using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(Duration.FromMilliseconds(50), neverCancelled.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
-        await clock.DelayAsync(
-            Duration.FromMilliseconds(70), TestContext.Current.CancellationToken);
+        await clock.DelayAsync(Duration.FromMilliseconds(70), TestContext.Current.CancellationToken);
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
 

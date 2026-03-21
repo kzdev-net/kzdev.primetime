@@ -374,15 +374,15 @@ public sealed class PrimeTestClock : IPrimeTestClock
             return;
 
         Instant dueInstant;
-        TaskCompletionSource<bool> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
             dueInstant = _now + duration;
-            _pendingDelays.Add(new PendingDelay(dueInstant, tcs, null));
+            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
         }
 
-        tcs.Task.GetAwaiter().GetResult();
+        taskCompletionSource.Task.GetAwaiter().GetResult();
     }
 
     /// <inheritdoc />
@@ -398,35 +398,34 @@ public sealed class PrimeTestClock : IPrimeTestClock
             return Task.CompletedTask;
 
         Instant dueInstant;
-        TaskCompletionSource<bool> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
             dueInstant = _now + duration;
-            _pendingDelays.Add(new PendingDelay(dueInstant, tcs, cancellationToken));
+            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
         }
 
         if (cancellationToken.CanBeCanceled)
         {
-            CancellationTokenRegistration reg = cancellationToken.Register(() =>
+            CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
             {
                 lock (_gate)
                 {
-                    if (_pendingDelays.RemoveAll(p => p.TaskCompletionSource == tcs) > 0)
-                        tcs.TrySetCanceled(cancellationToken);
+                    if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
+                        taskCompletionSource.TrySetCanceled(cancellationToken);
                 }
             });
 
-            _ = tcs.Task.ContinueWith(
-                (_, r) => ((CancellationTokenRegistration)r!).Dispose(),
-                reg,
+            _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
+                cancellationRegistration,
                 CancellationToken.None,
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
-            return tcs.Task;
+            return taskCompletionSource.Task;
         }
 
-        return tcs.Task;
+        return taskCompletionSource.Task;
     }
 
     #endregion IPrimeClock Implementation — Delays (Duration)
@@ -449,8 +448,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        Duration cancelAfter, CancellationToken cancellationToken)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
     {
         CancellationTokenSource timeCts = new();
         CancellationTokenSource linked =
@@ -467,8 +465,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        Duration cancelAfter, CancellationToken token1, CancellationToken token2)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
+        CancellationToken token2)
     {
         CancellationTokenSource timeCts = new();
         CancellationTokenSource linked =
@@ -485,8 +483,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        Duration cancelAfter, params CancellationToken[] cancellationTokens)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
+        params CancellationToken[] cancellationTokens)
     {
         CancellationTokenSource timeCts = new();
         CancellationTokenSource linked =
@@ -515,43 +513,39 @@ public sealed class PrimeTestClock : IPrimeTestClock
         GetTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds));
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        TimeSpan cancelTime, CancellationToken cancellationToken) =>
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
         LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationToken);
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        int cancelMilliseconds, CancellationToken cancellationToken) =>
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
         LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationToken);
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        int cancelMilliseconds, CancellationToken token1, CancellationToken token2)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
+        CancellationToken token2)
     {
-        return LinkTimeCancellationToken(
-            Duration.FromMilliseconds(cancelMilliseconds), token1, token2);
+        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), token1, token2);
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        TimeSpan cancelTime, CancellationToken token1, CancellationToken token2)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
+        CancellationToken token2)
     {
         return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), token1, token2);
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        TimeSpan cancelTime, params CancellationToken[] cancellationTokens)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        params CancellationToken[] cancellationTokens)
     {
         return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationTokens);
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (
-        int cancelMilliseconds, params CancellationToken[] cancellationTokens)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        params CancellationToken[] cancellationTokens)
     {
-        return LinkTimeCancellationToken(
-            Duration.FromMilliseconds(cancelMilliseconds), cancellationTokens);
+        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationTokens);
     }
 
     #endregion IPrimeTime Implementation — Time cancellation (TimeSpan/int)
@@ -563,12 +557,11 @@ public sealed class PrimeTestClock : IPrimeTestClock
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Action callback,
+        CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
             PrimeClockIntervalTimerCallbackKind.SimpleAction,
@@ -577,20 +570,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
             PrimeClockIntervalTimerCallbackKind.ContextAction,
@@ -599,20 +591,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
             PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
@@ -621,19 +612,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
             PrimeClockIntervalTimerCallbackKind.SimpleAsync,
@@ -642,20 +632,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
             PrimeClockIntervalTimerCallbackKind.ContextAsync,
@@ -664,19 +653,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action callback,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
             PrimeClockIntervalTimerCallbackKind.SimpleAction,
@@ -685,20 +673,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
             PrimeClockIntervalTimerCallbackKind.ContextAction,
@@ -707,20 +694,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
             PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
@@ -729,19 +715,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<CancellationToken, ValueTask> callback,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
             PrimeClockIntervalTimerCallbackKind.SimpleAsync,
@@ -750,20 +735,19 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        IntervalTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        IntervalTimerOptions? timerOptions = null)
     {
-        VirtualIntervalTimerBase t = new VirtualIntervalTimer(
-            this,
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
             PrimeClockIntervalTimerCallbackKind.ContextAsync,
@@ -772,8 +756,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _intervalTimers.Add(t);
-        return t;
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
     }
 
     #endregion IPrimeClock Implementation — Interval timers
@@ -783,11 +767,10 @@ public sealed class PrimeTestClock : IPrimeTestClock
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
         Action callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(
-            this,
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
             PrimeClockIntervalTimerCallbackKind.SimpleAction,
             callback,
@@ -795,19 +778,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        DayTimeTimerOptions? timerOptions = null)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(
-            this,
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
             PrimeClockIntervalTimerCallbackKind.ContextAction,
             callback,
@@ -815,19 +797,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        DayTimeTimerOptions? timerOptions = null)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(
-            this,
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
             PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
             callback,
@@ -835,18 +816,17 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<CancellationToken, ValueTask> callback,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(
-            this,
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
             PrimeClockIntervalTimerCallbackKind.SimpleAsync,
             callback,
@@ -854,19 +834,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
     }
 
     /// <inheritdoc />
     public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
         object? state = null,
-        DayTimeTimerOptions? timerOptions = null,
-        CancellationToken cancellationToken = default)
+        DayTimeTimerOptions? timerOptions = null)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(
-            this,
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
             PrimeClockIntervalTimerCallbackKind.ContextAsync,
             callback,
@@ -874,8 +853,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
             timerOptions,
             cancellationToken);
         lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
     }
 
     #endregion IPrimeClock Implementation — Time-of-day timers
@@ -925,13 +904,11 @@ public sealed class PrimeTestClock : IPrimeTestClock
         public Instant DueInstant { [DebuggerStepThrough] get; }
         public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
 
-        public PendingDelay (
-            Instant dueInstant,
-            TaskCompletionSource<bool> tcs,
-            CancellationToken? cancellationToken)
+        public PendingDelay (Instant dueInstant,
+            TaskCompletionSource<bool> taskCompletionSource)
         {
             DueInstant = dueInstant;
-            TaskCompletionSource = tcs;
+            TaskCompletionSource = taskCompletionSource;
         }
 
         public void Complete ()
@@ -945,8 +922,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         public Instant ExpireInstant { [DebuggerStepThrough] get; }
         private readonly TimeCancellationTokenSource _wrapper;
 
-        public TimeExpiryEntry (
-            Instant expireInstant,
+        public TimeExpiryEntry (Instant expireInstant,
             TimeCancellationTokenSource wrapper,
             CancellationTokenSource? timeCts = null)
         {
@@ -995,8 +971,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         private readonly bool _isLocalTimeRepresentation;
         private readonly bool _resetAfterCallback;
 
-        protected VirtualIntervalTimerBase (
-            PrimeTestClock clock,
+        protected VirtualIntervalTimerBase (PrimeTestClock clock,
             Duration initialCallbackTime,
             Duration repeatInterval,
             PrimeClockIntervalTimerCallbackKind callbackKind,
@@ -1138,8 +1113,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 if (Disposed || State == TimerState.Cancelled)
                     return false;
                 if (!IsRepeating && repeatInterval > Duration.Zero && repeatInterval != NoRepeatSentinel)
-                    throw new InvalidOperationException(
-                        "Cannot change a non-repeating timer to a repeating timer.");
+                    throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
                 InitialCallbackTime = nextInterval;
                 RepeatInterval = repeatInterval;
                 if (State == TimerState.Completed)
@@ -1211,8 +1185,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
     {
-        public VirtualIntervalTimer (
-            PrimeTestClock clock,
+        public VirtualIntervalTimer (PrimeTestClock clock,
             Duration initialCallbackTime,
             Duration repeatInterval,
             PrimeClockIntervalTimerCallbackKind callbackKind,
@@ -1266,24 +1239,21 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     ((Action)Callback)();
                     break;
                 case PrimeClockIntervalTimerCallbackKind.ContextAction:
-                    ((Action<PrimeClockTimerCallbackContext>)Callback)(
-                        new PrimeClockTimerCallbackContext(this, CallbackState));
+                    ((Action<PrimeClockTimerCallbackContext>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState));
                     break;
                 case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
-                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)Callback)(
-                        new PrimeClockTimerCallbackContext(this, CallbackState), CancellationToken);
+                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken);
                     break;
                 case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
-                    RunAsyncAndScheduleAfter(
-                        () => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
+                    RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
                         resetAfter,
                         isRepeating,
                         now);
                     return;
                 case PrimeClockIntervalTimerCallbackKind.ContextAsync:
-                    RunAsyncAndScheduleAfter(
-                        () => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(
-                            new PrimeClockTimerCallbackContext(this, CallbackState), CancellationToken),
+                    RunAsyncAndScheduleAfter(() => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState),
+                            CancellationToken),
                         resetAfter,
                         isRepeating,
                         now);
@@ -1295,8 +1265,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             OnSyncCallbackCompleted(resetAfter, isRepeating, now);
         }
 
-        private void RunAsyncAndScheduleAfter (
-            Func<ValueTask> run,
+        private void RunAsyncAndScheduleAfter (Func<ValueTask> run,
             bool resetAfter,
             bool isRepeating,
             Instant now)
@@ -1308,8 +1277,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 return;
             }
 
-            vt.AsTask().ContinueWith(
-                (_, state) =>
+            vt.AsTask().ContinueWith((_, state) =>
                 {
                     (VirtualIntervalTimer reg, bool ra, bool rep, Instant n) =
                         ((VirtualIntervalTimer, bool, bool, Instant))state!;
@@ -1380,8 +1348,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         protected int CallbacksRunning;
         protected LocalTime TargetTimeOfDay;
 
-        protected VirtualDayTimeTimerBase (
-            PrimeTestClock clock,
+        protected VirtualDayTimeTimerBase (PrimeTestClock clock,
             LocalTime timeOfDay,
             PrimeClockIntervalTimerCallbackKind callbackKind,
             Delegate callback,
@@ -1591,8 +1558,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
     {
-        public VirtualDayTimeTimer (
-            PrimeTestClock clock,
+        public VirtualDayTimeTimer (PrimeTestClock clock,
             LocalTime timeOfDay,
             PrimeClockIntervalTimerCallbackKind callbackKind,
             Delegate callback,
@@ -1638,19 +1604,18 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     ((Action)Callback)();
                     break;
                 case PrimeClockIntervalTimerCallbackKind.ContextAction:
-                    ((Action<PrimeClockTimerCallbackContext>)Callback)(
-                        new PrimeClockTimerCallbackContext(this, CallbackState));
+                    ((Action<PrimeClockTimerCallbackContext>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState));
                     break;
                 case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
-                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)Callback)(
-                        new PrimeClockTimerCallbackContext(this, CallbackState), CancellationToken);
+                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken);
                     break;
                 case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
                     ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken).AsTask().GetAwaiter().GetResult();
                     break;
                 case PrimeClockIntervalTimerCallbackKind.ContextAsync:
-                    ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(
-                        new PrimeClockTimerCallbackContext(this, CallbackState), CancellationToken)
+                    ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new PrimeClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken)
                         .AsTask().GetAwaiter().GetResult();
                     break;
                 default:

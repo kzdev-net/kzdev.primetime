@@ -26,6 +26,6 @@ public static class PrimeClockServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="services"/> is <c>null</c>.
     /// </exception>
-    public static IServiceCollection AddPrimeClock (this IServiceCollection services) => 
+    public static IServiceCollection AddPrimeClock (this IServiceCollection services) =>
         services is null ? throw new ArgumentNullException(nameof(services)) : services.AddSingleton<IPrimeClock, PrimeClock>();
 }

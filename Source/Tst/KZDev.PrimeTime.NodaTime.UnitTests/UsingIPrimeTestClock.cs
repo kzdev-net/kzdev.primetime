@@ -287,17 +287,15 @@ public class UsingIPrimeTestClock : UnitTestBase
                 sleepCompleted = true;
             }, TestContext.Current.CancellationToken);
 
-            sleepRegistered.Wait(SleepTestRealTimeTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue(
-                "sleep task should register before advance");
+            sleepRegistered.Wait(SleepTestRealTimeTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue("sleep task should register before advance");
             System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
             while (!sleepCompleted && sw.Elapsed < SleepTestRealTimeTimeout.ToTimeSpan())
             {
                 clock.Advance(Duration.FromSeconds(5));
                 Thread.Sleep(0);
             }
-        sleepCompleted.Should().BeTrue(
-            "sleep should have completed within the real-time timeout so that virtual advance could complete the delay");
-        await sleepTask;
+            sleepCompleted.Should().BeTrue("sleep should have completed within the real-time timeout so that virtual advance could complete the delay");
+            await sleepTask;
         }
         finally
         {
@@ -346,8 +344,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         using CancellationTokenSource cts = new();
-        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, TestContext.Current.CancellationToken);
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
+            TestContext.Current.CancellationToken);
         CancellationToken linked = linkedCts.Token;
 #pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(Duration.FromSeconds(10), linked);
@@ -389,11 +387,9 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(
-            Duration.FromSeconds(2),
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(Duration.FromSeconds(2),
             () => fireCount++,
-            false,
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken);
         fireCount.Should().Be(0);
         clock.Advance(Duration.FromSeconds(1));
         fireCount.Should().Be(0);
@@ -412,11 +408,10 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(
-            Duration.FromSeconds(1),
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(Duration.FromSeconds(1),
             () => fireCount++,
-            repeat: true,
-            cancellationToken: TestContext.Current.CancellationToken);
+            TestContext.Current.CancellationToken,
+            repeat: true);
         clock.Advance(Duration.FromSeconds(1));
         fireCount.Should().Be(1);
         clock.Advance(Duration.FromSeconds(1));
@@ -440,8 +435,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int fireCount = 0;
         LocalTime twoAm = new LocalTime(2, 0, 0);
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(
-            twoAm,
+        using IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(twoAm,
             () => fireCount++,
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Advance(Duration.FromHours(1));

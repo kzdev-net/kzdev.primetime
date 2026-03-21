@@ -75,8 +75,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockIntervalTimerRegistration"/> class.
     /// </summary>
-    internal PrimeClockIntervalTimerRegistration (
-        IPrimeClock clock,
+    internal PrimeClockIntervalTimerRegistration (IPrimeClock clock,
         Duration initialCallbackTime,
         Duration repeatInterval,
         PrimeClockIntervalTimerCallbackKind callbackKind,
@@ -327,23 +326,20 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
                 InvokeSynchronousCallbackWithExecutionContext(() => ((Action)_callback)());
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextAction:
-                InvokeSynchronousCallbackWithExecutionContext(() => ((Action<PrimeClockTimerCallbackContext>)_callback)(
-                    new PrimeClockTimerCallbackContext(this, _callbackState)));
+                InvokeSynchronousCallbackWithExecutionContext(() => ((Action<PrimeClockTimerCallbackContext>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState)));
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
                 InvokeSynchronousCallbackWithExecutionContext(() =>
-                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)_callback)(
-                        new PrimeClockTimerCallbackContext(this, _callbackState), _cancellationToken));
+                    ((Action<PrimeClockTimerCallbackContext, CancellationToken>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                        _cancellationToken));
                 break;
             case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
+                RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
                     isRepeating);
                 return;
             case PrimeClockIntervalTimerCallbackKind.ContextAsync:
-                RunAsyncAndScheduleAfter(
-                    () => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(
-                        new PrimeClockTimerCallbackContext(this, _callbackState), _cancellationToken),
+                RunAsyncAndScheduleAfter(() => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                        _cancellationToken),
                     isRepeating);
                 return;
             default:
@@ -361,8 +357,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
             OnCallbackCompleted(isRepeating);
             return;
         }
-        vt.AsTask().ContinueWith(
-            (_, state) =>
+        vt.AsTask().ContinueWith((_, state) =>
             {
                 (PrimeClockIntervalTimerRegistration reg, bool rep) =
                     ((PrimeClockIntervalTimerRegistration, bool))state!;
@@ -410,8 +405,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
                 return false;
             bool wouldBeRepeating = repeatInterval > Duration.Zero && repeatInterval != NoRepeatSentinel;
             if (!IsRepeating && wouldBeRepeating)
-                throw new InvalidOperationException(
-                    "Cannot change a non-repeating timer to a repeating timer.");
+                throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
             _initialCallbackTime = nextInterval;
             _repeatInterval = repeatInterval;
             if (_state == TimerState.Completed)

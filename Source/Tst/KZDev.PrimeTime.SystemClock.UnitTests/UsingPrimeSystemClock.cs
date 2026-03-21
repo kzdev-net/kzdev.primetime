@@ -154,8 +154,8 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource cts = new();
-        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, TestContext.Current.CancellationToken).Token;
+        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
+            TestContext.Current.CancellationToken).Token;
 #pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(10), linked);
 #pragma warning restore xUnit1051
@@ -174,8 +174,8 @@ public class UsingPrimeSystemClock : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         using CancellationTokenSource cts = new();
-        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, TestContext.Current.CancellationToken).Token;
+        CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
+            TestContext.Current.CancellationToken).Token;
 #pragma warning disable xUnit1051 // Linked token includes TestContext.Current.CancellationToken for test cancellation
         Task delayTask = clock.DelayAsync(10_000, linked);
 #pragma warning restore xUnit1051

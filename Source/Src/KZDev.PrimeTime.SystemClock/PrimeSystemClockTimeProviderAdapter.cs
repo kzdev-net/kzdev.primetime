@@ -42,8 +42,7 @@ internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
 
     /// <inheritdoc />
-    public override ITimer CreateTimer (
-        TimerCallback callback,
+    public override ITimer CreateTimer (TimerCallback callback,
         object? state,
         TimeSpan dueTime,
         TimeSpan period)
@@ -55,12 +54,11 @@ internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
             ? Timeout.InfiniteTimeSpan
             : period;
 
-        IClockIntervalTimer registration = _clock.RegisterTimer(
-            dueTime,
+        IClockIntervalTimer registration = _clock.RegisterTimer(dueTime,
             repeatInterval,
             () => callback(state),
-            timerOptions: null,
-            CancellationToken.None);
+            CancellationToken.None,
+            timerOptions: null);
 
         return new ClockIntervalTimerToITimerAdapter(registration);
     }
