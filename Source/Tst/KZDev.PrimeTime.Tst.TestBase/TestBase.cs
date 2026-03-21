@@ -32,9 +32,7 @@ public abstract class TestBase
     /// </param>
     protected TestBase (ITestOutputHelper xUnitTestOutputHelper)
     {
-        if (xUnitTestOutputHelper is null)
-            throw new ArgumentNullException(nameof(xUnitTestOutputHelper));
-        XUnitTestOutputHelper = xUnitTestOutputHelper;
+        XUnitTestOutputHelper = xUnitTestOutputHelper ?? throw new ArgumentNullException(nameof(xUnitTestOutputHelper));
     }
 
     #endregion Constructors/Finalizers

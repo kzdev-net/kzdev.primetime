@@ -97,7 +97,7 @@ public class UsingLocalTimeOfDay : UnitTestBase
     /// <summary>
     ///   Verifies that <see cref="LocalTimeOfDay"/> and <see cref="UtcTimeOfDay"/> are
     ///   distinct types: the same <see cref="TimeOnly"/> in each yields different types
-    ///   and they are not equal when compared as objects.
+    ///   , and they are not equal when compared as objects.
     /// </summary>
     [Fact]
     public void LocalTimeOfDay_And_UtcTimeOfDay_AreDistinctTypes_SameTimeOnly ()

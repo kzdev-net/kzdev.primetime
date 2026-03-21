@@ -181,7 +181,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         IPrimeSystemClock clock = new PrimeSystemClock();
         int count = 0;
         ManualResetEventSlim signal = new(false);
-        List<DateTimeOffset> times = new();
+        List<DateTimeOffset> times = [];
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
         {
@@ -270,7 +270,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
         TimeSpan newFirst = TimeSpan.FromMilliseconds(70);
         TimeSpan newRepeat = TimeSpan.FromMilliseconds(55);
         ManualResetEventSlim signal = new(false);
-        List<DateTimeOffset> times = new();
+        List<DateTimeOffset> times = [];
         int targetCount = 3;
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(1), RepeatInterval, () =>
@@ -394,7 +394,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     {
         IPrimeSystemClock clock = new PrimeSystemClock();
         TimeSpan asyncWork = TimeSpan.FromMilliseconds(80);
-        List<DateTimeOffset> callbackStarts = new();
+        List<DateTimeOffset> callbackStarts = [];
         ManualResetEventSlim signal = new(false);
 
         using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay,
@@ -443,7 +443,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that the timer returned by RegisterTimer has the expected
-    ///   <see cref="IClockIntervalTimer"/> contract properties (Id, IsTimeOfDay, IsRepeating,
+    ///   <see cref="IClockIntervalTimer"/> contract properties (ID, IsTimeOfDay, IsRepeating,
     ///   RegisteredTime, ElapsedTime, TimeUntilNextCallback).
     /// </summary>
     [Fact]

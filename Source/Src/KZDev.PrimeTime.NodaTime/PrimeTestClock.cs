@@ -192,7 +192,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 tee.Cancel();
         }
 
-        while (intervalDue != null && intervalDue.Count > 0)
+        while (intervalDue is {Count: > 0})
         {
             foreach (VirtualIntervalTimerBase t in intervalDue)
                 t.RunDueCallback(newNow);
@@ -211,7 +211,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        while (dayTimeDue != null && dayTimeDue.Count > 0)
+        while (dayTimeDue is {Count: > 0})
         {
             foreach (VirtualDayTimeTimerBase t in dayTimeDue)
                 t.RunDueCallback(newNow);
@@ -373,12 +373,11 @@ public sealed class PrimeTestClock : IPrimeTestClock
         if (duration <= Duration.Zero)
             return;
 
-        Instant dueInstant;
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
-            dueInstant = _now + duration;
+            Instant dueInstant = _now + duration;
             _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
         }
 
@@ -397,12 +396,11 @@ public sealed class PrimeTestClock : IPrimeTestClock
         if (duration <= Duration.Zero)
             return Task.CompletedTask;
 
-        Instant dueInstant;
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
-            dueInstant = _now + duration;
+            Instant dueInstant = _now + duration;
             _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
         }
 
@@ -422,7 +420,6 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 CancellationToken.None,
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
-            return taskCompletionSource.Task;
         }
 
         return taskCompletionSource.Task;
@@ -899,17 +896,12 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     #region Nested types — Pending delay and time expiry
 
-    private sealed class PendingDelay
+    private sealed class PendingDelay (
+        Instant dueInstant,
+        TaskCompletionSource<bool> taskCompletionSource)
     {
-        public Instant DueInstant { [DebuggerStepThrough] get; }
-        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
-
-        public PendingDelay (Instant dueInstant,
-            TaskCompletionSource<bool> taskCompletionSource)
-        {
-            DueInstant = dueInstant;
-            TaskCompletionSource = taskCompletionSource;
-        }
+        public Instant DueInstant { [DebuggerStepThrough] get; } = dueInstant;
+        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; } = taskCompletionSource;
 
         public void Complete ()
         {
@@ -966,10 +958,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
         protected bool Disposed;
         protected bool CancelRequested;
         protected int CallbacksRunning;
-        protected Duration InitialCallbackTime;
+        private Duration InitialCallbackTime;
         protected Duration RepeatInterval;
-        private readonly bool _isLocalTimeRepresentation;
-        private readonly bool _resetAfterCallback;
 
         protected VirtualIntervalTimerBase (PrimeTestClock clock,
             Duration initialCallbackTime,
@@ -987,8 +977,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
             Callback = callback;
             CallbackState = callbackState;
             CancellationToken = cancellationToken;
-            _isLocalTimeRepresentation = options?.LocalTimeRepresentation ?? false;
-            _resetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
+            IsLocalTimeRepresentation = options?.LocalTimeRepresentation ?? false;
+            IsResetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
             Id = Interlocked.Increment(ref _nextTimerId);
             Instant now = clock.Instant;
             RegisteredInstant = now;
@@ -1011,9 +1001,9 @@ public sealed class PrimeTestClock : IPrimeTestClock
         public bool IsTimeOfDay => false;
         public bool IsRepeating =>
             RepeatInterval > Duration.Zero && RepeatInterval != NoRepeatSentinel;
-        public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
+        public bool IsResetAfterCallback => field && IsRepeating;
         public bool IsCancelled => State == TimerState.Cancelled;
-        public bool IsLocalTimeRepresentation => _isLocalTimeRepresentation;
+        public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
         public bool IsActive =>
             State != TimerState.Cancelled && State != TimerState.Disposed && _enabled;
         public bool CallbacksProcessing => CallbacksRunning > 0;
@@ -1183,20 +1173,24 @@ public sealed class PrimeTestClock : IPrimeTestClock
         }
     }
 
-    private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
+    private sealed class VirtualIntervalTimer (
+        PrimeTestClock clock,
+        Duration initialCallbackTime,
+        Duration repeatInterval,
+        PrimeClockIntervalTimerCallbackKind callbackKind,
+        Delegate callback,
+        object? callbackState,
+        IntervalTimerOptions? options,
+        CancellationToken cancellationToken)
+        : VirtualIntervalTimerBase(clock,
+            initialCallbackTime,
+            repeatInterval,
+            callbackKind,
+            callback,
+            callbackState,
+            options,
+            cancellationToken)
     {
-        public VirtualIntervalTimer (PrimeTestClock clock,
-            Duration initialCallbackTime,
-            Duration repeatInterval,
-            PrimeClockIntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            IntervalTimerOptions? options,
-            CancellationToken cancellationToken)
-            : base(clock, initialCallbackTime, repeatInterval, callbackKind, callback, callbackState, options, cancellationToken)
-        {
-        }
-
         public override void RunDueCallback (Instant now)
         {
             bool resetAfter;
@@ -1556,19 +1550,16 @@ public sealed class PrimeTestClock : IPrimeTestClock
         }
     }
 
-    private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
+    private sealed class VirtualDayTimeTimer (
+        PrimeTestClock clock,
+        LocalTime timeOfDay,
+        PrimeClockIntervalTimerCallbackKind callbackKind,
+        Delegate callback,
+        object? callbackState,
+        DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+        : VirtualDayTimeTimerBase(clock, timeOfDay, callbackKind, callback, callbackState, options, cancellationToken)
     {
-        public VirtualDayTimeTimer (PrimeTestClock clock,
-            LocalTime timeOfDay,
-            PrimeClockIntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            DayTimeTimerOptions? options,
-            CancellationToken cancellationToken)
-            : base(clock, timeOfDay, callbackKind, callback, callbackState, options, cancellationToken)
-        {
-        }
-
         public override void RunDueCallback (Instant now)
         {
             lock (Gate)

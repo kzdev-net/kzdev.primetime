@@ -153,7 +153,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
                 tee.Cancel();
         }
 
-        while (intervalDue != null && intervalDue.Count > 0)
+        while (intervalDue is {Count: > 0})
         {
             foreach (VirtualIntervalTimerBase t in intervalDue)
                 t.RunDueCallback(newNow);
@@ -173,7 +173,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         }
 
 #if NET
-        while (dayTimeDue != null && dayTimeDue.Count > 0)
+        while (dayTimeDue is {Count: > 0})
         {
             foreach (VirtualDayTimeTimerBase t in dayTimeDue)
                 t.RunDueCallback(newNow);
@@ -345,12 +345,11 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         if (sleepTime <= TimeSpan.Zero)
             return;
 
-        DateTimeOffset dueUtc;
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
-            dueUtc = _utcNow + sleepTime;
+            DateTimeOffset dueUtc = _utcNow + sleepTime;
             _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
         }
 
@@ -381,12 +380,11 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         if (delayTime <= TimeSpan.Zero)
             return Task.CompletedTask;
 
-        DateTimeOffset dueUtc;
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         lock (_gate)
         {
-            dueUtc = _utcNow + delayTime;
+            DateTimeOffset dueUtc = _utcNow + delayTime;
             _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
         }
 
@@ -406,7 +404,6 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
                 CancellationToken.None,
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
-            return taskCompletionSource.Task;
         }
 
         return taskCompletionSource.Task;

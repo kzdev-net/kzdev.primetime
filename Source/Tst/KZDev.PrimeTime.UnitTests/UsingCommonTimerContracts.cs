@@ -44,7 +44,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer"/> declares all required properties (Id, IsCancelled, State, etc.).
+    ///   Verifies that <see cref="IRegisteredTimer"/> declares all required properties (ID, IsCancelled, State, etc.).
     /// </summary>
     [Fact]
     public void IRegisteredTimer_DeclaresRequiredProperties ()

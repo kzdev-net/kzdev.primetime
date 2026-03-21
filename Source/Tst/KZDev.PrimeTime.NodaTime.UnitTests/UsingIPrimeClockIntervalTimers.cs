@@ -198,7 +198,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         int count = 0;
         ManualResetEventSlim signal = new(false);
-        List<Instant> times = new();
+        List<Instant> times = [];
 
         using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
         {
@@ -288,7 +288,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         Duration newFirst = Duration.FromMilliseconds(70);
         Duration newRepeat = Duration.FromMilliseconds(55);
         ManualResetEventSlim signal = new(false);
-        List<Instant> times = new();
+        List<Instant> times = [];
         int targetCount = 3;
 
         using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
@@ -418,7 +418,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration asyncWork = Duration.FromMilliseconds(80);
-        List<Instant> callbackStarts = new();
+        List<Instant> callbackStarts = [];
         ManualResetEventSlim signal = new(false);
 
         using IPrimeClockTimerRegistration timer = clock.RegisterAsyncTimer(ShortDelay,
@@ -467,7 +467,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that the timer returned by RegisterTimer has the expected
-    ///   <see cref="IPrimeClockTimerRegistration"/> contract properties (Id, IsTimeOfDay, IsRepeating,
+    ///   <see cref="IPrimeClockTimerRegistration"/> contract properties (ID, IsTimeOfDay, IsRepeating,
     ///   RegisteredInstant, ElapsedTime, TimeUntilNextCallback).
     /// </summary>
     [Fact]

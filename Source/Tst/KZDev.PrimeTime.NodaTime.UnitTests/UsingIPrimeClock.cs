@@ -176,8 +176,8 @@ public class UsingIPrimeClock : UnitTestBase
         DateTimeZone utc = DateTimeZone.Utc;
         IPrimeClock clock = new PrimeClock(new FakeClock(instant), utc);
 
-        clock.UtcNowTime.Should().Be(new LocalTime(12, 30, 45));
-        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new(12, 30, 45));
+        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
         clock.LocalNowTime.Should().Be(clock.UtcNowTime);
         clock.LocalNowDate.Should().Be(clock.UtcNowDate);
     }
@@ -193,19 +193,19 @@ public class UsingIPrimeClock : UnitTestBase
         Duration advanceBy = Duration.FromHours(2).Plus(Duration.FromMinutes(30));
         Instant expectedAfter = initial.Plus(advanceBy);
         DateTimeZone utc = DateTimeZone.Utc;
-        FakeClock fakeClock = new FakeClock(initial);
+        FakeClock fakeClock = new(initial);
         IPrimeClock clock = new PrimeClock(fakeClock, utc);
 
         clock.Instant.Should().Be(initial);
-        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new LocalTime(10, 0, 0));
+        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new(10, 0, 0));
 
         fakeClock.Advance(advanceBy);
 
         clock.Instant.Should().Be(expectedAfter);
         clock.UtcNow.ToInstant().Should().Be(expectedAfter);
-        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new LocalTime(12, 30, 0));
+        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new(12, 30, 0));
         clock.LocalZonedNow.ToInstant().Should().Be(expectedAfter);
     }
 

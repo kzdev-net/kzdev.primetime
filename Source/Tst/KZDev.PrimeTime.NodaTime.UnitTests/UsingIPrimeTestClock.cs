@@ -351,12 +351,16 @@ public class UsingIPrimeTestClock : UnitTestBase
         Task delayTask = clock.DelayAsync(Duration.FromSeconds(10), linked);
 #pragma warning restore xUnit1051
         delayTask.IsCompleted.Should().BeFalse();
+#if NET
+        await cts.CancelAsync();
+#else
         cts.Cancel();
+#endif
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
-    #endregion DelayAsync (Duration) driven by virtual time
+#endregion DelayAsync (Duration) driven by virtual time
 
     #region Time cancellation (Duration) driven by virtual time
 
@@ -430,11 +434,11 @@ public class UsingIPrimeTestClock : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_WhenAdvanceReachesTargetTimeOfDay_Fires ()
     {
-        // Use UTC zone so "local" and "UTC" coincide and we can set instant to midnight then advance to 02:00
+        // Use UTC zone so "local" and "UTC" coincide, and we can set instant to midnight then advance to 02:00
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int fireCount = 0;
-        LocalTime twoAm = new LocalTime(2, 0, 0);
+        LocalTime twoAm = new(2, 0, 0);
         using IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(twoAm,
             () => fireCount++,
             cancellationToken: TestContext.Current.CancellationToken);
