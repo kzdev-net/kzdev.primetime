@@ -1,8 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 //
-// Unit tests for IPrimeClock RegisterTimeOfDay and RegisterAsyncTimeOfDay (Phase 11).
-// Uses real time; full determinism comes with PrimeTestClock (Phase 13).
+// Unit tests for IPrimeClock RegisterTimeOfDay and RegisterAsyncTimeOfDay.
+// Uses real time; use PrimeTestClock for fully deterministic day-time timer tests.
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;

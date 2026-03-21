@@ -1,7 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Phase 14: Extension methods to obtain a TimeProvider from a PrimeTime clock.
+// Extension methods to obtain a TimeProvider from a PrimeTime clock.
 
 namespace KZDev.PrimeTime;
 

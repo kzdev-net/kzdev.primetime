@@ -1,7 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for TimeProvider adapter (Phase 14).
+// Unit tests for TimeProvider adapter.
 // Verifies that ToTimeProvider() returns a TimeProvider driven by the PrimeTime clock,
 // and that GetUtcNow and CreateTimer are controllable via the test clock.
 

@@ -10,7 +10,7 @@ namespace KZDev.PrimeTime;
 ///   Delay and time-cancellation members (Sleep, DelayAsync, GetTimeCancellationToken,
 ///   LinkTimeCancellationToken) delegate to the BCL (Thread.Sleep, Task.Delay,
 ///   CancellationTokenSource with a timer), so they use system time rather than the provider's
-///   time. For deterministic tests, use the test clock implementation from Phase 12.
+///   time. For deterministic tests, use <see cref="PrimeTestSystemClock"/> or <see cref="IPrimeTestSystemClock"/>.
 /// </remarks>
 internal sealed class PrimeSystemClock : IPrimeSystemClock
 {

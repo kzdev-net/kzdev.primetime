@@ -7,7 +7,7 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.SystemClock.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/> (Phases 2 and 4).
+///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/>.
 ///   Verifies that all "now" members (including time-only and date-only on .NET) return values
 ///   consistent with a known time source and with each other.
 ///   On .NET, includes deterministic tests using FakeTimeProvider (Microsoft.Extensions.Time.Testing).

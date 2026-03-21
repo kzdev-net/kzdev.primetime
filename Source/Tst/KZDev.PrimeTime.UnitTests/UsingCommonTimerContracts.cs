@@ -10,7 +10,7 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for Phase 1 Common timer contracts, enums, and options. Verifies each type
+///   Unit tests for shared common timer contracts, enums, and options. Verifies each type
 ///   exists with the specified members, enums have expected values, and option types can be
 ///   constructed with expected defaults.
 /// </summary>

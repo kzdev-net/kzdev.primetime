@@ -9,7 +9,7 @@ namespace KZDev.PrimeTime;
 ///   NodaTime's <see cref="SystemClock"/> and derives local time using the system
 ///   default time zone. Delays and time-based cancellation use the BCL (Thread.Sleep,
 ///   Task.Delay, CancellationTokenSource with a timer); for deterministic tests use
-///   the test clock from a later phase.
+///   <see cref="PrimeTestClock"/> or <see cref="IPrimeTestClock"/>.
 /// </summary>
 internal sealed class PrimeClock : IPrimeClock
 {

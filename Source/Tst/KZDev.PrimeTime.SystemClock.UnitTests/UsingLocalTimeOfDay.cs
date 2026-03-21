@@ -10,7 +10,7 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.SystemClock.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="LocalTimeOfDay"/> (Phase 4).
+///   Unit tests for <see cref="LocalTimeOfDay"/>.
 ///   Verifies construction, equality, and that the type is distinct from <see cref="UtcTimeOfDay"/>.
 /// </summary>
 public class UsingLocalTimeOfDay : UnitTestBase

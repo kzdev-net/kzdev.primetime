@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 // Unit tests for PrimeSystemClock (SUT). Delays and time-based cancellation use system time;
-// full determinism comes with PrimeTestSystemClock (Phase 12).
+// use PrimeTestSystemClock for fully deterministic tests.
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;

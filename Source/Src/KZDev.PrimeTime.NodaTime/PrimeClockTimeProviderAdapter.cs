@@ -1,8 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Phase 14: TimeProvider adapter for IPrimeClock so code using TimeProvider gets
-// time and timers from the PrimeTime NodaTime clock (production or test).
+// TimeProvider adapter for IPrimeClock so code using TimeProvider gets time and timers from the
+// PrimeTime NodaTime clock (production or test).
 
 using System.Threading;
 using System.Threading.Tasks;

@@ -1,7 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for IPrimeTestSystemClock and PrimeTestSystemClock (Phase 12).
+// Unit tests for IPrimeTestSystemClock and PrimeTestSystemClock.
 // Verifies SetTime, Advance, RunFor, Start/Stop, ClockEvents, and that Sleep, DelayAsync,
 // time cancellation, and timers are driven by virtual time.
 

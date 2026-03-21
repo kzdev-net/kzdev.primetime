@@ -89,14 +89,11 @@ public interface IPrimeClock : IPrimeTime
     void Sleep (Duration duration);
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Creates a task that completes after the specified <see cref="Duration"/>.
+    ///   Asynchronously completes after the specified <see cref="Duration"/>.
     /// </summary>
     /// <param name="duration">
-    ///   The duration to wait before completing the returned task.
+    ///   The duration to wait before the operation completes.
     /// </param>
-    /// <returns>
-    ///   A task that completes after <paramref name="duration"/>.
-    /// </returns>
     /// <remarks>
     ///   Implementations may clamp values: zero or negative is treated as zero; durations
     ///   greater than <see cref="TimeSpan.MaxValue"/> are clamped to
@@ -105,17 +102,15 @@ public interface IPrimeClock : IPrimeTime
     Task DelayAsync (Duration duration);
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Creates a task that completes after the specified <see cref="Duration"/>.
+    ///   Asynchronously completes after the specified <see cref="Duration"/>, or ends early when
+    ///   <paramref name="cancellationToken"/> is cancelled.
     /// </summary>
     /// <param name="duration">
-    ///   The duration to wait before completing the returned task.
+    ///   The duration to wait before the operation completes.
     /// </param>
     /// <param name="cancellationToken">
     ///   A cancellation token to observe while waiting for the task to complete.
     /// </param>
-    /// <returns>
-    ///   A task that completes after <paramref name="duration"/> or when cancelled.
-    /// </returns>
     /// <remarks>
     ///   Implementations may clamp values: zero or negative is treated as zero; durations
     ///   greater than <see cref="TimeSpan.MaxValue"/> are clamped to

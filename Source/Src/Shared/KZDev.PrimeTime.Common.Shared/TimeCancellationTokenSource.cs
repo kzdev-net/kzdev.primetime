@@ -96,6 +96,11 @@ public sealed class TimeCancellationTokenSource : IDisposable
     /// <param name="throwOnFirstException">
     ///   True if an exception should be thrown if cancellation is successful; otherwise false.
     /// </param>
+    /// <remarks>
+    ///   Delegates to <see cref="CancellationTokenSource.Cancel(bool)"/>; when
+    ///   <paramref name="throwOnFirstException"/> is <c>true</c>, any exception from a registered
+    ///   cancellation callback may propagate per the underlying source.
+    /// </remarks>
     /// <exception cref="ObjectDisposedException">
     ///   This instance has been disposed.
     /// </exception>
