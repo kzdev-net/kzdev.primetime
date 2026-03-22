@@ -11,6 +11,757 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 {
+
+    #region Nested types — Pending delay and time expiry
+
+    private sealed class PendingDelay
+    {
+        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
+        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
+
+        public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> taskCompletionSource)
+        {
+            DueUtc = dueUtc;
+            TaskCompletionSource = taskCompletionSource;
+        }
+
+        public void Complete ()
+        {
+            TaskCompletionSource.TrySetResult(true);
+        }
+    }
+
+    private sealed class TimeExpiryEntry
+    {
+        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
+        private readonly TimeCancellationTokenSource _wrapper;
+
+        public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
+            CancellationTokenSource? timeCts = null)
+        {
+            ExpireUtc = expireUtc;
+            _wrapper = wrapper;
+        }
+
+        public void Cancel ()
+        {
+            try
+            {
+                _wrapper.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Caller may have disposed already.
+            }
+        }
+    }
+
+    #endregion Nested types — Pending delay and time expiry
+
+    #region Nested types — Virtual interval timer
+
+    private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
+    {
+        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected Delegate Callback { [DebuggerStepThrough] get; }
+        protected object? CallbackState { [DebuggerStepThrough] get; }
+        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
+#if NET10_OR_GREATER
+        protected Lock Gate { [DebuggerStepThrough] get; } = new();
+#else
+        protected object Gate { [DebuggerStepThrough] get; } = new();
+#endif
+        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+        protected bool IntervalTimerEnabled { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = true;
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        private readonly bool _isLocalTimeRepresentation;
+        private readonly bool _resetAfterCallback;
+
+        protected VirtualIntervalTimerBase (PrimeTestSystemClock clock,
+            TimeSpan initialCallbackTime,
+            TimeSpan repeatInterval,
+            IntervalTimerCallbackKind callbackKind,
+            Delegate callback,
+            object? callbackState,
+            IntervalTimerOptions? options,
+            CancellationToken cancellationToken)
+        {
+            Clock = clock;
+            InitialCallbackTime = initialCallbackTime;
+            RepeatInterval = repeatInterval;
+            CallbackKind = callbackKind;
+            Callback = callback;
+            CallbackState = callbackState;
+            CancellationToken = cancellationToken;
+            _isLocalTimeRepresentation = options?.LocalTimeRepresentation == true;
+            _resetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
+            Id = Interlocked.Increment(ref _nextTimerId);
+            DateTimeOffset now = clock.UtcNow;
+            RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNow : now;
+            NextDueUtc = now + initialCallbackTime;
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(OnCancelRequested);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    CancelRequested = true;
+                    State = TimerState.Cancelled;
+                    IntervalTimerEnabled = false;
+                }
+            }
+        }
+
+        public int Id { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+        public bool IsTimeOfDay => false;
+        public bool IsRepeating => RepeatInterval != Timeout.InfiniteTimeSpan && RepeatInterval > TimeSpan.Zero;
+        public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
+        public bool IsCancelled => State == TimerState.Cancelled;
+        public bool IsLocalTimeRepresentation => _isLocalTimeRepresentation;
+        public bool IsActive =>
+            State != TimerState.Cancelled && State != TimerState.Disposed && IntervalTimerEnabled;
+        public bool CallbacksProcessing => CallbacksRunning > 0;
+
+        public bool Enabled
+        {
+            get => IntervalTimerEnabled && !IsCancelled && State != TimerState.Disposed;
+            set
+            {
+                lock (Gate)
+                {
+                    if (Disposed || State == TimerState.Cancelled)
+                        return;
+                    if (value)
+                        Start();
+                    else
+                        Stop();
+                }
+            }
+        }
+
+        TimerState IRegisteredTimer.State => State;
+
+        public long ElapsedTime
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    if (LastCallbackUtc is not { } last)
+                        return -1;
+                    if (CallbacksRunning > 0)
+                        return 0;
+                    DateTimeOffset now = Clock.UtcNow;
+                    if (last >= now)
+                        return 0;
+                    return (long)(now - last).TotalMilliseconds;
+                }
+            }
+        }
+
+        public long TimeUntilNextCallback
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    if (!IsRepeating && LastCallbackUtc.HasValue)
+                        return -1;
+                    if (NextDueUtc is not { } next)
+                        return -1;
+                    DateTimeOffset now = Clock.UtcNow;
+                    if (next <= now)
+                        return 0;
+                    if (CallbacksRunning > 0 && IsResetAfterCallback)
+                        return (long)RepeatInterval.TotalMilliseconds;
+                    return (long)(next - now).TotalMilliseconds;
+                }
+            }
+        }
+
+        public bool IsDue (DateTimeOffset now)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
+                    return false;
+                if (NextDueUtc is not { } next)
+                    return false;
+                return next <= now;
+            }
+        }
+
+        public abstract void RunDueCallback (DateTimeOffset now);
+
+        protected void OnCancelRequested ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                IntervalTimerEnabled = false;
+            }
+
+            Clock.RemoveIntervalTimer(this);
+        }
+
+        public bool Change (TimeSpan interval) =>
+            Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
+
+        public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
+                    throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
+                InitialCallbackTime = nextInterval;
+                RepeatInterval = repeatInterval;
+                if (State == TimerState.Completed)
+                    State = TimerState.Active;
+                if (!IntervalTimerEnabled)
+                    return true;
+                NextDueUtc = Clock.UtcNow + nextInterval;
+                return true;
+            }
+        }
+
+        public void Cancel ()
+        {
+            lock (Gate)
+            {
+                if (State == TimerState.Cancelled || Disposed)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                IntervalTimerEnabled = false;
+            }
+
+            Clock.RemoveIntervalTimer(this);
+        }
+
+        public bool Stop ()
+        {
+            lock (Gate)
+            {
+                if (!IntervalTimerEnabled || State == TimerState.Cancelled || Disposed)
+                    return false;
+                IntervalTimerEnabled = false;
+                State = TimerState.Disabled;
+                return true;
+            }
+        }
+
+        public bool Start ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                if (State != TimerState.Completed && State != TimerState.Disabled)
+                    return false;
+                IntervalTimerEnabled = true;
+                State = TimerState.Active;
+                NextDueUtc = Clock.UtcNow + InitialCallbackTime;
+                return true;
+            }
+        }
+
+        public void Dispose ()
+        {
+            lock (Gate)
+            {
+                if (Disposed)
+                    return;
+                Disposed = true;
+                State = TimerState.Disposed;
+                IntervalTimerEnabled = false;
+            }
+
+            Clock.RemoveIntervalTimer(this);
+        }
+    }
+
+    private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
+    {
+        public VirtualIntervalTimer (PrimeTestSystemClock clock,
+            TimeSpan initialCallbackTime,
+            TimeSpan repeatInterval,
+            IntervalTimerCallbackKind callbackKind,
+            Delegate callback,
+            object? callbackState,
+            IntervalTimerOptions? options,
+            CancellationToken cancellationToken)
+            : base(clock, initialCallbackTime, repeatInterval, callbackKind, callback, callbackState, options, cancellationToken)
+        {
+        }
+
+        public override void RunDueCallback (DateTimeOffset now)
+        {
+            bool resetAfter;
+            bool isRepeating;
+            DateTimeOffset firedAt;
+
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
+                    return;
+                if (NextDueUtc is not { } next || next > now)
+                    return;
+                firedAt = next;
+                NextDueUtc = null;
+                LastCallbackUtc = firedAt;
+                isRepeating = IsRepeating;
+                resetAfter = IsResetAfterCallback;
+                State = isRepeating && !resetAfter ? TimerState.RepeatProcessingCallback : TimerState.ProcessingCallback;
+                CallbacksRunning++;
+            }
+
+            try
+            {
+                RunCallback(resetAfter, isRepeating, firedAt);
+            }
+            finally
+            {
+                lock (Gate)
+                    CallbacksRunning--;
+            }
+        }
+
+        private void RunCallback (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        {
+            void InvokeSync (Action run)
+            {
+                run();
+            }
+
+            switch (CallbackKind)
+            {
+                case IntervalTimerCallbackKind.SimpleAction:
+                    InvokeSync(() => ((Action)Callback)());
+                    break;
+                case IntervalTimerCallbackKind.ContextAction:
+                    InvokeSync(() => ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState)));
+                    break;
+                case IntervalTimerCallbackKind.ContextActionWithToken:
+                    InvokeSync(() => ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken));
+                    break;
+                case IntervalTimerCallbackKind.SimpleAsync:
+                    RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
+                        resetAfter,
+                        isRepeating,
+                        now);
+                    return;
+                case IntervalTimerCallbackKind.ContextAsync:
+                    RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
+                            CancellationToken),
+                        resetAfter,
+                        isRepeating,
+                        now);
+                    return;
+                default:
+                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
+            }
+
+            OnSyncCallbackCompleted(resetAfter, isRepeating, now);
+        }
+
+        private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating, DateTimeOffset now)
+        {
+            ValueTask vt = run();
+            if (vt.IsCompletedSuccessfully)
+            {
+                OnAsyncCallbackCompleted(resetAfter, isRepeating, now);
+                return;
+            }
+
+            vt.AsTask().ContinueWith((_, state) =>
+                {
+                    (VirtualIntervalTimer reg, bool ra, bool rep, DateTimeOffset n) =
+                        ((VirtualIntervalTimer, bool, bool, DateTimeOffset))state!;
+                    reg.OnAsyncCallbackCompleted(ra, rep, n);
+                },
+                (this, resetAfter, isRepeating, now),
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
+        }
+
+        private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled)
+                    return;
+                if (!isRepeating)
+                {
+                    State = TimerState.Completed;
+                    return;
+                }
+
+                State = TimerState.RepeatCycle;
+                NextDueUtc = now + RepeatInterval;
+            }
+        }
+
+        private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled)
+                    return;
+                if (!isRepeating)
+                {
+                    State = TimerState.Completed;
+                    return;
+                }
+
+                State = TimerState.RepeatCycle;
+                NextDueUtc = now + RepeatInterval;
+            }
+        }
+    }
+
+    #endregion Nested types — Virtual interval timer
+
+#if NET
+    #region Nested types — Virtual day-time timer
+
+    private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
+    {
+        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected bool IsLocal { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected Delegate Callback { [DebuggerStepThrough] get; }
+        protected object? CallbackState { [DebuggerStepThrough] get; }
+        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
+#if NET10_OR_GREATER
+        protected Lock Gate { [DebuggerStepThrough] get; } = new();
+#else
+        protected object Gate { [DebuggerStepThrough] get; } = new();
+#endif
+        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+        protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeOnly TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        protected VirtualDayTimeTimerBase (PrimeTestSystemClock clock,
+            bool isLocal,
+            TimeOnly targetTimeOfDay,
+            IntervalTimerCallbackKind callbackKind,
+            Delegate callback,
+            object? callbackState,
+            DayTimeTimerOptions? options,
+            CancellationToken cancellationToken)
+        {
+            Clock = clock;
+            IsLocal = isLocal;
+            TargetTimeOfDay = targetTimeOfDay;
+            CallbackKind = callbackKind;
+            Callback = callback;
+            CallbackState = callbackState;
+            CancellationToken = cancellationToken;
+            ConcurrentTriggerProcessing = options?.ConcurrentTriggerProcessing ?? ConcurrentTriggerProcessing.RunSequentially;
+            SkippedTimeBehavior = options?.SkippedTimeBehavior ?? SkippedTimeBehavior.RunAfter;
+            DuplicateTimeBehavior = options?.DuplicateTimeBehavior ?? DuplicateTimeBehavior.RunFirst;
+            Id = Interlocked.Increment(ref _nextTimerId);
+            RegisteredTime = Clock.UtcNow;
+            NextDueUtc = ComputeNextDue(clock.UtcNow);
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(OnCancelRequested);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    CancelRequested = true;
+                    State = TimerState.Cancelled;
+                    EnabledDayTime = false;
+                }
+            }
+        }
+
+        private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+
+        public int Id { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+        public bool IsTimeOfDay => true;
+        public bool IsLocalTimeRepresentation => IsLocal;
+        public bool IsRepeating => true;
+        public bool IsCancelled => State == TimerState.Cancelled;
+        public bool IsActive =>
+            State != TimerState.Cancelled && State != TimerState.Disposed && EnabledDayTime;
+        public bool CallbacksProcessing => CallbacksRunning > 0;
+        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
+        public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
+        public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
+
+        public bool Enabled
+        {
+            get => EnabledDayTime && !IsCancelled && State != TimerState.Disposed;
+            set
+            {
+                lock (Gate)
+                {
+                    if (Disposed || State == TimerState.Cancelled)
+                        return;
+                    if (value)
+                    {
+                        EnabledDayTime = true;
+                        State = TimerState.Active;
+                        NextDueUtc = ComputeNextDue(Clock.UtcNow);
+                    }
+                    else
+                    {
+                        EnabledDayTime = false;
+                        State = TimerState.Disabled;
+                    }
+                }
+            }
+        }
+
+        TimerState IRegisteredTimer.State => State;
+
+        public long ElapsedTime => -1;
+        public long TimeUntilNextCallback
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    if (NextDueUtc is not { } next)
+                        return -1;
+                    DateTimeOffset now = Clock.UtcNow;
+                    if (next <= now)
+                        return 0;
+                    return (long)(next - now).TotalMilliseconds;
+                }
+            }
+        }
+
+        public bool IsDue (DateTimeOffset now)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
+                    return false;
+                if (NextDueUtc is not { } next)
+                    return false;
+                return next <= now;
+            }
+        }
+
+        public abstract void RunDueCallback (DateTimeOffset now);
+
+        protected DateTimeOffset? ComputeNextDue (DateTimeOffset now)
+        {
+            if (IsLocal)
+            {
+                DateTimeOffset localNow = Clock.LocalNow;
+                DateOnly today = DateOnly.FromDateTime(localNow.DateTime);
+                DateTime nextDt = today.ToDateTime(TargetTimeOfDay);
+                if (nextDt <= localNow.DateTime)
+                    nextDt = today.AddDays(1).ToDateTime(TargetTimeOfDay);
+                DateTimeOffset nextLocal = new(nextDt, localNow.Offset);
+                return nextLocal.ToUniversalTime();
+            }
+            else
+            {
+                DateTime utcDate = now.UtcDateTime;
+                DateOnly today = DateOnly.FromDateTime(utcDate);
+                DateTime nextDt = today.ToDateTime(TargetTimeOfDay);
+                if (nextDt <= utcDate)
+                    nextDt = today.AddDays(1).ToDateTime(TargetTimeOfDay);
+                return new DateTimeOffset(nextDt, TimeSpan.Zero);
+            }
+        }
+
+        protected void OnCancelRequested ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                EnabledDayTime = false;
+            }
+
+            Clock.RemoveDayTimeTimer(this);
+        }
+
+        public bool Change (LocalTimeOfDay newTimeOfDay)
+        {
+            if (!IsLocal)
+                return false;
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                TargetTimeOfDay = newTimeOfDay.Value;
+                if (Enabled)
+                    NextDueUtc = ComputeNextDue(Clock.UtcNow);
+                return true;
+            }
+        }
+
+        public bool Change (UtcTimeOfDay newTimeOfDay)
+        {
+            if (IsLocal)
+                return false;
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                TargetTimeOfDay = newTimeOfDay.Value;
+                if (Enabled)
+                    NextDueUtc = ComputeNextDue(Clock.UtcNow);
+                return true;
+            }
+        }
+
+        public void Cancel ()
+        {
+            lock (Gate)
+            {
+                if (State == TimerState.Cancelled || Disposed)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                Enabled = false;
+            }
+
+            Clock.RemoveDayTimeTimer(this);
+        }
+
+        public bool Stop ()
+        {
+            lock (Gate)
+            {
+                if (!EnabledDayTime || State == TimerState.Cancelled || Disposed)
+                    return false;
+                EnabledDayTime = false;
+                State = TimerState.Disabled;
+                return true;
+            }
+        }
+
+        public bool Start ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                if (State != TimerState.Completed && State != TimerState.Disabled)
+                    return false;
+                EnabledDayTime = true;
+                State = TimerState.Active;
+                NextDueUtc = ComputeNextDue(Clock.UtcNow);
+                return true;
+            }
+        }
+
+        public void Dispose ()
+        {
+            lock (Gate)
+            {
+                if (Disposed)
+                    return;
+                Disposed = true;
+                State = TimerState.Disposed;
+                EnabledDayTime = false;
+            }
+
+            Clock.RemoveDayTimeTimer(this);
+        }
+    }
+
+    private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
+    {
+        public VirtualDayTimeTimer (PrimeTestSystemClock clock,
+            bool isLocal,
+            TimeOnly targetTimeOfDay,
+            IntervalTimerCallbackKind callbackKind,
+            Delegate callback,
+            object? callbackState,
+            DayTimeTimerOptions? options,
+            CancellationToken cancellationToken)
+            : base(clock, isLocal, targetTimeOfDay, callbackKind, callback, callbackState, options, cancellationToken)
+        {
+        }
+
+        public override void RunDueCallback (DateTimeOffset now)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
+                    return;
+                if (NextDueUtc is not { } next || next > now)
+                    return;
+                NextDueUtc = ComputeNextDue(now);
+                State = TimerState.RepeatProcessingCallback;
+                CallbacksRunning++;
+            }
+
+            try
+            {
+                RunCallback();
+            }
+            finally
+            {
+                lock (Gate)
+                {
+                    CallbacksRunning--;
+                    State = TimerState.RepeatCycle;
+                }
+            }
+        }
+
+        private void RunCallback ()
+        {
+            switch (CallbackKind)
+            {
+                case IntervalTimerCallbackKind.SimpleAction:
+                    ((Action)Callback)();
+                    break;
+                case IntervalTimerCallbackKind.ContextAction:
+                    ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState));
+                    break;
+                case IntervalTimerCallbackKind.ContextActionWithToken:
+                    ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken);
+                    break;
+                case IntervalTimerCallbackKind.SimpleAsync:
+                    ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken).AsTask().GetAwaiter().GetResult();
+                    break;
+                case IntervalTimerCallbackKind.ContextAsync:
+                    ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
+                        CancellationToken)
+                        .AsTask().GetAwaiter().GetResult();
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
+            }
+        }
+    }
+
+    #endregion Nested types — Virtual day-time timer
+#endif
+
     private static int _nextTimerId;
 #if NET10_OR_GREATER
     private readonly Lock _gate = new();
@@ -27,6 +778,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 #if NET
     private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
 #endif
+
 
     #region Constructors/Finalizers
 
@@ -53,10 +805,99 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     #endregion Constructors/Finalizers
 
+
     /// <summary>
     ///   Occurs when the clock's current time has changed.
     /// </summary>
     public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
+
+    #region Private helpers
+
+    private static DateTimeOffset ToLocal (DateTimeOffset utc)
+    {
+        TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(utc.DateTime);
+        return new DateTimeOffset(utc.UtcDateTime + offset, offset);
+    }
+
+    private void RunLoop ()
+    {
+        while (true)
+        {
+            Thread.Sleep(1000);
+            TimeSpan toAdvance;
+            lock (_gate)
+            {
+                if (!_isRunning)
+                    return;
+                toAdvance = _runRate;
+            }
+
+            Advance(toAdvance);
+        }
+    }
+
+    private void RaiseClockEvents (DateTimeOffset utcNow)
+    {
+        ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNow));
+    }
+
+    private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
+    {
+        lock (_gate)
+            _intervalTimers.Remove(timer);
+    }
+
+#if NET
+    private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
+    {
+        lock (_gate)
+            _dayTimeTimers.Remove(timer);
+    }
+
+    private IClockDayTimeTimer RegisterTimeOfDayLocal (TimeOnly targetTimeOfDay,
+        IntervalTimerCallbackKind kind,
+        Delegate callback,
+        object? state,
+        DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+    {
+        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
+            isLocal: true,
+            targetTimeOfDay,
+            kind,
+            callback,
+            state,
+            options,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(t);
+        return t;
+    }
+
+    private IClockDayTimeTimer RegisterTimeOfDayUtc (TimeOnly targetTimeOfDay,
+        IntervalTimerCallbackKind kind,
+        Delegate callback,
+        object? state,
+        DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+    {
+        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
+            isLocal: false,
+            targetTimeOfDay,
+            kind,
+            callback,
+            state,
+            options,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(t);
+        return t;
+    }
+#endif
+
+    #endregion Private helpers
+
+    #region Interface Implementations
 
     #region IPrimeTestSystemClock Implementation
 
@@ -818,840 +1659,5 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     #endregion IPrimeSystemClock Implementation — Day-time timers
 #endif
-
-    #region Private helpers
-
-    private static DateTimeOffset ToLocal (DateTimeOffset utc)
-    {
-        TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(utc.DateTime);
-        return new DateTimeOffset(utc.UtcDateTime + offset, offset);
-    }
-
-    private void RunLoop ()
-    {
-        while (true)
-        {
-            Thread.Sleep(1000);
-            TimeSpan toAdvance;
-            lock (_gate)
-            {
-                if (!_isRunning)
-                    return;
-                toAdvance = _runRate;
-            }
-
-            Advance(toAdvance);
-        }
-    }
-
-    private void RaiseClockEvents (DateTimeOffset utcNow)
-    {
-        ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNow));
-    }
-
-    private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
-    {
-        lock (_gate)
-            _intervalTimers.Remove(timer);
-    }
-
-#if NET
-    private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
-    {
-        lock (_gate)
-            _dayTimeTimers.Remove(timer);
-    }
-
-    private IClockDayTimeTimer RegisterTimeOfDayLocal (TimeOnly targetTimeOfDay,
-        IntervalTimerCallbackKind kind,
-        Delegate callback,
-        object? state,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
-            isLocal: true,
-            targetTimeOfDay,
-            kind,
-            callback,
-            state,
-            options,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
-    }
-
-    private IClockDayTimeTimer RegisterTimeOfDayUtc (TimeOnly targetTimeOfDay,
-        IntervalTimerCallbackKind kind,
-        Delegate callback,
-        object? state,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
-            isLocal: false,
-            targetTimeOfDay,
-            kind,
-            callback,
-            state,
-            options,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(t);
-        return t;
-    }
-#endif
-
-    #endregion Private helpers
-
-    #region Nested types — Pending delay and time expiry
-
-    private sealed class PendingDelay
-    {
-        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
-        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
-
-        public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> taskCompletionSource)
-        {
-            DueUtc = dueUtc;
-            TaskCompletionSource = taskCompletionSource;
-        }
-
-        public void Complete ()
-        {
-            TaskCompletionSource.TrySetResult(true);
-        }
-    }
-
-    private sealed class TimeExpiryEntry
-    {
-        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
-        private readonly TimeCancellationTokenSource _wrapper;
-
-        public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
-            CancellationTokenSource? timeCts = null)
-        {
-            ExpireUtc = expireUtc;
-            _wrapper = wrapper;
-        }
-
-        public void Cancel ()
-        {
-            try
-            {
-                _wrapper.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Caller may have disposed already.
-            }
-        }
-    }
-
-    #endregion Nested types — Pending delay and time expiry
-
-    #region Nested types — Virtual interval timer
-
-    private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
-    {
-        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
-        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
-        protected Delegate Callback { [DebuggerStepThrough] get; }
-        protected object? CallbackState { [DebuggerStepThrough] get; }
-        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
-#if NET10_OR_GREATER
-        protected Lock Gate { [DebuggerStepThrough] get; } = new();
-#else
-        protected object Gate { [DebuggerStepThrough] get; } = new();
-#endif
-        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
-        protected bool IntervalTimerEnabled { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = true;
-        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        private readonly bool _isLocalTimeRepresentation;
-        private readonly bool _resetAfterCallback;
-
-        protected VirtualIntervalTimerBase (PrimeTestSystemClock clock,
-            TimeSpan initialCallbackTime,
-            TimeSpan repeatInterval,
-            IntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            IntervalTimerOptions? options,
-            CancellationToken cancellationToken)
-        {
-            Clock = clock;
-            InitialCallbackTime = initialCallbackTime;
-            RepeatInterval = repeatInterval;
-            CallbackKind = callbackKind;
-            Callback = callback;
-            CallbackState = callbackState;
-            CancellationToken = cancellationToken;
-            _isLocalTimeRepresentation = options?.LocalTimeRepresentation == true;
-            _resetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
-            Id = Interlocked.Increment(ref _nextTimerId);
-            DateTimeOffset now = clock.UtcNow;
-            RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNow : now;
-            NextDueUtc = now + initialCallbackTime;
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(OnCancelRequested);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    CancelRequested = true;
-                    State = TimerState.Cancelled;
-                    IntervalTimerEnabled = false;
-                }
-            }
-        }
-
-        public int Id { [DebuggerStepThrough] get; }
-        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
-        public bool IsTimeOfDay => false;
-        public bool IsRepeating => RepeatInterval != Timeout.InfiniteTimeSpan && RepeatInterval > TimeSpan.Zero;
-        public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
-        public bool IsCancelled => State == TimerState.Cancelled;
-        public bool IsLocalTimeRepresentation => _isLocalTimeRepresentation;
-        public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && IntervalTimerEnabled;
-        public bool CallbacksProcessing => CallbacksRunning > 0;
-
-        public bool Enabled
-        {
-            get => IntervalTimerEnabled && !IsCancelled && State != TimerState.Disposed;
-            set
-            {
-                lock (Gate)
-                {
-                    if (Disposed || State == TimerState.Cancelled)
-                        return;
-                    if (value)
-                        Start();
-                    else
-                        Stop();
-                }
-            }
-        }
-
-        TimerState IRegisteredTimer.State => State;
-
-        public long ElapsedTime
-        {
-            get
-            {
-                lock (Gate)
-                {
-                    if (LastCallbackUtc is not { } last)
-                        return -1;
-                    if (CallbacksRunning > 0)
-                        return 0;
-                    DateTimeOffset now = Clock.UtcNow;
-                    if (last >= now)
-                        return 0;
-                    return (long)(now - last).TotalMilliseconds;
-                }
-            }
-        }
-
-        public long TimeUntilNextCallback
-        {
-            get
-            {
-                lock (Gate)
-                {
-                    if (!IsRepeating && LastCallbackUtc.HasValue)
-                        return -1;
-                    if (NextDueUtc is not { } next)
-                        return -1;
-                    DateTimeOffset now = Clock.UtcNow;
-                    if (next <= now)
-                        return 0;
-                    if (CallbacksRunning > 0 && IsResetAfterCallback)
-                        return (long)RepeatInterval.TotalMilliseconds;
-                    return (long)(next - now).TotalMilliseconds;
-                }
-            }
-        }
-
-        public bool IsDue (DateTimeOffset now)
-        {
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
-                    return false;
-                if (NextDueUtc is not { } next)
-                    return false;
-                return next <= now;
-            }
-        }
-
-        public abstract void RunDueCallback (DateTimeOffset now);
-
-        protected void OnCancelRequested ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                IntervalTimerEnabled = false;
-            }
-
-            Clock.RemoveIntervalTimer(this);
-        }
-
-        public bool Change (TimeSpan interval) =>
-            Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
-
-        public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
-                    throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
-                InitialCallbackTime = nextInterval;
-                RepeatInterval = repeatInterval;
-                if (State == TimerState.Completed)
-                    State = TimerState.Active;
-                if (!IntervalTimerEnabled)
-                    return true;
-                NextDueUtc = Clock.UtcNow + nextInterval;
-                return true;
-            }
-        }
-
-        public void Cancel ()
-        {
-            lock (Gate)
-            {
-                if (State == TimerState.Cancelled || Disposed)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                IntervalTimerEnabled = false;
-            }
-
-            Clock.RemoveIntervalTimer(this);
-        }
-
-        public bool Stop ()
-        {
-            lock (Gate)
-            {
-                if (!IntervalTimerEnabled || State == TimerState.Cancelled || Disposed)
-                    return false;
-                IntervalTimerEnabled = false;
-                State = TimerState.Disabled;
-                return true;
-            }
-        }
-
-        public bool Start ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                if (State != TimerState.Completed && State != TimerState.Disabled)
-                    return false;
-                IntervalTimerEnabled = true;
-                State = TimerState.Active;
-                NextDueUtc = Clock.UtcNow + InitialCallbackTime;
-                return true;
-            }
-        }
-
-        public void Dispose ()
-        {
-            lock (Gate)
-            {
-                if (Disposed)
-                    return;
-                Disposed = true;
-                State = TimerState.Disposed;
-                IntervalTimerEnabled = false;
-            }
-
-            Clock.RemoveIntervalTimer(this);
-        }
-    }
-
-    private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
-    {
-        public VirtualIntervalTimer (PrimeTestSystemClock clock,
-            TimeSpan initialCallbackTime,
-            TimeSpan repeatInterval,
-            IntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            IntervalTimerOptions? options,
-            CancellationToken cancellationToken)
-            : base(clock, initialCallbackTime, repeatInterval, callbackKind, callback, callbackState, options, cancellationToken)
-        {
-        }
-
-        public override void RunDueCallback (DateTimeOffset now)
-        {
-            bool resetAfter;
-            bool isRepeating;
-            DateTimeOffset firedAt;
-
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
-                    return;
-                if (NextDueUtc is not { } next || next > now)
-                    return;
-                firedAt = next;
-                NextDueUtc = null;
-                LastCallbackUtc = firedAt;
-                isRepeating = IsRepeating;
-                resetAfter = IsResetAfterCallback;
-                State = isRepeating && !resetAfter ? TimerState.RepeatProcessingCallback : TimerState.ProcessingCallback;
-                CallbacksRunning++;
-            }
-
-            try
-            {
-                RunCallback(resetAfter, isRepeating, firedAt);
-            }
-            finally
-            {
-                lock (Gate)
-                    CallbacksRunning--;
-            }
-        }
-
-        private void RunCallback (bool resetAfter, bool isRepeating, DateTimeOffset now)
-        {
-            void InvokeSync (Action run)
-            {
-                run();
-            }
-
-            switch (CallbackKind)
-            {
-                case IntervalTimerCallbackKind.SimpleAction:
-                    InvokeSync(() => ((Action)Callback)());
-                    break;
-                case IntervalTimerCallbackKind.ContextAction:
-                    InvokeSync(() => ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState)));
-                    break;
-                case IntervalTimerCallbackKind.ContextActionWithToken:
-                    InvokeSync(() => ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
-                        CancellationToken));
-                    break;
-                case IntervalTimerCallbackKind.SimpleAsync:
-                    RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
-                        resetAfter,
-                        isRepeating,
-                        now);
-                    return;
-                case IntervalTimerCallbackKind.ContextAsync:
-                    RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
-                            CancellationToken),
-                        resetAfter,
-                        isRepeating,
-                        now);
-                    return;
-                default:
-                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
-            }
-
-            OnSyncCallbackCompleted(resetAfter, isRepeating, now);
-        }
-
-        private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating, DateTimeOffset now)
-        {
-            ValueTask vt = run();
-            if (vt.IsCompletedSuccessfully)
-            {
-                OnAsyncCallbackCompleted(resetAfter, isRepeating, now);
-                return;
-            }
-
-            vt.AsTask().ContinueWith((_, state) =>
-                {
-                    (VirtualIntervalTimer reg, bool ra, bool rep, DateTimeOffset n) =
-                        ((VirtualIntervalTimer, bool, bool, DateTimeOffset))state!;
-                    reg.OnAsyncCallbackCompleted(ra, rep, n);
-                },
-                (this, resetAfter, isRepeating, now),
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default);
-        }
-
-        private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
-        {
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled)
-                    return;
-                if (!isRepeating)
-                {
-                    State = TimerState.Completed;
-                    return;
-                }
-
-                State = TimerState.RepeatCycle;
-                NextDueUtc = now + RepeatInterval;
-            }
-        }
-
-        private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
-        {
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled)
-                    return;
-                if (!isRepeating)
-                {
-                    State = TimerState.Completed;
-                    return;
-                }
-
-                State = TimerState.RepeatCycle;
-                NextDueUtc = now + RepeatInterval;
-            }
-        }
-    }
-
-    #endregion Nested types — Virtual interval timer
-
-#if NET
-    #region Nested types — Virtual day-time timer
-
-    private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
-    {
-        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
-        protected bool IsLocal { [DebuggerStepThrough] get; }
-        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
-        protected Delegate Callback { [DebuggerStepThrough] get; }
-        protected object? CallbackState { [DebuggerStepThrough] get; }
-        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
-#if NET10_OR_GREATER
-        protected Lock Gate { [DebuggerStepThrough] get; } = new();
-#else
-        protected object Gate { [DebuggerStepThrough] get; } = new();
-#endif
-        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
-        protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
-        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        protected TimeOnly TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-
-        protected VirtualDayTimeTimerBase (PrimeTestSystemClock clock,
-            bool isLocal,
-            TimeOnly targetTimeOfDay,
-            IntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            DayTimeTimerOptions? options,
-            CancellationToken cancellationToken)
-        {
-            Clock = clock;
-            IsLocal = isLocal;
-            TargetTimeOfDay = targetTimeOfDay;
-            CallbackKind = callbackKind;
-            Callback = callback;
-            CallbackState = callbackState;
-            CancellationToken = cancellationToken;
-            ConcurrentTriggerProcessing = options?.ConcurrentTriggerProcessing ?? ConcurrentTriggerProcessing.RunSequentially;
-            SkippedTimeBehavior = options?.SkippedTimeBehavior ?? SkippedTimeBehavior.RunAfter;
-            DuplicateTimeBehavior = options?.DuplicateTimeBehavior ?? DuplicateTimeBehavior.RunFirst;
-            Id = Interlocked.Increment(ref _nextTimerId);
-            RegisteredTime = Clock.UtcNow;
-            NextDueUtc = ComputeNextDue(clock.UtcNow);
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(OnCancelRequested);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    CancelRequested = true;
-                    State = TimerState.Cancelled;
-                    EnabledDayTime = false;
-                }
-            }
-        }
-
-        private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
-
-        public int Id { [DebuggerStepThrough] get; }
-        public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
-        public bool IsTimeOfDay => true;
-        public bool IsLocalTimeRepresentation => IsLocal;
-        public bool IsRepeating => true;
-        public bool IsCancelled => State == TimerState.Cancelled;
-        public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && EnabledDayTime;
-        public bool CallbacksProcessing => CallbacksRunning > 0;
-        public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
-        public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
-        public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
-
-        public bool Enabled
-        {
-            get => EnabledDayTime && !IsCancelled && State != TimerState.Disposed;
-            set
-            {
-                lock (Gate)
-                {
-                    if (Disposed || State == TimerState.Cancelled)
-                        return;
-                    if (value)
-                    {
-                        EnabledDayTime = true;
-                        State = TimerState.Active;
-                        NextDueUtc = ComputeNextDue(Clock.UtcNow);
-                    }
-                    else
-                    {
-                        EnabledDayTime = false;
-                        State = TimerState.Disabled;
-                    }
-                }
-            }
-        }
-
-        TimerState IRegisteredTimer.State => State;
-
-        public long ElapsedTime => -1;
-        public long TimeUntilNextCallback
-        {
-            get
-            {
-                lock (Gate)
-                {
-                    if (NextDueUtc is not { } next)
-                        return -1;
-                    DateTimeOffset now = Clock.UtcNow;
-                    if (next <= now)
-                        return 0;
-                    return (long)(next - now).TotalMilliseconds;
-                }
-            }
-        }
-
-        public bool IsDue (DateTimeOffset now)
-        {
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
-                    return false;
-                if (NextDueUtc is not { } next)
-                    return false;
-                return next <= now;
-            }
-        }
-
-        public abstract void RunDueCallback (DateTimeOffset now);
-
-        protected DateTimeOffset? ComputeNextDue (DateTimeOffset now)
-        {
-            if (IsLocal)
-            {
-                DateTimeOffset localNow = Clock.LocalNow;
-                DateOnly today = DateOnly.FromDateTime(localNow.DateTime);
-                DateTime nextDt = today.ToDateTime(TargetTimeOfDay);
-                if (nextDt <= localNow.DateTime)
-                    nextDt = today.AddDays(1).ToDateTime(TargetTimeOfDay);
-                DateTimeOffset nextLocal = new(nextDt, localNow.Offset);
-                return nextLocal.ToUniversalTime();
-            }
-            else
-            {
-                DateTime utcDate = now.UtcDateTime;
-                DateOnly today = DateOnly.FromDateTime(utcDate);
-                DateTime nextDt = today.ToDateTime(TargetTimeOfDay);
-                if (nextDt <= utcDate)
-                    nextDt = today.AddDays(1).ToDateTime(TargetTimeOfDay);
-                return new DateTimeOffset(nextDt, TimeSpan.Zero);
-            }
-        }
-
-        protected void OnCancelRequested ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                EnabledDayTime = false;
-            }
-
-            Clock.RemoveDayTimeTimer(this);
-        }
-
-        public bool Change (LocalTimeOfDay newTimeOfDay)
-        {
-            if (!IsLocal)
-                return false;
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                TargetTimeOfDay = newTimeOfDay.Value;
-                if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNow);
-                return true;
-            }
-        }
-
-        public bool Change (UtcTimeOfDay newTimeOfDay)
-        {
-            if (IsLocal)
-                return false;
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                TargetTimeOfDay = newTimeOfDay.Value;
-                if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNow);
-                return true;
-            }
-        }
-
-        public void Cancel ()
-        {
-            lock (Gate)
-            {
-                if (State == TimerState.Cancelled || Disposed)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                Enabled = false;
-            }
-
-            Clock.RemoveDayTimeTimer(this);
-        }
-
-        public bool Stop ()
-        {
-            lock (Gate)
-            {
-                if (!EnabledDayTime || State == TimerState.Cancelled || Disposed)
-                    return false;
-                EnabledDayTime = false;
-                State = TimerState.Disabled;
-                return true;
-            }
-        }
-
-        public bool Start ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                if (State != TimerState.Completed && State != TimerState.Disabled)
-                    return false;
-                EnabledDayTime = true;
-                State = TimerState.Active;
-                NextDueUtc = ComputeNextDue(Clock.UtcNow);
-                return true;
-            }
-        }
-
-        public void Dispose ()
-        {
-            lock (Gate)
-            {
-                if (Disposed)
-                    return;
-                Disposed = true;
-                State = TimerState.Disposed;
-                EnabledDayTime = false;
-            }
-
-            Clock.RemoveDayTimeTimer(this);
-        }
-    }
-
-    private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
-    {
-        public VirtualDayTimeTimer (PrimeTestSystemClock clock,
-            bool isLocal,
-            TimeOnly targetTimeOfDay,
-            IntervalTimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            DayTimeTimerOptions? options,
-            CancellationToken cancellationToken)
-            : base(clock, isLocal, targetTimeOfDay, callbackKind, callback, callbackState, options, cancellationToken)
-        {
-        }
-
-        public override void RunDueCallback (DateTimeOffset now)
-        {
-            lock (Gate)
-            {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
-                    return;
-                if (NextDueUtc is not { } next || next > now)
-                    return;
-                NextDueUtc = ComputeNextDue(now);
-                State = TimerState.RepeatProcessingCallback;
-                CallbacksRunning++;
-            }
-
-            try
-            {
-                RunCallback();
-            }
-            finally
-            {
-                lock (Gate)
-                {
-                    CallbacksRunning--;
-                    State = TimerState.RepeatCycle;
-                }
-            }
-        }
-
-        private void RunCallback ()
-        {
-            switch (CallbackKind)
-            {
-                case IntervalTimerCallbackKind.SimpleAction:
-                    ((Action)Callback)();
-                    break;
-                case IntervalTimerCallbackKind.ContextAction:
-                    ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState));
-                    break;
-                case IntervalTimerCallbackKind.ContextActionWithToken:
-                    ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
-                        CancellationToken);
-                    break;
-                case IntervalTimerCallbackKind.SimpleAsync:
-                    ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken).AsTask().GetAwaiter().GetResult();
-                    break;
-                case IntervalTimerCallbackKind.ContextAsync:
-                    ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
-                        CancellationToken)
-                        .AsTask().GetAwaiter().GetResult();
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
-            }
-        }
-    }
-
-    #endregion Nested types — Virtual day-time timer
-#endif
+    #endregion Interface Implementations
 }

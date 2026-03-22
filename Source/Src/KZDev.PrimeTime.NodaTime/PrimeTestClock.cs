@@ -13,886 +13,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public sealed class PrimeTestClock : IPrimeTestClock
 {
-    private static int _nextTimerId;
-#if NET10_OR_GREATER
-    private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
-    private Instant _now;
-    private readonly DateTimeZone _zone;
-    private bool _isRunning;
-    private Thread? _runThread;
-    private Duration _runRate = Duration.FromSeconds(1);
-    private readonly List<PendingDelay> _pendingDelays = [];
-    private readonly List<TimeExpiryEntry> _timeExpiryEntries = [];
-    private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
-    private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
-
-    #region Constructors/Finalizers
-
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
-    ///   virtual time set to the current system instant at construction.
-    /// </summary>
-    public PrimeTestClock ()
-    {
-        _now = SystemClock.Instance.GetCurrentInstant();
-        _zone = GetSystemDefaultTimeZone();
-    }
-
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
-    ///   the specified initial instant and system default time zone.
-    /// </summary>
-    /// <param name="initialInstant">
-    ///   The initial virtual instant.
-    /// </param>
-    public PrimeTestClock (Instant initialInstant)
-    {
-        _now = initialInstant;
-        _zone = GetSystemDefaultTimeZone();
-    }
-
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
-    ///   the specified initial instant and time zone.
-    /// </summary>
-    /// <param name="initialInstant">
-    ///   The initial virtual instant.
-    /// </param>
-    /// <param name="zone">
-    ///   The time zone used for local "now" values.
-    /// </param>
-    public PrimeTestClock (Instant initialInstant, DateTimeZone zone)
-    {
-        _now = initialInstant;
-        _zone = zone ?? throw new ArgumentNullException(nameof(zone));
-    }
-
-    #endregion Constructors/Finalizers
-
-    /// <summary>
-    ///   Occurs when the clock's current time has changed.
-    /// </summary>
-    public event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
-
-    private static DateTimeZone GetSystemDefaultTimeZone ()
-    {
-        try
-        {
-            return DateTimeZoneProviders.Bcl.GetSystemDefault();
-        }
-        catch (DateTimeZoneNotFoundException)
-        {
-            return BclDateTimeZone.ForSystemDefault();
-        }
-    }
-
-    #region IPrimeTestClock Implementation
-
-    /// <inheritdoc />
-    public void SetInstant (Instant instant)
-    {
-        lock (_gate)
-        {
-            _now = instant;
-        }
-
-        RaiseClockEvents(instant);
-    }
-
-    /// <inheritdoc />
-    public void SetTime (DateTimeOffset utcTime)
-    {
-        SetInstant(Instant.FromDateTimeUtc(utcTime.UtcDateTime));
-    }
-
-    /// <inheritdoc />
-    public void SetLocalTime (LocalDateTime localDateTime)
-    {
-        SetInstant(localDateTime.InZoneLeniently(_zone).ToInstant());
-    }
-
-    /// <inheritdoc />
-    public void Advance (Duration duration)
-    {
-        if (duration < Duration.Zero)
-            duration = Duration.Zero;
-
-        Instant newNow;
-        List<PendingDelay>? toComplete = null;
-        List<TimeExpiryEntry>? toCancel = null;
-        List<VirtualIntervalTimerBase>? intervalDue = null;
-        List<VirtualDayTimeTimerBase>? dayTimeDue = null;
-
-        lock (_gate)
-        {
-            _now += duration;
-            newNow = _now;
-
-            foreach (PendingDelay pd in _pendingDelays)
-            {
-                if (pd.DueInstant <= newNow)
-                {
-                    toComplete ??= [];
-                    toComplete.Add(pd);
-                }
-            }
-
-            if (toComplete != null)
-            {
-                foreach (PendingDelay pd in toComplete)
-                    _pendingDelays.Remove(pd);
-            }
-
-            foreach (TimeExpiryEntry tee in _timeExpiryEntries)
-            {
-                if (tee.ExpireInstant <= newNow)
-                {
-                    toCancel ??= [];
-                    toCancel.Add(tee);
-                }
-            }
-
-            if (toCancel != null)
-            {
-                foreach (TimeExpiryEntry tee in toCancel)
-                    _timeExpiryEntries.Remove(tee);
-            }
-
-            foreach (VirtualIntervalTimerBase t in _intervalTimers)
-            {
-                if (t.IsDue(newNow))
-                {
-                    intervalDue ??= [];
-                    intervalDue.Add(t);
-                }
-            }
-
-            foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
-            {
-                if (t.IsDue(newNow))
-                {
-                    dayTimeDue ??= [];
-                    dayTimeDue.Add(t);
-                }
-            }
-        }
-
-        if (toComplete != null)
-        {
-            foreach (PendingDelay pd in toComplete)
-                pd.Complete();
-        }
-
-        if (toCancel != null)
-        {
-            foreach (TimeExpiryEntry tee in toCancel)
-                tee.Cancel();
-        }
-
-        while (intervalDue is { Count: > 0 })
-        {
-            foreach (VirtualIntervalTimerBase t in intervalDue)
-                t.RunDueCallback(newNow);
-
-            intervalDue = null;
-            lock (_gate)
-            {
-                foreach (VirtualIntervalTimerBase t in _intervalTimers)
-                {
-                    if (t.IsDue(newNow))
-                    {
-                        intervalDue ??= [];
-                        intervalDue.Add(t);
-                    }
-                }
-            }
-        }
-
-        while (dayTimeDue is { Count: > 0 })
-        {
-            foreach (VirtualDayTimeTimerBase t in dayTimeDue)
-                t.RunDueCallback(newNow);
-
-            dayTimeDue = null;
-            lock (_gate)
-            {
-                foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
-                {
-                    if (t.IsDue(newNow))
-                    {
-                        dayTimeDue ??= [];
-                        dayTimeDue.Add(t);
-                    }
-                }
-            }
-        }
-
-        RaiseClockEvents(newNow);
-    }
-
-    /// <inheritdoc />
-    public void RunFor (Duration duration)
-    {
-        Advance(duration);
-    }
-
-    /// <inheritdoc />
-    public void Start (Duration? rate = null)
-    {
-        lock (_gate)
-        {
-            if (_isRunning)
-                return;
-            _isRunning = true;
-            _runRate = rate ?? Duration.FromSeconds(1);
-        }
-
-        _runThread = new Thread(RunLoop)
-        {
-            IsBackground = true
-        };
-        _runThread.Start();
-    }
-
-    /// <inheritdoc />
-    public bool Stop ()
-    {
-        lock (_gate)
-        {
-            if (!_isRunning)
-                return false;
-            _isRunning = false;
-        }
-
-        _runThread?.Join(TimeSpan.FromSeconds(5));
-        _runThread = null;
-        return true;
-    }
-
-    #endregion IPrimeTestClock Implementation
-
-    #region IPrimeTestTime Implementation
-
-    /// <inheritdoc />
-    public bool IsRunning
-    {
-        get
-        {
-            lock (_gate)
-                return _isRunning;
-        }
-    }
-
-    #endregion IPrimeTestTime Implementation
-
-    #region IPrimeClock Implementation — Now
-
-    /// <inheritdoc />
-    public Instant Instant
-    {
-        get
-        {
-            lock (_gate)
-                return _now;
-        }
-    }
-
-    /// <inheritdoc />
-    public ZonedDateTime UtcNow
-    {
-        get
-        {
-            lock (_gate)
-                return _now.InUtc();
-        }
-    }
-
-    /// <inheritdoc />
-    public ZonedDateTime LocalZonedNow
-    {
-        get
-        {
-            lock (_gate)
-                return _now.InZone(_zone);
-        }
-    }
-
-    /// <inheritdoc />
-    public ZonedDateTime UtcZonedNow => UtcNow;
-
-    /// <inheritdoc />
-    public LocalDateTime LocalNow => LocalZonedNow.LocalDateTime;
-
-    /// <inheritdoc />
-    public LocalTime LocalNowTime => LocalZonedNow.TimeOfDay;
-
-    /// <inheritdoc />
-    public LocalTime UtcNowTime => UtcNow.TimeOfDay;
-
-    /// <inheritdoc />
-    public LocalDate LocalNowDate => LocalZonedNow.Date;
-
-    /// <inheritdoc />
-    public LocalDate UtcNowDate => UtcNow.Date;
-
-    #endregion IPrimeClock Implementation — Now
-
-    #region IPrimeTime Implementation — Delays (TimeSpan/int)
-
-    /// <inheritdoc />
-    public void Sleep (TimeSpan sleepTime) => Sleep(Duration.FromTimeSpan(sleepTime));
-
-    /// <inheritdoc />
-    public void Sleep (int sleepMilliseconds) => Sleep(Duration.FromMilliseconds(sleepMilliseconds));
-
-    /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime) => DelayAsync(Duration.FromTimeSpan(delayTime));
-
-    /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay) =>
-        DelayAsync(Duration.FromMilliseconds(millisecondsDelay));
-
-    /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) =>
-        DelayAsync(Duration.FromTimeSpan(delayTime), cancellationToken);
-
-    /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) =>
-        DelayAsync(Duration.FromMilliseconds(millisecondsDelay), cancellationToken);
-
-    #endregion IPrimeTime Implementation — Delays (TimeSpan/int)
-
-    #region IPrimeClock Implementation — Delays (Duration)
-
-    /// <inheritdoc />
-    public void Sleep (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return;
-
-        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        lock (_gate)
-        {
-            Instant dueInstant = _now + duration;
-            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
-        }
-
-        taskCompletionSource.Task.GetAwaiter().GetResult();
-    }
-
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration)
-    {
-        return DelayAsync(duration, CancellationToken.None);
-    }
-
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
-    {
-        if (duration <= Duration.Zero)
-            return Task.CompletedTask;
-
-        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        lock (_gate)
-        {
-            Instant dueInstant = _now + duration;
-            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
-        }
-
-        if (cancellationToken.CanBeCanceled)
-        {
-            CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
-            {
-                lock (_gate)
-                {
-                    if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
-                        taskCompletionSource.TrySetCanceled(cancellationToken);
-                }
-            });
-
-            _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
-                cancellationRegistration,
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default);
-        }
-
-        return taskCompletionSource.Task;
-    }
-
-    #endregion IPrimeClock Implementation — Delays (Duration)
-
-    #region IPrimeClock Implementation — Time cancellation (Duration)
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
-    {
-        CancellationTokenSource cts = new();
-        TimeCancellationTokenSource wrapper = new(cts);
-
-        lock (_gate)
-        {
-            Instant expireInstant = _now + cancelAfter;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper));
-        }
-
-        return wrapper;
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked =
-            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            Instant expireInstant = _now + cancelAfter;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
-        CancellationToken token2)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked =
-            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            Instant expireInstant = _now + cancelAfter;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
-        params CancellationToken[] cancellationTokens)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked =
-            CancellationTokenSource.CreateLinkedTokenSource([timeCts.Token, .. cancellationTokens]);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            Instant expireInstant = _now + cancelAfter;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-
-    #endregion IPrimeClock Implementation — Time cancellation (Duration)
-
-    #region IPrimeTime Implementation — Time cancellation (TimeSpan/int)
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime) =>
-        GetTimeCancellationToken(Duration.FromTimeSpan(cancelTime));
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds) =>
-        GetTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds));
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
-        LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationToken);
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
-        LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationToken);
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
-        CancellationToken token2)
-    {
-        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), token1, token2);
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
-        CancellationToken token2)
-    {
-        return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), token1, token2);
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
-        params CancellationToken[] cancellationTokens)
-    {
-        return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationTokens);
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
-        params CancellationToken[] cancellationTokens)
-    {
-        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationTokens);
-    }
-
-    #endregion IPrimeTime Implementation — Time cancellation (TimeSpan/int)
-
-    #region IPrimeClock Implementation — Interval timers
-
     private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Action callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Action<PrimeClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
-        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<PrimeClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    #endregion IPrimeClock Implementation — Interval timers
-
-    #region IPrimeClock Implementation — Time-of-day timers
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null)
-    {
-        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
-            timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(dayTimeTimer);
-        return dayTimeTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<PrimeClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null)
-    {
-        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
-            timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(dayTimeTimer);
-        return dayTimeTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null)
-    {
-        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
-            timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(dayTimeTimer);
-        return dayTimeTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null)
-    {
-        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
-            timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(dayTimeTimer);
-        return dayTimeTimer;
-    }
-
-    /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null)
-    {
-        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
-            timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _dayTimeTimers.Add(dayTimeTimer);
-        return dayTimeTimer;
-    }
-
-    #endregion IPrimeClock Implementation — Time-of-day timers
-
-    #region Private helpers
-
-    private void RunLoop ()
-    {
-        while (true)
-        {
-            Thread.Sleep(1000);
-            Duration toAdvance;
-            lock (_gate)
-            {
-                if (!_isRunning)
-                    return;
-                toAdvance = _runRate;
-            }
-
-            Advance(toAdvance);
-        }
-    }
-
-    private void RaiseClockEvents (Instant instant)
-    {
-        ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(instant));
-    }
-
-    private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
-    {
-        lock (_gate)
-            _intervalTimers.Remove(timer);
-    }
-
-    private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
-    {
-        lock (_gate)
-            _dayTimeTimers.Remove(timer);
-    }
-
-    #endregion Private helpers
 
     #region Nested types — Pending delay and time expiry
 
@@ -1613,4 +734,887 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     #endregion Nested types — Virtual day-time timer
+
+    private static int _nextTimerId;
+#if NET10_OR_GREATER
+    private readonly Lock _gate = new();
+#else
+    private readonly object _gate = new();
+#endif
+    private Instant _now;
+    private readonly DateTimeZone _zone;
+    private bool _isRunning;
+    private Thread? _runThread;
+    private Duration _runRate = Duration.FromSeconds(1);
+    private readonly List<PendingDelay> _pendingDelays = [];
+    private readonly List<TimeExpiryEntry> _timeExpiryEntries = [];
+    private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
+    private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
+
+    #region Constructors/Finalizers
+
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
+    ///   virtual time set to the current system instant at construction.
+    /// </summary>
+    public PrimeTestClock ()
+    {
+        _now = SystemClock.Instance.GetCurrentInstant();
+        _zone = GetSystemDefaultTimeZone();
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
+    ///   the specified initial instant and system default time zone.
+    /// </summary>
+    /// <param name="initialInstant">
+    ///   The initial virtual instant.
+    /// </param>
+    public PrimeTestClock (Instant initialInstant)
+    {
+        _now = initialInstant;
+        _zone = GetSystemDefaultTimeZone();
+    }
+
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class with
+    ///   the specified initial instant and time zone.
+    /// </summary>
+    /// <param name="initialInstant">
+    ///   The initial virtual instant.
+    /// </param>
+    /// <param name="zone">
+    ///   The time zone used for local "now" values.
+    /// </param>
+    public PrimeTestClock (Instant initialInstant, DateTimeZone zone)
+    {
+        _now = initialInstant;
+        _zone = zone ?? throw new ArgumentNullException(nameof(zone));
+    }
+
+    #endregion Constructors/Finalizers
+
+
+    /// <summary>
+    ///   Occurs when the clock's current time has changed.
+    /// </summary>
+    public event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
+
+    private static DateTimeZone GetSystemDefaultTimeZone ()
+    {
+        try
+        {
+            return DateTimeZoneProviders.Bcl.GetSystemDefault();
+        }
+        catch (DateTimeZoneNotFoundException)
+        {
+            return BclDateTimeZone.ForSystemDefault();
+        }
+    }
+
+    #region Private helpers
+
+    private void RunLoop ()
+    {
+        while (true)
+        {
+            Thread.Sleep(1000);
+            Duration toAdvance;
+            lock (_gate)
+            {
+                if (!_isRunning)
+                    return;
+                toAdvance = _runRate;
+            }
+
+            Advance(toAdvance);
+        }
+    }
+
+    private void RaiseClockEvents (Instant instant)
+    {
+        ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(instant));
+    }
+
+    private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
+    {
+        lock (_gate)
+            _intervalTimers.Remove(timer);
+    }
+
+    private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
+    {
+        lock (_gate)
+            _dayTimeTimers.Remove(timer);
+    }
+
+    #endregion Private helpers
+
+    #region Interface Implementations
+
+    #region IPrimeTestClock Implementation
+
+    /// <inheritdoc />
+    public void SetInstant (Instant instant)
+    {
+        lock (_gate)
+        {
+            _now = instant;
+        }
+
+        RaiseClockEvents(instant);
+    }
+
+    /// <inheritdoc />
+    public void SetTime (DateTimeOffset utcTime)
+    {
+        SetInstant(Instant.FromDateTimeUtc(utcTime.UtcDateTime));
+    }
+
+    /// <inheritdoc />
+    public void SetLocalTime (LocalDateTime localDateTime)
+    {
+        SetInstant(localDateTime.InZoneLeniently(_zone).ToInstant());
+    }
+
+    /// <inheritdoc />
+    public void Advance (Duration duration)
+    {
+        if (duration < Duration.Zero)
+            duration = Duration.Zero;
+
+        Instant newNow;
+        List<PendingDelay>? toComplete = null;
+        List<TimeExpiryEntry>? toCancel = null;
+        List<VirtualIntervalTimerBase>? intervalDue = null;
+        List<VirtualDayTimeTimerBase>? dayTimeDue = null;
+
+        lock (_gate)
+        {
+            _now += duration;
+            newNow = _now;
+
+            foreach (PendingDelay pd in _pendingDelays)
+            {
+                if (pd.DueInstant <= newNow)
+                {
+                    toComplete ??= [];
+                    toComplete.Add(pd);
+                }
+            }
+
+            if (toComplete != null)
+            {
+                foreach (PendingDelay pd in toComplete)
+                    _pendingDelays.Remove(pd);
+            }
+
+            foreach (TimeExpiryEntry tee in _timeExpiryEntries)
+            {
+                if (tee.ExpireInstant <= newNow)
+                {
+                    toCancel ??= [];
+                    toCancel.Add(tee);
+                }
+            }
+
+            if (toCancel != null)
+            {
+                foreach (TimeExpiryEntry tee in toCancel)
+                    _timeExpiryEntries.Remove(tee);
+            }
+
+            foreach (VirtualIntervalTimerBase t in _intervalTimers)
+            {
+                if (t.IsDue(newNow))
+                {
+                    intervalDue ??= [];
+                    intervalDue.Add(t);
+                }
+            }
+
+            foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
+            {
+                if (t.IsDue(newNow))
+                {
+                    dayTimeDue ??= [];
+                    dayTimeDue.Add(t);
+                }
+            }
+        }
+
+        if (toComplete != null)
+        {
+            foreach (PendingDelay pd in toComplete)
+                pd.Complete();
+        }
+
+        if (toCancel != null)
+        {
+            foreach (TimeExpiryEntry tee in toCancel)
+                tee.Cancel();
+        }
+
+        while (intervalDue is { Count: > 0 })
+        {
+            foreach (VirtualIntervalTimerBase t in intervalDue)
+                t.RunDueCallback(newNow);
+
+            intervalDue = null;
+            lock (_gate)
+            {
+                foreach (VirtualIntervalTimerBase t in _intervalTimers)
+                {
+                    if (t.IsDue(newNow))
+                    {
+                        intervalDue ??= [];
+                        intervalDue.Add(t);
+                    }
+                }
+            }
+        }
+
+        while (dayTimeDue is { Count: > 0 })
+        {
+            foreach (VirtualDayTimeTimerBase t in dayTimeDue)
+                t.RunDueCallback(newNow);
+
+            dayTimeDue = null;
+            lock (_gate)
+            {
+                foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
+                {
+                    if (t.IsDue(newNow))
+                    {
+                        dayTimeDue ??= [];
+                        dayTimeDue.Add(t);
+                    }
+                }
+            }
+        }
+
+        RaiseClockEvents(newNow);
+    }
+
+    /// <inheritdoc />
+    public void RunFor (Duration duration)
+    {
+        Advance(duration);
+    }
+
+    /// <inheritdoc />
+    public void Start (Duration? rate = null)
+    {
+        lock (_gate)
+        {
+            if (_isRunning)
+                return;
+            _isRunning = true;
+            _runRate = rate ?? Duration.FromSeconds(1);
+        }
+
+        _runThread = new Thread(RunLoop)
+        {
+            IsBackground = true
+        };
+        _runThread.Start();
+    }
+
+    /// <inheritdoc />
+    public bool Stop ()
+    {
+        lock (_gate)
+        {
+            if (!_isRunning)
+                return false;
+            _isRunning = false;
+        }
+
+        _runThread?.Join(TimeSpan.FromSeconds(5));
+        _runThread = null;
+        return true;
+    }
+
+    #endregion IPrimeTestClock Implementation
+
+    #region IPrimeTestTime Implementation
+
+    /// <inheritdoc />
+    public bool IsRunning
+    {
+        get
+        {
+            lock (_gate)
+                return _isRunning;
+        }
+    }
+
+    #endregion IPrimeTestTime Implementation
+
+    #region IPrimeClock Implementation — Now
+
+    /// <inheritdoc />
+    public Instant Instant
+    {
+        get
+        {
+            lock (_gate)
+                return _now;
+        }
+    }
+
+    /// <inheritdoc />
+    public ZonedDateTime UtcNow
+    {
+        get
+        {
+            lock (_gate)
+                return _now.InUtc();
+        }
+    }
+
+    /// <inheritdoc />
+    public ZonedDateTime LocalZonedNow
+    {
+        get
+        {
+            lock (_gate)
+                return _now.InZone(_zone);
+        }
+    }
+
+    /// <inheritdoc />
+    public ZonedDateTime UtcZonedNow => UtcNow;
+
+    /// <inheritdoc />
+    public LocalDateTime LocalNow => LocalZonedNow.LocalDateTime;
+
+    /// <inheritdoc />
+    public LocalTime LocalNowTime => LocalZonedNow.TimeOfDay;
+
+    /// <inheritdoc />
+    public LocalTime UtcNowTime => UtcNow.TimeOfDay;
+
+    /// <inheritdoc />
+    public LocalDate LocalNowDate => LocalZonedNow.Date;
+
+    /// <inheritdoc />
+    public LocalDate UtcNowDate => UtcNow.Date;
+
+    #endregion IPrimeClock Implementation — Now
+
+    #region IPrimeTime Implementation — Delays (TimeSpan/int)
+
+    /// <inheritdoc />
+    public void Sleep (TimeSpan sleepTime) => Sleep(Duration.FromTimeSpan(sleepTime));
+
+    /// <inheritdoc />
+    public void Sleep (int sleepMilliseconds) => Sleep(Duration.FromMilliseconds(sleepMilliseconds));
+
+    /// <inheritdoc />
+    public Task DelayAsync (TimeSpan delayTime) => DelayAsync(Duration.FromTimeSpan(delayTime));
+
+    /// <inheritdoc />
+    public Task DelayAsync (int millisecondsDelay) =>
+        DelayAsync(Duration.FromMilliseconds(millisecondsDelay));
+
+    /// <inheritdoc />
+    public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) =>
+        DelayAsync(Duration.FromTimeSpan(delayTime), cancellationToken);
+
+    /// <inheritdoc />
+    public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) =>
+        DelayAsync(Duration.FromMilliseconds(millisecondsDelay), cancellationToken);
+
+    #endregion IPrimeTime Implementation — Delays (TimeSpan/int)
+
+    #region IPrimeClock Implementation — Delays (Duration)
+
+    /// <inheritdoc />
+    public void Sleep (Duration duration)
+    {
+        if (duration <= Duration.Zero)
+            return;
+
+        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        lock (_gate)
+        {
+            Instant dueInstant = _now + duration;
+            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
+        }
+
+        taskCompletionSource.Task.GetAwaiter().GetResult();
+    }
+
+    /// <inheritdoc />
+    public Task DelayAsync (Duration duration)
+    {
+        return DelayAsync(duration, CancellationToken.None);
+    }
+
+    /// <inheritdoc />
+    public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
+    {
+        if (duration <= Duration.Zero)
+            return Task.CompletedTask;
+
+        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        lock (_gate)
+        {
+            Instant dueInstant = _now + duration;
+            _pendingDelays.Add(new PendingDelay(dueInstant, taskCompletionSource));
+        }
+
+        if (cancellationToken.CanBeCanceled)
+        {
+            CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
+            {
+                lock (_gate)
+                {
+                    if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
+                        taskCompletionSource.TrySetCanceled(cancellationToken);
+                }
+            });
+
+            _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
+                cancellationRegistration,
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
+        }
+
+        return taskCompletionSource.Task;
+    }
+
+    #endregion IPrimeClock Implementation — Delays (Duration)
+
+    #region IPrimeClock Implementation — Time cancellation (Duration)
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
+    {
+        CancellationTokenSource cts = new();
+        TimeCancellationTokenSource wrapper = new(cts);
+
+        lock (_gate)
+        {
+            Instant expireInstant = _now + cancelAfter;
+            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper));
+        }
+
+        return wrapper;
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
+    {
+        CancellationTokenSource timeCts = new();
+        CancellationTokenSource linked =
+            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
+        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
+
+        lock (_gate)
+        {
+            Instant expireInstant = _now + cancelAfter;
+            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
+        }
+
+        return wrapper;
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
+        CancellationToken token2)
+    {
+        CancellationTokenSource timeCts = new();
+        CancellationTokenSource linked =
+            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
+        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
+
+        lock (_gate)
+        {
+            Instant expireInstant = _now + cancelAfter;
+            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
+        }
+
+        return wrapper;
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
+        params CancellationToken[] cancellationTokens)
+    {
+        CancellationTokenSource timeCts = new();
+        CancellationTokenSource linked =
+            CancellationTokenSource.CreateLinkedTokenSource([timeCts.Token, .. cancellationTokens]);
+        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
+
+        lock (_gate)
+        {
+            Instant expireInstant = _now + cancelAfter;
+            _timeExpiryEntries.Add(new TimeExpiryEntry(expireInstant, wrapper, timeCts));
+        }
+
+        return wrapper;
+    }
+
+    #endregion IPrimeClock Implementation — Time cancellation (Duration)
+
+    #region IPrimeTime Implementation — Time cancellation (TimeSpan/int)
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime) =>
+        GetTimeCancellationToken(Duration.FromTimeSpan(cancelTime));
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds) =>
+        GetTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds));
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken) =>
+        LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationToken);
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken) =>
+        LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationToken);
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
+        CancellationToken token2)
+    {
+        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), token1, token2);
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
+        CancellationToken token2)
+    {
+        return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), token1, token2);
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
+        params CancellationToken[] cancellationTokens)
+    {
+        return LinkTimeCancellationToken(Duration.FromTimeSpan(cancelTime), cancellationTokens);
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
+        params CancellationToken[] cancellationTokens)
+    {
+        return LinkTimeCancellationToken(Duration.FromMilliseconds(cancelMilliseconds), cancellationTokens);
+    }
+
+    #endregion IPrimeTime Implementation — Time cancellation (TimeSpan/int)
+
+    #region IPrimeClock Implementation — Interval timers
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Action callback,
+        CancellationToken cancellationToken,
+        bool repeat = false,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeat ? callbackTime : NoRepeatSentinel,
+            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        bool repeat = false,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeat ? callbackTime : NoRepeatSentinel,
+            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        bool repeat = false,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeat ? callbackTime : NoRepeatSentinel,
+            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        bool repeat = false,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeat ? callbackTime : NoRepeatSentinel,
+            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        bool repeat = false,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeat ? callbackTime : NoRepeatSentinel,
+            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Duration repeatInterval,
+        Action callback,
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Duration repeatInterval,
+        Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+        Duration repeatInterval,
+        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+        Duration repeatInterval,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+        Duration repeatInterval,
+        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    #endregion IPrimeClock Implementation — Interval timers
+
+    #region IPrimeClock Implementation — Time-of-day timers
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    #endregion IPrimeClock Implementation — Time-of-day timers
+    #endregion Interface Implementations
 }
