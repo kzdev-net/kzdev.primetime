@@ -1,6 +1,6 @@
 namespace KZDev.PrimeTime;
 
-//--------------------------------------------------------------------------------
+//################################################################################
 /// <summary>
 /// Defines how a local skipped time due to clock adjustments
 /// (such as time zone changes and/or daylight savings time changes)
@@ -49,4 +49,4 @@ public enum SkippedTimeBehavior
     /// </remarks>
     RunBefore
 }
-//--------------------------------------------------------------------------------
+//################################################################################

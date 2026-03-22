@@ -118,6 +118,9 @@ public interface IPrimeClock : IPrimeTime
     ///   greater than <see cref="TimeSpan.MaxValue"/> are clamped to
     ///   <see cref="TimeSpan.MaxValue"/> for the underlying delay.
     /// </remarks>
+    /// <exception cref="OperationCanceledException">
+    ///   The operation was canceled via <paramref name="cancellationToken"/>.
+    /// </exception>
     Task DelayAsync (Duration duration, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
 
@@ -240,6 +243,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
@@ -250,6 +263,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
         CancellationToken cancellationToken,
@@ -278,6 +301,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
+    /// <param name="timerOptions">Optional timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
@@ -296,6 +329,7 @@ public interface IPrimeClock : IPrimeTime
     ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
     ///   no external cancellation is required.
     /// </param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action callback,
@@ -305,6 +339,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context).
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext> callback,
@@ -315,6 +359,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
@@ -325,6 +379,15 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
+    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+    /// </param>
+    /// <param name="timerOptions">Optional timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<CancellationToken, ValueTask> callback,
@@ -334,6 +397,16 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback with context).
     /// </summary>
+    /// <param name="callbackTime">Duration until the first callback.</param>
+    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
+    /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> to monitor or change the timer.</returns>
     IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -366,6 +439,15 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
     /// </summary>
+    /// <param name="timeOfDay">The local time of day at which to fire.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional day-time timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> supporting <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/>.</returns>
     IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
@@ -375,6 +457,15 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
+    /// <param name="timeOfDay">The local time of day at which to fire.</param>
+    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+    ///   no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional day-time timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> supporting <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/>.</returns>
     IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
         CancellationToken cancellationToken,
@@ -384,6 +475,14 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.
     /// </summary>
+    /// <param name="timeOfDay">The local time of day at which to fire.</param>
+    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+    /// </param>
+    /// <param name="timerOptions">Optional day-time timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> supporting <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/>.</returns>
     IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
@@ -392,6 +491,15 @@ public interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
+    /// <param name="timeOfDay">The local time of day at which to fire.</param>
+    /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
+    /// <param name="cancellationToken">
+    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+    /// </param>
+    /// <param name="state">Optional state passed to the callback via <see cref="PrimeClockTimerCallbackContext"/>.</param>
+    /// <param name="timerOptions">Optional day-time timer options.</param>
+    /// <returns>An <see cref="IPrimeClockTimerRegistration"/> supporting <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/>.</returns>
     IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,

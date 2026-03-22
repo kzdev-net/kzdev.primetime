@@ -940,7 +940,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private abstract class VirtualIntervalTimerBase : IPrimeClockTimerRegistration
     {
-        protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
+        private PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected PrimeClockIntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
         protected object? CallbackState { [DebuggerStepThrough] get; }

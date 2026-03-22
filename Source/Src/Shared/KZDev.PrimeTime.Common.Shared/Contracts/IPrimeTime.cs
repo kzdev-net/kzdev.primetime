@@ -64,6 +64,9 @@ public interface IPrimeTime
     /// <param name="cancellationToken">
     /// A cancellation token to observe while waiting for the task to complete.
     /// </param>
+    /// <exception cref="OperationCanceledException">
+    /// The operation was canceled via <paramref name="cancellationToken"/>.
+    /// </exception>
     Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -75,6 +78,9 @@ public interface IPrimeTime
     /// <param name="cancellationToken">
     /// A cancellation token to observe while waiting for the task to complete.
     /// </param>
+    /// <exception cref="OperationCanceledException">
+    /// The operation was canceled via <paramref name="cancellationToken"/>.
+    /// </exception>
     Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
 

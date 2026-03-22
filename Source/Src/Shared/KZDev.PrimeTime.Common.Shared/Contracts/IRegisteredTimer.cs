@@ -24,10 +24,10 @@ public interface IRegisteredTimer : IDisposable
     ///   Returns whether this is a time-of-day clock registration or a time-interval
     ///   clock registration.
     /// </summary>
-    /// <returns>
+    /// <value>
     ///   <c>true</c> if this is a time-of-day clock registration, <c>false</c> if this is a
     ///   time interval clock registration.
-    /// </returns>
+    /// </value>
     bool IsTimeOfDay { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>

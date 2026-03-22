@@ -58,6 +58,9 @@ public interface IPrimeClockTimerRegistration : IIntervalTimer
     ///   <paramref name="repeatInterval"/> may be disallowed by the implementation
     ///   (e.g. throw <see cref="InvalidOperationException"/>).
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    ///   The implementation does not allow changing to a repeating interval from the current registration state.
+    /// </exception>
     bool Change (Duration nextInterval, Duration repeatInterval);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -71,9 +74,8 @@ public interface IPrimeClockTimerRegistration : IIntervalTimer
     ///   cancelled, disposed, or otherwise invalid.
     /// </returns>
     /// <remarks>
-    ///   Only applicable when <see cref="IIntervalTimer"/> (via <see cref="IRegisteredTimer.IsTimeOfDay"/>)
-    ///   indicates a time-of-day registration. For interval timers, use
-    ///   <see cref="Change(Duration)"/> or <see cref="Change(Duration, Duration)"/>.
+    ///   Only applicable when <see cref="IRegisteredTimer.IsTimeOfDay"/> is <c>true</c>.
+    ///   For interval timers, use <see cref="Change(Duration)"/> or <see cref="Change(Duration, Duration)"/>.
     /// </remarks>
     bool Change (LocalTime timeOfDay);
     //--------------------------------------------------------------------------------
