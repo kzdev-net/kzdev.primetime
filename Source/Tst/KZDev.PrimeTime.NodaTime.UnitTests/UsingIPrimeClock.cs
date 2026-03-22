@@ -434,7 +434,7 @@ public class UsingIPrimeClock : UnitTestBase
 #endif
     }
 
-#endregion DelayAsync (IPrimeTime and Duration)
+    #endregion DelayAsync (IPrimeTime and Duration)
 
     #region GetTimeCancellationToken (Duration)
 

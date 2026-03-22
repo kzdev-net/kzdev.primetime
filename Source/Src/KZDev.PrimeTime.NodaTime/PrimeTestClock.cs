@@ -192,7 +192,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 tee.Cancel();
         }
 
-        while (intervalDue is {Count: > 0})
+        while (intervalDue is { Count: > 0 })
         {
             foreach (VirtualIntervalTimerBase t in intervalDue)
                 t.RunDueCallback(newNow);
@@ -211,7 +211,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        while (dayTimeDue is {Count: > 0})
+        while (dayTimeDue is { Count: > 0 })
         {
             foreach (VirtualDayTimeTimerBase t in dayTimeDue)
                 t.RunDueCallback(newNow);
@@ -896,8 +896,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     #region Nested types — Pending delay and time expiry
 
-    private sealed class PendingDelay (
-        Instant dueInstant,
+    private sealed class PendingDelay (Instant dueInstant,
         TaskCompletionSource<bool> taskCompletionSource)
     {
         public Instant DueInstant { [DebuggerStepThrough] get; } = dueInstant;
@@ -941,25 +940,25 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private abstract class VirtualIntervalTimerBase : IPrimeClockTimerRegistration
     {
-        protected readonly PrimeTestClock Clock;
-        protected readonly PrimeClockIntervalTimerCallbackKind CallbackKind;
-        protected readonly Delegate Callback;
-        protected readonly object? CallbackState;
-        protected readonly CancellationToken CancellationToken;
+        protected PrimeTestClock Clock { get; }
+        protected PrimeClockIntervalTimerCallbackKind CallbackKind { get; }
+        protected Delegate Callback { get; }
+        protected object? CallbackState { get; }
+        protected CancellationToken CancellationToken { get; }
 #if NET10_OR_GREATER
-        protected readonly Lock Gate = new();
+        protected Lock Gate { get; } = new();
 #else
-        protected readonly object Gate = new();
+        protected object Gate { get; } = new();
 #endif
-        protected Instant? NextDueInstant;
-        protected Instant? LastCallbackInstant;
-        protected TimerState State = TimerState.Active;
-        protected bool _enabled = true;
-        protected bool Disposed;
-        protected bool CancelRequested;
-        protected int CallbacksRunning;
+        protected Instant? NextDueInstant { get; set; }
+        protected Instant? LastCallbackInstant { get; set; }
+        protected TimerState State { get; set; } = TimerState.Active;
+        protected bool IntervalTimerEnabled { get; private set; } = true;
+        protected bool Disposed { get; set; }
+        protected bool CancelRequested { get; set; }
+        protected int CallbacksRunning { get; set; }
         private Duration InitialCallbackTime;
-        protected Duration RepeatInterval;
+        protected Duration RepeatInterval { get; set; }
 
         protected VirtualIntervalTimerBase (PrimeTestClock clock,
             Duration initialCallbackTime,
@@ -991,7 +990,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 {
                     CancelRequested = true;
                     State = TimerState.Cancelled;
-                    _enabled = false;
+                    IntervalTimerEnabled = false;
                 }
             }
         }
@@ -1005,12 +1004,12 @@ public sealed class PrimeTestClock : IPrimeTestClock
         public bool IsCancelled => State == TimerState.Cancelled;
         public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
         public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && _enabled;
+            State != TimerState.Cancelled && State != TimerState.Disposed && IntervalTimerEnabled;
         public bool CallbacksProcessing => CallbacksRunning > 0;
 
         public bool Enabled
         {
-            get => _enabled && !IsCancelled && State != TimerState.Disposed;
+            get => IntervalTimerEnabled && !IsCancelled && State != TimerState.Disposed;
             set
             {
                 lock (Gate)
@@ -1069,7 +1068,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             lock (Gate)
             {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !_enabled)
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
                     return false;
                 if (NextDueInstant is not { } next)
                     return false;
@@ -1087,7 +1086,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 CancelRequested = true;
                 State = TimerState.Cancelled;
-                _enabled = false;
+                IntervalTimerEnabled = false;
             }
 
             Clock.RemoveIntervalTimer(this);
@@ -1108,7 +1107,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 RepeatInterval = repeatInterval;
                 if (State == TimerState.Completed)
                     State = TimerState.Active;
-                if (!_enabled)
+                if (!IntervalTimerEnabled)
                     return true;
                 NextDueInstant = Clock.Instant + nextInterval;
                 return true;
@@ -1125,7 +1124,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 CancelRequested = true;
                 State = TimerState.Cancelled;
-                _enabled = false;
+                IntervalTimerEnabled = false;
             }
 
             Clock.RemoveIntervalTimer(this);
@@ -1135,9 +1134,9 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             lock (Gate)
             {
-                if (!_enabled || State == TimerState.Cancelled || Disposed)
+                if (!IntervalTimerEnabled || State == TimerState.Cancelled || Disposed)
                     return false;
-                _enabled = false;
+                IntervalTimerEnabled = false;
                 State = TimerState.Disabled;
                 return true;
             }
@@ -1151,7 +1150,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return false;
                 if (State != TimerState.Completed && State != TimerState.Disabled)
                     return false;
-                _enabled = true;
+                IntervalTimerEnabled = true;
                 State = TimerState.Active;
                 NextDueInstant = Clock.Instant + InitialCallbackTime;
                 return true;
@@ -1166,15 +1165,14 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 Disposed = true;
                 State = TimerState.Disposed;
-                _enabled = false;
+                IntervalTimerEnabled = false;
             }
 
             Clock.RemoveIntervalTimer(this);
         }
     }
 
-    private sealed class VirtualIntervalTimer (
-        PrimeTestClock clock,
+    private sealed class VirtualIntervalTimer (PrimeTestClock clock,
         Duration initialCallbackTime,
         Duration repeatInterval,
         PrimeClockIntervalTimerCallbackKind callbackKind,
@@ -1199,7 +1197,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
             lock (Gate)
             {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !_enabled)
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
                     return;
                 if (NextDueInstant is not { } next || next > now)
                     return;
@@ -1324,23 +1322,23 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private abstract class VirtualDayTimeTimerBase : IPrimeClockTimerRegistration
     {
-        protected readonly PrimeTestClock Clock;
-        protected readonly PrimeClockIntervalTimerCallbackKind CallbackKind;
-        protected readonly Delegate Callback;
-        protected readonly object? CallbackState;
-        protected readonly CancellationToken CancellationToken;
+        protected PrimeTestClock Clock { get; }
+        protected PrimeClockIntervalTimerCallbackKind CallbackKind { get; }
+        protected Delegate Callback { get; }
+        protected object? CallbackState { get; }
+        protected CancellationToken CancellationToken { get; }
 #if NET10_OR_GREATER
-        protected readonly Lock Gate = new();
+        protected Lock Gate { get; } = new();
 #else
-        protected readonly object Gate = new();
+        protected object Gate { get; } = new();
 #endif
-        protected Instant? NextDueInstant;
-        protected TimerState State = TimerState.Active;
-        protected bool _enabledDayTime = true;
-        protected bool Disposed;
-        protected bool CancelRequested;
-        protected int CallbacksRunning;
-        protected LocalTime TargetTimeOfDay;
+        protected Instant? NextDueInstant { get; set; }
+        protected TimerState State { get; set; } = TimerState.Active;
+        protected bool EnabledDayTime { get; set; } = true;
+        protected bool Disposed { get; set; }
+        protected bool CancelRequested { get; set; }
+        protected int CallbacksRunning { get; set; }
+        protected LocalTime TargetTimeOfDay { get; set; }
 
         protected VirtualDayTimeTimerBase (PrimeTestClock clock,
             LocalTime timeOfDay,
@@ -1372,7 +1370,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 {
                     CancelRequested = true;
                     State = TimerState.Cancelled;
-                    _enabledDayTime = false;
+                    EnabledDayTime = false;
                 }
             }
         }
@@ -1385,7 +1383,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         public bool IsRepeating => true;
         public bool IsCancelled => State == TimerState.Cancelled;
         public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && _enabledDayTime;
+            State != TimerState.Cancelled && State != TimerState.Disposed && EnabledDayTime;
         public bool CallbacksProcessing => CallbacksRunning > 0;
         public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
         public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
@@ -1393,7 +1391,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
         public bool Enabled
         {
-            get => _enabledDayTime && !IsCancelled && State != TimerState.Disposed;
+            get => EnabledDayTime && !IsCancelled && State != TimerState.Disposed;
             set
             {
                 lock (Gate)
@@ -1402,13 +1400,13 @@ public sealed class PrimeTestClock : IPrimeTestClock
                         return;
                     if (value)
                     {
-                        _enabledDayTime = true;
+                        EnabledDayTime = true;
                         State = TimerState.Active;
                         NextDueInstant = ComputeNextDue(Clock.Instant);
                     }
                     else
                     {
-                        _enabledDayTime = false;
+                        EnabledDayTime = false;
                         State = TimerState.Disabled;
                     }
                 }
@@ -1439,7 +1437,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             lock (Gate)
             {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !_enabledDayTime)
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
                     return false;
                 if (NextDueInstant is not { } next)
                     return false;
@@ -1471,7 +1469,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 CancelRequested = true;
                 State = TimerState.Cancelled;
-                _enabledDayTime = false;
+                EnabledDayTime = false;
             }
 
             Clock.RemoveDayTimeTimer(this);
@@ -1502,7 +1500,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 CancelRequested = true;
                 State = TimerState.Cancelled;
-                _enabledDayTime = false;
+                EnabledDayTime = false;
             }
 
             Clock.RemoveDayTimeTimer(this);
@@ -1512,9 +1510,9 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             lock (Gate)
             {
-                if (!_enabledDayTime || State == TimerState.Cancelled || Disposed)
+                if (!EnabledDayTime || State == TimerState.Cancelled || Disposed)
                     return false;
-                _enabledDayTime = false;
+                EnabledDayTime = false;
                 State = TimerState.Disabled;
                 return true;
             }
@@ -1528,7 +1526,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return false;
                 if (State != TimerState.Completed && State != TimerState.Disabled)
                     return false;
-                _enabledDayTime = true;
+                EnabledDayTime = true;
                 State = TimerState.Active;
                 NextDueInstant = ComputeNextDue(Clock.Instant);
                 return true;
@@ -1543,15 +1541,14 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return;
                 Disposed = true;
                 State = TimerState.Disposed;
-                _enabledDayTime = false;
+                EnabledDayTime = false;
             }
 
             Clock.RemoveDayTimeTimer(this);
         }
     }
 
-    private sealed class VirtualDayTimeTimer (
-        PrimeTestClock clock,
+    private sealed class VirtualDayTimeTimer (PrimeTestClock clock,
         LocalTime timeOfDay,
         PrimeClockIntervalTimerCallbackKind callbackKind,
         Delegate callback,
@@ -1564,7 +1561,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             lock (Gate)
             {
-                if (Disposed || CancelRequested || State == TimerState.Cancelled || !_enabledDayTime)
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
                     return;
                 if (NextDueInstant is not { } next || next > now)
                     return;

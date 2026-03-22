@@ -360,7 +360,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
-#endregion DelayAsync (Duration) driven by virtual time
+    #endregion DelayAsync (Duration) driven by virtual time
 
     #region Time cancellation (Duration) driven by virtual time
 
