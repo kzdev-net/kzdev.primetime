@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
@@ -16,7 +18,7 @@ public interface IIntervalTimer : IRegisteredTimer
     ///   This only applies to repeating time-interval registrations, and is <c>false</c>
     ///   for non-repeating registrations.
     /// </remarks>
-    bool IsResetAfterCallback { get; }
+    bool IsResetAfterCallback { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
@@ -37,7 +39,7 @@ public interface IIntervalTimer : IRegisteredTimer
     ///     time-type agnostic.
     ///   </para>
     /// </remarks>
-    long ElapsedTime { get; }
+    long ElapsedTime { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time remaining until the next callback for this registration.
@@ -60,7 +62,7 @@ public interface IIntervalTimer : IRegisteredTimer
     ///     indicates no next callback or not applicable.
     ///   </para>
     /// </remarks>
-    long TimeUntilNextCallback { get; }
+    long TimeUntilNextCallback { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 }
 //################################################################################

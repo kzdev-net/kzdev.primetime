@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
@@ -10,17 +12,17 @@ public interface IDayTimeTimer : IRegisteredTimer
     /// <summary>
     ///   Gets the concurrent trigger processing setting for this registration.
     /// </summary>
-    ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
+    ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Gets the skipped time behavior setting for this registration.
     /// </summary>
-    SkippedTimeBehavior SkippedTimeBehavior { get; }
+    SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Gets the duplicate time behavior setting for this registration.
     /// </summary>
-    DuplicateTimeBehavior DuplicateTimeBehavior { get; }
+    DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 }
 //################################################################################

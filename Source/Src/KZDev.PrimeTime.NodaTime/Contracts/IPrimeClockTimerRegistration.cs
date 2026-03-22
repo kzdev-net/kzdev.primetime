@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -15,7 +17,7 @@ public interface IPrimeClockTimerRegistration : IIntervalTimer
     /// <summary>
     ///   Gets the instant (UTC) at which this timer was registered.
     /// </summary>
-    Instant RegisteredInstant { get; }
+    Instant RegisteredInstant { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Changes the interval of this registration (interval timers only).

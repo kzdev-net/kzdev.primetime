@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
@@ -11,12 +13,12 @@ public interface IRegisteredTimer : IDisposable
     /// <summary>
     ///   A unique identifier for this timer registration instance.
     /// </summary>
-    int Id { get; }
+    int Id { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Indicates whether the timer has been cancelled.
     /// </summary>
-    bool IsCancelled { get; }
+    bool IsCancelled { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a time-of-day clock registration or a time-interval
@@ -26,12 +28,12 @@ public interface IRegisteredTimer : IDisposable
     ///   <c>true</c> if this is a time-of-day clock registration, <c>false</c> if this is a
     ///   time interval clock registration.
     /// </returns>
-    bool IsTimeOfDay { get; }
+    bool IsTimeOfDay { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a repeating timer registration or not.
     /// </summary>
-    bool IsRepeating { get; }
+    bool IsRepeating { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether the properties on this registration are based on local time
@@ -39,7 +41,7 @@ public interface IRegisteredTimer : IDisposable
     ///   to use local time instead using the <see cref="TimerOptions.LocalTimeRepresentation"/>
     ///   timer option during registration.
     /// </summary>
-    bool IsLocalTimeRepresentation { get; }
+    bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this timer registration is currently active. This will
@@ -48,12 +50,12 @@ public interface IRegisteredTimer : IDisposable
     ///   Otherwise, this will return <c>true</c>, even if <see cref="State"/> is
     ///   <see cref="TimerState.Disabled"/>.
     /// </summary>
-    bool IsActive { get; }
+    bool IsActive { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns the current state of this timer registration.
     /// </summary>
-    TimerState State { get; }
+    TimerState State { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether there are currently callbacks being processed for this timer registration.
@@ -62,7 +64,7 @@ public interface IRegisteredTimer : IDisposable
     ///   This will always return <c>false</c> if the timer registration is cancelled or disposed,
     ///   even if there are callbacks currently being processed.
     /// </remarks>
-    bool CallbacksProcessing { get; }
+    bool CallbacksProcessing { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Gets or sets the enabled state of this timer registration. When this is set to
@@ -82,7 +84,7 @@ public interface IRegisteredTimer : IDisposable
     ///     in which case the timer will be restarted.
     ///   </para>
     /// </remarks>
-    bool Enabled { get; set; }
+    bool Enabled { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Cancels this timer registration. When this is called, the <see cref="State"/>

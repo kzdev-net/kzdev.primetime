@@ -955,25 +955,25 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
     {
-        protected PrimeTestSystemClock Clock { get; }
-        protected IntervalTimerCallbackKind CallbackKind { get; }
-        protected Delegate Callback { get; }
-        protected object? CallbackState { get; }
-        protected CancellationToken CancellationToken { get; }
+        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected Delegate Callback { [DebuggerStepThrough] get; }
+        protected object? CallbackState { [DebuggerStepThrough] get; }
+        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
 #if NET10_OR_GREATER
-        protected Lock Gate { get; } = new();
+        protected Lock Gate { [DebuggerStepThrough] get; } = new();
 #else
-        protected object Gate { get; } = new();
+        protected object Gate { [DebuggerStepThrough] get; } = new();
 #endif
-        protected DateTimeOffset? NextDueUtc { get; set; }
-        protected DateTimeOffset? LastCallbackUtc { get; set; }
-        protected TimerState State { get; set; } = TimerState.Active;
-        protected bool IntervalTimerEnabled { get; private set; } = true;
-        protected bool Disposed { get; set; }
-        protected bool CancelRequested { get; set; }
-        protected int CallbacksRunning { get; set; }
-        protected TimeSpan InitialCallbackTime { get; set; }
-        protected TimeSpan RepeatInterval { get; set; }
+        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+        protected bool IntervalTimerEnabled { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = true;
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         private readonly bool _isLocalTimeRepresentation;
         private readonly bool _resetAfterCallback;
 
@@ -1334,24 +1334,24 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
-        protected PrimeTestSystemClock Clock { get; }
-        protected bool IsLocal { get; }
-        protected IntervalTimerCallbackKind CallbackKind { get; }
-        protected Delegate Callback { get; }
-        protected object? CallbackState { get; }
-        protected CancellationToken CancellationToken { get; }
+        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected bool IsLocal { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected Delegate Callback { [DebuggerStepThrough] get; }
+        protected object? CallbackState { [DebuggerStepThrough] get; }
+        protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
 #if NET10_OR_GREATER
-        protected Lock Gate { get; } = new();
+        protected Lock Gate { [DebuggerStepThrough] get; } = new();
 #else
-        protected object Gate { get; } = new();
+        protected object Gate { [DebuggerStepThrough] get; } = new();
 #endif
-        protected DateTimeOffset? NextDueUtc { get; set; }
-        protected TimerState State { get; set; } = TimerState.Active;
-        protected bool EnabledDayTime { get; set; } = true;
-        protected bool Disposed { get; set; }
-        protected bool CancelRequested { get; set; }
-        protected int CallbacksRunning { get; set; }
-        protected TimeOnly TargetTimeOfDay { get; set; }
+        protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+        protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeOnly TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
 
         protected VirtualDayTimeTimerBase (PrimeTestSystemClock clock,
             bool isLocal,

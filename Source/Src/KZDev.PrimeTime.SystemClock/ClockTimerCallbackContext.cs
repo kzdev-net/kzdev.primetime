@@ -37,12 +37,12 @@ public readonly struct ClockTimerCallbackContext : IEquatable<ClockTimerCallback
     /// <summary>
     ///   Gets the optional state object passed when the timer was registered.
     /// </summary>
-    public object? CallbackState { get; }
+    public object? CallbackState { [DebuggerStepThrough] get; }
 
     /// <summary>
     ///   Gets the timer registration instance for this callback.
     /// </summary>
-    public IClockTimer Registration { get; }
+    public IClockTimer Registration { [DebuggerStepThrough] get; }
 
     #region Overrides
 

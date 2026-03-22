@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.PrimeTime;
 
 //################################################################################
@@ -13,7 +15,7 @@ public interface IPrimeTestTime : IPrimeTime
     ///   RunFor or Start). When <c>false</c>, time is frozen and SetTime/Advance control
     ///   the current time.
     /// </summary>
-    bool IsRunning { get; }
+    bool IsRunning { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 }
 //################################################################################
