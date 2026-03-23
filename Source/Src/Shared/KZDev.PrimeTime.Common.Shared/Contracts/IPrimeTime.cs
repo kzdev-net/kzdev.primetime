@@ -4,7 +4,9 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   The interface for the PrimeTime library for time passing and timer services.
 ///   Implementations may clamp very large or out-of-range values for sleep, delay, and
-///   time-based cancellation; see the implementing type for specific limits.
+///   time-based cancellation; see the implementing type for specific limits. Members that
+///   delegate to the BCL may throw the same exceptions as the corresponding
+///   <see cref="Thread"/>, <see cref="Task"/>, or <see cref="CancellationTokenSource"/> APIs.
 /// </summary>
 public interface IPrimeTime
 {
@@ -12,74 +14,94 @@ public interface IPrimeTime
 
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Suspends the current thread for the specified amount of time.
+    ///   Suspends the current thread for the specified amount of time.
     /// </summary>
     /// <param name="sleepTime">
-    /// The amount of time for which the thread is suspended. If the value of the sleepTime
-    /// argument is Zero, the thread relinquishes the remainder of its time slice to any 
-    /// thread of equal priority that is ready to run. If there are no other threads of
-    /// equal priority that are ready to run, execution of the current thread
-    /// is not suspended.
+    ///   The amount of time for which the thread is suspended. If the value is
+    ///   <see cref="TimeSpan.Zero"/>, the thread relinquishes the remainder of its time slice to any
+    ///   thread of equal priority that is ready to run. If there are no other threads of
+    ///   equal priority that are ready to run, execution of the current thread is not suspended.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="sleepTime"/> is not a valid sleep interval (for example, negative and not
+    ///   an infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     /// <seealso cref="Thread.Sleep(TimeSpan)"/>
     void Sleep (TimeSpan sleepTime);
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Suspends the current thread for the specified number of milliseconds.
+    ///   Suspends the current thread for the specified number of milliseconds.
     /// </summary>
     /// <param name="sleepMilliseconds">
-    /// The number of milliseconds for which the thread is suspended. If the value of the 
-    /// sleepMilliseconds argument is zero, the thread relinquishes the remainder
-    /// of its time slice to any thread of equal priority that is ready to run. 
-    /// If there are no other threads of equal priority that are ready to run, 
-    /// execution of the current thread is not suspended.
+    ///   The number of milliseconds for which the thread is suspended. If the value is zero, the
+    ///   thread relinquishes the remainder of its time slice to any thread of equal priority that is
+    ///   ready to run. If there are no other threads of equal priority that are ready to run,
+    ///   execution of the current thread is not suspended.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="sleepMilliseconds"/> is negative and not equal to
+    ///   <see cref="Timeout.Infinite"/>.
+    /// </exception>
     /// <seealso cref="Thread.Sleep(int)"/>
     void Sleep (int sleepMilliseconds);
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Creates a task that completes after a specified time interval.
+    ///   Creates a task that completes after a specified time interval.
     /// </summary>
     /// <param name="delayTime">
-    /// The time span to wait before completing the returned task, or 
-    /// Timeout.InfiniteTimeSpan to wait indefinitely.
+    ///   The time span to wait before completing the returned task, or
+    ///   <see cref="Timeout.InfiniteTimeSpan"/> to wait indefinitely.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="delayTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     Task DelayAsync (TimeSpan delayTime);
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Creates a task that completes after a specified number of milliseconds.
+    ///   Creates a task that completes after a specified number of milliseconds.
     /// </summary>
     /// <param name="millisecondsDelay">
-    /// The number of milliseconds to wait before completing the returned task, or -1 to wait indefinitely.
+    ///   The number of milliseconds to wait before completing the returned task, or -1 to wait indefinitely.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="millisecondsDelay"/> is less than -1.
+    /// </exception>
     Task DelayAsync (int millisecondsDelay);
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Creates a task that completes after a specified time interval.
+    ///   Creates a task that completes after a specified time interval.
     /// </summary>
     /// <param name="delayTime">
-    /// The time span to wait before completing the returned task, or 
-    /// Timeout.InfiniteTimeSpan to wait indefinitely.
+    ///   The time span to wait before completing the returned task, or
+    ///   <see cref="Timeout.InfiniteTimeSpan"/> to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">
-    /// A cancellation token to observe while waiting for the task to complete.
+    ///   A cancellation token to observe while waiting for the task to complete.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="delayTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     /// <exception cref="OperationCanceledException">
-    /// The operation was canceled via <paramref name="cancellationToken"/>.
+    ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
     Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Creates a task that completes after a specified number of milliseconds.
+    ///   Creates a task that completes after a specified number of milliseconds.
     /// </summary>
     /// <param name="millisecondsDelay">
-    /// The number of milliseconds to wait before completing the returned task, or -1 to wait indefinitely.
+    ///   The number of milliseconds to wait before completing the returned task, or -1 to wait indefinitely.
     /// </param>
     /// <param name="cancellationToken">
-    /// A cancellation token to observe while waiting for the task to complete.
+    ///   A cancellation token to observe while waiting for the task to complete.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="millisecondsDelay"/> is less than -1.
+    /// </exception>
     /// <exception cref="OperationCanceledException">
-    /// The operation was canceled via <paramref name="cancellationToken"/>.
+    ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
     Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
@@ -99,6 +121,10 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/> that will cancel after the specified time. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -111,6 +137,9 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/> that will cancel after the specified time. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelMilliseconds"/> is less than -1.
+    /// </exception>
     TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -128,6 +157,10 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -145,6 +178,9 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelMilliseconds"/> is less than -1.
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -165,6 +201,9 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelMilliseconds"/> is less than -1.
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         CancellationToken token1, CancellationToken token2);
     //--------------------------------------------------------------------------------
@@ -186,6 +225,10 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
         CancellationToken token1, CancellationToken token2);
     //--------------------------------------------------------------------------------
@@ -204,6 +247,13 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="cancellationTokens"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
         params CancellationToken[] cancellationTokens);
     //--------------------------------------------------------------------------------
@@ -222,6 +272,12 @@ public interface IPrimeTime
     /// <returns>
     ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="cancellationTokens"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelMilliseconds"/> is less than -1.
+    /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         params CancellationToken[] cancellationTokens);
     //--------------------------------------------------------------------------------

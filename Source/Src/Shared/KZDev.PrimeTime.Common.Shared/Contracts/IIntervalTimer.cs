@@ -4,7 +4,7 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration to an interval timer.
+///   Registration for an interval timer.
 /// </summary>
 public interface IIntervalTimer : IRegisteredTimer
 {

@@ -2,90 +2,84 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-/// Represents the state of a timer registration.
+///   Represents the state of a timer registration.
 /// </summary>
 public enum TimerState
 {
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer is active and is not processing any callbacks.
+    ///   The timer is active and is not processing any callbacks.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// For interval timers, this state applies when the timer has not triggered any
-    /// callbacks yet.
-    /// </para>
-    /// <para>
-    /// For time of day timers, this state applies when the timer is not currently
-    /// processing any callbacks for a provided time of day trigger, but there are
-    /// still future time of day triggers that will be processed.
-    /// </para>
+    ///   <para>
+    ///     For interval timers, this state applies when the timer has not triggered any callbacks yet.
+    ///   </para>
+    ///   <para>
+    ///     For time-of-day timers, this state applies when no callback is running for a scheduled
+    ///     trigger but future time-of-day triggers remain.
+    ///   </para>
     /// </remarks>
     Active,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer has been cancelled.
+    ///   The timer has been cancelled.
     /// </summary>
     Cancelled,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer has completed with all callbacks. This only applies to non-repeating
-    /// timers.
+    ///   The timer has finished all callbacks. Applies only to non-repeating timers.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// For interval timers, this means that the timer has completed its callback processing.
-    /// </para>
-    /// <para>
-    /// For time of day timers, this means that the timer has completed all the callbacks
-    /// for the provided list of times of day.
-    /// </para>
+    ///   <para>
+    ///     For interval timers, callback processing has completed.
+    ///   </para>
+    ///   <para>
+    ///     For time-of-day timers, all callbacks for the provided times of day have run.
+    ///   </para>
     /// </remarks>
     Completed,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer has been disabled or stopped.
+    ///   The timer has been disabled or stopped.
     /// </summary>
     Disabled,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer has been disposed.
+    ///   The timer has been disposed.
     /// </summary>
     Disposed,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer is currently processing at least one callback.
+    ///   The timer is processing at least one callback.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// For interval timers, this applies only to timers that are either non-repeating or
-    /// repeating with the <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> option
-    /// set to <c>true</c>.
-    /// </para>
-    /// <para>
-    /// For time of day timers, this applies only to timers that are currently processing
-    /// at least one callback for a provided time of day trigger.
-    /// </para>
+    ///   <para>
+    ///     For interval timers, this applies when the timer is non-repeating or repeating with
+    ///     <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> set to <c>true</c>.
+    ///   </para>
+    ///   <para>
+    ///     For time-of-day timers, this applies when at least one callback is running for a
+    ///     scheduled time-of-day trigger.
+    ///   </para>
     /// </remarks>
     ProcessingCallback,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer is currently in a repeat cycle where the repeat interval resets before
-    /// the callback is invoked. This only applies to interval timers.
+    ///   The timer is in a repeat cycle where the interval resets before the callback runs.
+    ///   Interval timers only.
     /// </summary>
     /// <remarks>
-    /// In this state, there are no active callbacks running.
+    ///   No callback is running in this state.
     /// </remarks>
     RepeatCycle,
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// The timer is currently processing a callback and also in a repeat cycle where
-    /// the repeat interval resets before the callback is invoked. This only applies to
-    /// interval timers.
+    ///   A callback is running and the repeat interval resets before the callback (interval
+    ///   timers only).
     /// </summary>
     /// <remarks>
-    /// This only applies to interval timers that are repeating with the
-    /// <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> option set to <c>false</c>.
+    ///   Applies to repeating interval timers with
+    ///   <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> set to <c>false</c>.
     /// </remarks>
     RepeatProcessingCallback
     //--------------------------------------------------------------------------------

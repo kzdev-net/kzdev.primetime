@@ -16,8 +16,11 @@ namespace KZDev.PrimeTime;
 /// </remarks>
 public sealed class TimeCancellationTokenSource : IDisposable
 {
+    // Token exposed via Token; disposed with this wrapper.
     private readonly CancellationTokenSource _primary;
+    // Extra CTS instances created for linking (e.g. time-based source) that must be disposed with the wrapper.
     private readonly CancellationTokenSource[]? _additionalToDispose;
+    // Non-zero after Dispose completes; read with Volatile for thread-safe disposal checks.
     private int _disposed;
 
     #region Constructors/Finalizers
@@ -98,9 +101,14 @@ public sealed class TimeCancellationTokenSource : IDisposable
     /// </param>
     /// <remarks>
     ///   Delegates to <see cref="CancellationTokenSource.Cancel(bool)"/>; when
-    ///   <paramref name="throwOnFirstException"/> is <c>true</c>, any exception from a registered
-    ///   cancellation callback may propagate per the underlying source.
+    ///   <paramref name="throwOnFirstException"/> is <c>true</c>, the first exception from a
+    ///   registered cancellation callback is propagated; otherwise an
+    ///   <see cref="AggregateException"/> may be thrown when multiple callbacks fail.
     /// </remarks>
+    /// <exception cref="AggregateException">
+    ///   <paramref name="throwOnFirstException"/> is <c>false</c> and one or more registered
+    ///   cancellation callbacks throw.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">
     ///   This instance has been disposed.
     /// </exception>
@@ -113,7 +121,10 @@ public sealed class TimeCancellationTokenSource : IDisposable
 
     #region Interface Implementations
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Disposes the primary <see cref="CancellationTokenSource"/> and any additional sources
+    ///   supplied at construction.
+    /// </summary>
     public void Dispose ()
     {
         if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)

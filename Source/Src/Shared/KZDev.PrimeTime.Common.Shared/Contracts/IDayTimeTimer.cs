@@ -4,7 +4,7 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration to a time of day timer.
+///   Registration for a time-of-day timer.
 /// </summary>
 public interface IDayTimeTimer : IRegisteredTimer
 {

@@ -4,14 +4,14 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-/// Timer options for setting up time-of-day callback timers.
+///   Timer options for setting up time-of-day callback timers.
 /// </summary>
 [DebuggerStepThrough]
 public record DayTimeTimerOptions : TimerOptions
 {
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Sets the option of allowing more than one callback to be processing concurrently.
+    ///   Sets whether more than one callback is allowed to run concurrently.
     /// </summary>
 #if NET
     public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; init; }
@@ -20,7 +20,7 @@ public record DayTimeTimerOptions : TimerOptions
 #endif
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Sets the option of how to handle skipped times during clock transitions.
+    ///   Sets how skipped times are handled during clock transitions.
     /// </summary>
 #if NET
     public SkippedTimeBehavior SkippedTimeBehavior { get; init; } = SkippedTimeBehavior.RunAfter;
@@ -29,7 +29,7 @@ public record DayTimeTimerOptions : TimerOptions
 #endif
     //--------------------------------------------------------------------------------
     /// <summary>
-    /// Sets the option of how to handle duplicate times during clock transitions.
+    ///   Sets how duplicate trigger times are handled during clock transitions.
     /// </summary>
 #if NET
     public DuplicateTimeBehavior DuplicateTimeBehavior { get; init; } = DuplicateTimeBehavior.RunLast;

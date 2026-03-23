@@ -2,50 +2,44 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-/// Defines how a local skipped time due to clock adjustments
-/// (such as time zone changes and/or daylight savings time changes)
-/// should be handled.
+///   Defines how a local skipped time due to clock adjustments (such as time zone changes
+///   and/or daylight saving time changes) should be handled.
 /// </summary>
 public enum SkippedTimeBehavior
 {
     /// <summary>
-    /// Indicates that the timer should be skipped and no callback should be invoked
-    /// for the skipped time.
+    ///   The timer is skipped and no callback is invoked for the skipped time.
     /// </summary>
     Skip,
 
     /// <summary>
-    /// Indicates that the timer should be run immediately after the skipped time.
+    ///   The timer runs as soon as possible after the skipped time.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// This will cause the timer to trigger the respective callback as soon as possible
-    /// after the skipped time, but only if there isn't another callback time that would
-    /// run at that time or before it; in which case, the timer callback for the skipped
-    /// time will be skipped.
-    /// </para>
-    /// <para>
-    /// This only applies to time shifts related to daylight savings time changes. If the
-    /// timezone changes, the timer callback times will be recalculated and the timer will
-    /// just run at the next scheduled time.
-    /// </para>
+    ///   <para>
+    ///     The timer triggers the respective callback as soon as possible after the skipped time,
+    ///     unless another callback time would run at or before that instant—in that case the
+    ///     callback for the skipped time is skipped.
+    ///   </para>
+    ///   <para>
+    ///     This applies to time shifts from daylight saving time changes. If the time zone
+    ///     changes, callback times are recalculated and the timer runs at the next scheduled time.
+    ///   </para>
     /// </remarks>
     RunAfter,
 
     /// <summary>
-    /// Indicates that the timer should be run immediately before the skipped time.
+    ///   The timer runs immediately before the skipped time.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// This will cause the timer to trigger the respective callback immediately before the
-    /// daylight savings time change occurs. This will cause the timer to trigger the
-    /// callback right as the clock is adjusted forward.
-    /// </para>
-    /// <para>
-    /// This only applies to time shifts related to daylight savings time changes. If the
-    /// timezone changes, the timer callback times will be recalculated and the timer will
-    /// just run at the next scheduled time.
-    /// </para>
+    ///   <para>
+    ///     The timer triggers the respective callback immediately before the daylight saving time
+    ///     change, as the clock is adjusted forward.
+    ///   </para>
+    ///   <para>
+    ///     This applies to time shifts from daylight saving time changes. If the time zone
+    ///     changes, callback times are recalculated and the timer runs at the next scheduled time.
+    ///   </para>
     /// </remarks>
     RunBefore
 }
