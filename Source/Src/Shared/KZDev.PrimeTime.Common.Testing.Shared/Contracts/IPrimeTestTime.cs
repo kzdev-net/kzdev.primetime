@@ -2,20 +2,14 @@ using System.Diagnostics;
 
 namespace KZDev.PrimeTime;
 
-//################################################################################
 /// <summary>
-///   Extends <see cref="IPrimeTime"/> with test-controllable time support. Used by both
-///   test clock implementations (system and NodaTime test clocks in their respective assemblies).
+/// Extends <see cref="IPrimeTime"/> with test-controlled time support for clock implementations used in tests.
 /// </summary>
 public interface IPrimeTestTime : IPrimeTime
 {
-    //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Gets whether the test clock is currently running (e.g. time is advancing under
-    ///   RunFor or Start). When <c>false</c>, time is frozen and SetTime/Advance control
-    ///   the current time.
+    /// Gets whether test time is currently advancing.
+    /// When <c>false</c>, time is frozen and controlled through explicit test-time operations.
     /// </summary>
     bool IsRunning { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
 }
-//################################################################################
