@@ -1,9 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// TimeProvider adapter for IPrimeSystemClock so code using TimeProvider gets time and timers from
-// the PrimeTime clock (production or test).
-
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,11 +64,21 @@ internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
     {
         private readonly IClockIntervalTimer _registration;
 
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="ClockIntervalTimerToITimerAdapter"/> class.
+        /// </summary>
+        /// <param name="registration">
+        ///   The underlying PrimeTime interval timer registration.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="registration"/> is <c>null</c>.
+        /// </exception>
         internal ClockIntervalTimerToITimerAdapter (IClockIntervalTimer registration)
         {
-            _registration = registration;
+            _registration = registration ?? throw new ArgumentNullException(nameof(registration));
         }
 
+        /// <inheritdoc />
         public bool Change (TimeSpan dueTime, TimeSpan period)
         {
             TimeSpan repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
@@ -80,8 +87,10 @@ internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
             return _registration.Change(dueTime, repeat);
         }
 
+        /// <inheritdoc />
         public void Dispose () => _registration.Dispose();
 
+        /// <inheritdoc />
         public ValueTask DisposeAsync ()
         {
             _registration.Dispose();

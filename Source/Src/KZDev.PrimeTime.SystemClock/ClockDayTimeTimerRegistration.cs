@@ -38,6 +38,34 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     #region Constructors/Finalizers
 
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="ClockDayTimeTimerRegistration"/> class
+    ///   for a local-time day-time timer.
+    /// </summary>
+    /// <param name="clock">
+    ///   The system clock used for scheduling and callback execution.
+    /// </param>
+    /// <param name="timeOfDay">
+    ///   The local time of day at which the callback should run.
+    /// </param>
+    /// <param name="callbackKind">
+    ///   The callback signature kind used to invoke <paramref name="callback"/>.
+    /// </param>
+    /// <param name="callback">
+    ///   The callback delegate to invoke when the timer fires.
+    /// </param>
+    /// <param name="callbackState">
+    ///   Optional state passed to callbacks that accept <see cref="ClockTimerCallbackContext"/>.
+    /// </param>
+    /// <param name="options">
+    ///   Optional day-time timer options that control callback scheduling and execution behavior.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///   Token that requests cancellation of this timer registration.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   Thrown when <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     internal ClockDayTimeTimerRegistration (IPrimeSystemClock clock,
         LocalTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,
@@ -49,6 +77,34 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     {
     }
 
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="ClockDayTimeTimerRegistration"/> class
+    ///   for a UTC day-time timer.
+    /// </summary>
+    /// <param name="clock">
+    ///   The system clock used for scheduling and callback execution.
+    /// </param>
+    /// <param name="timeOfDay">
+    ///   The UTC time of day at which the callback should run.
+    /// </param>
+    /// <param name="callbackKind">
+    ///   The callback signature kind used to invoke <paramref name="callback"/>.
+    /// </param>
+    /// <param name="callback">
+    ///   The callback delegate to invoke when the timer fires.
+    /// </param>
+    /// <param name="callbackState">
+    ///   Optional state passed to callbacks that accept <see cref="ClockTimerCallbackContext"/>.
+    /// </param>
+    /// <param name="options">
+    ///   Optional day-time timer options that control callback scheduling and execution behavior.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///   Token that requests cancellation of this timer registration.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   Thrown when <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     internal ClockDayTimeTimerRegistration (IPrimeSystemClock clock,
         UtcTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,

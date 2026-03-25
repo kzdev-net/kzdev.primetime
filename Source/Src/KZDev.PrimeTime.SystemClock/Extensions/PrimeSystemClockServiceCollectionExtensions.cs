@@ -1,8 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Service collection extension to register IPrimeSystemClock with the default production implementation.
-
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KZDev.PrimeTime;

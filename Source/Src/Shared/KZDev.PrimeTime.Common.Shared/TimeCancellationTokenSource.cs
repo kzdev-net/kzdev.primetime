@@ -130,12 +130,13 @@ public sealed class TimeCancellationTokenSource : IDisposable
         if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
             return;
         _primary.Dispose();
-        if (_additionalToDispose != null)
+        if (_additionalToDispose == null)
         {
-            foreach (CancellationTokenSource cts in _additionalToDispose)
-                cts.Dispose();
+            return;
         }
-        GC.SuppressFinalize(this);
+
+        foreach (CancellationTokenSource cts in _additionalToDispose)
+            cts.Dispose();
     }
 
     #endregion Interface Implementations

@@ -47,7 +47,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     private readonly Delegate _callback;
     private readonly object? _callbackState;
     private readonly CancellationToken _cancellationToken;
-    private CancellationTokenRegistration _cancelRegistration;
+    private readonly CancellationTokenRegistration _cancelRegistration;
 #if NET10_OR_GREATER
     private readonly Lock _gate = new();
 #else
@@ -58,7 +58,6 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     private TimeSpan _repeatInterval;
     private DateTimeOffset? _nextCallbackUtc;
     private DateTimeOffset? _lastCallbackUtc;
-    private TimerState _state;
     private bool _enabled = true;
     private bool _disposed;
     private int _callbacksRunning;
@@ -126,12 +125,12 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             if (cancellationToken.IsCancellationRequested)
             {
                 _cancelRequested = true;
-                _state = TimerState.Cancelled;
+                State = TimerState.Cancelled;
                 return;
             }
         }
 
-        _state = TimerState.Active;
+        State = TimerState.Active;
         ScheduleNext(initialCallbackTime);
     }
 
@@ -153,27 +152,27 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     public bool IsRepeating => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
 
     /// <inheritdoc />
-    public bool IsCancelled => _state == TimerState.Cancelled;
+    public bool IsCancelled => State == TimerState.Cancelled;
     /// <inheritdoc />
     public bool IsActive =>
-        _state != TimerState.Cancelled &&
-        _state != TimerState.Completed &&
-        _state != TimerState.Disposed &&
+        State != TimerState.Cancelled &&
+        State != TimerState.Completed &&
+        State != TimerState.Disposed &&
         _enabled;
 
     /// <inheritdoc />
-    public TimerState State => _state;
+    public TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
     /// <inheritdoc />
     public bool CallbacksProcessing => _callbacksRunning > 0;
     /// <inheritdoc />
     public bool Enabled
     {
-        get => _enabled && !IsCancelled && _state != TimerState.Disposed;
+        get => _enabled && !IsCancelled && State != TimerState.Disposed;
         set
         {
             lock (_gate)
             {
-                if (_disposed || _state == TimerState.Cancelled)
+                if (_disposed || State == TimerState.Cancelled)
                     return;
                 if (value)
                     Start();
@@ -227,10 +226,10 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _state == TimerState.Cancelled)
+            if (_disposed || State == TimerState.Cancelled)
                 return;
             _cancelRequested = true;
-            _state = TimerState.Cancelled;
+            State = TimerState.Cancelled;
             _enabled = false;
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
@@ -255,7 +254,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
+            if (_disposed || _cancelRequested || State == TimerState.Cancelled || !_enabled)
                 return;
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
         }
@@ -270,7 +269,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             : TimerState.ProcessingCallback;
         lock (_gate)
         {
-            _state = stateDuringCallback;
+            State = stateDuringCallback;
             _callbacksRunning++;
         }
 
@@ -365,14 +364,14 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _cancelRequested || _state == TimerState.Cancelled)
+            if (_disposed || _cancelRequested || State == TimerState.Cancelled)
                 return;
             if (!isRepeating)
             {
-                _state = TimerState.Completed;
+                State = TimerState.Completed;
                 return;
             }
-            _state = TimerState.RepeatCycle;
+            State = TimerState.RepeatCycle;
             TimeSpan next = _repeatInterval;
             ScheduleNext(next);
         }
@@ -382,14 +381,14 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _cancelRequested || _state == TimerState.Cancelled)
+            if (_disposed || _cancelRequested || State == TimerState.Cancelled)
                 return;
             if (!isRepeating)
             {
-                _state = TimerState.Completed;
+                State = TimerState.Completed;
                 return;
             }
-            _state = TimerState.RepeatCycle;
+            State = TimerState.RepeatCycle;
             ScheduleNext(_repeatInterval);
         }
     }
@@ -405,14 +404,14 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _state == TimerState.Cancelled)
+            if (_disposed || State == TimerState.Cancelled)
                 return false;
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
                 throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
             _initialCallbackTime = nextInterval;
             _repeatInterval = repeatInterval;
-            if (_state == TimerState.Completed)
-                _state = TimerState.Active;
+            if (State == TimerState.Completed)
+                State = TimerState.Active;
             if (!_enabled)
                 return true;
             ScheduleNext(nextInterval);
@@ -425,10 +424,10 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_state == TimerState.Cancelled || _disposed)
+            if (State == TimerState.Cancelled || _disposed)
                 return;
             _cancelRequested = true;
-            _state = TimerState.Cancelled;
+            State = TimerState.Cancelled;
             _enabled = false;
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
@@ -439,10 +438,10 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (!_enabled || _state == TimerState.Cancelled || _disposed)
+            if (!_enabled || State == TimerState.Cancelled || _disposed)
                 return false;
             _enabled = false;
-            _state = TimerState.Disabled;
+            State = TimerState.Disabled;
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
             return true;
         }
@@ -453,12 +452,12 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     {
         lock (_gate)
         {
-            if (_disposed || _state == TimerState.Cancelled)
+            if (_disposed || State == TimerState.Cancelled)
                 return false;
-            if (_state != TimerState.Completed && _state != TimerState.Disabled)
+            if (State != TimerState.Completed && State != TimerState.Disabled)
                 return false;
             _enabled = true;
-            _state = TimerState.Active;
+            State = TimerState.Active;
             ScheduleNext(_initialCallbackTime);
             return true;
         }
@@ -472,7 +471,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             if (_disposed)
                 return;
             _disposed = true;
-            _state = TimerState.Disposed;
+            State = TimerState.Disposed;
             _enabled = false;
             _cancelRegistration.Dispose();
             _timer?.Dispose();
