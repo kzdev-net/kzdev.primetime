@@ -4,7 +4,7 @@
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
-namespace KZDev.PrimeTime.SystemClock.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/>.
@@ -14,14 +14,14 @@ namespace KZDev.PrimeTime.SystemClock.UnitTests;
 /// </summary>
 public partial class UsingIPrimeSystemClock : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeSystemClock"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    #region Constructors/Finalizers
-
     public UsingIPrimeSystemClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {

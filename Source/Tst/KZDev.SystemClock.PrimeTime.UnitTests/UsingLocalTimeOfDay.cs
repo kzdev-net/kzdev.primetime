@@ -7,7 +7,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 #pragma warning disable HAA0601
 
-namespace KZDev.PrimeTime.SystemClock.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="LocalTimeOfDay"/>.
@@ -15,12 +15,12 @@ namespace KZDev.PrimeTime.SystemClock.UnitTests;
 /// </summary>
 public class UsingLocalTimeOfDay : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingLocalTimeOfDay"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">The xUnit test output helper.</param>
-    #region Constructors/Finalizers
-
     public UsingLocalTimeOfDay (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
@@ -96,8 +96,8 @@ public class UsingLocalTimeOfDay : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="LocalTimeOfDay"/> and <see cref="UtcTimeOfDay"/> are
-    ///   distinct types: the same <see cref="TimeOnly"/> in each yields different types
-    ///   , and they are not equal when compared as objects.
+    ///   distinct types: the same <see cref="TimeOnly"/> in each yields different types,
+    ///   and they are not equal when compared as objects.
     /// </summary>
     [Fact]
     public void LocalTimeOfDay_And_UtcTimeOfDay_AreDistinctTypes_SameTimeOnly ()

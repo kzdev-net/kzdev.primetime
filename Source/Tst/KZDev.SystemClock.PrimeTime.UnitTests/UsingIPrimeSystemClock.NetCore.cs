@@ -11,7 +11,7 @@ using KZDev.PrimeTime.Tests;
 using Microsoft.Extensions.Time.Testing;
 #endif
 
-namespace KZDev.PrimeTime.SystemClock.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 public partial class UsingIPrimeSystemClock
 {

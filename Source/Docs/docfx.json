@@ -25,7 +25,7 @@
                     ]
                 },
                 {
-                    "src": "../../artifacts/bin/KZDev.PrimeTime.SystemClock/release_net8.0",
+                    "src": "../../artifacts/bin/KZDev.SystemClock.PrimeTime/release_net8.0",
                     "dest": "api",
                     "cwd": "src",
                     "properties": {

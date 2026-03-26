@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{FB9B15
 		Src\Directory.Packages.props = Src\Directory.Packages.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.SystemClock", "Src\KZDev.PrimeTime.SystemClock\KZDev.PrimeTime.SystemClock.csproj", "{EAFFE189-CC21-4D14-A8C1-B78141951C7B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.SystemClock.PrimeTime", "Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj", "{EAFFE189-CC21-4D14-A8C1-B78141951C7B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.NodaTime", "Src\KZDev.PrimeTime.NodaTime\KZDev.PrimeTime.NodaTime.csproj", "{695B26F9-7526-4449-B1D2-1BAF69F143DD}"
 EndProject
@@ -56,7 +56,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.Tst.UnitTes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.UnitTests", "Tst\KZDev.PrimeTime.UnitTests\KZDev.PrimeTime.UnitTests.csproj", "{F4A5B6C7-D8E9-4F0A-B1C2-3D4E5F6A7B8C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.SystemClock.UnitTests", "Tst\KZDev.PrimeTime.SystemClock.UnitTests\KZDev.PrimeTime.SystemClock.UnitTests.csproj", "{F5B6C7D8-E9F0-4A1B-C2D3-4E5F6A7B8C9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.SystemClock.PrimeTime.UnitTests", "Tst\KZDev.SystemClock.PrimeTime.UnitTests\KZDev.SystemClock.PrimeTime.UnitTests.csproj", "{F5B6C7D8-E9F0-4A1B-C2D3-4E5F6A7B8C9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KZDev.PrimeTime.NodaTime.UnitTests", "Tst\KZDev.PrimeTime.NodaTime.UnitTests\KZDev.PrimeTime.NodaTime.UnitTests.csproj", "{F6C7D8E9-F0A1-4B2C-D3E4-4F5A6B7C8D9E}"
 EndProject

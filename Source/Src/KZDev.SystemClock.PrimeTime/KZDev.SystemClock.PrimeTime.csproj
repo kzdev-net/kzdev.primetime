@@ -3,6 +3,9 @@
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>KZDev.SystemClock.PrimeTime</AssemblyName>
+    <PackageId>KZDev.SystemClock.PrimeTime</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="KZDev.PrimeTime.SystemClock.UnitTests" />
+    <InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.UnitTests" />
   </ItemGroup>
 
 </Project>

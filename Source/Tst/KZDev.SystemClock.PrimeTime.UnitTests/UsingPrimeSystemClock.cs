@@ -7,7 +7,7 @@
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
-namespace KZDev.PrimeTime.SystemClock.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="PrimeSystemClock"/> (IPrimeTime delay and time-cancellation members).

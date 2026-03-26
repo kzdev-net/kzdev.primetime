@@ -25,6 +25,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Src\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
+        <ProjectReference Include="..\..\Src\KZDev.PrimeTime.NodaTime\KZDev.PrimeTime.NodaTime.csproj">
+            <Aliases>NodaImpl</Aliases>
+        </ProjectReference>
         <ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
     </ItemGroup>
 

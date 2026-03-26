@@ -7,7 +7,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 #pragma warning disable HAA0601
 
-namespace KZDev.PrimeTime.SystemClock.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="UtcTimeOfDay"/>.
@@ -15,12 +15,12 @@ namespace KZDev.PrimeTime.SystemClock.UnitTests;
 /// </summary>
 public class UsingUtcTimeOfDay : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingUtcTimeOfDay"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">The xUnit test output helper.</param>
-    #region Constructors/Finalizers
-
     public UsingUtcTimeOfDay (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
