@@ -2,11 +2,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Context passed to SystemClock timer callbacks that accept state and registration.
+///   Context passed to BCL timer callbacks that accept state and registration.
 /// </summary>
 [DebuggerDisplay("{" + nameof(DisplayValue) + ",nq}")]
 [StructLayout(LayoutKind.Auto)]

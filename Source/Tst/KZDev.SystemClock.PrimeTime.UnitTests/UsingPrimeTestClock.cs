@@ -1,7 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for IPrimeTestSystemClock and PrimeTestSystemClock.
+// Unit tests for IPrimeTestClock and PrimeTestClock.
 // Verifies SetTime, Advance, RunFor, Start/Stop, ClockEvents, and that Sleep, DelayAsync,
 // time cancellation, and timers are driven by virtual time.
 
@@ -11,19 +11,19 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeTestSystemClock"/> and <see cref="PrimeTestSystemClock"/>.
+///   Unit tests for <see cref="IPrimeTestClock"/> and <see cref="PrimeTestClock"/>.
 /// </summary>
-public class UsingPrimeTestSystemClock : UnitTestBase
+public class UsingPrimeTestClock : UnitTestBase
 {
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingPrimeTestSystemClock"/> class.
+    ///   Initializes a new instance of the <see cref="UsingPrimeTestClock"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    public UsingPrimeTestSystemClock (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingPrimeTestClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -35,44 +35,44 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     #region Contract and construction
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock"/> extends <see cref="IPrimeTestTime"/> and
-    ///   <see cref="IPrimeSystemClock"/>.
+    ///   Verifies that <see cref="IPrimeTestClock"/> extends <see cref="IPrimeTestTime"/> and
+    ///   <see cref="IPrimeClock"/>.
     /// </summary>
     [Fact]
-    public void IPrimeTestSystemClock_ExtendsIPrimeTestTimeAndIPrimeSystemClock ()
+    public void IPrimeTestClock_ExtendsIPrimeTestTimeAndIPrimeClock ()
     {
-        typeof(IPrimeTestSystemClock).GetInterfaces().Should().Contain(typeof(IPrimeTestTime));
-        typeof(IPrimeTestSystemClock).GetInterfaces().Should().Contain(typeof(IPrimeSystemClock));
+        typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeTestTime));
+        typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeClock));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestSystemClock"/> implements <see cref="IPrimeTestSystemClock"/>.
+    ///   Verifies that <see cref="PrimeTestClock"/> implements <see cref="IPrimeTestClock"/>.
     /// </summary>
     [Fact]
-    public void PrimeTestSystemClock_ImplementsIPrimeTestSystemClock ()
+    public void PrimeTestClock_ImplementsIPrimeTestClock ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.Should().NotBeNull();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestSystemClock"/> default constructor sets a non-default UtcNow.
+    ///   Verifies that <see cref="PrimeTestClock"/> default constructor sets a non-default UtcNow.
     /// </summary>
     [Fact]
-    public void PrimeTestSystemClock_DefaultConstructor_SetsUtcNow ()
+    public void PrimeTestClock_DefaultConstructor_SetsUtcNow ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.UtcNow.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestSystemClock"/> with initial time returns that time from UtcNow.
+    ///   Verifies that <see cref="PrimeTestClock"/> with initial time returns that time from UtcNow.
     /// </summary>
     [Fact]
-    public void PrimeTestSystemClock_WithInitialTime_ReturnsThatTimeFromUtcNow ()
+    public void PrimeTestClock_WithInitialTime_ReturnsThatTimeFromUtcNow ()
     {
         DateTimeOffset initial = new(2020, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.UtcNow.Should().Be(initial);
     }
 
@@ -81,38 +81,38 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     #region SetTime and Advance
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.SetTime"/> updates UtcNow and related "now" members.
+    ///   Verifies that <see cref="IPrimeTestClock.SetTime"/> updates UtcNow and related "now" members.
     /// </summary>
     [Fact]
     public void SetTime_WithUtcTime_UpdatesUtcNowAndRelatedMembers ()
     {
         DateTimeOffset setTime = new(2025, 1, 10, 14, 30, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.SetTime(setTime);
         clock.UtcNow.Should().Be(setTime);
         clock.UtcDateTimeNow.Should().Be(setTime.UtcDateTime);
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.Advance"/> adds duration to virtual time.
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> adds duration to virtual time.
     /// </summary>
     [Fact]
     public void Advance_WithPositiveDuration_AddsToVirtualTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(TimeSpan.FromHours(2));
         clock.UtcNow.Should().Be(initial + TimeSpan.FromHours(2));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.Advance"/> with zero does not change time.
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with zero does not change time.
     /// </summary>
     [Fact]
     public void Advance_WithZero_LeavesTimeUnchanged ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(TimeSpan.Zero);
         clock.UtcNow.Should().Be(initial);
     }
@@ -122,13 +122,13 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     #region RunFor
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.RunFor"/> advances virtual time by the given duration.
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor"/> advances virtual time by the given duration.
     /// </summary>
     [Fact]
     public void RunFor_WithDuration_AdvancesVirtualTimeByDuration ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.RunFor(TimeSpan.FromMinutes(30));
         clock.UtcNow.Should().Be(initial + TimeSpan.FromMinutes(30));
     }
@@ -138,33 +138,33 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     #region Start and Stop
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.IsRunning"/> is false when not started.
+    ///   Verifies that <see cref="IPrimeTestClock.IsRunning"/> is false when not started.
     /// </summary>
     [Fact]
     public void IsRunning_WhenNotStarted_ReturnsFalse ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.IsRunning.Should().BeFalse();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.Stop"/> returns false when not running.
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> returns false when not running.
     /// </summary>
     [Fact]
     public void Stop_WhenNotRunning_ReturnsFalse ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.Stop().Should().BeFalse();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.Start"/> and <see cref="IPrimeTestSystemClock.Stop"/> set
+    ///   Verifies that <see cref="IPrimeTestClock.Start"/> and <see cref="IPrimeTestClock.Stop"/> set
     ///   IsRunning and that Stop returns true when was running.
     /// </summary>
     [Fact]
     public void Start_ThenStop_SetsIsRunningAndStopReturnsTrue ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
         clock.Start(TimeSpan.FromSeconds(1));
         clock.IsRunning.Should().BeTrue();
         bool stopped = clock.Stop();
@@ -177,13 +177,13 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     #region ClockEvents
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.ClockEvents"/> is raised when SetTime is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when SetTime is called.
     /// </summary>
     [Fact]
     public void SetTime_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset setTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         DateTimeOffset? received = null;
         clock.ClockEvents += (_, e) => received = e.UtcNow;
         clock.SetTime(setTime);
@@ -192,13 +192,13 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.ClockEvents"/> is raised when Advance is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when Advance is called.
     /// </summary>
     [Fact]
     public void Advance_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         DateTimeOffset? received = null;
         clock.ClockEvents += (_, e) => received = e.UtcNow;
         clock.Advance(TimeSpan.FromHours(1));
@@ -207,13 +207,13 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestSystemClock.ClockEvents"/> is raised when RunFor is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when RunFor is called.
     /// </summary>
     [Fact]
     public void RunFor_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         DateTimeOffset? received = null;
         clock.ClockEvents += (_, e) => received = e.UtcNow;
         clock.RunFor(TimeSpan.FromMinutes(15));
@@ -232,7 +232,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public async Task Sleep_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         bool sleepCompleted = false;
         ManualResetEventSlim sleepRegistered = new(false);
         try
@@ -268,7 +268,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     [Fact]
     public void Sleep_WithTimeSpanZero_CompletesWithoutThrowing ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         Action act = () => clock.Sleep(TimeSpan.Zero);
         act.Should().NotThrow();
     }
@@ -284,7 +284,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public async Task DelayAsync_WhenAdvanceCoversDuration_CompletesWithoutRealDelay ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
 
         delayTask.IsCompleted.Should().BeFalse();
@@ -301,7 +301,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public async Task DelayAsync_WhenTokenCancelledDuringDelay_ThrowsOperationCanceledException ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         using CancellationTokenSource cts = new();
         using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
             TestContext.Current.CancellationToken);
@@ -326,7 +326,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public void GetTimeCancellationToken_WhenAdvanceReachesCancelTime_TokenIsCancelled ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         using TimeCancellationTokenSource tcs = clock.GetTimeCancellationToken(TimeSpan.FromSeconds(2));
         tcs.IsCancellationRequested.Should().BeFalse();
         clock.Advance(TimeSpan.FromSeconds(2));
@@ -344,7 +344,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public void RegisterTimer_OneShot_WhenAdvanceReachesCallbackTime_FiresOnce ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
         using IClockIntervalTimer registration = clock.RegisterTimer(TimeSpan.FromSeconds(2),
             () => fireCount++,
@@ -365,7 +365,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public void RegisterTimer_Repeating_WhenAdvanceCoversMultipleIntervals_FiresMultipleTimes ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
         using IClockIntervalTimer registration = clock.RegisterTimer(TimeSpan.FromSeconds(1),
             () => fireCount++,
@@ -391,7 +391,7 @@ public class UsingPrimeTestSystemClock : UnitTestBase
     public void RegisterTimeOfDay_Utc_WhenAdvanceReachesTargetTimeOfDay_Fires ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
         UtcTimeOfDay twoAm = new(new TimeOnly(2, 0, 0));
         using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(twoAm,

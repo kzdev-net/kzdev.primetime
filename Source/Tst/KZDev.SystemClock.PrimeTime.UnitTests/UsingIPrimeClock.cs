@@ -7,22 +7,22 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeSystemClock"/> and <see cref="PrimeSystemClock"/>.
+///   Unit tests for <see cref="IPrimeClock"/> and <see cref="PrimeClock"/>.
 ///   Verifies that all "now" members (including time-only and date-only on .NET) return values
 ///   consistent with a known time source and with each other.
 ///   On .NET, includes deterministic tests using FakeTimeProvider (Microsoft.Extensions.Time.Testing).
 /// </summary>
-public partial class UsingIPrimeSystemClock : UnitTestBase
+public partial class UsingIPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingIPrimeSystemClock"/> class.
+    ///   Initializes a new instance of the <see cref="UsingIPrimeClock"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    public UsingIPrimeSystemClock (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingIPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -30,32 +30,32 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     #endregion Constructors/Finalizers
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeSystemClock"/> extends <see cref="IPrimeTime"/>.
+    ///   Verifies that <see cref="IPrimeClock"/> extends <see cref="IPrimeTime"/>.
     /// </summary>
     [Fact]
-    public void IPrimeSystemClock_ExtendsIPrimeTime ()
+    public void IPrimeClock_ExtendsIPrimeTime ()
     {
-        typeof(IPrimeSystemClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
+        typeof(IPrimeClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClock"/> implements <see cref="IPrimeSystemClock"/>.
+    ///   Verifies that <see cref="PrimeClock"/> implements <see cref="IPrimeClock"/>.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_ImplementsIPrimeSystemClock ()
+    public void PrimeClock_ImplementsIPrimeClock ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         clock.Should().NotBeNull();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClock"/> constructed with an explicit
+    ///   Verifies that <see cref="PrimeClock"/> constructed with an explicit
     ///   <see cref="TimeProvider"/> uses that provider for "now" values.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithTimeProvider_UsesProviderForNow ()
+    public void PrimeClock_WithTimeProvider_UsesProviderForNow ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock(TimeProvider.System);
+        IPrimeClock clock = new PrimeClock(TimeProvider.System);
         DateTimeOffset before = TimeProvider.System.GetUtcNow().AddSeconds(-1);
         DateTimeOffset after = TimeProvider.System.GetUtcNow().AddSeconds(1);
         clock.UtcNow.Should().BeAfter(before).And.BeBefore(after);
@@ -64,12 +64,12 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClock"/> throws when given a null time provider.
+    ///   Verifies that <see cref="PrimeClock"/> throws when given a null time provider.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithNullTimeProvider_ThrowsArgumentNullException ()
+    public void PrimeClock_WithNullTimeProvider_ThrowsArgumentNullException ()
     {
-        Action act = () => _ = new PrimeSystemClock(null!);
+        Action act = () => _ = new PrimeClock(null!);
         act.Should().Throw<ArgumentNullException>().WithParameterName("timeProvider");
     }
 
@@ -78,9 +78,9 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     ///   and UtcNowTime/UtcNowDate match the time/date components of UtcDateTimeNow.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_UtcNowMembersAreConsistent ()
+    public void PrimeClock_UtcNowMembersAreConsistent ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         DateTimeOffset utcNow = clock.UtcNow;
         DateTime utcDateTimeNow = clock.UtcDateTimeNow;
 #if NET
@@ -103,9 +103,9 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     ///   and LocalNowTime/LocalNowDate match the time/date components of LocalDateTimeNow.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_LocalNowMembersAreConsistent ()
+    public void PrimeClock_LocalNowMembersAreConsistent ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         DateTimeOffset localNow = clock.LocalNow;
         DateTime localDateTimeNow = clock.LocalDateTimeNow;
 #if NET
@@ -127,9 +127,9 @@ public partial class UsingIPrimeSystemClock : UnitTestBase
     ///   Verifies that all "now" values are recent (within the last 5 seconds).
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_NowMembersAreRecent ()
+    public void PrimeClock_NowMembersAreRecent ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 

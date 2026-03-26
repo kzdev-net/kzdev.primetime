@@ -8,10 +8,10 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeSystemClock"/> RegisterTimer and RegisterAsyncTimer
+///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer
 ///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating, Change, Unsafe).
 /// </summary>
-public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
+public class UsingIPrimeClockIntervalTimers : UnitTestBase
 {
     /// <summary>
     ///   Short initial delay used by many tests (milliseconds).
@@ -35,14 +35,14 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     private static readonly TimeSpan CallbackSettle = TimeSpan.FromMilliseconds(50);
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingIPrimeSystemClockIntervalTimers"/> class.
+    ///   Initializes a new instance of the <see cref="UsingIPrimeClockIntervalTimers"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper for diagnostic output.
     /// </param>
     #region Constructors/Finalizers
 
-    public UsingIPrimeSystemClockIntervalTimers (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingIPrimeClockIntervalTimers (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -58,7 +58,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShot_CallbackCalledOnceAndStateCompleted ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         DateTimeOffset? firedAt = null;
 
@@ -82,7 +82,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShotWithContext_CallbackReceivesStateAndRegistration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
@@ -107,7 +107,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShotWithCancelledToken_StateCancelled ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using CancellationTokenSource cts = new();
         cts.Cancel();
@@ -126,7 +126,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShot_CancelBeforeFire_StateCancelled ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromMilliseconds(200),
             () => signal.Set(), cancellationToken: TestContext.Current.CancellationToken);
@@ -146,7 +146,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_Repeating_CallbackCalledMultipleTimes ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         int count = 0;
         ManualResetEventSlim signal = new(false);
         DateTimeOffset firstCallbackTime = default;
@@ -178,7 +178,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_RepeatingResetAfterCallback_CallbackCalledWithCorrectSpacing ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         int count = 0;
         ManualResetEventSlim signal = new(false);
         List<DateTimeOffset> times = [];
@@ -207,7 +207,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShot_ChangeBeforeFire_NextFireAtNewInterval ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan newInterval = TimeSpan.FromMilliseconds(100);
         ManualResetEventSlim signal = new(false);
         DateTimeOffset? firedAt = null;
@@ -232,7 +232,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShot_ChangeAfterFire_ReschedulesAndFiresAgain ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan secondInterval = TimeSpan.FromMilliseconds(90);
         ManualResetEventSlim signal = new(false);
         int count = 0;
@@ -266,7 +266,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_Repeating_ChangeNextAndRepeatInterval_NextFiresAtNewIntervals ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan newFirst = TimeSpan.FromMilliseconds(70);
         TimeSpan newRepeat = TimeSpan.FromMilliseconds(55);
         ManualResetEventSlim signal = new(false);
@@ -296,7 +296,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_OneShot_ChangeToRepeating_ThrowsInvalidOperationException ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(1), () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         AssertChangeToRepeatingThrows(timer);
@@ -320,7 +320,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_Stop_StateDisabled_Start_Reschedules ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(2), () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
@@ -345,7 +345,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterAsyncTimer_OneShot_ValueTaskCompletesAndStateCompleted ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         DateTimeOffset? firedAt = null;
 
@@ -369,7 +369,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterAsyncTimer_OneShotWithContext_ReceivesStateAndToken ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
@@ -392,7 +392,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterAsyncTimer_RepeatingResetAfterCallback_NextTickAfterAsyncCallbackCompletes ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan asyncWork = TimeSpan.FromMilliseconds(80);
         List<DateTimeOffset> callbackStarts = [];
         ManualResetEventSlim signal = new(false);
@@ -425,7 +425,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_UnsafeOption_CallbackInvoked ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
@@ -449,7 +449,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_ReturnsTimerWithCorrectContractProperties ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
@@ -472,7 +472,7 @@ public class UsingIPrimeSystemClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_AfterDispose_ChangeReturnsFalse ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(2), () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Dispose();

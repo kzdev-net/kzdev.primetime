@@ -11,20 +11,20 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="PrimeSystemClockTimeProviderAdapter"/> and
-///   <see cref="PrimeSystemClockTimeProviderExtensions.ToTimeProvider(IPrimeSystemClock)"/>.
+///   Unit tests for <see cref="PrimeClockTimeProviderAdapter"/> and
+///   <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>.
 /// </summary>
-public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
+public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 {
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingPrimeSystemClockTimeProviderAdapter"/> class.
+    ///   Initializes a new instance of the <see cref="UsingPrimeClockTimeProviderAdapter"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    public UsingPrimeSystemClockTimeProviderAdapter (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingPrimeClockTimeProviderAdapter (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -34,25 +34,25 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     #region ToTimeProvider extension
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClockTimeProviderExtensions.ToTimeProvider(IPrimeSystemClock)"/>
+    ///   Verifies that <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>
     ///   returns a non-null TimeProvider when given a test clock.
     /// </summary>
     [Fact]
-    public void ToTimeProvider_WithPrimeTestSystemClock_ReturnsNonNullTimeProvider ()
+    public void ToTimeProvider_WithPrimeTestClock_ReturnsNonNullTimeProvider ()
     {
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.Zero));
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.Zero));
         TimeProvider provider = clock.ToTimeProvider();
         provider.Should().NotBeNull();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClockTimeProviderExtensions.ToTimeProvider(IPrimeSystemClock)"/>
+    ///   Verifies that <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>
     ///   throws <see cref="ArgumentNullException"/> when the clock is null.
     /// </summary>
     [Fact]
     public void ToTimeProvider_WithNullClock_ThrowsArgumentNullException ()
     {
-        IPrimeSystemClock? clock = null;
+        IPrimeClock? clock = null;
         Action act = () => clock!.ToTimeProvider();
         act.Should().Throw<ArgumentNullException>().WithParameterName("clock");
     }
@@ -69,7 +69,7 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     public void GetUtcNow_AfterSetTime_ReturnsSetTime ()
     {
         DateTimeOffset setTime = new(2025, 1, 10, 14, 30, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock();
+        IPrimeTestClock clock = new PrimeTestClock();
         clock.SetTime(setTime);
         TimeProvider provider = clock.ToTimeProvider();
         provider.GetUtcNow().Should().Be(setTime);
@@ -82,7 +82,7 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     public void GetUtcNow_AfterAdvance_ReturnsAdvancedTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         provider.GetUtcNow().Should().Be(initial);
         clock.Advance(TimeSpan.FromHours(2));
@@ -96,7 +96,7 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     public void GetUtcNow_AfterRunFor_ReturnsAdvancedTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         clock.RunFor(TimeSpan.FromMinutes(30));
         provider.GetUtcNow().Should().Be(initial + TimeSpan.FromMinutes(30));
@@ -114,7 +114,7 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     public void CreateTimer_WithDueTime_AfterAdvance_FiresCallback ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
         using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
@@ -133,7 +133,7 @@ public class UsingPrimeSystemClockTimeProviderAdapter : UnitTestBase
     public void CreateTimer_Repeating_AfterAdvance_FiresMultipleTimes ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestSystemClock clock = new PrimeTestSystemClock(initial);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
         using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));

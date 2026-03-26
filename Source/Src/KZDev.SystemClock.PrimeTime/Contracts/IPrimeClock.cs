@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
@@ -9,9 +9,9 @@ namespace KZDev.PrimeTime;
 ///   On .NET 6 and later, time-only and date-only "now" members (LocalNowTime, UtcNowTime,
 ///   LocalNowDate, UtcNowDate) are also available.
 /// </summary>
-public interface IPrimeSystemClock : IPrimeTime
+public interface IPrimeClock : IPrimeTime
 {
-    #region IPrimeSystemClock — Now (date and time)
+    #region IPrimeClock — Now (date and time)
 
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -37,10 +37,10 @@ public interface IPrimeSystemClock : IPrimeTime
     DateTime UtcDateTimeNow { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 
-    #endregion IPrimeSystemClock — Now (date and time)
+    #endregion IPrimeClock — Now (date and time)
 
 #if NET
-    #region IPrimeSystemClock — Now (time-only and date-only)
+    #region IPrimeClock — Now (time-only and date-only)
 
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -64,10 +64,10 @@ public interface IPrimeSystemClock : IPrimeTime
     DateOnly UtcNowDate { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 
-    #endregion IPrimeSystemClock — Now (time-only and date-only)
+    #endregion IPrimeClock — Now (time-only and date-only)
 #endif
 
-    #region IPrimeSystemClock — Interval timers
+    #region IPrimeClock — Interval timers
 
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -260,10 +260,10 @@ public interface IPrimeSystemClock : IPrimeTime
             IntervalTimerOptions? timerOptions = null);
     //--------------------------------------------------------------------------------
 
-    #endregion IPrimeSystemClock — Interval timers
+    #endregion IPrimeClock — Interval timers
 
 #if NET
-    #region IPrimeSystemClock — Day-time timers
+    #region IPrimeClock — Day-time timers
 
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -439,7 +439,7 @@ public interface IPrimeSystemClock : IPrimeTime
             DayTimeTimerOptions? timerOptions = null);
     //--------------------------------------------------------------------------------
 
-    #endregion IPrimeSystemClock — Day-time timers
+    #endregion IPrimeClock — Day-time timers
 #endif
 }
 //################################################################################

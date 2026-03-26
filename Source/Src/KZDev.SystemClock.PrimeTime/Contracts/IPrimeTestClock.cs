@@ -1,13 +1,13 @@
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Extends <see cref="IPrimeTestTime"/> and <see cref="IPrimeSystemClock"/> with
+///   Extends <see cref="IPrimeTestTime"/> and <see cref="IPrimeClock"/> with
 ///   test-controllable time: set current time, advance by a duration, run for a duration,
 ///   and start/stop automatic advancement with an optional rate. All "now" values, delays,
 ///   time-based cancellation, and timers are driven by this virtual time so tests are deterministic.
 /// </summary>
-public interface IPrimeTestSystemClock : IPrimeTestTime, IPrimeSystemClock
+public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
     //--------------------------------------------------------------------------------
     /// <summary>

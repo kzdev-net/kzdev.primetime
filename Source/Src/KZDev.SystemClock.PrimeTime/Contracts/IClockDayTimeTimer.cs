@@ -1,10 +1,10 @@
 #if NET
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration for a time-of-day timer created on an <see cref="IPrimeSystemClock"/>,
+///   Registration for a time-of-day timer created on an <see cref="IPrimeClock"/>,
 ///   supporting change of the target time of day.
 /// </summary>
 public interface IClockDayTimeTimer : IDayTimeTimer, IClockTimer

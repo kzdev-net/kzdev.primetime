@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
 ///   Internal callback type for interval timer invocations.
@@ -36,12 +36,12 @@ internal enum IntervalTimerCallbackKind
 }
 
 /// <summary>
-///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeSystemClock"/>.
+///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>.
 /// </summary>
 internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
 {
     private static int _nextId;
-    private readonly IPrimeSystemClock _clock;
+    private readonly IPrimeClock _clock;
     private readonly bool _captureContext;
     private readonly IntervalTimerCallbackKind _callbackKind;
     private readonly Delegate _callback;
@@ -69,7 +69,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
     /// </summary>
     /// <param name="clock">
-    ///   The system clock used for scheduling and time.
+    ///   The BCL clock used for scheduling and time.
     /// </param>
     /// <param name="initialCallbackTime">
     ///   Delay until the first callback.
@@ -94,7 +94,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
     /// <param name="cancellationToken">
     ///   Token to cancel the registration.
     /// </param>
-    internal ClockIntervalTimerRegistration (IPrimeSystemClock clock,
+    internal ClockIntervalTimerRegistration (IPrimeClock clock,
         TimeSpan initialCallbackTime,
         TimeSpan repeatInterval,
         IntervalTimerCallbackKind callbackKind,

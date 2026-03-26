@@ -4,30 +4,30 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
-///   Adapts an <see cref="IPrimeSystemClock"/> to <see cref="TimeProvider"/> so that
+///   Adapts an <see cref="IPrimeClock"/> to <see cref="TimeProvider"/> so that
 ///   components depending on <see cref="TimeProvider"/> (e.g. <see cref="TimeProvider.GetUtcNow"/>,
 ///   <see cref="TimeProvider.CreateTimer"/>) use the PrimeTime clock. When the clock is a
-///   test clock (<see cref="IPrimeTestSystemClock"/>), time and timers are driven by
-///   <see cref="IPrimeTestSystemClock.SetTime"/>, <see cref="IPrimeTestSystemClock.Advance"/>,
-///   and <see cref="IPrimeTestSystemClock.RunFor"/> for deterministic tests.
+///   test clock (<see cref="IPrimeTestClock"/>), time and timers are driven by
+///   <see cref="IPrimeTestClock.SetTime"/>, <see cref="IPrimeTestClock.Advance"/>,
+///   and <see cref="IPrimeTestClock.RunFor"/> for deterministic tests.
 /// </summary>
-internal sealed class PrimeSystemClockTimeProviderAdapter : TimeProvider
+internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
-    private readonly IPrimeSystemClock _clock;
+    private readonly IPrimeClock _clock;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeSystemClockTimeProviderAdapter"/> class.
+    ///   Initializes a new instance of the <see cref="PrimeClockTimeProviderAdapter"/> class.
     /// </summary>
     /// <param name="clock">
-    ///   The PrimeTime system clock to use for time and timer operations.
+    ///   The PrimeTime BCL clock to use for time and timer operations.
     /// </param>
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="clock"/> is <c>null</c>.
     /// </exception>
-    public PrimeSystemClockTimeProviderAdapter (IPrimeSystemClock clock)
+    public PrimeClockTimeProviderAdapter (IPrimeClock clock)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }

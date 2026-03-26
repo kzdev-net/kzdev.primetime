@@ -1,8 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 //
-// Unit tests for IPrimeSystemClock RegisterTimeOfDay and RegisterAsyncTimeOfDay.
-// Uses real time; use PrimeTestSystemClock for fully deterministic day-time timer tests.
+// Unit tests for IPrimeClock RegisterTimeOfDay and RegisterAsyncTimeOfDay.
+// Uses real time; use PrimeTestClock for fully deterministic day-time timer tests.
 
 #if NET
 
@@ -12,10 +12,10 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="IPrimeSystemClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
+///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
 ///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (local/UTC, options, Change).
 /// </summary>
-public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
+public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
     /// <summary>
     ///   Short delay from "now" used to compute a time-of-day that fires soon (milliseconds).
@@ -35,12 +35,12 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     private static readonly TimeSpan CallbackSettle = TimeSpan.FromMilliseconds(50);
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingIPrimeSystemClockDayTimeTimers"/> class.
+    ///   Initializes a new instance of the <see cref="UsingIPrimeClockDayTimeTimers"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper for diagnostic output.
     /// </param>
-    public UsingIPrimeSystemClockDayTimeTimers (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingIPrimeClockDayTimeTimers (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -54,7 +54,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_LocalTimeOfDay_CallbackFiresNearTargetTime ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         DateTimeOffset now = clock.LocalNow;
         TimeOnly targetTime = TimeOnly.FromDateTime((now + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(targetTime);
@@ -79,7 +79,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_LocalTimeOfDay_ReturnsTimerWithCorrectContractProperties ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -113,7 +113,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_UtcTimeOfDay_CallbackFiresNearTargetTime ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         DateTimeOffset now = clock.UtcNow;
         TimeOnly targetTime = TimeOnly.FromDateTime((now + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(targetTime);
@@ -138,7 +138,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_UtcTimeOfDay_IsLocalTimeRepresentationFalse ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -160,7 +160,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_LocalWithContext_CallbackReceivesStateAndRegistration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         object state = new();
@@ -185,7 +185,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterAsyncTimeOfDay_UtcTimeOfDay_ValueTaskCompletesAndCallbackFires ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -213,7 +213,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_ChangeLocalTimeOfDay_ReschedulesAndFiresAtNewTime ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly farTarget = TimeOnly.FromDateTime((clock.LocalNow + TimeSpan.FromSeconds(10)).DateTime);
         LocalTimeOfDay initial = new(farTarget);
         ManualResetEventSlim signal = new(false);
@@ -238,7 +238,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_ChangeUtcTimeOfDay_ReturnsFalse ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -256,7 +256,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Utc_ChangeLocalTimeOfDay_ReturnsFalse ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -278,7 +278,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_CancelBeforeFire_StateCancelled ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + TimeSpan.FromSeconds(5)).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
@@ -298,7 +298,7 @@ public class UsingIPrimeSystemClockDayTimeTimers : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_WithDefaultOptions_RegistrationExposesDefaultBehaviors ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);

@@ -1,8 +1,8 @@
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Production implementation of <see cref="IPrimeSystemClock"/> that delegates "now"
+///   Production implementation of <see cref="IPrimeClock"/> that delegates "now"
 ///   to a <see cref="TimeProvider"/> time source (e.g. <see cref="TimeProvider.System"/>),
 ///   analogous to the NodaTime stack using an IClock abstraction.
 /// </summary>
@@ -10,31 +10,31 @@ namespace KZDev.PrimeTime;
 ///   Delay and time-cancellation members (Sleep, DelayAsync, GetTimeCancellationToken,
 ///   LinkTimeCancellationToken) delegate to the BCL (Thread.Sleep, Task.Delay,
 ///   CancellationTokenSource with a timer), so they use system time rather than the provider's
-///   time. For deterministic tests, use <see cref="PrimeTestSystemClock"/> or <see cref="IPrimeTestSystemClock"/>.
+///   time. For deterministic tests, use <see cref="PrimeTestClock"/> or <see cref="IPrimeTestClock"/>.
 /// </remarks>
-internal sealed class PrimeSystemClock : IPrimeSystemClock
+internal sealed class PrimeClock : IPrimeClock
 {
     private readonly TimeProvider _timeProvider;
 
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeSystemClock"/> class using
+    ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
     ///   <see cref="TimeProvider.System"/> as the time source.
     /// </summary>
-    public PrimeSystemClock ()
+    public PrimeClock ()
         : this(TimeProvider.System)
     {
     }
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeSystemClock"/> class with the
+    ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
     ///   specified time provider.
     /// </summary>
     /// <param name="timeProvider">
     ///   The time provider used to obtain the current UTC and local time.
     /// </param>
-    public PrimeSystemClock (TimeProvider timeProvider)
+    public PrimeClock (TimeProvider timeProvider)
     {
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
@@ -43,7 +43,7 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
 
     #region Interface Implementations
 
-    #region IPrimeSystemClock Implementation
+    #region IPrimeClock Implementation
 
     /// <inheritdoc />
     public DateTimeOffset LocalNow => _timeProvider.GetLocalNow();
@@ -71,7 +71,7 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
     public DateOnly UtcNowDate => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 #endif
 
-    #endregion IPrimeSystemClock Implementation
+    #endregion IPrimeClock Implementation
 
     #region IPrimeTime Implementation
 
@@ -184,7 +184,7 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
 
     #endregion IPrimeTime Implementation
 
-    #region IPrimeSystemClock — Interval timers
+    #region IPrimeClock — Interval timers
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
@@ -342,10 +342,10 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
             timerOptions,
             cancellationToken);
 
-    #endregion IPrimeSystemClock — Interval timers
+    #endregion IPrimeClock — Interval timers
 
 #if NET
-    #region IPrimeSystemClock — Day-time timers
+    #region IPrimeClock — Day-time timers
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
@@ -483,7 +483,7 @@ internal sealed class PrimeSystemClock : IPrimeSystemClock
             timerOptions,
             cancellationToken);
 
-    #endregion IPrimeSystemClock — Day-time timers
+    #endregion IPrimeClock — Day-time timers
 #endif
 
     #endregion Interface Implementations

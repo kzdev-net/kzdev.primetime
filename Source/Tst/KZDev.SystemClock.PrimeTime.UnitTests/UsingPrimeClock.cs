@@ -1,8 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for PrimeSystemClock (SUT). Delays and time-based cancellation use system time;
-// use PrimeTestSystemClock for fully deterministic tests.
+// Unit tests for PrimeClock (SUT). Delays and time-based cancellation use system time;
+// use PrimeTestClock for fully deterministic tests.
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
@@ -10,20 +10,20 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for <see cref="PrimeSystemClock"/> (IPrimeTime delay and time-cancellation members).
+///   Unit tests for <see cref="PrimeClock"/> (IPrimeTime delay and time-cancellation members).
 ///   Different test genres are grouped in regions.
 /// </summary>
-public class UsingPrimeSystemClock : UnitTestBase
+public class UsingPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingPrimeSystemClock"/> class.
+    ///   Initializes a new instance of the <see cref="UsingPrimeClock"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper that can be used to output test messages.
     /// </param>
-    public UsingPrimeSystemClock (ITestOutputHelper xUnitTestOutputHelper)
+    public UsingPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
@@ -39,7 +39,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void Sleep_TimeSpanZero_CompletesWithoutThrowing ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         Action act = () => clock.Sleep(TimeSpan.Zero);
         act.Should().NotThrow();
     }
@@ -51,7 +51,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void Sleep_MillisecondsZero_CompletesWithoutThrowing ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         Action act = () => clock.Sleep(0);
         act.Should().NotThrow();
     }
@@ -63,7 +63,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void Sleep_TimeSpan_SuspendsForAtLeastDuration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan sleepDuration = TimeSpan.FromMilliseconds(30);
         DateTimeOffset before = DateTimeOffset.UtcNow;
         clock.Sleep(sleepDuration);
@@ -78,7 +78,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void Sleep_Milliseconds_SuspendsForAtLeastDuration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         const int sleepMs = 30;
         DateTimeOffset before = DateTimeOffset.UtcNow;
         clock.Sleep(sleepMs);
@@ -97,7 +97,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_TimeSpanZero_CompletesWithoutThrowing ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);
         await act.Should().NotThrowAsync();
     }
@@ -109,7 +109,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_MillisecondsZero_CompletesWithoutThrowing ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         Func<Task> act = async () => await clock.DelayAsync(0);
         await act.Should().NotThrowAsync();
     }
@@ -121,7 +121,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_TimeSpan_CompletesAfterDuration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan delay = TimeSpan.FromMilliseconds(40);
         DateTimeOffset before = DateTimeOffset.UtcNow;
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
@@ -136,7 +136,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_Milliseconds_CompletesAfterDuration ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         const int delayMs = 40;
         DateTimeOffset before = DateTimeOffset.UtcNow;
         await clock.DelayAsync(delayMs, TestContext.Current.CancellationToken);
@@ -152,7 +152,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_TimeSpanWithToken_CancelledEarly_ThrowsOperationCanceledException ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource cts = new();
         CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
             TestContext.Current.CancellationToken).Token;
@@ -172,7 +172,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task DelayAsync_MillisecondsWithToken_CancelledEarly_ThrowsOperationCanceledException ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource cts = new();
         CancellationToken linked = CancellationTokenSource.CreateLinkedTokenSource(cts.Token,
             TestContext.Current.CancellationToken).Token;
@@ -195,7 +195,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task GetTimeCancellationToken_TimeSpan_ExpiresAfterTime ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         TimeSpan cancelAfter = TimeSpan.FromMilliseconds(50);
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
@@ -211,7 +211,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task GetTimeCancellationToken_Milliseconds_ExpiresAfterTime ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         const int cancelAfterMs = 50;
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
@@ -231,7 +231,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task LinkTimeCancellationToken_TimeSpanAndToken_CancelsWhenLinkedCancels ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource userCts = new();
         using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromSeconds(10), userCts.Token);
@@ -248,7 +248,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void LinkTimeCancellationToken_TimeSpanAndTwoTokens_CancelsWhenOneTokenCancels ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource cts1 = new();
         using CancellationTokenSource cts2 = new();
         using TimeCancellationTokenSource linkedSource =
@@ -265,7 +265,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void LinkTimeCancellationToken_TimeSpanAndParams_CancelsWhenOneTokenCancels ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource cts1 = new();
         using CancellationTokenSource cts2 = new();
         using TimeCancellationTokenSource linkedSource =
@@ -282,7 +282,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public void LinkTimeCancellationToken_MillisecondsAndToken_CancelsWhenLinkedCancels ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource userCts = new();
         using TimeCancellationTokenSource linkedSource = clock.LinkTimeCancellationToken(10_000, userCts.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
@@ -297,7 +297,7 @@ public class UsingPrimeSystemClock : UnitTestBase
     [Fact]
     public async Task LinkTimeCancellationToken_ExpiresAfterTimeWhenLinkedNotCancelled ()
     {
-        IPrimeSystemClock clock = new PrimeSystemClock();
+        IPrimeClock clock = new PrimeClock();
         using CancellationTokenSource neverCancelled = new();
         using TimeCancellationTokenSource linkedSource =
             clock.LinkTimeCancellationToken(TimeSpan.FromMilliseconds(50), neverCancelled.Token);

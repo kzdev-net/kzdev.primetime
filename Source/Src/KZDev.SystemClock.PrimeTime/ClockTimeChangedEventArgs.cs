@@ -1,10 +1,10 @@
 using System.Diagnostics;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Provides data for the <see cref="IPrimeTestSystemClock.ClockEvents"/> event.
+///   Provides data for the <see cref="IPrimeTestClock.ClockEvents"/> event.
 /// </summary>
 [DebuggerStepThrough]
 public sealed class ClockTimeChangedEventArgs : EventArgs

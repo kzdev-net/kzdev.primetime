@@ -13,20 +13,20 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
-public partial class UsingIPrimeSystemClock
+public partial class UsingIPrimeClock
 {
 #if NET
     /// <summary>
-    ///   Verifies that <see cref="PrimeSystemClock"/> with a <see cref="FakeTimeProvider"/> at a fixed
+    ///   Verifies that <see cref="PrimeClock"/> with a <see cref="FakeTimeProvider"/> at a fixed
     ///   UTC time yields consistent "now" values: UtcNow matches the set time, LocalNow reflects
     ///   the provider's local zone, and DateTime/DateTimeOffset members are consistent.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_NowMembersAreConsistentWithFixedUtc ()
+    public void PrimeClock_WithFakeTimeProvider_NowMembersAreConsistentWithFixedUtc ()
     {
         DateTimeOffset fixedUtc = new(2025, 3, 7, 12, 0, 0, TimeSpan.Zero);
         FakeTimeProvider fake = new(fixedUtc);
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNow.Should().Be(fixedUtc);
         clock.UtcNow.Offset.Should().Be(TimeSpan.Zero);
@@ -39,17 +39,17 @@ public partial class UsingIPrimeSystemClock
     }
 
     /// <summary>
-    ///   Verifies that at a fixed UTC instant, <see cref="PrimeSystemClock"/> with a
+    ///   Verifies that at a fixed UTC instant, <see cref="PrimeClock"/> with a
     ///   <see cref="FakeTimeProvider"/> (with local zone set to UTC) returns exact time-only and
     ///   date-only "now" values.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_TimeOnlyAndDateOnlyReturnExactValuesAtFixedInstant ()
+    public void PrimeClock_WithFakeTimeProvider_TimeOnlyAndDateOnlyReturnExactValuesAtFixedInstant ()
     {
         DateTimeOffset fixedUtc = new(2025, 3, 7, 12, 30, 45, TimeSpan.Zero);
         FakeTimeProvider fake = new(fixedUtc);
         fake.SetLocalTimeZone(TimeZoneInfo.Utc);
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNowTime.Should().Be(TimeOnly.FromDateTime(fixedUtc.UtcDateTime));
         clock.UtcNowDate.Should().Be(DateOnly.FromDateTime(fixedUtc.UtcDateTime));
@@ -60,18 +60,18 @@ public partial class UsingIPrimeSystemClock
     }
 
     /// <summary>
-    ///   Verifies that advancing a <see cref="FakeTimeProvider"/> used by <see cref="PrimeSystemClock"/>
+    ///   Verifies that advancing a <see cref="FakeTimeProvider"/> used by <see cref="PrimeClock"/>
     ///   updates all "now" values (UtcNow, LocalNow, DateTime, and on .NET the time/date components).
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_AdvanceUpdatesNow ()
+    public void PrimeClock_WithFakeTimeProvider_AdvanceUpdatesNow ()
     {
         DateTimeOffset initial = new(2025, 3, 7, 10, 0, 0, TimeSpan.Zero);
         TimeSpan advanceBy = TimeSpan.FromHours(2).Add(TimeSpan.FromMinutes(30));
         DateTimeOffset expectedAfter = initial.Add(advanceBy);
         FakeTimeProvider fake = new(initial);
         fake.SetLocalTimeZone(TimeZoneInfo.Utc);
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNow.Should().Be(initial);
         clock.UtcNowDate.Should().Be(new(2025, 3, 7));
@@ -88,13 +88,13 @@ public partial class UsingIPrimeSystemClock
 
     /// <summary>
     ///   Verifies that <see cref="FakeTimeProvider"/> default start (midnight 2000-01-01 UTC) is
-    ///   reflected by <see cref="PrimeSystemClock"/> when no explicit time is set.
+    ///   reflected by <see cref="PrimeClock"/> when no explicit time is set.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_StartIsUsedWhenNoSetUtcNow ()
+    public void PrimeClock_WithFakeTimeProvider_StartIsUsedWhenNoSetUtcNow ()
     {
         FakeTimeProvider fake = new();
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNow.Should().Be(fake.Start);
         clock.UtcNow.Offset.Should().Be(TimeSpan.Zero);
@@ -105,16 +105,16 @@ public partial class UsingIPrimeSystemClock
 
     /// <summary>
     ///   Verifies that <see cref="FakeTimeProvider.SetUtcNow"/> is reflected in all
-    ///   <see cref="IPrimeSystemClock"/> "now" members: UTC values match the set time,
+    ///   <see cref="IPrimeClock"/> "now" members: UTC values match the set time,
     ///   and local values represent the same moment (same UtcDateTime) with the provider's offset.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_SetUtcNow_ReflectedInAllNowMembers ()
+    public void PrimeClock_WithFakeTimeProvider_SetUtcNow_ReflectedInAllNowMembers ()
     {
         DateTimeOffset setTime = new(2030, 6, 15, 14, 45, 30, TimeSpan.Zero);
         FakeTimeProvider fake = new();
         fake.SetUtcNow(setTime);
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNow.Should().Be(setTime);
         clock.UtcDateTimeNow.Should().Be(setTime.UtcDateTime);
@@ -128,18 +128,18 @@ public partial class UsingIPrimeSystemClock
 
     /// <summary>
     ///   Verifies that <see cref="FakeTimeProvider.SetLocalTimeZone"/> affects
-    ///   <see cref="IPrimeSystemClock.LocalNow"/> and related local members so they match the
+    ///   <see cref="IPrimeClock.LocalNow"/> and related local members so they match the
     ///   configured zone offset.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_LocalTimeZone_AffectsLocalNow ()
+    public void PrimeClock_WithFakeTimeProvider_LocalTimeZone_AffectsLocalNow ()
     {
         DateTimeOffset fixedUtc = new(2025, 3, 7, 12, 0, 0, TimeSpan.Zero);
         FakeTimeProvider fake = new(fixedUtc);
         TimeZoneInfo plusTwo = TimeZoneInfo.CreateCustomTimeZone("+02", TimeSpan.FromHours(2), null, null);
         fake.SetLocalTimeZone(plusTwo);
 
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
         DateTimeOffset localNow = clock.LocalNow;
         localNow.Offset.Should().Be(TimeSpan.FromHours(2));
         localNow.UtcDateTime.Should().Be(fixedUtc.UtcDateTime);
@@ -148,14 +148,14 @@ public partial class UsingIPrimeSystemClock
 
     /// <summary>
     ///   Verifies that multiple <see cref="FakeTimeProvider.Advance"/> calls accumulate and
-    ///   <see cref="PrimeSystemClock"/> always reflects the current fake time.
+    ///   <see cref="PrimeClock"/> always reflects the current fake time.
     /// </summary>
     [Fact]
-    public void PrimeSystemClock_WithFakeTimeProvider_MultipleAdvances_Accumulate ()
+    public void PrimeClock_WithFakeTimeProvider_MultipleAdvances_Accumulate ()
     {
         DateTimeOffset start = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         FakeTimeProvider fake = new(start);
-        IPrimeSystemClock clock = new PrimeSystemClock(fake);
+        IPrimeClock clock = new PrimeClock(fake);
 
         clock.UtcNow.Should().Be(start);
         fake.Advance(TimeSpan.FromDays(1));

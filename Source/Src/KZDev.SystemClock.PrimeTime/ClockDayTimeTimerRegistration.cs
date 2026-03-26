@@ -2,10 +2,10 @@
 
 using System.Diagnostics;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
-///   Implementation of <see cref="IClockDayTimeTimer"/> used by <see cref="PrimeSystemClock"/>.
+///   Implementation of <see cref="IClockDayTimeTimer"/> used by <see cref="PrimeClock"/>.
 /// </summary>
 internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
@@ -13,7 +13,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
     private static readonly TimeSpan RunSequentiallyRetryDelay = TimeSpan.FromMilliseconds(30);
 
-    private readonly IPrimeSystemClock _clock;
+    private readonly IPrimeClock _clock;
     private readonly bool _isLocal;
     private readonly bool _captureContext;
     private readonly IntervalTimerCallbackKind _callbackKind;
@@ -43,7 +43,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     ///   for a local-time day-time timer.
     /// </summary>
     /// <param name="clock">
-    ///   The system clock used for scheduling and callback execution.
+    ///   The BCL clock used for scheduling and callback execution.
     /// </param>
     /// <param name="timeOfDay">
     ///   The local time of day at which the callback should run.
@@ -66,7 +66,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <exception cref="ArgumentNullException">
     ///   Thrown when <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
     /// </exception>
-    internal ClockDayTimeTimerRegistration (IPrimeSystemClock clock,
+    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
         LocalTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
@@ -82,7 +82,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     ///   for a UTC day-time timer.
     /// </summary>
     /// <param name="clock">
-    ///   The system clock used for scheduling and callback execution.
+    ///   The BCL clock used for scheduling and callback execution.
     /// </param>
     /// <param name="timeOfDay">
     ///   The UTC time of day at which the callback should run.
@@ -105,7 +105,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <exception cref="ArgumentNullException">
     ///   Thrown when <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
     /// </exception>
-    internal ClockDayTimeTimerRegistration (IPrimeSystemClock clock,
+    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
         UtcTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
@@ -116,7 +116,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     {
     }
 
-    private ClockDayTimeTimerRegistration (IPrimeSystemClock clock,
+    private ClockDayTimeTimerRegistration (IPrimeClock clock,
         bool isLocal,
         TimeOnly targetTimeOfDay,
         IntervalTimerCallbackKind callbackKind,

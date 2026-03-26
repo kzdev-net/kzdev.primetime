@@ -1,10 +1,10 @@
 using System.Diagnostics;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration for a timer created on an <see cref="IPrimeSystemClock"/>.
+///   Registration for a timer created on an <see cref="IPrimeClock"/>.
 /// </summary>
 public interface IClockTimer : IRegisteredTimer
 {

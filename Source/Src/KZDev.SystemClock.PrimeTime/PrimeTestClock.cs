@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
-///   Test clock implementation of <see cref="IPrimeTestSystemClock"/> that maintains
+///   Test clock implementation of <see cref="IPrimeTestClock"/> that maintains
 ///   virtual time. All "now" values, delays, time-based cancellation, and timers are
 ///   driven by this virtual time so tests can advance time deterministically.
 /// </summary>
-public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
+public sealed class PrimeTestClock : IPrimeTestClock
 {
 
     #region Nested types — Pending delay and time expiry
@@ -62,7 +62,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
     {
-        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
         protected object? CallbackState { [DebuggerStepThrough] get; }
@@ -84,7 +84,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         private readonly bool _isLocalTimeRepresentation;
         private readonly bool _resetAfterCallback;
 
-        protected VirtualIntervalTimerBase (PrimeTestSystemClock clock,
+        protected VirtualIntervalTimerBase (PrimeTestClock clock,
             TimeSpan initialCallbackTime,
             TimeSpan repeatInterval,
             IntervalTimerCallbackKind callbackKind,
@@ -295,7 +295,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
     {
-        public VirtualIntervalTimer (PrimeTestSystemClock clock,
+        public VirtualIntervalTimer (PrimeTestClock clock,
             TimeSpan initialCallbackTime,
             TimeSpan repeatInterval,
             IntervalTimerCallbackKind callbackKind,
@@ -441,7 +441,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
-        protected PrimeTestSystemClock Clock { [DebuggerStepThrough] get; }
+        protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected bool IsLocal { [DebuggerStepThrough] get; }
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
@@ -460,7 +460,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         protected TimeOnly TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
 
-        protected VirtualDayTimeTimerBase (PrimeTestSystemClock clock,
+        protected VirtualDayTimeTimerBase (PrimeTestClock clock,
             bool isLocal,
             TimeOnly targetTimeOfDay,
             IntervalTimerCallbackKind callbackKind,
@@ -692,7 +692,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
     {
-        public VirtualDayTimeTimer (PrimeTestSystemClock clock,
+        public VirtualDayTimeTimer (PrimeTestClock clock,
             bool isLocal,
             TimeOnly targetTimeOfDay,
             IntervalTimerCallbackKind callbackKind,
@@ -783,22 +783,22 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeTestSystemClock"/> class
+    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class
     ///   with virtual time set to <see cref="DateTimeOffset.UtcNow"/> at construction.
     /// </summary>
-    public PrimeTestSystemClock ()
+    public PrimeTestClock ()
     {
         _utcNow = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeTestSystemClock"/> class
+    ///   Initializes a new instance of the <see cref="PrimeTestClock"/> class
     ///   with the specified initial UTC time.
     /// </summary>
     /// <param name="initialUtcTime">
     ///   The initial virtual UTC time.
     /// </param>
-    public PrimeTestSystemClock (DateTimeOffset initialUtcTime)
+    public PrimeTestClock (DateTimeOffset initialUtcTime)
     {
         _utcNow = initialUtcTime;
     }
@@ -899,7 +899,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     #region Interface Implementations
 
-    #region IPrimeTestSystemClock Implementation
+    #region IPrimeTestClock Implementation
 
     /// <inheritdoc />
     public void SetTime (DateTimeOffset utcTime)
@@ -1076,7 +1076,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         return true;
     }
 
-    #endregion IPrimeTestSystemClock Implementation
+    #endregion IPrimeTestClock Implementation
 
     #region IPrimeTestTime Implementation
 
@@ -1092,7 +1092,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     #endregion IPrimeTestTime Implementation
 
-    #region IPrimeSystemClock Implementation — Now
+    #region IPrimeClock Implementation — Now
 
     /// <inheritdoc />
     public DateTimeOffset LocalNow
@@ -1176,7 +1176,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
     }
 #endif
 
-    #endregion IPrimeSystemClock Implementation — Now
+    #endregion IPrimeClock Implementation — Now
 
     #region IPrimeTime Implementation — Delays
 
@@ -1368,7 +1368,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
 
     #endregion IPrimeTime Implementation — Time cancellation
 
-    #region IPrimeSystemClock Implementation — Interval timers
+    #region IPrimeClock Implementation — Interval timers
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
@@ -1576,10 +1576,10 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         return intervalTimer;
     }
 
-    #endregion IPrimeSystemClock Implementation — Interval timers
+    #endregion IPrimeClock Implementation — Interval timers
 
 #if NET
-    #region IPrimeSystemClock Implementation — Day-time timers
+    #region IPrimeClock Implementation — Day-time timers
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
@@ -1657,7 +1657,7 @@ public sealed class PrimeTestSystemClock : IPrimeTestSystemClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayUtc(timeOfDay.Value, IntervalTimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
 
-    #endregion IPrimeSystemClock Implementation — Day-time timers
+    #endregion IPrimeClock Implementation — Day-time timers
 #endif
     #endregion Interface Implementations
 }

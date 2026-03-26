@@ -1,8 +1,8 @@
-namespace KZDev.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration for an interval timer created on an <see cref="IPrimeSystemClock"/>,
+///   Registration for an interval timer created on an <see cref="IPrimeClock"/>,
 ///   supporting change of due time and repeat interval.
 /// </summary>
 public interface IClockIntervalTimer : IIntervalTimer, IClockTimer
