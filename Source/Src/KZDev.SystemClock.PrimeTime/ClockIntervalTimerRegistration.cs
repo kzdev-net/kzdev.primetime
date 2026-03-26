@@ -2,6 +2,7 @@
 // This file is part of the PrimeTime project.
 
 using System.Diagnostics;
+using KZDev.PrimeTime;
 
 namespace KZDev.SystemClock.PrimeTime;
 

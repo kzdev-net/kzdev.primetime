@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using KZDev.PrimeTime;
 
 namespace KZDev.SystemClock.PrimeTime;
 

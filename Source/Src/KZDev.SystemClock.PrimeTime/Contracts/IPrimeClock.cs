@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using KZDev.PrimeTime;
 
 namespace KZDev.SystemClock.PrimeTime;
 

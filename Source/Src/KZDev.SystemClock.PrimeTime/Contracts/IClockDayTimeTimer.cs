@@ -1,3 +1,5 @@
+using KZDev.PrimeTime;
+
 #if NET
 
 namespace KZDev.SystemClock.PrimeTime;
