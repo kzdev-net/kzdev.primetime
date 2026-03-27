@@ -1,6 +1,8 @@
-using System.Collections.Generic;
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
+
 using System.Diagnostics;
-using System.Threading.Tasks;
+
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -59,7 +61,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     #region Nested types — Virtual interval timer
 
-    private abstract class VirtualIntervalTimerBase : IPrimeClockTimerRegistration
+    private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
     {
         private PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected PrimeClockIntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
@@ -118,6 +120,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
         public int Id { [DebuggerStepThrough] get; }
         public Instant RegisteredInstant { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
         public bool IsTimeOfDay => false;
         public bool IsRepeating =>
             RepeatInterval > Duration.Zero && RepeatInterval != NoRepeatSentinel;
@@ -213,6 +216,16 @@ public sealed class PrimeTestClock : IPrimeTestClock
             Clock.RemoveIntervalTimer(this);
         }
 
+        public bool Change (TimeSpan interval) =>
+            Change(Duration.FromTimeSpan(interval), IsRepeating ? Duration.FromTimeSpan(interval) : NoRepeatSentinel);
+
+        public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
+        {
+            Duration next = Duration.FromTimeSpan(nextInterval);
+            Duration repeat = repeatInterval == Timeout.InfiniteTimeSpan ? NoRepeatSentinel : Duration.FromTimeSpan(repeatInterval);
+            return Change(next, repeat);
+        }
+
         public bool Change (Duration interval) =>
             Change(interval, IsRepeating ? interval : NoRepeatSentinel);
 
@@ -234,8 +247,6 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 return true;
             }
         }
-
-        public bool Change (LocalTime timeOfDay) => false;
 
         public void Cancel ()
         {
@@ -441,7 +452,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     #region Nested types — Virtual day-time timer
 
-    private abstract class VirtualDayTimeTimerBase : IPrimeClockTimerRegistration
+    private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected PrimeClockIntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
@@ -498,8 +509,8 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
         public int Id { [DebuggerStepThrough] get; }
         public Instant RegisteredInstant { [DebuggerStepThrough] get; }
+        public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
         public bool IsTimeOfDay => true;
-        public bool IsResetAfterCallback => false;
         public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
         public bool IsRepeating => true;
         public bool IsCancelled => State == TimerState.Cancelled;
@@ -535,24 +546,6 @@ public sealed class PrimeTestClock : IPrimeTestClock
         }
 
         TimerState IRegisteredTimer.State => State;
-
-        public long ElapsedTime => -1;
-
-        public long TimeUntilNextCallback
-        {
-            get
-            {
-                lock (Gate)
-                {
-                    if (NextDueInstant is not { } next)
-                        return -1;
-                    Instant now = Clock.Instant;
-                    if (next <= now)
-                        return 0;
-                    return (long)(next - now).TotalMilliseconds;
-                }
-            }
-        }
 
         public bool IsDue (Instant now)
         {
@@ -596,9 +589,16 @@ public sealed class PrimeTestClock : IPrimeTestClock
             Clock.RemoveDayTimeTimer(this);
         }
 
-        public bool Change (Duration interval) => false;
+#if NET
+        public bool Change (LocalTimeOfDay newTimeOfDay)
+        {
+            TimeOnly t = newTimeOfDay.Value;
+            LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
+            return Change(localTime);
+        }
 
-        public bool Change (Duration nextInterval, Duration repeatInterval) => false;
+        public bool Change (UtcTimeOfDay newTimeOfDay) => false;
+#endif
 
         public bool Change (LocalTime timeOfDay)
         {
@@ -612,6 +612,10 @@ public sealed class PrimeTestClock : IPrimeTestClock
                 return true;
             }
         }
+
+#if NET
+        public bool Change (Duration interval) => false;
+#endif
 
         public void Cancel ()
         {
@@ -1313,7 +1317,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     #region IPrimeClock Implementation — Interval timers
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action callback,
         CancellationToken cancellationToken,
         bool repeat = false,
@@ -1333,7 +1337,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1354,7 +1358,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1375,7 +1379,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         bool repeat = false,
@@ -1395,7 +1399,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1416,7 +1420,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action callback,
         CancellationToken cancellationToken,
@@ -1436,7 +1440,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
@@ -1457,7 +1461,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
         CancellationToken cancellationToken,
@@ -1478,7 +1482,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
@@ -1498,7 +1502,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimer (Duration callbackTime,
+    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
@@ -1522,8 +1526,9 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     #region IPrimeClock Implementation — Time-of-day timers
 
+#if NET
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null)
@@ -1541,7 +1546,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1560,7 +1565,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterTimeOfDay (LocalTime timeOfDay,
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1579,7 +1584,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null)
@@ -1597,7 +1602,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IPrimeClockTimerRegistration RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1614,6 +1619,100 @@ public sealed class PrimeTestClock : IPrimeTestClock
             _dayTimeTimers.Add(dayTimeTimer);
         return dayTimeTimer;
     }
+#else
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<PrimeClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<PrimeClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null)
+    {
+        VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
+            timeOfDay,
+            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _dayTimeTimers.Add(dayTimeTimer);
+        return dayTimeTimer;
+    }
+#endif
 
     #endregion IPrimeClock Implementation — Time-of-day timers
     #endregion Interface Implementations

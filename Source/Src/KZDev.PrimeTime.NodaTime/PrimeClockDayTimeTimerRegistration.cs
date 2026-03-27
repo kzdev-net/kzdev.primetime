@@ -4,11 +4,10 @@ using NodaTime;
 namespace KZDev.PrimeTime;
 
 /// <summary>
-///   Implementation of <see cref="IPrimeClockTimerRegistration"/> and <see cref="IDayTimeTimer"/>
-///   used by <see cref="PrimeClock"/> for time-of-day timers (fire once per day at a given
-///   <see cref="LocalTime"/>).
+///   Implementation of day-time timer registration contracts used by <see cref="PrimeClock"/>
+///   (fire once per day at a given <see cref="LocalTime"/>).
 /// </summary>
-internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegistration, IDayTimeTimer
+internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
     private static int _nextId;
     private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
@@ -88,6 +87,9 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
 
     /// <inheritdoc />
     public Instant RegisteredInstant { [DebuggerStepThrough] get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
 
     /// <inheritdoc />
     public bool IsTimeOfDay => true;
@@ -411,19 +413,20 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
         ScheduleNext();
     }
 
-    #region IPrimeClockTimerRegistration Implementation
+    #region Day-time change operations
+
+#if NET
+    /// <inheritdoc />
+    public bool Change (LocalTimeOfDay newTimeOfDay)
+    {
+        TimeOnly t = newTimeOfDay.Value;
+        LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
+        return Change(localTime);
+    }
 
     /// <inheritdoc />
-    /// <remarks>
-    ///   Not applicable for time-of-day timers; returns <c>false</c>.
-    /// </remarks>
-    public bool Change (Duration interval) => false;
-
-    /// <inheritdoc />
-    /// <remarks>
-    ///   Not applicable for time-of-day timers; returns <c>false</c>.
-    /// </remarks>
-    public bool Change (Duration nextInterval, Duration repeatInterval) => false;
+    public bool Change (UtcTimeOfDay newTimeOfDay) => false;
+#endif
 
     /// <inheritdoc />
     public bool Change (LocalTime timeOfDay)
@@ -440,7 +443,12 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IPrimeClockTimerRegis
         }
     }
 
-    #endregion IPrimeClockTimerRegistration Implementation
+#if NET
+    /// <inheritdoc />
+    public bool Change (Duration interval) => false;
+#endif
+
+    #endregion Day-time change operations
 
     #region IRegisteredTimer Implementation
 

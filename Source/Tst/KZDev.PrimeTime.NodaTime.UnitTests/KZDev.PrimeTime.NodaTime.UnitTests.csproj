@@ -30,4 +30,8 @@
         <Using Include="Xunit" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
+        <Compile Remove="UsingIPrimeClockDayTimeTimers.cs" />
+    </ItemGroup>
+
 </Project>

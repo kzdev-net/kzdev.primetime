@@ -56,7 +56,7 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
             ? Duration.FromTimeSpan(Timeout.InfiniteTimeSpan)
             : Duration.FromTimeSpan(period);
 
-        IPrimeClockTimerRegistration registration = _clock.RegisterTimer(due,
+        IClockIntervalTimer registration = _clock.RegisterTimer(due,
             repeatInterval,
             () => callback(state),
             CancellationToken.None,
@@ -67,9 +67,9 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
     private sealed class PrimeClockTimerToITimerAdapter : ITimer
     {
-        private readonly IPrimeClockTimerRegistration _registration;
+        private readonly IClockIntervalTimer _registration;
 
-        internal PrimeClockTimerToITimerAdapter (IPrimeClockTimerRegistration registration)
+        internal PrimeClockTimerToITimerAdapter (IClockIntervalTimer registration)
         {
             _registration = registration;
         }

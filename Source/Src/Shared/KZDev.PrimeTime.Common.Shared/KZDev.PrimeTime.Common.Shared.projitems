@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)TimeCancellationTokenSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockDayTimeTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockIntervalTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IRegisteredTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IIntervalTimer.cs" />
@@ -22,5 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\TimerOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\IntervalTimerOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\DayTimeTimerOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\LocalTimeOfDay.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\UtcTimeOfDay.cs" />
   </ItemGroup>
 </Project>

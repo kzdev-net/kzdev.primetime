@@ -1,15 +1,14 @@
-using KZDev.PrimeTime;
-
 #if NET
 
-namespace KZDev.SystemClock.PrimeTime;
+namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Registration for a time-of-day timer created on an <see cref="IPrimeClock"/>,
-///   supporting change of the target time of day.
+///   Registration for a time-of-day timer created from a clock's timer registration API;
+///   supporting change of the target time of day (BCL subset using
+///   <see cref="LocalTimeOfDay"/> and <see cref="UtcTimeOfDay"/>).
 /// </summary>
-public interface IClockDayTimeTimer : IDayTimeTimer, IClockTimer
+public partial interface IClockDayTimeTimer : IDayTimeTimer, IClockTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>

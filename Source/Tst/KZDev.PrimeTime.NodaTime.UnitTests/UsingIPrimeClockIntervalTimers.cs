@@ -12,7 +12,7 @@ namespace KZDev.PrimeTime.NodaTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer
-///   (interval timers) and <see cref="IPrimeClockTimerRegistration"/> (one-shot, repeating,
+///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating,
 ///   Change(Duration), Change(Duration, Duration), Unsafe).
 /// </summary>
 public class UsingIPrimeClockIntervalTimers : UnitTestBase
@@ -70,7 +70,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, () =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () =>
         {
             firedAt = clock.Instant;
             signal.Set();
@@ -87,7 +87,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that a one-shot timer with state passes the state and registration
-    ///   (<see cref="IPrimeClockTimerRegistration"/>) to the callback via
+    ///   (<see cref="IClockIntervalTimer"/>) to the callback via
     ///   <see cref="PrimeClockTimerCallbackContext"/>.
     /// </summary>
     [Fact]
@@ -97,12 +97,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
-        IPrimeClockTimerRegistration? receivedReg = null;
+        IClockIntervalTimer? receivedReg = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, callbackContext =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, callbackContext =>
         {
             receivedState = callbackContext.CallbackState;
-            receivedReg = callbackContext.Registration;
+            receivedReg = (IClockIntervalTimer)callbackContext.Registration;
             signal.Set();
         }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
@@ -123,7 +123,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using CancellationTokenSource cts = new();
         cts.Cancel();
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
             cts.Token, timerOptions: null);
         signal.Wait((ShortDelay + CallbackSettle).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
@@ -139,7 +139,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromMilliseconds(200),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromMilliseconds(200),
             () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
@@ -164,7 +164,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         Instant firstCallbackTime = default;
         Instant secondCallbackTime = default;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, RepeatInterval, () =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, () =>
         {
             count++;
             switch (count)
@@ -200,7 +200,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         List<Instant> times = [];
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
         {
             times.Add(clock.Instant);
             count++;
@@ -219,7 +219,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     #region Change
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeClockTimerRegistration.Change(Duration)"/> on an active one-shot
+    ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration)"/> on an active one-shot
     ///   timer reschedules the next fire to the new interval.
     /// </summary>
     [Fact]
@@ -230,7 +230,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
             () =>
             {
                 firedAt = clock.Instant;
@@ -246,7 +246,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that calling <see cref="IPrimeClockTimerRegistration.Change(Duration)"/> on a completed
+    ///   Verifies that calling <see cref="IClockIntervalTimer.Change(Duration)"/> on a completed
     ///   one-shot timer reschedules and fires the callback again, then completes.
     /// </summary>
     [Fact]
@@ -257,7 +257,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         int count = 0;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, () =>
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () =>
         {
             count++;
             if (count == 1 || count == 2)
@@ -278,7 +278,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeClockTimerRegistration.Change(Duration, Duration)"/> on a repeating
+    ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a repeating
     ///   timer updates both the next due time and the repeat interval for subsequent callbacks.
     /// </summary>
     [Fact]
@@ -291,7 +291,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         List<Instant> times = [];
         int targetCount = 3;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
             RepeatInterval,
             () =>
             {
@@ -312,20 +312,20 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that calling <see cref="IPrimeClockTimerRegistration.Change(Duration, Duration)"/> on a
+    ///   Verifies that calling <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a
     ///   one-shot timer with a positive repeat interval throws <see cref="InvalidOperationException"/>.
     /// </summary>
     [Fact]
     public void RegisterTimer_OneShot_ChangeToRepeating_ThrowsInvalidOperationException ()
     {
         IPrimeClock clock = new PrimeClock();
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
             () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         AssertChangeToRepeatingThrows(timer);
     }
 
-    private static void AssertChangeToRepeatingThrows (IPrimeClockTimerRegistration registration)
+    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
     {
         Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
         act.Should().Throw<InvalidOperationException>();
@@ -338,14 +338,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// <summary>
     ///   Verifies that <see cref="IRegisteredTimer.Stop"/> sets state to
     ///   <see cref="TimerState.Disabled"/>, and <see cref="IRegisteredTimer.Start"/> after
-    ///   <see cref="IPrimeClockTimerRegistration.Change(Duration)"/> reschedules and allows the callback to fire.
+    ///   <see cref="IClockIntervalTimer.Change(Duration)"/> reschedules and allows the callback to fire.
     /// </summary>
     [Fact]
     public void RegisterTimer_Stop_StateDisabled_Start_Reschedules ()
     {
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
             () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Sleep(ShortDelay);
@@ -373,7 +373,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterAsyncTimer(ShortDelay, ct =>
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay, ct =>
         {
             firedAt = clock.Instant;
             signal.Set();
@@ -398,7 +398,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterAsyncTimer(ShortDelay, (callbackContext, ct) =>
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay, (callbackContext, ct) =>
         {
             receivedState = callbackContext.CallbackState;
             signal.Set();
@@ -421,7 +421,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         List<Instant> callbackStarts = [];
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterAsyncTimer(ShortDelay,
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay,
             RepeatInterval,
             async (ct) =>
             {
@@ -451,7 +451,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
             TestContext.Current.CancellationToken,
             timerOptions: new IntervalTimerOptions { CallbackExecutionContext = TimerCallbackExecutionContext.Unsafe });
         bool fired = signal.Wait((WaitMargin + ShortDelay + Duration.FromSeconds(1)).ToTimeSpan(),
@@ -467,7 +467,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that the timer returned by RegisterTimer has the expected
-    ///   <see cref="IPrimeClockTimerRegistration"/> contract properties (ID, IsTimeOfDay, IsRepeating,
+    ///   <see cref="IClockIntervalTimer"/> contract properties (ID, IsTimeOfDay, IsRepeating,
     ///   RegisteredInstant, ElapsedTime, TimeUntilNextCallback).
     /// </summary>
     [Fact]
@@ -475,7 +475,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Id.Should().BeGreaterThan(0);
         timer.IsTimeOfDay.Should().BeFalse();
@@ -490,14 +490,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeClockTimerRegistration.Change(Duration)"/> returns <c>false</c>
+    ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration)"/> returns <c>false</c>
     ///   after the timer registration has been disposed.
     /// </summary>
     [Fact]
     public void RegisterTimer_AfterDispose_ChangeReturnsFalse ()
     {
         IPrimeClock clock = new PrimeClock();
-        IPrimeClockTimerRegistration timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
+        IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
             () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Dispose();

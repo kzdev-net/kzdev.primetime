@@ -391,7 +391,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(Duration.FromSeconds(2),
+        using IClockIntervalTimer registration = clock.RegisterTimer(Duration.FromSeconds(2),
             () => fireCount++,
             TestContext.Current.CancellationToken);
         fireCount.Should().Be(0);
@@ -412,7 +412,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int fireCount = 0;
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimer(Duration.FromSeconds(1),
+        using IClockIntervalTimer registration = clock.RegisterTimer(Duration.FromSeconds(1),
             () => fireCount++,
             TestContext.Current.CancellationToken,
             repeat: true);
@@ -428,6 +428,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     #region Day-time timer driven by virtual time
 
+#if NET
     /// <summary>
     ///   Verifies that a local time-of-day timer fires when virtual time reaches the target time of day.
     /// </summary>
@@ -439,7 +440,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int fireCount = 0;
         LocalTime twoAm = new(2, 0, 0);
-        using IPrimeClockTimerRegistration registration = clock.RegisterTimeOfDay(twoAm,
+        using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(twoAm,
             () => fireCount++,
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Advance(Duration.FromHours(1));
@@ -447,6 +448,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         clock.Advance(Duration.FromHours(1));
         fireCount.Should().Be(1);
     }
+#endif
 
     #endregion Day-time timer driven by virtual time
 }

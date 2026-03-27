@@ -30,7 +30,7 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
     /// <param name="callbackState">
     ///   The state passed when the timer was registered, or <c>null</c>.
     /// </param>
-    public PrimeClockTimerCallbackContext (IPrimeClockTimerRegistration registration, object? callbackState)
+    public PrimeClockTimerCallbackContext (IClockTimer registration, object? callbackState)
     {
         Registration = registration ?? throw new ArgumentNullException(nameof(registration));
         CallbackState = callbackState;
@@ -46,7 +46,7 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
     /// <summary>
     ///   Gets the timer registration instance for this callback.
     /// </summary>
-    public IPrimeClockTimerRegistration Registration { [DebuggerStepThrough] get; }
+    public IClockTimer Registration { [DebuggerStepThrough] get; }
 
     #region Overrides
 

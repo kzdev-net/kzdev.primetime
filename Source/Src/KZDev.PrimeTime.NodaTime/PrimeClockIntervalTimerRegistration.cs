@@ -38,10 +38,10 @@ internal enum PrimeClockIntervalTimerCallbackKind
 }
 
 /// <summary>
-///   Implementation of <see cref="IPrimeClockTimerRegistration"/> used by <see cref="PrimeClock"/>
+///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>
 ///   for interval timers.
 /// </summary>
-internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegistration
+internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
 {
     private static int _nextId;
 
@@ -122,6 +122,9 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
 
     /// <inheritdoc />
     public Instant RegisteredInstant { [DebuggerStepThrough] get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
 
     /// <inheritdoc />
     public bool IsTimeOfDay => false;
@@ -390,7 +393,23 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
         }
     }
 
-    #region IPrimeClockTimerRegistration Implementation
+    #region IClockIntervalTimer Implementation
+
+    /// <inheritdoc />
+    public bool Change (TimeSpan interval)
+    {
+        Duration duration = Duration.FromTimeSpan(interval);
+        return Change(duration, IsRepeating ? duration : NoRepeatSentinel);
+    }
+
+    /// <inheritdoc />
+    public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
+    {
+        Duration next = Duration.FromTimeSpan(nextInterval);
+        // Duration has no infinite value; use NoRepeatSentinel to represent Timeout.InfiniteTimeSpan.
+        Duration repeat = repeatInterval == Timeout.InfiniteTimeSpan ? NoRepeatSentinel : Duration.FromTimeSpan(repeatInterval);
+        return Change(next, repeat);
+    }
 
     /// <inheritdoc />
     public bool Change (Duration interval) =>
@@ -417,13 +436,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IPrimeClockTimerRegi
         }
     }
 
-    /// <inheritdoc />
-    /// <remarks>
-    ///   Not applicable for interval timers; returns <c>false</c>.
-    /// </remarks>
-    public bool Change (LocalTime timeOfDay) => false;
-
-    #endregion IPrimeClockTimerRegistration Implementation
+    #endregion IClockIntervalTimer Implementation
 
     #region IRegisteredTimer Implementation
 

@@ -12,7 +12,7 @@ namespace KZDev.PrimeTime.NodaTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
-///   (day-time timers) and <see cref="IPrimeClockTimerRegistration"/> (Change(LocalTime), options).
+///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (Change(LocalTime), options).
 /// </summary>
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
@@ -61,7 +61,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(targetTime, () =>
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(targetTime, () =>
         {
             firedAt = clock.Instant;
             signal.Set();
@@ -86,7 +86,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime target = (clock.Instant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
             TestContext.Current.CancellationToken,
             new DayTimeTimerOptions
             {
@@ -121,12 +121,12 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
-        IPrimeClockTimerRegistration? receivedReg = null;
+        IClockDayTimeTimer? receivedReg = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(target, callbackContext =>
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, callbackContext =>
         {
             receivedState = callbackContext.CallbackState;
-            receivedReg = callbackContext.Registration;
+            receivedReg = (IClockDayTimeTimer)callbackContext.Registration;
             signal.Set();
         }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
@@ -145,7 +145,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterAsyncTimeOfDay(target, ct =>
+        using IClockDayTimeTimer timer = clock.RegisterAsyncTimeOfDay(target, ct =>
         {
             firedAt = clock.Instant;
             signal.Set();
@@ -163,7 +163,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     #region Change(LocalTime)
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeClockTimerRegistration.Change(LocalTime)"/> on a
+    ///   Verifies that <see cref="IClockDayTimeTimer.Change(LocalTime)"/> on a
     ///   time-of-day registration updates the target time and reschedules; the callback
     ///   fires near the new time.
     /// </summary>
@@ -176,7 +176,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(farTarget, () =>
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(farTarget, () =>
         {
             firedAt = clock.Instant;
             signal.Set();
@@ -191,7 +191,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeClockTimerRegistration.Change(Duration)"/> on a
+    ///   Verifies that <see cref="IClockDayTimeTimer.Change(Duration)"/> on a
     ///   time-of-day registration returns false (not applicable).
     /// </summary>
     [Fact]
@@ -201,7 +201,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime target = (clock.Instant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Change(Duration.FromSeconds(1)).Should().BeFalse();
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
@@ -223,7 +223,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             .LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
         signal.Wait((ShortDelay + CallbackSettle).ToTimeSpan(), TestContext.Current.CancellationToken)
@@ -244,7 +244,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime target = (clock.Instant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IPrimeClockTimerRegistration timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
             TestContext.Current.CancellationToken, timerOptions: null);
         IDayTimeTimer dayTimer = (IDayTimeTimer)timer;
         dayTimer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);

@@ -1,19 +1,17 @@
 using System.Diagnostics;
-using KZDev.PrimeTime;
 
-namespace KZDev.SystemClock.PrimeTime;
+using NodaTime;
+
+namespace KZDev.PrimeTime;
 
 //################################################################################
-/// <summary>
-///   Registration for a timer created on an <see cref="IPrimeClock"/>.
-/// </summary>
-public interface IClockTimer : IRegisteredTimer
+public partial interface IClockTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the time (UTC or local per registration options) at which this timer was registered.
+    ///   Gets the instant (UTC) at which this timer was registered (NodaTime stack).
     /// </summary>
-    DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+    Instant RegisteredInstant { [DebuggerStepThrough] get; }
     //--------------------------------------------------------------------------------
 }
 //################################################################################

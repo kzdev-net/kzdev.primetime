@@ -2,7 +2,7 @@
 
 using System.Diagnostics;
 
-namespace KZDev.SystemClock.PrimeTime;
+namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
