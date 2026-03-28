@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockIntervalTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IRegisteredTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IIntervalTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IDayTimeTimer.cs" />

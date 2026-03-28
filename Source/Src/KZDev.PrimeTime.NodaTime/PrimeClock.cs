@@ -123,7 +123,7 @@ internal sealed class PrimeClock : IPrimeClock
     #region IPrimeClock Implementation
 
     /// <inheritdoc />
-    public Instant Instant => _clock.GetCurrentInstant();
+    public Instant NowInstant => _clock.GetCurrentInstant();
 
     /// <inheritdoc />
     public ZonedDateTime UtcNow => _clock.GetCurrentInstant().InUtc();
@@ -148,6 +148,32 @@ internal sealed class PrimeClock : IPrimeClock
 
     /// <inheritdoc />
     public LocalDate UtcNowDate => UtcNow.Date;
+
+    /// <inheritdoc />
+    public DateTimeOffset LocalNowOffset => LocalZonedNow.ToDateTimeOffset();
+
+    /// <inheritdoc />
+    public DateTimeOffset UtcNowOffset => UtcNow.ToDateTimeOffset();
+
+    /// <inheritdoc />
+    public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+
+    /// <inheritdoc />
+    public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+
+#if NET
+    /// <inheritdoc />
+    public TimeOnly LocalNowTimeOnly => TimeOnly.FromDateTime(LocalNowDateTime);
+
+    /// <inheritdoc />
+    public TimeOnly UtcNowTimeOnly => TimeOnly.FromDateTime(UtcNowDateTime);
+
+    /// <inheritdoc />
+    public DateOnly LocalNowDateOnly => DateOnly.FromDateTime(LocalNowDateTime);
+
+    /// <inheritdoc />
+    public DateOnly UtcNowDateOnly => DateOnly.FromDateTime(UtcNowDateTime);
+#endif
 
     #endregion IPrimeClock Implementation
 
@@ -591,3 +617,4 @@ internal sealed class PrimeClock : IPrimeClock
     #endregion Interface Implementations
 }
 //################################################################################
+

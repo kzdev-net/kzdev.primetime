@@ -96,7 +96,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
         _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
         _cancellationToken = cancellationToken;
         Id = Interlocked.Increment(ref _nextId);
-        RegisteredInstant = clock.Instant;
+        RegisteredInstant = clock.NowInstant;
         _lastCallbackInstant = null;
         _nextCallbackInstant = null;
 
@@ -184,7 +184,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
                     return -1;
                 if (_callbacksRunning > 0)
                     return 0;
-                Instant now = _clock.Instant;
+                Instant now = _clock.NowInstant;
                 if (last >= now)
                     return 0;
                 return (long)(now - last).TotalMilliseconds;
@@ -203,7 +203,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
                     return -1;
                 if (_nextCallbackInstant is not { } next)
                     return -1;
-                Instant now = _clock.Instant;
+                Instant now = _clock.NowInstant;
                 if (next <= now)
                     return 0;
                 if (_callbacksRunning > 0 && IsResetAfterCallback)
@@ -251,7 +251,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
         int ms = DurationToTimerMilliseconds(delay);
         if (ms <= 0)
             return;
-        _nextCallbackInstant = _clock.Instant + delay;
+        _nextCallbackInstant = _clock.NowInstant + delay;
         if (_timer is null)
             _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
         else
@@ -267,7 +267,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        Instant now = _clock.Instant;
+        Instant now = _clock.NowInstant;
         _lastCallbackInstant = now;
         _nextCallbackInstant = null;
         bool isRepeating = IsRepeating;
@@ -502,3 +502,4 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
 
     #endregion IRegisteredTimer Implementation
 }
+

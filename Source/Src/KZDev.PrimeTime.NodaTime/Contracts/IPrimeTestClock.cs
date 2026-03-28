@@ -23,7 +23,7 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current instant (UTC) of the clock to the specified value. When the
-    ///   clock is not running, this is the instant returned by <see cref="IPrimeClock.Instant"/>
+    ///   clock is not running, this is the instant returned by <see cref="IPrimeClock.NowInstant"/>
     ///   and related members.
     /// </summary>
     /// <param name="instant">
@@ -93,3 +93,4 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //--------------------------------------------------------------------------------
 }
 //################################################################################
+

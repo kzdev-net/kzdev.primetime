@@ -116,7 +116,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
         _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
         _cancellationToken = cancellationToken;
         Id = Interlocked.Increment(ref _nextId);
-        RegisteredTime = IsLocalTimeRepresentation ? clock.LocalNow : clock.UtcNow;
+        RegisteredTime = IsLocalTimeRepresentation ? clock.LocalNowOffset : clock.UtcNowOffset;
         _lastCallbackUtc = null;
         _nextCallbackUtc = null;
 
@@ -194,7 +194,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
                     return -1;
                 if (_callbacksRunning > 0)
                     return 0;
-                DateTimeOffset now = _clock.UtcNow;
+                DateTimeOffset now = _clock.UtcNowOffset;
                 if (last >= now)
                     return 0;
                 return (long)(now - last).TotalMilliseconds;
@@ -213,7 +213,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
                     return -1;
                 if (_nextCallbackUtc is not { } next)
                     return -1;
-                DateTimeOffset now = _clock.UtcNow;
+                DateTimeOffset now = _clock.UtcNowOffset;
                 if (next <= now)
                     return 0;
                 if (_callbacksRunning > 0 && IsResetAfterCallback)
@@ -244,7 +244,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
         if (msLong < 0)
             msLong = 0;
         int ms = (int)msLong;
-        _nextCallbackUtc = _clock.UtcNow + delay;
+        _nextCallbackUtc = _clock.UtcNowOffset + delay;
         if (_timer is null)
             _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
         else
@@ -260,7 +260,7 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        DateTimeOffset now = _clock.UtcNow;
+        DateTimeOffset now = _clock.UtcNowOffset;
         _lastCallbackUtc = now;
         _nextCallbackUtc = null;
         bool isRepeating = IsRepeating;
@@ -482,3 +482,4 @@ internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer
 
     #endregion Interface Implementations
 }
+

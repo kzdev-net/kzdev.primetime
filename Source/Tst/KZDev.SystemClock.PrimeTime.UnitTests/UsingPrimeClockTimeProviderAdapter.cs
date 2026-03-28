@@ -63,7 +63,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 
     /// <summary>
     ///   Verifies that the TimeProvider returned from the test clock reports GetUtcNow
-    ///   equal to the clock's UtcNow after SetTime.
+    ///   equal to the clock's UtcNowOffset after SetTime.
     /// </summary>
     [Fact]
     public void GetUtcNow_AfterSetTime_ReturnsSetTime ()
@@ -147,3 +147,4 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 
     #endregion CreateTimer driven by test clock
 }
+

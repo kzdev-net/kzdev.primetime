@@ -21,7 +21,7 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current UTC time of the clock to the specified value. When the clock
-    ///   is not running, this is the time returned by UtcNow and related members.
+    ///   is not running, this is the time returned by UtcNowOffset and related members.
     /// </summary>
     /// <param name="utcTime">
     ///   The new current UTC time.
@@ -71,3 +71,4 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //--------------------------------------------------------------------------------
 }
 //################################################################################
+

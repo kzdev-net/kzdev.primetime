@@ -141,7 +141,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         _cancellationToken = cancellationToken;
 
         Id = Interlocked.Increment(ref _nextId);
-        RegisteredTime = _clock.UtcNow;
+        RegisteredTime = _clock.UtcNowOffset;
         IsLocalTimeRepresentation = isLocal;
 
         if (cancellationToken.CanBeCanceled)
@@ -224,7 +224,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// </summary>
     private TimeSpan GetDelayUntilNext ()
     {
-        DateTimeOffset now = _isLocal ? _clock.LocalNow : _clock.UtcNow;
+        DateTimeOffset now = _isLocal ? _clock.LocalNowOffset : _clock.UtcNowOffset;
         DateOnly today = DateOnly.FromDateTime(now.DateTime);
         DateTime nextDt = today.ToDateTime(_targetTimeOfDay);
         if (nextDt <= now.DateTime)
@@ -249,7 +249,7 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             if (msLong < 0)
                 msLong = 0;
             int ms = (int)msLong;
-            DateTimeOffset now = _isLocal ? _clock.LocalNow : _clock.UtcNow;
+            DateTimeOffset now = _isLocal ? _clock.LocalNowOffset : _clock.UtcNowOffset;
             _nextCallbackUtc = now + delay;
             if (_timer is null)
                 _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
@@ -521,3 +521,4 @@ internal sealed class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     #endregion IRegisteredTimer Implementation
 }
 #endif
+

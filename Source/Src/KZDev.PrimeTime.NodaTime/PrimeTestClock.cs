@@ -102,7 +102,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             IsLocalTimeRepresentation = options?.LocalTimeRepresentation ?? false;
             IsResetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
             Id = Interlocked.Increment(ref _nextTimerId);
-            Instant now = clock.Instant;
+            Instant now = Clock.NowInstant;
             RegisteredInstant = now;
             NextDueInstant = now + initialCallbackTime;
 
@@ -160,7 +160,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                         return -1;
                     if (CallbacksRunning > 0)
                         return 0;
-                    Instant now = Clock.Instant;
+                    Instant now = Clock.NowInstant;
                     if (last >= now)
                         return 0;
                     return (long)(now - last).TotalMilliseconds;
@@ -178,7 +178,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                         return -1;
                     if (NextDueInstant is not { } next)
                         return -1;
-                    Instant now = Clock.Instant;
+                    Instant now = Clock.NowInstant;
                     if (next <= now)
                         return 0;
                     if (CallbacksRunning > 0 && IsResetAfterCallback)
@@ -243,7 +243,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     State = TimerState.Active;
                 if (!IntervalTimerEnabled)
                     return true;
-                NextDueInstant = Clock.Instant + nextInterval;
+                NextDueInstant = Clock.NowInstant + nextInterval;
                 return true;
             }
         }
@@ -284,7 +284,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return false;
                 IntervalTimerEnabled = true;
                 State = TimerState.Active;
-                NextDueInstant = Clock.Instant + InitialCallbackTime;
+                NextDueInstant = Clock.NowInstant + InitialCallbackTime;
                 return true;
             }
         }
@@ -491,9 +491,9 @@ public sealed class PrimeTestClock : IPrimeTestClock
             SkippedTimeBehavior = options?.SkippedTimeBehavior ?? SkippedTimeBehavior.RunAfter;
             DuplicateTimeBehavior = options?.DuplicateTimeBehavior ?? DuplicateTimeBehavior.RunFirst;
             Id = Interlocked.Increment(ref _nextTimerId);
-            RegisteredInstant = clock.Instant;
+            RegisteredInstant = Clock.NowInstant;
             IsLocalTimeRepresentation = true;
-            NextDueInstant = ComputeNextDue(clock.Instant);
+            NextDueInstant = ComputeNextDue(Clock.NowInstant);
 
             if (cancellationToken.CanBeCanceled)
             {
@@ -534,7 +534,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     {
                         EnabledDayTime = true;
                         State = TimerState.Active;
-                        NextDueInstant = ComputeNextDue(Clock.Instant);
+                        NextDueInstant = ComputeNextDue(Clock.NowInstant);
                     }
                     else
                     {
@@ -608,7 +608,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return false;
                 TargetTimeOfDay = timeOfDay;
                 if (Enabled)
-                    NextDueInstant = ComputeNextDue(Clock.Instant);
+                    NextDueInstant = ComputeNextDue(Clock.NowInstant);
                 return true;
             }
         }
@@ -653,7 +653,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
                     return false;
                 EnabledDayTime = true;
                 State = TimerState.Active;
-                NextDueInstant = ComputeNextDue(Clock.Instant);
+                NextDueInstant = ComputeNextDue(Clock.NowInstant);
                 return true;
             }
         }
@@ -1058,7 +1058,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     #region IPrimeClock Implementation — Now
 
     /// <inheritdoc />
-    public Instant Instant
+    public Instant NowInstant
     {
         get
         {
@@ -1104,6 +1104,32 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     /// <inheritdoc />
     public LocalDate UtcNowDate => UtcNow.Date;
+
+    /// <inheritdoc />
+    public DateTimeOffset LocalNowOffset => LocalZonedNow.ToDateTimeOffset();
+
+    /// <inheritdoc />
+    public DateTimeOffset UtcNowOffset => UtcNow.ToDateTimeOffset();
+
+    /// <inheritdoc />
+    public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+
+    /// <inheritdoc />
+    public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+
+#if NET
+    /// <inheritdoc />
+    public TimeOnly LocalNowTimeOnly => TimeOnly.FromDateTime(LocalNowDateTime);
+
+    /// <inheritdoc />
+    public TimeOnly UtcNowTimeOnly => TimeOnly.FromDateTime(UtcNowDateTime);
+
+    /// <inheritdoc />
+    public DateOnly LocalNowDateOnly => DateOnly.FromDateTime(LocalNowDateTime);
+
+    /// <inheritdoc />
+    public DateOnly UtcNowDateOnly => DateOnly.FromDateTime(UtcNowDateTime);
+#endif
 
     #endregion IPrimeClock Implementation — Now
 
@@ -1717,3 +1743,5 @@ public sealed class PrimeTestClock : IPrimeTestClock
     #endregion IPrimeClock Implementation — Time-of-day timers
     #endregion Interface Implementations
 }
+
+

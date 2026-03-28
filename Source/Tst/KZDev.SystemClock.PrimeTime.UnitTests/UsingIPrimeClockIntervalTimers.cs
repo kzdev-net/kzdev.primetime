@@ -64,10 +64,10 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () =>
         {
-            firedAt = clock.UtcNow;
+            firedAt = clock.UtcNowOffset;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
@@ -156,14 +156,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         {
             count++;
             if (count == 1)
-                firstCallbackTime = clock.UtcNow;
+                firstCallbackTime = clock.UtcNowOffset;
             else if (count == 2)
             {
-                secondCallbackTime = clock.UtcNow;
+                secondCallbackTime = clock.UtcNowOffset;
                 signal.Set();
             }
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin + ShortDelay + RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         count.Should().BeGreaterThan(1);
         (firstCallbackTime - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
@@ -185,7 +185,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, callbackContext =>
         {
-            times.Add(clock.UtcNow);
+            times.Add(clock.UtcNowOffset);
             count++;
             if (count >= 2)
                 signal.Set();
@@ -214,13 +214,13 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(2), () =>
         {
-            firedAt = clock.UtcNow;
+            firedAt = clock.UtcNowOffset;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         clock.Sleep(ShortDelay);
         timer.Change(newInterval).Should().BeTrue();
         timer.State.Should().Be(TimerState.Active);
-        DateTimeOffset afterChange = clock.UtcNow;
+        DateTimeOffset afterChange = clock.UtcNowOffset;
         signal.Wait(WaitMargin + newInterval, TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - afterChange).Should().BeCloseTo(newInterval, TimingTolerance);
     }
@@ -251,7 +251,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Reset();
         timer.Change(secondInterval).Should().BeTrue();
         timer.State.Should().Be(TimerState.Active);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         bool secondFired = signal.Wait(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         secondFired.Should().BeTrue("second callback should fire after Change(interval) on completed one-shot");
         count.Should().Be(2);
@@ -275,13 +275,13 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(1), RepeatInterval, () =>
         {
-            times.Add(clock.UtcNow);
+            times.Add(clock.UtcNowOffset);
             if (times.Count >= targetCount)
                 signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         clock.Sleep(ShortDelay);
         timer.Change(newFirst, newRepeat).Should().BeTrue();
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin + newFirst + newRepeat + newRepeat + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(targetCount - 1);
         (times[0] - start).Should().BeCloseTo(newFirst, TimingTolerance);
@@ -351,11 +351,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay, ct =>
         {
-            firedAt = clock.UtcNow;
+            firedAt = clock.UtcNowOffset;
             signal.Set();
             return default;
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
@@ -401,7 +401,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             RepeatInterval,
             async (ct) =>
             {
-                callbackStarts.Add(clock.UtcNow);
+                callbackStarts.Add(clock.UtcNowOffset);
                 await Task.Delay(asyncWork, ct);
                 if (callbackStarts.Count >= 2)
                     signal.Set();
@@ -457,7 +457,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.IsTimeOfDay.Should().BeFalse();
         timer.IsRepeating.Should().BeFalse();
         timer.IsCancelled.Should().BeFalse();
-        timer.RegisteredTime.Should().BeCloseTo(clock.UtcNow, TimeSpan.FromSeconds(5));
+        timer.RegisteredTime.Should().BeCloseTo(clock.UtcNowOffset, TimeSpan.FromSeconds(5));
         timer.ElapsedTime.Should().Be(-1);
         timer.TimeUntilNextCallback.Should().BeInRange(0, (long)(ShortDelay + WaitMargin).TotalMilliseconds);
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
@@ -481,3 +481,4 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     #endregion Properties
 }
+

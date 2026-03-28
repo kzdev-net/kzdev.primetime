@@ -62,7 +62,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         _cancellationToken = cancellationToken;
 
         Id = Interlocked.Increment(ref _nextId);
-        RegisteredInstant = clock.Instant;
+        RegisteredInstant = clock.NowInstant;
         IsLocalTimeRepresentation = true;
 
         if (cancellationToken.CanBeCanceled)
@@ -156,7 +156,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
                     return -1;
                 if (_callbacksRunning > 0)
                     return 0;
-                Instant now = _clock.Instant;
+                Instant now = _clock.NowInstant;
                 if (last >= now)
                     return 0;
                 return (long)(now - last).TotalMilliseconds;
@@ -173,7 +173,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
             {
                 if (_nextCallbackInstant is not { } next)
                     return -1;
-                Instant now = _clock.Instant;
+                Instant now = _clock.NowInstant;
                 if (next <= now)
                     return 0;
                 return (long)(next - now).TotalMilliseconds;
@@ -204,7 +204,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         LocalDate today = nowZ.Date;
         LocalDateTime nextLdt = today.At(_targetTimeOfDay);
         ZonedDateTime nextZdt = nextLdt.InZoneLeniently(nowZ.Zone);
-        Instant now = _clock.Instant;
+        Instant now = _clock.NowInstant;
         if (nextZdt.ToInstant() <= now)
         {
             nextLdt = today.PlusDays(1).At(_targetTimeOfDay);
@@ -241,7 +241,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
             int ms = DurationToTimerMilliseconds(delay);
             if (ms == Timeout.Infinite)
                 return;
-            _nextCallbackInstant = _clock.Instant + delay;
+            _nextCallbackInstant = _clock.NowInstant + delay;
             if (_timer is null)
                 _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
             else
@@ -291,7 +291,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
 
         _nextCallbackInstant = null;
-        Instant nowAtTick = _clock.Instant;
+        Instant nowAtTick = _clock.NowInstant;
         _lastCallbackInstant = nowAtTick;
         lock (_gate)
         {
@@ -514,3 +514,4 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     #endregion IRegisteredTimer Implementation
 }
+

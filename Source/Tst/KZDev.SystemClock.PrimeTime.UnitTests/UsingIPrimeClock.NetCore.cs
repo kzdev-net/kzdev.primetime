@@ -18,7 +18,7 @@ public partial class UsingIPrimeClock
 #if NET
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> with a <see cref="FakeTimeProvider"/> at a fixed
-    ///   UTC time yields consistent "now" values: UtcNow matches the set time, LocalNow reflects
+    ///   UTC time yields consistent "now" values: UtcNowOffset matches the set time, LocalNowOffset reflects
     ///   the provider's local zone, and DateTime/DateTimeOffset members are consistent.
     /// </summary>
     [Fact]
@@ -28,14 +28,14 @@ public partial class UsingIPrimeClock
         FakeTimeProvider fake = new(fixedUtc);
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNow.Should().Be(fixedUtc);
-        clock.UtcNow.Offset.Should().Be(TimeSpan.Zero);
-        clock.UtcDateTimeNow.Should().Be(fixedUtc.UtcDateTime);
-        clock.UtcDateTimeNow.Kind.Should().Be(DateTimeKind.Utc);
-        clock.LocalNow.Should().Be(fake.GetLocalNow());
-        clock.LocalNow.Offset.Should().Be(fake.GetLocalNow().Offset);
-        clock.LocalDateTimeNow.Should().Be(clock.LocalNow.LocalDateTime);
-        clock.LocalDateTimeNow.Kind.Should().Be(DateTimeKind.Local);
+        clock.UtcNowOffset.Should().Be(fixedUtc);
+        clock.UtcNowOffset.Offset.Should().Be(TimeSpan.Zero);
+        clock.UtcNowDateTime.Should().Be(fixedUtc.UtcDateTime);
+        clock.UtcNowDateTime.Kind.Should().Be(DateTimeKind.Utc);
+        clock.LocalNowOffset.Should().Be(fake.GetLocalNow());
+        clock.LocalNowOffset.Offset.Should().Be(fake.GetLocalNow().Offset);
+        clock.LocalNowDateTime.Should().Be(clock.LocalNowOffset.LocalDateTime);
+        clock.LocalNowDateTime.Kind.Should().Be(DateTimeKind.Local);
     }
 
     /// <summary>
@@ -51,17 +51,17 @@ public partial class UsingIPrimeClock
         fake.SetLocalTimeZone(TimeZoneInfo.Utc);
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNowTime.Should().Be(TimeOnly.FromDateTime(fixedUtc.UtcDateTime));
-        clock.UtcNowDate.Should().Be(DateOnly.FromDateTime(fixedUtc.UtcDateTime));
-        clock.LocalNowTime.Should().Be(clock.UtcNowTime);
-        clock.LocalNowDate.Should().Be(clock.UtcNowDate);
-        clock.UtcNowTime.Should().Be(new(12, 30, 45));
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTimeOnly.Should().Be(TimeOnly.FromDateTime(fixedUtc.UtcDateTime));
+        clock.UtcNowDateOnly.Should().Be(DateOnly.FromDateTime(fixedUtc.UtcDateTime));
+        clock.LocalNowTimeOnly.Should().Be(clock.UtcNowTimeOnly);
+        clock.LocalNowDateOnly.Should().Be(clock.UtcNowDateOnly);
+        clock.UtcNowTimeOnly.Should().Be(new(12, 30, 45));
+        clock.UtcNowDateOnly.Should().Be(new(2025, 3, 7));
     }
 
     /// <summary>
     ///   Verifies that advancing a <see cref="FakeTimeProvider"/> used by <see cref="PrimeClock"/>
-    ///   updates all "now" values (UtcNow, LocalNow, DateTime, and on .NET the time/date components).
+    ///   updates all "now" values (UtcNowOffset, LocalNowOffset, DateTime, and on .NET the time/date components).
     /// </summary>
     [Fact]
     public void PrimeClock_WithFakeTimeProvider_AdvanceUpdatesNow ()
@@ -73,17 +73,17 @@ public partial class UsingIPrimeClock
         fake.SetLocalTimeZone(TimeZoneInfo.Utc);
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNow.Should().Be(initial);
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new(10, 0, 0));
+        clock.UtcNowOffset.Should().Be(initial);
+        clock.UtcNowDateOnly.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTimeOnly.Should().Be(new(10, 0, 0));
 
         fake.Advance(advanceBy);
 
-        clock.UtcNow.Should().Be(expectedAfter);
-        clock.UtcDateTimeNow.Should().Be(expectedAfter.UtcDateTime);
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new(12, 30, 0));
-        clock.LocalNow.Should().Be(fake.GetLocalNow());
+        clock.UtcNowOffset.Should().Be(expectedAfter);
+        clock.UtcNowDateTime.Should().Be(expectedAfter.UtcDateTime);
+        clock.UtcNowDateOnly.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTimeOnly.Should().Be(new(12, 30, 0));
+        clock.LocalNowOffset.Should().Be(fake.GetLocalNow());
     }
 
     /// <summary>
@@ -96,11 +96,11 @@ public partial class UsingIPrimeClock
         FakeTimeProvider fake = new();
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNow.Should().Be(fake.Start);
-        clock.UtcNow.Offset.Should().Be(TimeSpan.Zero);
-        clock.UtcDateTimeNow.Year.Should().Be(2000);
-        clock.UtcDateTimeNow.Month.Should().Be(1);
-        clock.UtcDateTimeNow.Day.Should().Be(1);
+        clock.UtcNowOffset.Should().Be(fake.Start);
+        clock.UtcNowOffset.Offset.Should().Be(TimeSpan.Zero);
+        clock.UtcNowDateTime.Year.Should().Be(2000);
+        clock.UtcNowDateTime.Month.Should().Be(1);
+        clock.UtcNowDateTime.Day.Should().Be(1);
     }
 
     /// <summary>
@@ -116,19 +116,19 @@ public partial class UsingIPrimeClock
         fake.SetUtcNow(setTime);
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNow.Should().Be(setTime);
-        clock.UtcDateTimeNow.Should().Be(setTime.UtcDateTime);
-        clock.LocalNow.UtcDateTime.Should().Be(setTime.UtcDateTime, "local and UTC now must be the same moment");
-        clock.LocalDateTimeNow.Should().Be(clock.LocalNow.LocalDateTime);
-        clock.UtcNowTime.Should().Be(TimeOnly.FromDateTime(setTime.UtcDateTime));
-        clock.UtcNowDate.Should().Be(DateOnly.FromDateTime(setTime.UtcDateTime));
-        clock.LocalNowTime.Should().Be(TimeOnly.FromDateTime(clock.LocalNow.DateTime));
-        clock.LocalNowDate.Should().Be(DateOnly.FromDateTime(clock.LocalNow.DateTime));
+        clock.UtcNowOffset.Should().Be(setTime);
+        clock.UtcNowDateTime.Should().Be(setTime.UtcDateTime);
+        clock.LocalNowOffset.UtcDateTime.Should().Be(setTime.UtcDateTime, "local and UTC now must be the same moment");
+        clock.LocalNowDateTime.Should().Be(clock.LocalNowOffset.LocalDateTime);
+        clock.UtcNowTimeOnly.Should().Be(TimeOnly.FromDateTime(setTime.UtcDateTime));
+        clock.UtcNowDateOnly.Should().Be(DateOnly.FromDateTime(setTime.UtcDateTime));
+        clock.LocalNowTimeOnly.Should().Be(TimeOnly.FromDateTime(clock.LocalNowOffset.DateTime));
+        clock.LocalNowDateOnly.Should().Be(DateOnly.FromDateTime(clock.LocalNowOffset.DateTime));
     }
 
     /// <summary>
     ///   Verifies that <see cref="FakeTimeProvider.SetLocalTimeZone"/> affects
-    ///   <see cref="IPrimeClock.LocalNow"/> and related local members so they match the
+    ///   <see cref="IPrimeClock.LocalNowOffset"/> and related local members so they match the
     ///   configured zone offset.
     /// </summary>
     [Fact]
@@ -140,10 +140,10 @@ public partial class UsingIPrimeClock
         fake.SetLocalTimeZone(plusTwo);
 
         IPrimeClock clock = new PrimeClock(fake);
-        DateTimeOffset localNow = clock.LocalNow;
-        localNow.Offset.Should().Be(TimeSpan.FromHours(2));
-        localNow.UtcDateTime.Should().Be(fixedUtc.UtcDateTime);
-        clock.LocalDateTimeNow.Kind.Should().Be(DateTimeKind.Local);
+        DateTimeOffset LocalNowOffset = clock.LocalNowOffset;
+        LocalNowOffset.Offset.Should().Be(TimeSpan.FromHours(2));
+        LocalNowOffset.UtcDateTime.Should().Be(fixedUtc.UtcDateTime);
+        clock.LocalNowDateTime.Kind.Should().Be(DateTimeKind.Local);
     }
 
     /// <summary>
@@ -157,13 +157,14 @@ public partial class UsingIPrimeClock
         FakeTimeProvider fake = new(start);
         IPrimeClock clock = new PrimeClock(fake);
 
-        clock.UtcNow.Should().Be(start);
+        clock.UtcNowOffset.Should().Be(start);
         fake.Advance(TimeSpan.FromDays(1));
-        clock.UtcNow.Should().Be(start.AddDays(1));
+        clock.UtcNowOffset.Should().Be(start.AddDays(1));
         fake.Advance(TimeSpan.FromHours(12));
-        clock.UtcNow.Should().Be(start.AddDays(1).AddHours(12));
+        clock.UtcNowOffset.Should().Be(start.AddDays(1).AddHours(12));
         fake.Advance(TimeSpan.FromMinutes(30));
-        clock.UtcNow.Should().Be(start.AddDays(1).AddHours(12).AddMinutes(30));
+        clock.UtcNowOffset.Should().Be(start.AddDays(1).AddHours(12).AddMinutes(30));
     }
 #endif
 }
+

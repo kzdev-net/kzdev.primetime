@@ -64,7 +64,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant initial = Instant.FromUtc(2020, 6, 15, 12, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        clock.Instant.Should().Be(initial);
+        clock.NowInstant.Should().Be(initial);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2020, 6, 15, 12, 0, 0);
         DateTimeZone utc = DateTimeZone.Utc;
         IPrimeTestClock clock = new PrimeTestClock(initial, utc);
-        clock.Instant.Should().Be(initial);
+        clock.NowInstant.Should().Be(initial);
         clock.UtcNow.ToInstant().Should().Be(initial);
         clock.LocalZonedNow.Zone.Should().Be(utc);
     }
@@ -94,7 +94,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant setInstant = Instant.FromUtc(2025, 1, 10, 14, 30, 0);
         IPrimeTestClock clock = new PrimeTestClock();
         clock.SetInstant(setInstant);
-        clock.Instant.Should().Be(setInstant);
+        clock.NowInstant.Should().Be(setInstant);
         clock.UtcNow.ToInstant().Should().Be(setInstant);
     }
 
@@ -107,7 +107,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         DateTimeOffset utcTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock();
         clock.SetTime(utcTime);
-        clock.Instant.Should().Be(Instant.FromDateTimeUtc(utcTime.UtcDateTime));
+        clock.NowInstant.Should().Be(Instant.FromDateTimeUtc(utcTime.UtcDateTime));
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(Duration.FromHours(2));
-        clock.Instant.Should().Be(initial + Duration.FromHours(2));
+        clock.NowInstant.Should().Be(initial + Duration.FromHours(2));
     }
 
     /// <summary>
@@ -144,7 +144,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(Duration.Zero);
-        clock.Instant.Should().Be(initial);
+        clock.NowInstant.Should().Be(initial);
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(Duration.FromHours(-1));
-        clock.Instant.Should().Be(initial);
+        clock.NowInstant.Should().Be(initial);
     }
 
     #endregion SetInstant, SetTime, SetLocalTime and Advance
@@ -173,7 +173,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.RunFor(Duration.FromMinutes(30));
-        clock.Instant.Should().Be(initial + Duration.FromMinutes(30));
+        clock.NowInstant.Should().Be(initial + Duration.FromMinutes(30));
     }
 
     #endregion RunFor
@@ -452,3 +452,4 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     #endregion Day-time timer driven by virtual time
 }
+

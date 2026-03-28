@@ -113,7 +113,7 @@ public class UsingIPrimeClock : UnitTestBase
         DateTimeZone localZone = DateTimeZoneProviders.Bcl.GetSystemDefault();
         IPrimeClock clock = new PrimeClock(new FakeClock(instant), localZone);
 
-        clock.Instant.Should().Be(instant);
+        clock.NowInstant.Should().Be(instant);
         clock.UtcNow.ToInstant().Should().Be(instant);
         clock.UtcZonedNow.ToInstant().Should().Be(instant);
         clock.LocalZonedNow.ToInstant().Should().Be(instant);
@@ -196,13 +196,13 @@ public class UsingIPrimeClock : UnitTestBase
         FakeClock fakeClock = new(initial);
         IPrimeClock clock = new PrimeClock(fakeClock, utc);
 
-        clock.Instant.Should().Be(initial);
+        clock.NowInstant.Should().Be(initial);
         clock.UtcNowDate.Should().Be(new(2025, 3, 7));
         clock.UtcNowTime.Should().Be(new(10, 0, 0));
 
         fakeClock.Advance(advanceBy);
 
-        clock.Instant.Should().Be(expectedAfter);
+        clock.NowInstant.Should().Be(expectedAfter);
         clock.UtcNow.ToInstant().Should().Be(expectedAfter);
         clock.UtcNowDate.Should().Be(new(2025, 3, 7));
         clock.UtcNowTime.Should().Be(new(12, 30, 0));
@@ -219,7 +219,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant before = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(5));
         Instant after = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromSeconds(5));
 
-        clock.Instant.Should().BeGreaterThan(before).And.BeLessThan(after);
+        clock.NowInstant.Should().BeGreaterThan(before).And.BeLessThan(after);
     }
 
     #region Sleep (TimeSpan and Duration)
@@ -232,9 +232,9 @@ public class UsingIPrimeClock : UnitTestBase
     public void Sleep_TimeSpanZero_CompletesWithoutThrowing ()
     {
         IPrimeClock clock = new PrimeClock();
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(TimeSpan.Zero);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
 
@@ -246,9 +246,9 @@ public class UsingIPrimeClock : UnitTestBase
     public void Sleep_DurationZero_CompletesWithoutThrowing ()
     {
         IPrimeClock clock = new PrimeClock();
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(Duration.Zero);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
 
@@ -262,9 +262,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration sleepDuration = Duration.FromMilliseconds(SleepTestDurationMilliseconds);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(sleepDuration);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         Duration elapsed = after - before;
         AssertElapsedTimeInRange(elapsed,
             sleepDuration,
@@ -281,9 +281,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration negativeDuration = Duration.FromSeconds(-1);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(negativeDuration);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         Duration elapsed = after - before;
         elapsed.Should().BeGreaterThanOrEqualTo(Duration.Zero);
         elapsed.Should().BeLessThan(Duration.FromSeconds(1));
@@ -299,9 +299,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration sleepDuration = Duration.FromMilliseconds(1);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(sleepDuration);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeGreaterThanOrEqualTo(Duration.Zero);
     }
 
@@ -314,9 +314,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration sleepDuration = Duration.FromMilliseconds(SleepTimingToleranceMilliseconds);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         clock.Sleep(sleepDuration);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         AssertElapsedTimeInRange(after - before,
             sleepDuration,
             Duration.FromMilliseconds(SleepTimingToleranceMilliseconds));
@@ -334,9 +334,9 @@ public class UsingIPrimeClock : UnitTestBase
     public async Task DelayAsync_TimeSpanZero_CompletesWithoutThrowing ()
     {
         IPrimeClock clock = new PrimeClock();
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         await clock.DelayAsync(TimeSpan.Zero, TestContext.Current.CancellationToken);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
 
@@ -348,9 +348,9 @@ public class UsingIPrimeClock : UnitTestBase
     public async Task DelayAsync_DurationZero_CompletesWithoutThrowing ()
     {
         IPrimeClock clock = new PrimeClock();
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         await clock.DelayAsync(Duration.Zero, TestContext.Current.CancellationToken);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
 
@@ -363,9 +363,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration delay = Duration.FromMilliseconds(DelayAsyncTestDurationMilliseconds);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         Duration elapsed = after - before;
         AssertElapsedTimeInRange(elapsed,
             delay,
@@ -383,9 +383,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration delay = Duration.FromMilliseconds(1);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         (after - before).Should().BeGreaterThanOrEqualTo(Duration.Zero);
     }
 
@@ -398,9 +398,9 @@ public class UsingIPrimeClock : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         Duration delay = Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds);
-        Instant before = clock.Instant;
+        Instant before = clock.NowInstant;
         await clock.DelayAsync(delay, TestContext.Current.CancellationToken);
-        Instant after = clock.Instant;
+        Instant after = clock.NowInstant;
         AssertElapsedTimeInRange(after - before,
             delay,
             Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds));
@@ -547,3 +547,4 @@ public class UsingIPrimeClock : UnitTestBase
 
     #endregion LinkTimeCancellationToken (Duration)
 }
+

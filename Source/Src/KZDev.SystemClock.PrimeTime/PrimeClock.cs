@@ -48,29 +48,29 @@ internal sealed class PrimeClock : IPrimeClock
     #region IPrimeClock Implementation
 
     /// <inheritdoc />
-    public DateTimeOffset LocalNow => _timeProvider.GetLocalNow();
+    public DateTimeOffset LocalNowOffset => _timeProvider.GetLocalNow();
 
     /// <inheritdoc />
-    public DateTimeOffset UtcNow => _timeProvider.GetUtcNow();
+    public DateTimeOffset UtcNowOffset => _timeProvider.GetUtcNow();
 
     /// <inheritdoc />
-    public DateTime LocalDateTimeNow => _timeProvider.GetLocalNow().LocalDateTime;
+    public DateTime LocalNowDateTime => _timeProvider.GetLocalNow().LocalDateTime;
 
     /// <inheritdoc />
-    public DateTime UtcDateTimeNow => _timeProvider.GetUtcNow().UtcDateTime;
+    public DateTime UtcNowDateTime => _timeProvider.GetUtcNow().UtcDateTime;
 
 #if NET
     /// <inheritdoc />
-    public TimeOnly LocalNowTime => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+    public TimeOnly LocalNowTimeOnly => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
 
     /// <inheritdoc />
-    public TimeOnly UtcNowTime => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+    public TimeOnly UtcNowTimeOnly => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 
     /// <inheritdoc />
-    public DateOnly LocalNowDate => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+    public DateOnly LocalNowDateOnly => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
 
     /// <inheritdoc />
-    public DateOnly UtcNowDate => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+    public DateOnly UtcNowDateOnly => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
 #endif
 
     #endregion IPrimeClock Implementation
@@ -491,3 +491,4 @@ internal sealed class PrimeClock : IPrimeClock
     #endregion Interface Implementations
 }
 //################################################################################
+

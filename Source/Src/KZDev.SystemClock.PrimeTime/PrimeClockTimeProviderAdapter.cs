@@ -35,7 +35,7 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     }
 
     /// <inheritdoc />
-    public override DateTimeOffset GetUtcNow () => _clock.UtcNow;
+    public override DateTimeOffset GetUtcNow () => _clock.UtcNowOffset;
 
     /// <inheritdoc />
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
@@ -100,3 +100,4 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         }
     }
 }
+

@@ -14,12 +14,12 @@ public sealed class ClockTimeChangedEventArgs : EventArgs
     /// <summary>
     ///   Initializes a new instance of the <see cref="ClockTimeChangedEventArgs"/> class.
     /// </summary>
-    /// <param name="utcNow">
+    /// <param name="utcNowOffset">
     ///   The new current UTC time of the clock after the change.
     /// </param>
-    public ClockTimeChangedEventArgs (DateTimeOffset utcNow)
+    public ClockTimeChangedEventArgs (DateTimeOffset utcNowOffset)
     {
-        UtcNow = utcNow;
+        UtcNowOffset = utcNowOffset;
     }
 
     #endregion Constructors/Finalizers
@@ -27,6 +27,8 @@ public sealed class ClockTimeChangedEventArgs : EventArgs
     /// <summary>
     ///   Gets the current UTC time of the clock after the time change.
     /// </summary>
-    public DateTimeOffset UtcNow { get; }
+    public DateTimeOffset UtcNowOffset { get; }
 }
 //################################################################################
+
+

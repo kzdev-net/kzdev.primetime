@@ -56,7 +56,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTimeOfDay_CallbackFiresNearTargetTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        DateTimeOffset now = clock.LocalNow;
+        DateTimeOffset now = clock.LocalNowOffset;
         TimeOnly targetTime = TimeOnly.FromDateTime((now + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(targetTime);
         ManualResetEventSlim signal = new(false);
@@ -64,10 +64,10 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () =>
         {
-            firedAt = clock.LocalNow;
+            firedAt = clock.LocalNowOffset;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.LocalNow;
+        DateTimeOffset start = clock.LocalNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
@@ -81,7 +81,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTimeOfDay_ReturnsTimerWithCorrectContractProperties ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNowOffset + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -115,7 +115,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_UtcTimeOfDay_CallbackFiresNearTargetTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        DateTimeOffset now = clock.UtcNow;
+        DateTimeOffset now = clock.UtcNowOffset;
         TimeOnly targetTime = TimeOnly.FromDateTime((now + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(targetTime);
         ManualResetEventSlim signal = new(false);
@@ -123,10 +123,10 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () =>
         {
-            firedAt = clock.UtcNow;
+            firedAt = clock.UtcNowOffset;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
@@ -140,7 +140,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_UtcTimeOfDay_IsLocalTimeRepresentationFalse ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowOffset + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -162,7 +162,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalWithContext_CallbackReceivesStateAndRegistration ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNowOffset + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         object state = new();
         ManualResetEventSlim signal = new(false);
@@ -187,18 +187,18 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterAsyncTimeOfDay_UtcTimeOfDay_ValueTaskCompletesAndCallbackFires ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowOffset + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
         DateTimeOffset? firedAt = null;
 
         using IClockDayTimeTimer timer = clock.RegisterAsyncTimeOfDay(timeOfDay, ct =>
         {
-            firedAt = clock.UtcNow;
+            firedAt = clock.UtcNowOffset;
             signal.Set();
             return default;
         }, cancellationToken: TestContext.Current.CancellationToken);
-        DateTimeOffset start = clock.UtcNow;
+        DateTimeOffset start = clock.UtcNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
     }
@@ -215,19 +215,19 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_Local_ChangeLocalTimeOfDay_ReschedulesAndFiresAtNewTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly farTarget = TimeOnly.FromDateTime((clock.LocalNow + TimeSpan.FromSeconds(10)).DateTime);
+        TimeOnly farTarget = TimeOnly.FromDateTime((clock.LocalNowOffset + TimeSpan.FromSeconds(10)).DateTime);
         LocalTimeOfDay initial = new(farTarget);
         ManualResetEventSlim signal = new(false);
         DateTimeOffset? firedAt = null;
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(initial, () =>
         {
-            firedAt = clock.LocalNow;
+            firedAt = clock.LocalNowOffset;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        TimeOnly newTarget = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
+        TimeOnly newTarget = TimeOnly.FromDateTime((clock.LocalNowOffset + ShortDelay).DateTime);
         timer.Change(new LocalTimeOfDay(newTarget)).Should().BeTrue();
-        DateTimeOffset afterChange = clock.LocalNow;
+        DateTimeOffset afterChange = clock.LocalNowOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - afterChange).Should().BeCloseTo(ShortDelay, TimingTolerance);
     }
@@ -240,7 +240,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_Local_ChangeUtcTimeOfDay_ReturnsFalse ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + ShortDelay).DateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNowOffset + ShortDelay).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -258,7 +258,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_Utc_ChangeLocalTimeOfDay_ReturnsFalse ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowOffset + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -280,7 +280,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_Local_CancelBeforeFire_StateCancelled ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNow + TimeSpan.FromSeconds(5)).DateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.LocalNowOffset + TimeSpan.FromSeconds(5)).DateTime);
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -300,7 +300,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_WithDefaultOptions_RegistrationExposesDefaultBehaviors ()
     {
         IPrimeClock clock = new PrimeClock();
-        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNow + ShortDelay).UtcDateTime);
+        TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowOffset + ShortDelay).UtcDateTime);
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
@@ -316,3 +316,4 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 }
 
 #endif
+
