@@ -4,7 +4,6 @@
 #if NET
 
 using AwesomeAssertions;
-using KZDev.PrimeTime;
 using KZDev.PrimeTime.Tests;
 #pragma warning disable HAA0601
 

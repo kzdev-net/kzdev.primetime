@@ -1,6 +1,10 @@
 #if NET
 
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime;
+#else
 namespace KZDev.PrimeTime;
+#endif
 
 //################################################################################
 /// <summary>

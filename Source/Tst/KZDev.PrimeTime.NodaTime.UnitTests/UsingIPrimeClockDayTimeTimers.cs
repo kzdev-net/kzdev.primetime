@@ -111,7 +111,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that a time-of-day timer with context callback receives state and
-    ///   registration via <see cref="PrimeClockTimerCallbackContext"/>.
+    ///   registration via <see cref="ClockTimerCallbackContext"/>.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_WithContext_CallbackReceivesStateAndRegistration ()

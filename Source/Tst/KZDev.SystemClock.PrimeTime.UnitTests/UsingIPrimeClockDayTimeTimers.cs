@@ -7,7 +7,6 @@
 #if NET
 
 using AwesomeAssertions;
-using KZDev.PrimeTime;
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;

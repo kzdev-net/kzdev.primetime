@@ -25,6 +25,12 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     private readonly object _gate = new();
 #endif
     private Timer? _timer;
+
+    /// <summary>
+    ///   Indicates whether the configured time of day is interpreted in UTC (<c>true</c>) or in the
+    ///   clock's local time zone (<c>false</c>) when scheduling daily callbacks.
+    /// </summary>
+    private readonly bool _utcTimeOfDaySchedule;
     private LocalTime _targetTimeOfDay;
     private Instant? _nextCallbackInstant;
     private Instant? _lastCallbackInstant;
@@ -40,15 +46,21 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockDayTimeTimerRegistration"/> class.
     /// </summary>
+    /// <param name="utcTimeOfDaySchedule">
+    ///   <c>true</c> to interpret <paramref name="timeOfDay"/> in UTC for each UTC calendar day;
+    ///   <c>false</c> (the default) to interpret it in the clock's local time zone for each local day.
+    /// </param>
     internal PrimeClockDayTimeTimerRegistration (IPrimeClock clock,
         LocalTime timeOfDay,
         PrimeClockIntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool utcTimeOfDaySchedule = false)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
         _targetTimeOfDay = timeOfDay;
         _callbackKind = callbackKind;
         _callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -63,7 +75,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
 
         Id = Interlocked.Increment(ref _nextId);
         RegisteredInstant = clock.NowInstant;
-        IsLocalTimeRepresentation = true;
+        IsLocalTimeRepresentation = !utcTimeOfDaySchedule;
 
         if (cancellationToken.CanBeCanceled)
         {
@@ -200,17 +212,33 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// </summary>
     private Duration GetDelayUntilNext ()
     {
-        ZonedDateTime nowZ = _clock.LocalZonedNow;
-        LocalDate today = nowZ.Date;
-        LocalDateTime nextLdt = today.At(_targetTimeOfDay);
-        ZonedDateTime nextZdt = nextLdt.InZoneLeniently(nowZ.Zone);
         Instant now = _clock.NowInstant;
-        if (nextZdt.ToInstant() <= now)
+        if (_utcTimeOfDaySchedule)
         {
-            nextLdt = today.PlusDays(1).At(_targetTimeOfDay);
-            nextZdt = nextLdt.InZoneLeniently(nowZ.Zone);
+            ZonedDateTime nowZ = _clock.UtcNow;
+            LocalDate today = nowZ.Date;
+            LocalDateTime nextLdt = today.At(_targetTimeOfDay);
+            ZonedDateTime nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
+            if (nextZdt.ToInstant() <= now)
+            {
+                nextLdt = today.PlusDays(1).At(_targetTimeOfDay);
+                nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
+            }
+
+            return nextZdt.ToInstant() - now;
         }
-        return nextZdt.ToInstant() - now;
+
+        ZonedDateTime nowLocalZ = _clock.LocalZonedNow;
+        LocalDate todayLocal = nowLocalZ.Date;
+        LocalDateTime nextLocalLdt = todayLocal.At(_targetTimeOfDay);
+        ZonedDateTime nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
+        if (nextLocalZdt.ToInstant() <= now)
+        {
+            nextLocalLdt = todayLocal.PlusDays(1).At(_targetTimeOfDay);
+            nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
+        }
+
+        return nextLocalZdt.ToInstant() - now;
     }
 
     private static int DurationToTimerMilliseconds (Duration duration)
@@ -360,17 +388,17 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
                 InvokeSync(() => ((Action)_callback)());
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextAction:
-                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState)));
+                InvokeSync(() => ((Action<ClockTimerCallbackContext>)_callback)(new ClockTimerCallbackContext(this, _callbackState)));
                 break;
             case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
-                InvokeSync(() => ((Action<PrimeClockTimerCallbackContext, CancellationToken>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                InvokeSync(() => ((Action<ClockTimerCallbackContext, CancellationToken>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
                     _cancellationToken));
                 break;
             case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
                 RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken));
                 return;
             case PrimeClockIntervalTimerCallbackKind.ContextAsync:
-                RunAsyncAndScheduleAfter(() => ((Func<PrimeClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new PrimeClockTimerCallbackContext(this, _callbackState),
+                RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
                     _cancellationToken));
                 return;
             default:
@@ -419,13 +447,28 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <inheritdoc />
     public bool Change (LocalTimeOfDay newTimeOfDay)
     {
+        if (_utcTimeOfDaySchedule)
+        {
+            return false;
+        }
+
         TimeOnly t = newTimeOfDay.Value;
         LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
         return Change(localTime);
     }
 
     /// <inheritdoc />
-    public bool Change (UtcTimeOfDay newTimeOfDay) => false;
+    public bool Change (UtcTimeOfDay newTimeOfDay)
+    {
+        if (!_utcTimeOfDaySchedule)
+        {
+            return false;
+        }
+
+        TimeOnly t = newTimeOfDay.Value;
+        LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
+        return Change(localTime);
+    }
 #endif
 
     /// <inheritdoc />

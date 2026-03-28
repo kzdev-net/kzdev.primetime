@@ -27,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="KZDev.PrimeTime" />
+        <Using Include="KZDev.SystemClock.PrimeTime" />
         <Using Include="Xunit" />
     </ItemGroup>
 

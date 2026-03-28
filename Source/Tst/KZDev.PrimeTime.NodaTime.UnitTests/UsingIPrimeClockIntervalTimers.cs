@@ -88,7 +88,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// <summary>
     ///   Verifies that a one-shot timer with state passes the state and registration
     ///   (<see cref="IClockIntervalTimer"/>) to the callback via
-    ///   <see cref="PrimeClockTimerCallbackContext"/>.
+    ///   <see cref="ClockTimerCallbackContext"/>.
     /// </summary>
     [Fact]
     public void RegisterTimer_OneShotWithContext_CallbackReceivesStateAndRegistration ()
@@ -388,7 +388,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that a one-shot async timer with state passes the state to the callback
-    ///   via <see cref="PrimeClockTimerCallbackContext"/> (and receives a cancellation token).
+    ///   via <see cref="ClockTimerCallbackContext"/> (and receives a cancellation token).
     /// </summary>
     [Fact]
     public void RegisterAsyncTimer_OneShotWithContext_ReceivesStateAndToken ()

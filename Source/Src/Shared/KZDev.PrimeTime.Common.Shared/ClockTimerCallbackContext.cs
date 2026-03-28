@@ -5,24 +5,27 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime;
+#else
 namespace KZDev.PrimeTime;
+#endif
 
 //################################################################################
 /// <summary>
-///   Context passed to NodaTime (PrimeClock) timer callbacks that accept state and registration.
+///   Context passed to clock timer callbacks that accept state and registration.
 /// </summary>
 [DebuggerDisplay("{" + nameof(DisplayValue) + ",nq}")]
 [StructLayout(LayoutKind.Auto)]
-public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTimerCallbackContext>
+public readonly struct ClockTimerCallbackContext : IEquatable<ClockTimerCallbackContext>
 {
     [ExcludeFromCodeCoverage]
-    private string DisplayValue =>
-        $"{Registration.Id} (Registered @ {Registration.RegisteredInstant})";
+    private string DisplayValue => $"{Registration.Id} (Registered @ {Registration.RegisteredTime})";
 
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeClockTimerCallbackContext"/> struct.
+    ///   Initializes a new instance of the <see cref="ClockTimerCallbackContext"/> struct.
     /// </summary>
     /// <param name="registration">
     ///   The timer registration for this callback.
@@ -30,7 +33,7 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
     /// <param name="callbackState">
     ///   The state passed when the timer was registered, or <c>null</c>.
     /// </param>
-    public PrimeClockTimerCallbackContext (IClockTimer registration, object? callbackState)
+    public ClockTimerCallbackContext (IClockTimer registration, object? callbackState)
     {
         Registration = registration ?? throw new ArgumentNullException(nameof(registration));
         CallbackState = callbackState;
@@ -52,7 +55,7 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
 
     /// <inheritdoc />
     public override bool Equals (object? obj) =>
-        obj is PrimeClockTimerCallbackContext other && Equals(other);
+        obj is ClockTimerCallbackContext other && Equals(other);
 
     /// <inheritdoc />
     public override int GetHashCode () => Registration.GetHashCode();
@@ -62,7 +65,7 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
     #region Interface Implementations
 
     /// <inheritdoc />
-    public bool Equals (PrimeClockTimerCallbackContext other) =>
+    public bool Equals (ClockTimerCallbackContext other) =>
         ReferenceEquals(Registration, other.Registration) &&
         Equals(CallbackState, other.CallbackState);
 
@@ -73,13 +76,13 @@ public readonly struct PrimeClockTimerCallbackContext : IEquatable<PrimeClockTim
     /// <summary>
     ///   Equality operator.
     /// </summary>
-    public static bool operator == (PrimeClockTimerCallbackContext left, PrimeClockTimerCallbackContext right) =>
+    public static bool operator == (ClockTimerCallbackContext left, ClockTimerCallbackContext right) =>
         left.Equals(right);
 
     /// <summary>
     ///   Inequality operator.
     /// </summary>
-    public static bool operator != (PrimeClockTimerCallbackContext left, PrimeClockTimerCallbackContext right) =>
+    public static bool operator != (ClockTimerCallbackContext left, ClockTimerCallbackContext right) =>
         !left.Equals(right);
 
     #endregion Operators
