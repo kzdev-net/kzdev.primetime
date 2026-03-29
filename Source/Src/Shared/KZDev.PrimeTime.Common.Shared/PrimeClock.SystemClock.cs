@@ -6,8 +6,10 @@
 namespace KZDev.SystemClock.PrimeTime;
 
 /// <content>
-///   BCL delay/cancellation and timer registration members for <see cref="PrimeClock"/>
-///   (TimeProvider-based); compiled only into <c>KZDev.SystemClock.PrimeTime</c>.
+///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeClock"/>
+///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based). Compiled only when
+///   <c>SYSTEMCLOCK</c> is defined; the NodaTime stack supplies its own partial in
+///   <c>KZDev.PrimeTime.NodaTime</c>.
 /// </content>
 internal sealed partial class PrimeClock
 {
