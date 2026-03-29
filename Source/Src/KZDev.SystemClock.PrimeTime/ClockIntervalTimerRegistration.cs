@@ -5,36 +5,6 @@ using System.Diagnostics;
 namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
-///   Internal callback type for interval timer invocations.
-/// </summary>
-internal enum IntervalTimerCallbackKind
-{
-    /// <summary>
-    ///   Parameterless <see cref="Action"/> callback.
-    /// </summary>
-    SimpleAction,
-    /// <summary>
-    ///   Callback that receives <see cref="ClockTimerCallbackContext"/>.
-    /// </summary>
-    ContextAction,
-    /// <summary>
-    ///   Callback that receives <see cref="ClockTimerCallbackContext"/> and
-    ///   <see cref="CancellationToken"/>.
-    /// </summary>
-    ContextActionWithToken,
-    /// <summary>
-    ///   Async callback that receives <see cref="CancellationToken"/> and returns
-    ///   <see cref="ValueTask"/>.
-    /// </summary>
-    SimpleAsync,
-    /// <summary>
-    ///   Async callback that receives <see cref="ClockTimerCallbackContext"/> and
-    ///   <see cref="CancellationToken"/>, and returns <see cref="ValueTask"/>.
-    /// </summary>
-    ContextAsync
-}
-
-/// <summary>
 ///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>.
 /// </summary>
 internal sealed class ClockIntervalTimerRegistration : IClockIntervalTimer

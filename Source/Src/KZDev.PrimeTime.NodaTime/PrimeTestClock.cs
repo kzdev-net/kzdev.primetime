@@ -65,7 +65,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
     {
         private PrimeTestClock Clock { [DebuggerStepThrough] get; }
-        protected PrimeClockIntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
         protected object? CallbackState { [DebuggerStepThrough] get; }
         protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
@@ -87,7 +87,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         protected VirtualIntervalTimerBase (PrimeTestClock clock,
             Duration initialCallbackTime,
             Duration repeatInterval,
-            PrimeClockIntervalTimerCallbackKind callbackKind,
+            IntervalTimerCallbackKind callbackKind,
             Delegate callback,
             object? callbackState,
             IntervalTimerOptions? options,
@@ -308,7 +308,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     private sealed class VirtualIntervalTimer (PrimeTestClock clock,
         Duration initialCallbackTime,
         Duration repeatInterval,
-        PrimeClockIntervalTimerCallbackKind callbackKind,
+        IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         IntervalTimerOptions? options,
@@ -360,23 +360,23 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             switch (CallbackKind)
             {
-                case PrimeClockIntervalTimerCallbackKind.SimpleAction:
+                case IntervalTimerCallbackKind.SimpleAction:
                     ((Action)Callback)();
                     break;
-                case PrimeClockIntervalTimerCallbackKind.ContextAction:
+                case IntervalTimerCallbackKind.ContextAction:
                     ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState));
                     break;
-                case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
+                case IntervalTimerCallbackKind.ContextActionWithToken:
                     ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
                         CancellationToken);
                     break;
-                case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
+                case IntervalTimerCallbackKind.SimpleAsync:
                     RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
                         resetAfter,
                         isRepeating,
                         now);
                     return;
-                case PrimeClockIntervalTimerCallbackKind.ContextAsync:
+                case IntervalTimerCallbackKind.ContextAsync:
                     RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
                             CancellationToken),
                         resetAfter,
@@ -456,7 +456,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     private abstract class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
-        protected PrimeClockIntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+        protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
         protected object? CallbackState { [DebuggerStepThrough] get; }
         protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
@@ -476,7 +476,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
         protected VirtualDayTimeTimerBase (PrimeTestClock clock,
             LocalTime timeOfDay,
-            PrimeClockIntervalTimerCallbackKind callbackKind,
+            IntervalTimerCallbackKind callbackKind,
             Delegate callback,
             object? callbackState,
             DayTimeTimerOptions? options,
@@ -710,7 +710,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
 
     private sealed class VirtualDayTimeTimer (PrimeTestClock clock,
         LocalTime timeOfDay,
-        PrimeClockIntervalTimerCallbackKind callbackKind,
+        IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
@@ -750,20 +750,20 @@ public sealed class PrimeTestClock : IPrimeTestClock
         {
             switch (CallbackKind)
             {
-                case PrimeClockIntervalTimerCallbackKind.SimpleAction:
+                case IntervalTimerCallbackKind.SimpleAction:
                     ((Action)Callback)();
                     break;
-                case PrimeClockIntervalTimerCallbackKind.ContextAction:
+                case IntervalTimerCallbackKind.ContextAction:
                     ((Action<ClockTimerCallbackContext>)Callback)(new ClockTimerCallbackContext(this, CallbackState));
                     break;
-                case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
+                case IntervalTimerCallbackKind.ContextActionWithToken:
                     ((Action<ClockTimerCallbackContext, CancellationToken>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
                         CancellationToken);
                     break;
-                case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
+                case IntervalTimerCallbackKind.SimpleAsync:
                     ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken).AsTask().GetAwaiter().GetResult();
                     break;
-                case PrimeClockIntervalTimerCallbackKind.ContextAsync:
+                case IntervalTimerCallbackKind.ContextAsync:
                     ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
                         CancellationToken)
                         .AsTask().GetAwaiter().GetResult();
@@ -1412,7 +1412,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1433,7 +1433,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -1454,7 +1454,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
             timerOptions,
@@ -1474,7 +1474,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -1495,7 +1495,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : NoRepeatSentinel,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -1515,7 +1515,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1536,7 +1536,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -1557,7 +1557,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
             timerOptions,
@@ -1577,7 +1577,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -1598,7 +1598,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -1730,7 +1730,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1749,7 +1749,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -1768,7 +1768,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
             timerOptions,
@@ -1786,7 +1786,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -1805,7 +1805,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -1861,7 +1861,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             TimeOnlyToLocalTime(timeOfDay.Value),
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1881,7 +1881,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             TimeOnlyToLocalTime(timeOfDay.Value),
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -1901,7 +1901,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             TimeOnlyToLocalTime(timeOfDay.Value),
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
             timerOptions,
@@ -1920,7 +1920,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             TimeOnlyToLocalTime(timeOfDay.Value),
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -1940,7 +1940,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             TimeOnlyToLocalTime(timeOfDay.Value),
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -1959,7 +1959,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAction,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1978,7 +1978,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAction,
+            IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -1997,7 +1997,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextActionWithToken,
+            IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
             timerOptions,
@@ -2015,7 +2015,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -2034,7 +2034,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     {
         VirtualDayTimeTimerBase dayTimeTimer = new VirtualDayTimeTimer(this,
             timeOfDay,
-            PrimeClockIntervalTimerCallbackKind.ContextAsync,
+            IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,

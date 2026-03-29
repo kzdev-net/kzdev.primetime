@@ -4,40 +4,6 @@ using NodaTime;
 namespace KZDev.PrimeTime;
 
 /// <summary>
-///   Internal callback type for interval timer invocations.
-/// </summary>
-internal enum PrimeClockIntervalTimerCallbackKind
-{
-    /// <summary>
-    ///   Parameterless <see cref="Action"/> callback.
-    /// </summary>
-    SimpleAction,
-
-    /// <summary>
-    ///   Callback that receives <see cref="ClockTimerCallbackContext"/>.
-    /// </summary>
-    ContextAction,
-
-    /// <summary>
-    ///   Callback that receives <see cref="ClockTimerCallbackContext"/> and
-    ///   <see cref="CancellationToken"/>.
-    /// </summary>
-    ContextActionWithToken,
-
-    /// <summary>
-    ///   Async callback that receives <see cref="CancellationToken"/> and returns
-    ///   <see cref="ValueTask"/>.
-    /// </summary>
-    SimpleAsync,
-
-    /// <summary>
-    ///   Async callback that receives <see cref="ClockTimerCallbackContext"/> and
-    ///   <see cref="CancellationToken"/>, and returns <see cref="ValueTask"/>.
-    /// </summary>
-    ContextAsync
-}
-
-/// <summary>
 ///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>
 ///   for interval timers.
 /// </summary>
@@ -49,7 +15,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
 
     private readonly IPrimeClock _clock;
     private readonly bool _captureContext;
-    private readonly PrimeClockIntervalTimerCallbackKind _callbackKind;
+    private readonly IntervalTimerCallbackKind _callbackKind;
     private readonly Delegate _callback;
     private readonly object? _callbackState;
     private readonly CancellationToken _cancellationToken;
@@ -78,7 +44,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
     internal PrimeClockIntervalTimerRegistration (IPrimeClock clock,
         Duration initialCallbackTime,
         Duration repeatInterval,
-        PrimeClockIntervalTimerCallbackKind callbackKind,
+        IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         IntervalTimerOptions? options,
@@ -325,22 +291,22 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
     {
         switch (_callbackKind)
         {
-            case PrimeClockIntervalTimerCallbackKind.SimpleAction:
+            case IntervalTimerCallbackKind.SimpleAction:
                 InvokeSynchronousCallbackWithExecutionContext(() => ((Action)_callback)());
                 break;
-            case PrimeClockIntervalTimerCallbackKind.ContextAction:
+            case IntervalTimerCallbackKind.ContextAction:
                 InvokeSynchronousCallbackWithExecutionContext(() => ((Action<ClockTimerCallbackContext>)_callback)(new ClockTimerCallbackContext(this, _callbackState)));
                 break;
-            case PrimeClockIntervalTimerCallbackKind.ContextActionWithToken:
+            case IntervalTimerCallbackKind.ContextActionWithToken:
                 InvokeSynchronousCallbackWithExecutionContext(() =>
                     ((Action<ClockTimerCallbackContext, CancellationToken>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
                         _cancellationToken));
                 break;
-            case PrimeClockIntervalTimerCallbackKind.SimpleAsync:
+            case IntervalTimerCallbackKind.SimpleAsync:
                 RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
                     isRepeating);
                 return;
-            case PrimeClockIntervalTimerCallbackKind.ContextAsync:
+            case IntervalTimerCallbackKind.ContextAsync:
                 RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
                         _cancellationToken),
                     isRepeating);

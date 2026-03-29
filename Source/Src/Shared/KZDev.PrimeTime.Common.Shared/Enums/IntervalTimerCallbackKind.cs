@@ -1,0 +1,42 @@
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
+
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
+
+/// <summary>
+///   Internal callback type for interval and day-time timer invocations.
+/// </summary>
+internal enum IntervalTimerCallbackKind
+{
+    /// <summary>
+    ///   Parameterless <see cref="Action"/> callback.
+    /// </summary>
+    SimpleAction,
+
+    /// <summary>
+    ///   Callback that receives <see cref="ClockTimerCallbackContext"/>.
+    /// </summary>
+    ContextAction,
+
+    /// <summary>
+    ///   Callback that receives <see cref="ClockTimerCallbackContext"/> and
+    ///   <see cref="CancellationToken"/>.
+    /// </summary>
+    ContextActionWithToken,
+
+    /// <summary>
+    ///   Async callback that receives <see cref="CancellationToken"/> and returns
+    ///   <see cref="ValueTask"/>.
+    /// </summary>
+    SimpleAsync,
+
+    /// <summary>
+    ///   Async callback that receives <see cref="ClockTimerCallbackContext"/> and
+    ///   <see cref="CancellationToken"/>, and returns <see cref="ValueTask"/>.
+    /// </summary>
+    ContextAsync
+}
