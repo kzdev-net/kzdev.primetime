@@ -839,7 +839,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
     /// <summary>
     ///   Occurs when the clock's current time has changed.
     /// </summary>
-    public event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
+    public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
 
     private static DateTimeZone GetSystemDefaultTimeZone ()
     {
@@ -921,6 +921,12 @@ public sealed class PrimeTestClock : IPrimeTestClock
     public void SetLocalTime (LocalDateTime localDateTime)
     {
         SetInstant(localDateTime.InZoneLeniently(_zone).ToInstant());
+    }
+
+    /// <inheritdoc />
+    public void Advance (TimeSpan duration)
+    {
+        Advance(Duration.FromTimeSpan(duration));
     }
 
     /// <inheritdoc />
@@ -1043,9 +1049,21 @@ public sealed class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
+    public void RunFor (TimeSpan duration)
+    {
+        RunFor(Duration.FromTimeSpan(duration));
+    }
+
+    /// <inheritdoc />
     public void RunFor (Duration duration)
     {
         Advance(duration);
+    }
+
+    /// <inheritdoc />
+    public void Start (TimeSpan? rate = null)
+    {
+        Start(rate is null ? null : Duration.FromTimeSpan(rate.Value));
     }
 
     /// <inheritdoc />

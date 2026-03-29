@@ -4,22 +4,11 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Extends <see cref="IPrimeTestTime"/> and <see cref="IPrimeClock"/> with
-///   test-controllable time: set current instant or local time, advance by a duration,
-///   run for a duration, and start/stop automatic advancement with an optional rate.
-///   All "now" values, delays, time-based cancellation, and timers are driven by this
-///   virtual time so tests are deterministic.
+///   NodaTime-specific test clock members: instant and local time setters, and
+///   duration-based advance, run, and start overloads.
 /// </summary>
-public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
+public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
-    //--------------------------------------------------------------------------------
-    /// <summary>
-    ///   Occurs when the clock's current time has changed (e.g. after
-    ///   <see cref="SetInstant"/>, <see cref="SetTime"/>, <see cref="SetLocalTime"/>,
-    ///   <see cref="Advance"/>, <see cref="RunFor"/>, or automatic advancement from
-    ///   <see cref="Start"/>).
-    /// </summary>
-    event EventHandler<NodaClockTimeChangedEventArgs>? ClockEvents;
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current instant (UTC) of the clock to the specified value. When the
@@ -30,16 +19,6 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The new current instant on the global timeline.
     /// </param>
     void SetInstant (Instant instant);
-    //--------------------------------------------------------------------------------
-    /// <summary>
-    ///   Sets the current UTC time of the clock to the specified BCL value. Equivalent
-    ///   to <see cref="SetInstant"/> with the instant corresponding to
-    ///   <paramref name="utcTime"/>.
-    /// </summary>
-    /// <param name="utcTime">
-    ///   The new current UTC time.
-    /// </param>
-    void SetTime (DateTimeOffset utcTime);
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current time of the clock to the specified local date and time,
@@ -82,15 +61,5 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     /// </param>
     void Start (Duration? rate = null);
     //--------------------------------------------------------------------------------
-    /// <summary>
-    ///   Stops automatic advancement of virtual time.
-    /// </summary>
-    /// <returns>
-    ///   <c>true</c> if the clock was running and is now stopped; <c>false</c> if
-    ///   the clock was not running.
-    /// </returns>
-    bool Stop ();
-    //--------------------------------------------------------------------------------
 }
 //################################################################################
-

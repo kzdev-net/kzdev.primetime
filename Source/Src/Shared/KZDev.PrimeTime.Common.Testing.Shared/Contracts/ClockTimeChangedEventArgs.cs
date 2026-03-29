@@ -1,13 +1,17 @@
 using System.Diagnostics;
 
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
 
 //################################################################################
 /// <summary>
 ///   Provides data for the <see cref="IPrimeTestClock.ClockEvents"/> event.
 /// </summary>
 [DebuggerStepThrough]
-public sealed class ClockTimeChangedEventArgs : EventArgs
+public class ClockTimeChangedEventArgs : EventArgs
 {
     #region Constructors/Finalizers
 
@@ -30,5 +34,3 @@ public sealed class ClockTimeChangedEventArgs : EventArgs
     public DateTimeOffset UtcNowOffset { get; }
 }
 //################################################################################
-
-

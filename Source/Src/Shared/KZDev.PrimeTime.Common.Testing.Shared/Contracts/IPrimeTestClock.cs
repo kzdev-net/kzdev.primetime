@@ -1,4 +1,8 @@
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
 
 //################################################################################
 /// <summary>
@@ -7,7 +11,7 @@ namespace KZDev.SystemClock.PrimeTime;
 ///   and start/stop automatic advancement with an optional rate. All "now" values, delays,
 ///   time-based cancellation, and timers are driven by this virtual time so tests are deterministic.
 /// </summary>
-public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
+public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -69,4 +73,3 @@ public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //--------------------------------------------------------------------------------
 }
 //################################################################################
-

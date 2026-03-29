@@ -9,6 +9,8 @@
     <Import_RootNamespace>KZDev.PrimeTime.Common.Testing.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\ClockTimeChangedEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestTime.cs" />
   </ItemGroup>
 </Project>

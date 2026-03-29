@@ -362,4 +362,24 @@ public class UsingCommonTimerContracts : UnitTestBase
     }
 
     #endregion IPrimeTestTime contract
+
+    #region IPrimeTestClock contract
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock"/> extends <see cref="IPrimeTestTime"/> and
+    ///   <see cref="IPrimeClock"/>, and that <see cref="IPrimeTestClock.ClockEvents"/> uses
+    ///   <see cref="EventHandler{T}"/> of <see cref="ClockTimeChangedEventArgs"/>.
+    /// </summary>
+    [Fact]
+    public void IPrimeTestClock_ExtendsTestTimeAndClock_AndClockEventsUsesClockTimeChangedEventArgs ()
+    {
+        typeof(IPrimeTestClock).IsInterface.Should().BeTrue();
+        typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeTestTime));
+        typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeClock));
+        EventInfo? clockEvents = typeof(IPrimeTestClock).GetEvent("ClockEvents");
+        clockEvents.Should().NotBeNull();
+        clockEvents!.EventHandlerType.Should().Be(typeof(EventHandler<ClockTimeChangedEventArgs>));
+    }
+
+    #endregion IPrimeTestClock contract
 }

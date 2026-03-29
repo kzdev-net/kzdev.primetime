@@ -228,7 +228,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant setInstant = Instant.FromUtc(2025, 2, 20, 10, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock();
         Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e.Instant;
+        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
         clock.SetInstant(setInstant);
         received.Should().NotBeNull();
         received!.Value.Should().Be(setInstant);
@@ -243,7 +243,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e.Instant;
+        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
         clock.Advance(Duration.FromHours(1));
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + Duration.FromHours(1));
@@ -258,7 +258,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e.Instant;
+        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
         clock.RunFor(Duration.FromMinutes(15));
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + Duration.FromMinutes(15));

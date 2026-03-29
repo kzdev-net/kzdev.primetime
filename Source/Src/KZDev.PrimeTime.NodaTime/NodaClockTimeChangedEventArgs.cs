@@ -5,10 +5,11 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Provides data for the <see cref="IPrimeTestClock.ClockEvents"/> event.
+///   Provides data for the <see cref="IPrimeTestClock.ClockEvents"/> event, including the
+///   current instant after the change.
 /// </summary>
 [DebuggerStepThrough]
-public sealed class NodaClockTimeChangedEventArgs : EventArgs
+public sealed class NodaClockTimeChangedEventArgs : ClockTimeChangedEventArgs
 {
     #region Constructors/Finalizers
 
@@ -19,6 +20,7 @@ public sealed class NodaClockTimeChangedEventArgs : EventArgs
     ///   The new current instant (UTC) of the clock after the change.
     /// </param>
     public NodaClockTimeChangedEventArgs (Instant instant)
+        : base(new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero))
     {
         Instant = instant;
     }
@@ -31,5 +33,3 @@ public sealed class NodaClockTimeChangedEventArgs : EventArgs
     public Instant Instant { get; }
 }
 //################################################################################
-
-
