@@ -22,15 +22,6 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KZDev.PrimeTime.NodaTime\KZDev.PrimeTime.NodaTime.csproj">
-      <PrivateAssets>all</PrivateAssets>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-
-  <Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />
-
   <!--
     PrivateAssets=all: the nuspec must not list KZDev.PrimeTime.NodaTime as a package dependency (that project is not published).
     ReferenceOutputAssembly=false: the main assembly still references shared contract sources, so importing NodaTime outputs would

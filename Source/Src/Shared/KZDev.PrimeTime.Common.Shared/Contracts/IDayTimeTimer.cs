@@ -10,7 +10,7 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Registration for a time-of-day timer.
 /// </summary>
-public interface IDayTimeTimer : IRegisteredTimer
+public interface IDayTimeTimer : IClockTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>

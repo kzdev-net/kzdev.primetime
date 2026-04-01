@@ -12,7 +12,7 @@ namespace KZDev.PrimeTime;
 ///   supporting change of the target time of day (BCL subset using
 ///   <see cref="LocalTimeOfDay"/> and <see cref="UtcTimeOfDay"/>).
 /// </summary>
-public partial interface IClockDayTimeTimer : IDayTimeTimer, IClockTimer
+public partial interface IClockDayTimeTimer : IDayTimeTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>

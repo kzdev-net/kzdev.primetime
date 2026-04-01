@@ -2,16 +2,16 @@
 // This file is part of the PrimeTime project.
 
 #if SYSTEMCLOCK
-
 namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
 
 /// <content>
 ///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeClock"/>
-///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based). Compiled only when
-///   <c>SYSTEMCLOCK</c> is defined; the NodaTime stack supplies its own partial in
-///   <c>KZDev.PrimeTime.NodaTime</c>.
+///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based).
 /// </content>
-internal sealed partial class PrimeClock
+internal sealed partial class PrimeClock : IPrimeClock
 {
     #region Interface Implementations
 
@@ -430,4 +430,3 @@ internal sealed partial class PrimeClock
 
     #endregion Interface Implementations
 }
-#endif

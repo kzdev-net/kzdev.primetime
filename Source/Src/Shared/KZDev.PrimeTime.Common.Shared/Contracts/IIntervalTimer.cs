@@ -10,7 +10,7 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Registration for an interval timer.
 /// </summary>
-public interface IIntervalTimer : IRegisteredTimer
+public interface IIntervalTimer : IClockTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>

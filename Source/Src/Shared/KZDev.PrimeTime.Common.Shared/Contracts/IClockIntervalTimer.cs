@@ -9,7 +9,7 @@ namespace KZDev.PrimeTime;
 ///   Registration for an interval timer created from a clock's timer registration API;
 ///   supporting change of due time and repeat interval (BCL <see cref="TimeSpan"/> subset).
 /// </summary>
-public partial interface IClockIntervalTimer : IIntervalTimer, IClockTimer
+public partial interface IClockIntervalTimer : IIntervalTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>

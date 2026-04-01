@@ -1,4 +1,8 @@
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
+
 using System;
+
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -12,7 +16,7 @@ namespace KZDev.PrimeTime;
 ///   Task.Delay, CancellationTokenSource with a timer); for deterministic tests use
 ///   <see cref="PrimeTestClock"/> or <see cref="IPrimeTestClock"/>.
 /// </summary>
-internal sealed partial class PrimeClock : IPrimeClock
+internal sealed partial class PrimeClock
 {
     private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
     private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);

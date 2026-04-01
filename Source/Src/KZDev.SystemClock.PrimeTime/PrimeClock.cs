@@ -12,7 +12,7 @@ namespace KZDev.SystemClock.PrimeTime;
 ///   CancellationTokenSource with a timer), so they use system time rather than the provider's
 ///   time. For deterministic tests, use <see cref="PrimeTestClock"/> or <see cref="IPrimeTestClock"/>.
 /// </remarks>
-internal sealed partial class PrimeClock : IPrimeClock
+internal sealed partial class PrimeClock
 {
     private readonly TimeProvider _timeProvider;
 

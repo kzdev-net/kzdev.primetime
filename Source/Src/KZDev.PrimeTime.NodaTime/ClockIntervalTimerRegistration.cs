@@ -1,3 +1,6 @@
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
+
 using System.Diagnostics;
 using NodaTime;
 
@@ -7,41 +10,50 @@ namespace KZDev.PrimeTime;
 ///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>
 ///   for interval timers.
 /// </summary>
-internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
+internal sealed partial class ClockIntervalTimerRegistration
 {
-    private static int _nextId;
-
     private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
-    private readonly IPrimeClock _clock;
-    private readonly bool _captureContext;
-    private readonly IntervalTimerCallbackKind _callbackKind;
-    private readonly Delegate _callback;
-    private readonly object? _callbackState;
-    private readonly CancellationToken _cancellationToken;
-    private readonly CancellationTokenRegistration _cancelRegistration;
-#if NET10_OR_GREATER
-    private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
-    private Timer? _timer;
-    private Duration _initialCallbackTime;
+    private Duration _initialCallbackDuration;
     private Duration _repeatInterval;
     private Instant? _nextCallbackInstant;
     private Instant? _lastCallbackInstant;
-    private TimerState _state;
-    private bool _enabled = true;
-    private bool _disposed;
-    private int _callbacksRunning;
-    private bool _cancelRequested;
+
+    private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
+
+    private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
+
+    private partial long GetElapsedTime ()
+    {
+        lock (_gate)
+        {
+            if (_lastCallbackInstant is not { } last)
+                return -1;
+            if (_callbacksRunning > 0)
+                return 0;
+            Instant now = _clock.NowInstant;
+            if (last >= now)
+                return 0;
+            return (long)(now - last).TotalMilliseconds;
+        }
+    }
+
+    private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackDuration.ToTimeSpan(); [DebuggerStepThrough] set => _initialCallbackDuration = Duration.FromTimeSpan(value); }
+
+    private partial TimeSpan RepeatTimeSpanInterval { [DebuggerStepThrough] get => _repeatInterval.ToTimeSpan(); [DebuggerStepThrough] set => _repeatInterval = Duration.FromTimeSpan(value); }
+
+    private partial DateTimeOffset? NextCallbackUtc { [DebuggerStepThrough] get => _nextCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _nextCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
+
+    private partial DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get => _lastCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _lastCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
+
+    private partial bool IsRepeatingTimer => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel;
 
     #region Constructors/Finalizers
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeClockIntervalTimerRegistration"/> class.
+    ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
     /// </summary>
-    internal PrimeClockIntervalTimerRegistration (IPrimeClock clock,
+    internal ClockIntervalTimerRegistration (IPrimeClock clock,
         Duration initialCallbackTime,
         Duration repeatInterval,
         IntervalTimerCallbackKind callbackKind,
@@ -54,7 +66,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
         _callbackKind = callbackKind;
         _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         _callbackState = callbackState;
-        _initialCallbackTime = initialCallbackTime;
+        _initialCallbackDuration = initialCallbackTime;
         _repeatInterval = repeatInterval;
         IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
         IsResetAfterCallback = opts.ResetIntervalAfterCallback;
@@ -63,8 +75,6 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
         _cancellationToken = cancellationToken;
         Id = Interlocked.Increment(ref _nextId);
         RegisteredInstant = clock.NowInstant;
-        _lastCallbackInstant = null;
-        _nextCallbackInstant = null;
 
         if (cancellationToken.CanBeCanceled)
         {
@@ -84,79 +94,7 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
     #endregion Constructors/Finalizers
 
     /// <inheritdoc />
-    public int Id { [DebuggerStepThrough] get; }
-
-    /// <inheritdoc />
-    public Instant RegisteredInstant { [DebuggerStepThrough] get; }
-
-    /// <inheritdoc />
-    public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
-
-    /// <inheritdoc />
-    public bool IsTimeOfDay => false;
-
-    /// <inheritdoc />
-    public bool IsResetAfterCallback { [DebuggerStepThrough] get; }
-
-    /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
-
-    /// <inheritdoc />
-    public bool IsRepeating =>
-        _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel;
-
-    /// <inheritdoc />
-    public bool IsCancelled => _state == TimerState.Cancelled;
-
-    /// <inheritdoc />
-    public bool IsActive =>
-        _state != TimerState.Cancelled &&
-        _state != TimerState.Completed &&
-        _state != TimerState.Disposed &&
-        _enabled;
-
-    /// <inheritdoc />
-    public TimerState State => _state;
-
-    /// <inheritdoc />
-    public bool CallbacksProcessing => _callbacksRunning > 0;
-
-    /// <inheritdoc />
-    public bool Enabled
-    {
-        get => _enabled && !IsCancelled && _state != TimerState.Disposed;
-        set
-        {
-            lock (_gate)
-            {
-                if (_disposed || _state == TimerState.Cancelled)
-                    return;
-                if (value)
-                    Start();
-                else
-                    Stop();
-            }
-        }
-    }
-
-    /// <inheritdoc />
-    public long ElapsedTime
-    {
-        get
-        {
-            lock (_gate)
-            {
-                if (_lastCallbackInstant is not { } last)
-                    return -1;
-                if (_callbacksRunning > 0)
-                    return 0;
-                Instant now = _clock.NowInstant;
-                if (last >= now)
-                    return 0;
-                return (long)(now - last).TotalMilliseconds;
-            }
-        }
-    }
+    public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
 
     /// <inheritdoc />
     public long TimeUntilNextCallback
@@ -176,19 +114,6 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
                     return (long)_repeatInterval.TotalMilliseconds;
                 return (long)(next - now).TotalMilliseconds;
             }
-        }
-    }
-
-    private void OnCancelRequested ()
-    {
-        lock (_gate)
-        {
-            if (_disposed || _state == TimerState.Cancelled)
-                return;
-            _cancelRequested = true;
-            _state = TimerState.Cancelled;
-            _enabled = false;
-            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
 
@@ -328,8 +253,8 @@ internal sealed class PrimeClockIntervalTimerRegistration : IClockIntervalTimer
         }
         vt.AsTask().ContinueWith((_, state) =>
             {
-                (PrimeClockIntervalTimerRegistration reg, bool rep) =
-                    ((PrimeClockIntervalTimerRegistration, bool))state!;
+                (ClockIntervalTimerRegistration reg, bool rep) =
+                    ((ClockIntervalTimerRegistration, bool))state!;
                 reg.OnCallbackCompleted(rep);
             },
             (this, isRepeating),
