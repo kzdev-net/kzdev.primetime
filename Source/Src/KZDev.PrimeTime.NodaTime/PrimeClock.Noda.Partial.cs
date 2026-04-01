@@ -8,7 +8,7 @@ namespace KZDev.PrimeTime;
 /// <content>
 ///   NodaTime-specific partial of <see cref="PrimeClock"/>: BCL <see cref="IPrimeTime"/> forwards,
 ///   <see cref="TimeSpan"/> timer overloads, and day-time registration using
-///   <see cref="PrimeClockDayTimeTimerRegistration"/>. Lives in <c>KZDev.PrimeTime.NodaTime</c>
+///   <see cref="ClockDayTimeTimerRegistration"/>. Lives in <c>KZDev.PrimeTime.NodaTime</c>
 ///   only (not Common.Shared), so shared sources stay BCL-only aside from namespace conditionals.
 /// </content>
 internal sealed partial class PrimeClock
@@ -25,11 +25,122 @@ internal sealed partial class PrimeClock
         new(t.Hour, t.Minute, t.Second, t.Millisecond);
 
     /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken,
+            utcTimeOfDaySchedule: true);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken,
+            utcTimeOfDaySchedule: true);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken,
+            utcTimeOfDaySchedule: true);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken,
+            utcTimeOfDaySchedule: true);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken,
+            utcTimeOfDaySchedule: true);
+
+    /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAction,
             callback,
@@ -43,7 +154,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAction,
             callback,
@@ -57,7 +168,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
@@ -70,7 +181,7 @@ internal sealed partial class PrimeClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
@@ -84,7 +195,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAsync,
             callback,
@@ -97,7 +208,7 @@ internal sealed partial class PrimeClock
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAction,
             callback,
@@ -111,7 +222,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAction,
             callback,
@@ -125,7 +236,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
@@ -138,7 +249,7 @@ internal sealed partial class PrimeClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
@@ -152,7 +263,7 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new PrimeClockDayTimeTimerRegistration(this,
+        new ClockDayTimeTimerRegistration(this,
             timeOfDay,
             IntervalTimerCallbackKind.ContextAsync,
             callback,

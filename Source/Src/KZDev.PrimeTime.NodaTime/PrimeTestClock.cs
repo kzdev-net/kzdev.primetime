@@ -149,7 +149,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        TimerState IRegisteredTimer.State => State;
+        TimerState IClockTimer.State => State;
 
         public long ElapsedTime
         {
@@ -549,7 +549,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        TimerState IRegisteredTimer.State => State;
+        TimerState IClockTimer.State => State;
 
         public bool IsDue (Instant now)
         {
@@ -648,9 +648,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-#if NET
         public bool Change (Duration interval) => false;
-#endif
 
         public void Cancel ()
         {

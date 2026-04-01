@@ -32,7 +32,7 @@ public interface IIntervalTimer : IClockTimer
     ///     Value is in milliseconds. If no callbacks have been made yet, this will return -1.
     ///   </para>
     ///   <para>
-    ///     If the current <see cref="IRegisteredTimer.State">State</see> is
+    ///     If the current <see cref="IClockTimer.State">State</see> is
     ///     <see cref="TimerState.ProcessingCallback"/>, this will return 0
     ///     regardless of the number of callbacks that are currently being processed and not
     ///     yet completed.
@@ -56,7 +56,7 @@ public interface IIntervalTimer : IClockTimer
     ///   <para>
     ///     For a repeating interval timer where
     ///     <see cref="IsResetAfterCallback">IsResetAfterCallback</see>
-    ///     is <c>true</c>, and with a current <see cref="IRegisteredTimer.State">State</see> of
+    ///     is <c>true</c>, and with a current <see cref="IClockTimer.State">State</see> of
     ///     <see cref="TimerState.ProcessingCallback"/>, this will return the time until
     ///     the next callback after the current callback completes.
     ///   </para>

@@ -48,74 +48,8 @@ internal sealed partial class ClockIntervalTimerRegistration
 
     private partial bool IsRepeatingTimer => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel;
 
-    #region Constructors/Finalizers
-
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
-    /// </summary>
-    internal ClockIntervalTimerRegistration (IPrimeClock clock,
-        Duration initialCallbackTime,
-        Duration repeatInterval,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        IntervalTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _callbackKind = callbackKind;
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        _callbackState = callbackState;
-        _initialCallbackDuration = initialCallbackTime;
-        _repeatInterval = repeatInterval;
-        IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
-        IsResetAfterCallback = opts.ResetIntervalAfterCallback;
-        IsLocalTimeRepresentation = opts.LocalTimeRepresentation;
-        _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
-        _cancellationToken = cancellationToken;
-        Id = Interlocked.Increment(ref _nextId);
-        RegisteredInstant = clock.NowInstant;
-
-        if (cancellationToken.CanBeCanceled)
-        {
-            _cancelRegistration = cancellationToken.Register(OnCancelRequested);
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _cancelRequested = true;
-                _state = TimerState.Cancelled;
-                return;
-            }
-        }
-
-        _state = TimerState.Active;
-        ScheduleNext(initialCallbackTime);
-    }
-
-    #endregion Constructors/Finalizers
-
     /// <inheritdoc />
     public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
-
-    /// <inheritdoc />
-    public long TimeUntilNextCallback
-    {
-        get
-        {
-            lock (_gate)
-            {
-                if (!IsRepeating && _lastCallbackInstant.HasValue)
-                    return -1;
-                if (_nextCallbackInstant is not { } next)
-                    return -1;
-                Instant now = _clock.NowInstant;
-                if (next <= now)
-                    return 0;
-                if (_callbacksRunning > 0 && IsResetAfterCallback)
-                    return (long)_repeatInterval.TotalMilliseconds;
-                return (long)(next - now).TotalMilliseconds;
-            }
-        }
-    }
 
     private static int DurationToTimerMilliseconds (Duration duration)
     {
@@ -135,262 +69,63 @@ internal sealed partial class ClockIntervalTimerRegistration
         }
     }
 
-    private void ScheduleNext (Duration delay)
+    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
     {
-        if (delay <= Duration.Zero || delay == NoRepeatSentinel)
-            return;
-        int ms = DurationToTimerMilliseconds(delay);
+        Duration d = Duration.FromTimeSpan(delay);
+        if (d <= Duration.Zero || d == NoRepeatSentinel)
+        {
+            milliseconds = 0;
+            return false;
+        }
+        int ms = DurationToTimerMilliseconds(d);
         if (ms <= 0)
-            return;
-        _nextCallbackInstant = _clock.NowInstant + delay;
-        if (_timer is null)
-            _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
-        else
-            _timer.Change(ms, Timeout.Infinite);
+        {
+            milliseconds = 0;
+            return false;
+        }
+        milliseconds = ms;
+        return true;
     }
 
-    private void OnTimerTick (object? _)
-    {
-        lock (_gate)
-        {
-            if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
-                return;
-            _timer!.Change(Timeout.Infinite, Timeout.Infinite);
-        }
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
+        _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
 
-        Instant now = _clock.NowInstant;
-        _lastCallbackInstant = now;
+    private partial void RecordIntervalCallbackStarted ()
+    {
+        _lastCallbackInstant = _clock.NowInstant;
         _nextCallbackInstant = null;
-        bool isRepeating = IsRepeating;
-        bool resetAfter = IsResetAfterCallback;
-        TimerState stateDuringCallback = isRepeating && !resetAfter
-            ? TimerState.RepeatProcessingCallback
-            : TimerState.ProcessingCallback;
-        lock (_gate)
-        {
-            _state = stateDuringCallback;
-            _callbacksRunning++;
-        }
-
-        try
-        {
-            RunCallback(stateDuringCallback, isRepeating);
-        }
-        finally
-        {
-            lock (_gate)
-            {
-                _callbacksRunning--;
-            }
-        }
     }
 
-    /// <summary>
-    ///   Invokes a synchronous callback with the configured execution context behavior:
-    ///   either capture and restore the calling context, or suppress flow (Unsafe).
-    /// </summary>
-    /// <param name="run">The synchronous action to run.</param>
-    private void InvokeSynchronousCallbackWithExecutionContext (Action run)
+    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
     {
-        if (_captureContext && !ExecutionContext.IsFlowSuppressed())
-        {
-            ExecutionContext? ec = ExecutionContext.Capture();
-            if (ec is not null)
-            {
-                ExecutionContext.Run(ec, _ => run(), null);
-                return;
-            }
-        }
-        if (!_captureContext && !ExecutionContext.IsFlowSuppressed())
-        {
-            using (ExecutionContext.SuppressFlow())
-            {
-                run();
-            }
-            return;
-        }
-        run();
-    }
-
-    private void RunCallback (TimerState stateDuringCallback, bool isRepeating)
-    {
-        switch (_callbackKind)
-        {
-            case IntervalTimerCallbackKind.SimpleAction:
-                InvokeSynchronousCallbackWithExecutionContext(() => ((Action)_callback)());
-                break;
-            case IntervalTimerCallbackKind.ContextAction:
-                InvokeSynchronousCallbackWithExecutionContext(() => ((Action<ClockTimerCallbackContext>)_callback)(new ClockTimerCallbackContext(this, _callbackState)));
-                break;
-            case IntervalTimerCallbackKind.ContextActionWithToken:
-                InvokeSynchronousCallbackWithExecutionContext(() =>
-                    ((Action<ClockTimerCallbackContext, CancellationToken>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
-                        _cancellationToken));
-                break;
-            case IntervalTimerCallbackKind.SimpleAsync:
-                RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
-                    isRepeating);
-                return;
-            case IntervalTimerCallbackKind.ContextAsync:
-                RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
-                        _cancellationToken),
-                    isRepeating);
-                return;
-            default:
-                throw new InvalidOperationException($"Unsupported callback kind: {_callbackKind}");
-        }
-
-        OnCallbackCompleted(isRepeating);
-    }
-
-    private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool isRepeating)
-    {
-        ValueTask vt = run();
-        if (vt.IsCompletedSuccessfully)
-        {
-            OnCallbackCompleted(isRepeating);
-            return;
-        }
-        vt.AsTask().ContinueWith((_, state) =>
-            {
-                (ClockIntervalTimerRegistration reg, bool rep) =
-                    ((ClockIntervalTimerRegistration, bool))state!;
-                reg.OnCallbackCompleted(rep);
-            },
-            (this, isRepeating),
-            CancellationToken.None,
-            TaskContinuationOptions.None,
-            TaskScheduler.Default);
-    }
-
-    /// <summary>
-    ///   Updates state and optionally schedules the next tick after a timer callback completes
-    ///   (sync or async).
-    /// </summary>
-    /// <param name="isRepeating">Whether the timer is repeating; if <c>false</c>, state is set to <see cref="TimerState.Completed"/>.</param>
-    private void OnCallbackCompleted (bool isRepeating)
-    {
-        lock (_gate)
-        {
-            if (_disposed || _cancelRequested || _state == TimerState.Cancelled)
-                return;
-            if (!isRepeating)
-            {
-                _state = TimerState.Completed;
-                return;
-            }
-            _state = TimerState.RepeatCycle;
-            ScheduleNext(_repeatInterval);
-        }
+        if (!IsRepeating && _lastCallbackInstant.HasValue)
+            return -1;
+        if (_nextCallbackInstant is not { } next)
+            return -1;
+        Instant now = _clock.NowInstant;
+        if (next <= now)
+            return 0;
+        if (_callbacksRunning > 0 && IsResetAfterCallback)
+            return (long)_repeatInterval.TotalMilliseconds;
+        return (long)(next - now).TotalMilliseconds;
     }
 
     #region IClockIntervalTimer Implementation
 
     /// <inheritdoc />
-    public bool Change (TimeSpan interval)
+    public bool Change (Duration interval)
     {
-        Duration duration = Duration.FromTimeSpan(interval);
-        return Change(duration, IsRepeating ? duration : NoRepeatSentinel);
+        Duration repeat = IsRepeating ? interval : NoRepeatSentinel;
+        return Change(interval.ToTimeSpan(), repeat.ToTimeSpan());
     }
-
-    /// <inheritdoc />
-    public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
-    {
-        Duration next = Duration.FromTimeSpan(nextInterval);
-        // Duration has no infinite value; use NoRepeatSentinel to represent Timeout.InfiniteTimeSpan.
-        Duration repeat = repeatInterval == Timeout.InfiniteTimeSpan ? NoRepeatSentinel : Duration.FromTimeSpan(repeatInterval);
-        return Change(next, repeat);
-    }
-
-    /// <inheritdoc />
-    public bool Change (Duration interval) =>
-        Change(interval, IsRepeating ? interval : NoRepeatSentinel);
 
     /// <inheritdoc />
     public bool Change (Duration nextInterval, Duration repeatInterval)
     {
-        lock (_gate)
-        {
-            if (_disposed || _state == TimerState.Cancelled)
-                return false;
-            bool wouldBeRepeating = repeatInterval > Duration.Zero && repeatInterval != NoRepeatSentinel;
-            if (!IsRepeating && wouldBeRepeating)
-                throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
-            _initialCallbackTime = nextInterval;
-            _repeatInterval = repeatInterval;
-            if (_state == TimerState.Completed)
-                _state = TimerState.Active;
-            if (!_enabled)
-                return true;
-            ScheduleNext(nextInterval);
-            return true;
-        }
+        TimeSpan nextTs = nextInterval.ToTimeSpan();
+        TimeSpan repeatTs = repeatInterval == NoRepeatSentinel ? Timeout.InfiniteTimeSpan : repeatInterval.ToTimeSpan();
+        return Change(nextTs, repeatTs);
     }
 
     #endregion IClockIntervalTimer Implementation
-
-    #region IRegisteredTimer Implementation
-
-    /// <inheritdoc />
-    public void Cancel ()
-    {
-        lock (_gate)
-        {
-            if (_state == TimerState.Cancelled || _disposed)
-                return;
-            _cancelRequested = true;
-            _state = TimerState.Cancelled;
-            _enabled = false;
-            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
-        }
-    }
-
-    /// <inheritdoc />
-    public bool Stop ()
-    {
-        lock (_gate)
-        {
-            if (!_enabled || _state == TimerState.Cancelled || _disposed)
-                return false;
-            _enabled = false;
-            _state = TimerState.Disabled;
-            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
-            return true;
-        }
-    }
-
-    /// <inheritdoc />
-    public bool Start ()
-    {
-        lock (_gate)
-        {
-            if (_disposed || _state == TimerState.Cancelled)
-                return false;
-            if (_state != TimerState.Completed && _state != TimerState.Disabled)
-                return false;
-            _enabled = true;
-            _state = TimerState.Active;
-            ScheduleNext(_initialCallbackTime);
-            return true;
-        }
-    }
-
-    /// <inheritdoc />
-    public void Dispose ()
-    {
-        lock (_gate)
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-            _state = TimerState.Disposed;
-            _enabled = false;
-            _cancelRegistration.Dispose();
-            _timer?.Dispose();
-            _timer = null;
-        }
-    }
-
-    #endregion IRegisteredTimer Implementation
 }
-

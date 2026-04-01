@@ -1,7 +1,5 @@
-﻿// Copyright (c) Kevin Zehrer. All rights reserved.
+// Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
-
-using System.Diagnostics;
 
 namespace KZDev.SystemClock.PrimeTime;
 
@@ -46,4 +44,40 @@ internal sealed partial class ClockIntervalTimerRegistration
     private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
 
     private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
+
+    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
+    {
+        if (delay < TimeSpan.Zero || delay == Timeout.InfiniteTimeSpan)
+        {
+            milliseconds = 0;
+            return false;
+        }
+        long msLong = (long)Math.Min(delay.TotalMilliseconds, int.MaxValue);
+        if (msLong < 0)
+            msLong = 0;
+        milliseconds = (int)msLong;
+        return true;
+    }
+
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowOffset + delay;
+
+    private partial void RecordIntervalCallbackStarted ()
+    {
+        LastCallbackUtc = _clock.UtcNowOffset;
+        NextCallbackUtc = null;
+    }
+
+    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
+    {
+        if (!IsRepeating && LastCallbackUtc.HasValue)
+            return -1;
+        if (NextCallbackUtc is not { } next)
+            return -1;
+        DateTimeOffset now = _clock.UtcNowOffset;
+        if (next <= now)
+            return 0;
+        if (_callbacksRunning > 0 && IsResetAfterCallback)
+            return (long)RepeatTimeSpanInterval.TotalMilliseconds;
+        return (long)(next - now).TotalMilliseconds;
+    }
 }

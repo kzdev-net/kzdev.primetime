@@ -3,12 +3,13 @@
 
 using System.Reflection;
 using AwesomeAssertions;
+using KZDev.PrimeTime;
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for the IPrimeTime contract exposed by the core library.
+///   Unit tests for the <see cref="IPrimeTime"/> contract carried by the PrimeTime stack (NodaTime implementation assembly in this solution).
 /// </summary>
 public class UsingIPrimeTimeContract : UnitTestBase
 {
@@ -28,13 +29,12 @@ public class UsingIPrimeTimeContract : UnitTestBase
     #endregion Constructors/Finalizers
 
     /// <summary>
-    ///   Verifies that the core library assembly exposes the <see cref="IPrimeTime"/> interface type.
+    ///   Verifies that the referenced PrimeTime assembly exposes the <see cref="IPrimeTime"/> interface type.
     /// </summary>
     [Fact]
-    public void CoreAssembly_ExposesIPrimeTimeInterface ()
+    public void ContractAssembly_ExposesIPrimeTimeInterface ()
     {
-        Type? primeTimeInterfaceType = GetIPrimeTimeType();
-        primeTimeInterfaceType.Should().NotBeNull();
+        Type primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.IsInterface.Should().BeTrue();
     }
 
@@ -44,8 +44,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     [Fact]
     public void IPrimeTime_DeclaresDelayMethods ()
     {
-        Type? primeTimeInterfaceType = GetIPrimeTimeType();
-        primeTimeInterfaceType.Should().NotBeNull();
+        Type primeTimeInterfaceType = GetIPrimeTimeType();
         MethodInfo[] methods = primeTimeInterfaceType.GetMethods();
         bool hasSleep = methods.Any(m => m.Name == "Sleep");
         bool hasDelayAsync = methods.Any(m => m.Name == "DelayAsync");
@@ -54,16 +53,13 @@ public class UsingIPrimeTimeContract : UnitTestBase
     }
 
     /// <summary>
-    ///   Retrieves the <see cref="Type"/> representing the IPrimeTime interface from the core library assembly.
+    ///   Resolves the runtime <see cref="Type"/> for <see cref="IPrimeTime"/> from the assembly referenced by this test project.
     /// </summary>
     /// <returns>
-    ///   The <see cref="Type"/> of IPrimeTime if found; otherwise, <c>null</c>.
+    ///   The <see cref="Type"/> of <see cref="IPrimeTime"/>.
     /// </returns>
-    private static Type? GetIPrimeTimeType ()
+    private static Type GetIPrimeTimeType ()
     {
-        Assembly coreAssembly = AppDomain.CurrentDomain.GetAssemblies()
-            .FirstOrDefault(a => a.GetName().Name == "KZDev.PrimeTime") ?? Assembly.Load(new AssemblyName("KZDev.PrimeTime"));
-
-        return coreAssembly.GetType("KZDev.PrimeTime.IPrimeTime");
+        return typeof(IPrimeTime);
     }
 }

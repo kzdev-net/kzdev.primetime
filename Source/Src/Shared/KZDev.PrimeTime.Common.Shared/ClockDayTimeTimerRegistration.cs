@@ -1,39 +1,42 @@
-using System.Diagnostics;
-using NodaTime;
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
 
+#if NET || !SYSTEMCLOCK
+
+using System.Diagnostics;
+
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime;
+#else
 namespace KZDev.PrimeTime;
+#endif
 
 /// <summary>
-///   Implementation of day-time timer registration contracts used by <see cref="PrimeClock"/>
-///   (fire once per day at a given <see cref="LocalTime"/>).
+///   Shared implementation of day-time timer registration: lifecycle, callback dispatch,
+///   and scheduling orchestration. Time-basis storage and delay math live in partials.
 /// </summary>
-internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
+internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
     private static int _nextId;
-    private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
+    private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
-    private readonly IPrimeClock _clock;
-    private readonly bool _captureContext;
-    private readonly IntervalTimerCallbackKind _callbackKind;
-    private readonly Delegate _callback;
-    private readonly object? _callbackState;
-    private readonly CancellationToken _cancellationToken;
-    private readonly CancellationTokenRegistration _cancelRegistration;
+    private IPrimeClock _clock;
+    private bool _captureContext;
+    private IntervalTimerCallbackKind _callbackKind;
+    private Delegate _callback;
+    private object? _callbackState;
+    private CancellationToken _cancellationToken;
+    private CancellationTokenRegistration _cancelRegistration;
+    private ConcurrentTriggerProcessing _concurrentTriggerProcessing;
+    private SkippedTimeBehavior _skippedTimeBehavior;
+    private DuplicateTimeBehavior _duplicateTimeBehavior;
+    private int _id;
 #if NET10_OR_GREATER
     private readonly Lock _gate = new();
 #else
     private readonly object _gate = new();
 #endif
     private Timer? _timer;
-
-    /// <summary>
-    ///   Indicates whether the configured time of day is interpreted in UTC (<c>true</c>) or in the
-    ///   clock's local time zone (<c>false</c>) when scheduling daily callbacks.
-    /// </summary>
-    private readonly bool _utcTimeOfDaySchedule;
-    private LocalTime _targetTimeOfDay;
-    private Instant? _nextCallbackInstant;
-    private Instant? _lastCallbackInstant;
     private TimerState _state;
     private bool _enabled = true;
     private bool _disposed;
@@ -41,41 +44,56 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     private bool _cancelRequested;
     private bool _pendingRunSequential;
 
-    #region Constructors/Finalizers
+    private partial void CaptureRegisteredTimeForDayTimer ();
+
+    private partial DateTimeOffset GetRegisteredTimeOffset ();
+
+    private partial bool GetIsLocalTimeRepresentation ();
+
+    private partial TimeSpan GetDelayUntilNextForTimer ();
+
+    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeClockDayTimeTimerRegistration"/> class.
+    ///   Clears the next-fire marker and records the callback start instant/offset for elapsed queries.
     /// </summary>
-    /// <param name="utcTimeOfDaySchedule">
-    ///   <c>true</c> to interpret <paramref name="timeOfDay"/> in UTC for each UTC calendar day;
-    ///   <c>false</c> (the default) to interpret it in the clock's local time zone for each local day.
-    /// </param>
-    internal PrimeClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTime timeOfDay,
+    private partial void RecordDayTimeCallbackTickStarted ();
+
+    private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
+
+    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
+
+    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
+
+    private partial int GetRunSequentiallyRetryMilliseconds ();
+
+    #region Constructors
+
+    /// <summary>
+    ///   Completes initialization shared by stack-specific constructors.
+    /// </summary>
+    private void FinishConstruction (
+        IPrimeClock clock,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
-        CancellationToken cancellationToken,
-        bool utcTimeOfDaySchedule = false)
+        CancellationToken cancellationToken)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
-        _targetTimeOfDay = timeOfDay;
         _callbackKind = callbackKind;
         _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         _callbackState = callbackState;
 
         DayTimeTimerOptions opts = options ?? new DayTimeTimerOptions();
-        ConcurrentTriggerProcessing = opts.ConcurrentTriggerProcessing;
-        SkippedTimeBehavior = opts.SkippedTimeBehavior;
-        DuplicateTimeBehavior = opts.DuplicateTimeBehavior;
+        _concurrentTriggerProcessing = opts.ConcurrentTriggerProcessing;
+        _skippedTimeBehavior = opts.SkippedTimeBehavior;
+        _duplicateTimeBehavior = opts.DuplicateTimeBehavior;
         _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
         _cancellationToken = cancellationToken;
 
-        Id = Interlocked.Increment(ref _nextId);
-        RegisteredInstant = clock.NowInstant;
-        IsLocalTimeRepresentation = !utcTimeOfDaySchedule;
+        _id = Interlocked.Increment(ref _nextId);
+        CaptureRegisteredTimeForDayTimer();
 
         if (cancellationToken.CanBeCanceled)
         {
@@ -92,16 +110,13 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         ScheduleNext();
     }
 
-    #endregion Constructors/Finalizers
+    #endregion Constructors
 
     /// <inheritdoc />
-    public int Id { [DebuggerStepThrough] get; }
+    public int Id { [DebuggerStepThrough] get => _id; }
 
     /// <inheritdoc />
-    public Instant RegisteredInstant { [DebuggerStepThrough] get; }
-
-    /// <inheritdoc />
-    public DateTimeOffset RegisteredTime => RegisteredInstant.ToDateTimeOffset();
+    public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get => GetRegisteredTimeOffset(); }
 
     /// <inheritdoc />
     public bool IsTimeOfDay => true;
@@ -110,7 +125,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     public bool IsResetAfterCallback => false;
 
     /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
+    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get => GetIsLocalTimeRepresentation(); }
 
     /// <inheritdoc />
     public bool IsRepeating => true;
@@ -131,13 +146,13 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
     public bool CallbacksProcessing => _callbacksRunning > 0;
 
     /// <inheritdoc />
-    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
+    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get => _concurrentTriggerProcessing; }
 
     /// <inheritdoc />
-    public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
+    public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get => _skippedTimeBehavior; }
 
     /// <inheritdoc />
-    public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
+    public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get => _duplicateTimeBehavior; }
 
     /// <inheritdoc />
     public bool Enabled
@@ -164,14 +179,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             lock (_gate)
             {
-                if (_lastCallbackInstant is not { } last)
-                    return -1;
-                if (_callbacksRunning > 0)
-                    return 0;
-                Instant now = _clock.NowInstant;
-                if (last >= now)
-                    return 0;
-                return (long)(now - last).TotalMilliseconds;
+                return GetDayTimeElapsedMillisecondsWhileLocked();
             }
         }
     }
@@ -183,12 +191,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             lock (_gate)
             {
-                if (_nextCallbackInstant is not { } next)
-                    return -1;
-                Instant now = _clock.NowInstant;
-                if (next <= now)
-                    return 0;
-                return (long)(next - now).TotalMilliseconds;
+                return GetDayTimeTimeUntilNextMillisecondsWhileLocked();
             }
         }
     }
@@ -206,70 +209,18 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
-    /// <summary>
-    ///   Computes the duration until the next occurrence of the target time of day in the
-    ///   clock's local zone.
-    /// </summary>
-    private Duration GetDelayUntilNext ()
-    {
-        Instant now = _clock.NowInstant;
-        if (_utcTimeOfDaySchedule)
-        {
-            ZonedDateTime nowZ = _clock.UtcNow;
-            LocalDate today = nowZ.Date;
-            LocalDateTime nextLdt = today.At(_targetTimeOfDay);
-            ZonedDateTime nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
-            if (nextZdt.ToInstant() <= now)
-            {
-                nextLdt = today.PlusDays(1).At(_targetTimeOfDay);
-                nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
-            }
-
-            return nextZdt.ToInstant() - now;
-        }
-
-        ZonedDateTime nowLocalZ = _clock.LocalZonedNow;
-        LocalDate todayLocal = nowLocalZ.Date;
-        LocalDateTime nextLocalLdt = todayLocal.At(_targetTimeOfDay);
-        ZonedDateTime nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
-        if (nextLocalZdt.ToInstant() <= now)
-        {
-            nextLocalLdt = todayLocal.PlusDays(1).At(_targetTimeOfDay);
-            nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
-        }
-
-        return nextLocalZdt.ToInstant() - now;
-    }
-
-    private static int DurationToTimerMilliseconds (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return 0;
-        try
-        {
-            TimeSpan ts = duration.ToTimeSpan();
-            long msLong = (long)Math.Min(ts.TotalMilliseconds, int.MaxValue);
-            if (msLong <= 0)
-                return 0;
-            return (int)msLong;
-        }
-        catch (OverflowException)
-        {
-            return int.MaxValue;
-        }
-    }
-
     private void ScheduleNext ()
     {
         lock (_gate)
         {
             if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
                 return;
-            Duration delay = GetDelayUntilNext();
-            int ms = DurationToTimerMilliseconds(delay);
-            if (ms == Timeout.Infinite)
+            TimeSpan delay = GetDelayUntilNextForTimer();
+            if (delay <= TimeSpan.Zero)
+                delay = OneDay;
+            if (!TryGetTimerMillisecondsFromDelay(delay, out int ms))
                 return;
-            _nextCallbackInstant = _clock.NowInstant + delay;
+            SetNextCallbackScheduledFromDelay(delay);
             if (_timer is null)
                 _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
             else
@@ -283,7 +234,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
                 return;
-            int ms = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
+            int ms = GetRunSequentiallyRetryMilliseconds();
             if (ms <= 0)
                 ms = 1;
             if (_timer is null)
@@ -318,9 +269,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
             return;
         }
 
-        _nextCallbackInstant = null;
-        Instant nowAtTick = _clock.NowInstant;
-        _lastCallbackInstant = nowAtTick;
+        RecordDayTimeCallbackTickStarted();
         lock (_gate)
         {
             _state = TimerState.RepeatProcessingCallback;
@@ -416,7 +365,7 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
         vt.AsTask().ContinueWith((_, state) =>
             {
-                ((PrimeClockDayTimeTimerRegistration)state!).ScheduleNextFromAsync();
+                ((ClockDayTimeTimerRegistration)state!).ScheduleNextFromAsync();
             },
             this,
             CancellationToken.None,
@@ -441,44 +390,25 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         ScheduleNext();
     }
 
-    #region Day-time change operations
-
 #if NET
+    private partial bool IsLocalDayTimeSchedule { get; }
+
+    private partial bool IsUtcDayTimeSchedule { get; }
+
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value);
+
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value);
+
     /// <inheritdoc />
     public bool Change (LocalTimeOfDay newTimeOfDay)
     {
-        if (_utcTimeOfDaySchedule)
-        {
+        if (!IsLocalDayTimeSchedule)
             return false;
-        }
-
-        TimeOnly t = newTimeOfDay.Value;
-        LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
-        return Change(localTime);
-    }
-
-    /// <inheritdoc />
-    public bool Change (UtcTimeOfDay newTimeOfDay)
-    {
-        if (!_utcTimeOfDaySchedule)
-        {
-            return false;
-        }
-
-        TimeOnly t = newTimeOfDay.Value;
-        LocalTime localTime = new(t.Hour, t.Minute, t.Second, t.Millisecond);
-        return Change(localTime);
-    }
-#endif
-
-    /// <inheritdoc />
-    public bool Change (LocalTime timeOfDay)
-    {
         lock (_gate)
         {
             if (_disposed || _state == TimerState.Cancelled)
                 return false;
-            _targetTimeOfDay = timeOfDay;
+            ApplyLocalScheduleTimeOfDay(newTimeOfDay.Value);
             if (!_enabled)
                 return true;
             ScheduleNext();
@@ -486,14 +416,23 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
-#if NET
     /// <inheritdoc />
-    public bool Change (Duration interval) => false;
+    public bool Change (UtcTimeOfDay newTimeOfDay)
+    {
+        if (!IsUtcDayTimeSchedule)
+            return false;
+        lock (_gate)
+        {
+            if (_disposed || _state == TimerState.Cancelled)
+                return false;
+            ApplyUtcScheduleTimeOfDay(newTimeOfDay.Value);
+            if (!_enabled)
+                return true;
+            ScheduleNext();
+            return true;
+        }
+    }
 #endif
-
-    #endregion Day-time change operations
-
-    #region IRegisteredTimer Implementation
 
     /// <inheritdoc />
     public void Cancel ()
@@ -554,7 +493,5 @@ internal sealed class PrimeClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer = null;
         }
     }
-
-    #endregion IRegisteredTimer Implementation
 }
-
+#endif

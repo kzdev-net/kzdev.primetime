@@ -9,6 +9,7 @@
     <Import_RootNamespace>KZDev.PrimeTime.Common.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ClockDayTimeTimerRegistration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClockIntervalTimerRegistration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClockTimerCallbackContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeClock.cs" />

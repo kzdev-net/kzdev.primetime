@@ -50,6 +50,27 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
     private partial bool IsRepeatingTimer { get; }
 
+    /// <summary>
+    ///   When <c>true</c>, converts <paramref name="delay"/> to a due-time in milliseconds for
+    ///   <see cref="Timer"/>; when <c>false</c>, the registration should not arm the timer.
+    /// </summary>
+    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds);
+
+    /// <summary>
+    ///   Records the logical next callback instant/offset as <c>now + delay</c> for the active time basis.
+    /// </summary>
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay);
+
+    /// <summary>
+    ///   Marks the start of a timer callback: records "last callback" and clears the next-callback marker.
+    /// </summary>
+    private partial void RecordIntervalCallbackStarted ();
+
+    /// <summary>
+    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="_gate"/> is held.
+    /// </summary>
+    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ();
+
     #region Constructors/Finalizers
 
     /// <summary>
@@ -201,16 +222,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         {
             lock (_gate)
             {
-                if (!IsRepeating && _lastCallbackUtc.HasValue)
-                    return -1;
-                if (_nextCallbackUtc is not { } next)
-                    return -1;
-                DateTimeOffset now = _clock.UtcNowOffset;
-                if (next <= now)
-                    return 0;
-                if (_callbacksRunning > 0 && IsResetAfterCallback)
-                    return (long)_repeatInterval.TotalMilliseconds;
-                return (long)(next - now).TotalMilliseconds;
+                return GetTimeUntilNextCallbackMillisecondsWhileLocked();
             }
         }
     }
@@ -230,13 +242,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
     private void ScheduleNext (TimeSpan delay)
     {
-        if (delay < TimeSpan.Zero || delay == Timeout.InfiniteTimeSpan)
+        if (!TryGetTimerMillisecondsForSchedule(delay, out int ms))
             return;
-        long msLong = (long)Math.Min(delay.TotalMilliseconds, int.MaxValue);
-        if (msLong < 0)
-            msLong = 0;
-        int ms = (int)msLong;
-        _nextCallbackUtc = _clock.UtcNowOffset + delay;
+        SetNextCallbackScheduledForDelay(delay);
         if (_timer is null)
             _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
         else
@@ -252,9 +260,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        DateTimeOffset now = _clock.UtcNowOffset;
-        _lastCallbackUtc = now;
-        _nextCallbackUtc = null;
+        RecordIntervalCallbackStarted();
         bool isRepeating = IsRepeating;
         bool resetAfter = IsResetAfterCallback;
         TimerState stateDuringCallback = isRepeating && !resetAfter
@@ -365,7 +371,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return;
             }
             State = TimerState.RepeatCycle;
-            TimeSpan next = _repeatInterval;
+            TimeSpan next = RepeatTimeSpanInterval;
             ScheduleNext(next);
         }
     }
@@ -382,11 +388,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return;
             }
             State = TimerState.RepeatCycle;
-            ScheduleNext(_repeatInterval);
+            ScheduleNext(RepeatTimeSpanInterval);
         }
     }
 
-    #region Interface Implementations
+    #region IClockIntervalTimer Implementation
 
     /// <inheritdoc />
     public bool Change (TimeSpan interval) =>
@@ -401,8 +407,8 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return false;
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
                 throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
-            _initialCallbackTime = nextInterval;
-            _repeatInterval = repeatInterval;
+            InitialCallbackTimeSpan = nextInterval;
+            RepeatTimeSpanInterval = repeatInterval;
             if (State == TimerState.Completed)
                 State = TimerState.Active;
             if (!_enabled)
@@ -451,7 +457,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return false;
             _enabled = true;
             State = TimerState.Active;
-            ScheduleNext(_initialCallbackTime);
+            ScheduleNext(InitialCallbackTimeSpan);
             return true;
         }
     }
@@ -472,6 +478,5 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
-    #endregion Interface Implementations
+    #endregion IClockIntervalTimer Implementation
 }
-

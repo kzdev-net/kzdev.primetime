@@ -31,79 +31,79 @@ public class UsingCommonTimerContracts : UnitTestBase
 
     #endregion Constructors/Finalizers
 
-    #region IRegisteredTimer contract
+    #region IClockTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer"/> is an interface and extends <see cref="IDisposable"/>.
+    ///   Verifies that <see cref="IClockTimer"/> is an interface and extends <see cref="IDisposable"/>.
     /// </summary>
     [Fact]
-    public void IRegisteredTimer_ExistsAndIsInterface ()
+    public void IClockTimer_ExistsAndIsInterface ()
     {
-        typeof(IRegisteredTimer).IsInterface.Should().BeTrue();
-        typeof(IRegisteredTimer).GetInterfaces().Should().Contain(typeof(IDisposable));
+        typeof(IClockTimer).IsInterface.Should().BeTrue();
+        typeof(IClockTimer).GetInterfaces().Should().Contain(typeof(IDisposable));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer"/> declares all required properties (ID, IsCancelled, State, etc.).
+    ///   Verifies that <see cref="IClockTimer"/> declares all required properties (ID, IsCancelled, State, etc.).
     /// </summary>
     [Fact]
-    public void IRegisteredTimer_DeclaresRequiredProperties ()
+    public void IClockTimer_DeclaresRequiredProperties ()
     {
-        Type timerType = typeof(IRegisteredTimer);
+        Type timerType = typeof(IClockTimer);
         string[] requiredProperties = ["Id", "IsCancelled", "IsTimeOfDay", "IsRepeating", "IsLocalTimeRepresentation",
             "IsActive", "State", "CallbacksProcessing", "Enabled"];
         foreach (string name in requiredProperties)
         {
             PropertyInfo? prop = timerType.GetProperty(name);
-            prop.Should().NotBeNull($"IRegisteredTimer should declare property {name}");
+            prop.Should().NotBeNull($"IClockTimer should declare property {name}");
         }
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer"/> declares Cancel, Stop, and Start methods.
+    ///   Verifies that <see cref="IClockTimer"/> declares Cancel, Stop, and Start methods.
     /// </summary>
     [Fact]
-    public void IRegisteredTimer_DeclaresRequiredMethods ()
+    public void IClockTimer_DeclaresRequiredMethods ()
     {
-        Type timerType = typeof(IRegisteredTimer);
+        Type timerType = typeof(IClockTimer);
         timerType.GetMethod("Cancel").Should().NotBeNull();
         timerType.GetMethod("Stop").Should().NotBeNull();
         timerType.GetMethod("Start").Should().NotBeNull();
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer.Id"/> is of type <see cref="int"/>.
+    ///   Verifies that <see cref="IClockTimer.Id"/> is of type <see cref="int"/>.
     /// </summary>
     [Fact]
-    public void IRegisteredTimer_Id_IsInt ()
+    public void IClockTimer_Id_IsInt ()
     {
-        PropertyInfo? prop = typeof(IRegisteredTimer).GetProperty("Id");
+        PropertyInfo? prop = typeof(IClockTimer).GetProperty("Id");
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(int));
     }
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer.State"/> is of type <see cref="TimerState"/>.
+    ///   Verifies that <see cref="IClockTimer.State"/> is of type <see cref="TimerState"/>.
     /// </summary>
     [Fact]
-    public void IRegisteredTimer_State_IsTimerState ()
+    public void IClockTimer_State_IsTimerState ()
     {
-        PropertyInfo? prop = typeof(IRegisteredTimer).GetProperty("State");
+        PropertyInfo? prop = typeof(IClockTimer).GetProperty("State");
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(TimerState));
     }
 
-    #endregion IRegisteredTimer contract
+    #endregion IClockTimer contract
 
     #region IDayTimeTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IDayTimeTimer"/> extends <see cref="IRegisteredTimer"/>.
+    ///   Verifies that <see cref="IDayTimeTimer"/> extends <see cref="IClockTimer"/>.
     /// </summary>
     [Fact]
-    public void IDayTimeTimer_ExtendsIRegisteredTimer ()
+    public void IDayTimeTimer_ExtendsIClockTimer ()
     {
-        typeof(IDayTimeTimer).GetInterfaces().Should().Contain(typeof(IRegisteredTimer));
+        typeof(IDayTimeTimer).GetInterfaces().Should().Contain(typeof(IClockTimer));
     }
 
     /// <summary>
@@ -123,12 +123,12 @@ public class UsingCommonTimerContracts : UnitTestBase
     #region IIntervalTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IIntervalTimer"/> extends <see cref="IRegisteredTimer"/>.
+    ///   Verifies that <see cref="IIntervalTimer"/> extends <see cref="IClockTimer"/>.
     /// </summary>
     [Fact]
-    public void IIntervalTimer_ExtendsIRegisteredTimer ()
+    public void IIntervalTimer_ExtendsIClockTimer ()
     {
-        typeof(IIntervalTimer).GetInterfaces().Should().Contain(typeof(IRegisteredTimer));
+        typeof(IIntervalTimer).GetInterfaces().Should().Contain(typeof(IClockTimer));
     }
 
     /// <summary>

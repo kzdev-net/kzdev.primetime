@@ -146,7 +146,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        TimerState IRegisteredTimer.State => State;
+        TimerState IClockTimer.State => State;
 
         public long ElapsedTime
         {
@@ -533,7 +533,7 @@ public sealed class PrimeTestClock : IPrimeTestClock
             }
         }
 
-        TimerState IRegisteredTimer.State => State;
+        TimerState IClockTimer.State => State;
 
         public long ElapsedTime => -1;
         public long TimeUntilNextCallback

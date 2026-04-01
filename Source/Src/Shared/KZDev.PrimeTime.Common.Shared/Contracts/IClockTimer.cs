@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 ///   Registration for a timer created from a clock's timer registration API (BCL "now"
 ///   subset or full NodaTime-capable clock).
 /// </summary>
-public partial interface IClockTimer
+public partial interface IClockTimer : IDisposable
 {
     //--------------------------------------------------------------------------------
     /// <summary>

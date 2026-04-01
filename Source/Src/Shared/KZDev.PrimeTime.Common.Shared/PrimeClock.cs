@@ -286,7 +286,7 @@ internal sealed partial class PrimeClock : IPrimeClock
 
     #endregion IPrimeClock — Interval timers
 
-#if NET
+#if NET && SYSTEMCLOCK
     #region IPrimeClock — Day-time timers
 
     /// <inheritdoc />

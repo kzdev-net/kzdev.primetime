@@ -264,15 +264,18 @@ internal sealed partial class PrimeClock
         Action callback,
         CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        return new ClockIntervalTimerRegistration(this,
+            callbackPeriod,
+            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
             IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
             cancellationToken);
+    }
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -280,15 +283,18 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        return new ClockIntervalTimerRegistration(this,
+            callbackPeriod,
+            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
             IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
             cancellationToken);
+    }
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -297,9 +303,9 @@ internal sealed partial class PrimeClock
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            (repeat ? callbackTime : NoRepeatSentinel).ToTimeSpan(),
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
@@ -311,15 +317,18 @@ internal sealed partial class PrimeClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        return new ClockIntervalTimerRegistration(this,
+            callbackPeriod,
+            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
             cancellationToken);
+    }
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -327,15 +336,18 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeat ? callbackTime : NoRepeatSentinel,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        return new ClockIntervalTimerRegistration(this,
+            callbackPeriod,
+            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
             IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
             cancellationToken);
+    }
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -343,9 +355,9 @@ internal sealed partial class PrimeClock
         Action callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeatInterval,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            repeatInterval.ToTimeSpan(),
             IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
@@ -359,9 +371,9 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeatInterval,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            repeatInterval.ToTimeSpan(),
             IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
@@ -375,9 +387,9 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeatInterval,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            repeatInterval.ToTimeSpan(),
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
@@ -390,9 +402,9 @@ internal sealed partial class PrimeClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeatInterval,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            repeatInterval.ToTimeSpan(),
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
@@ -406,9 +418,9 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        new PrimeClockIntervalTimerRegistration(this,
-            callbackTime,
-            repeatInterval,
+        new ClockIntervalTimerRegistration(this,
+            callbackTime.ToTimeSpan(),
+            repeatInterval.ToTimeSpan(),
             IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
