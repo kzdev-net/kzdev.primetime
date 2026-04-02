@@ -9,7 +9,9 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
-///   Unit tests for the <see cref="IPrimeTime"/> contract carried by the PrimeTime stack (NodaTime implementation assembly in this solution).
+///   Unit tests for the <see cref="IPrimeTime"/> contract on the NodaTime implementation assembly
+///   (<c>KZDev.PrimeTime.NodaTime</c>). The BCL subset under <c>KZDev.SystemClock.PrimeTime</c> is covered by
+///   <see cref="UsingSystemClockSubsetContract"/>.
 /// </summary>
 public class UsingIPrimeTimeContract : UnitTestBase
 {

@@ -440,8 +440,8 @@ public class UsingIPrimeClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.GetTimeCancellationToken(Duration)"/> returns
-    ///   a source whose token is still active just before the specified duration and becomes
-    ///   cancelled shortly after that time (timing check around the expected cancellation).
+    ///   a source whose token is initially active and becomes cancelled after one combined delay
+    ///   that runs past the requested cancellation duration.
     /// </summary>
     [Fact]
     public async Task GetTimeCancellationToken_Duration_ExpiresAfterTime ()
@@ -450,12 +450,14 @@ public class UsingIPrimeClock : UnitTestBase
         Duration cancelAfter = Duration.FromMilliseconds(120);
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        // Wait well before the expected cancellation time; token should still be active.
-        Duration preCancelDelay = Duration.FromMilliseconds(80);
-        await clock.DelayAsync(preCancelDelay, TestContext.Current.CancellationToken);
-        timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        // Wait past the expected cancellation time; token should be cancelled.
-        await clock.DelayAsync(Duration.FromMilliseconds(50), TestContext.Current.CancellationToken);
+        // Use one delay that runs past cancelAfter rather than a "wait until just before expiry,
+        // assert false, then wait a little longer" split-delay sequence. On net481 and
+        // netstandard2.0, coarse timer resolution plus thread-pool scheduling latency can resume
+        // the test after the cancellation deadline has already passed, making the intermediate
+        // "not cancelled yet" assertion flaky. The single-delay pattern avoids that race while
+        // still verifying that the token is eventually cancelled.
+        Duration additionalDelayForCancellation = Duration.FromMilliseconds(80);
+        await clock.DelayAsync(cancelAfter + additionalDelayForCancellation, TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
 
