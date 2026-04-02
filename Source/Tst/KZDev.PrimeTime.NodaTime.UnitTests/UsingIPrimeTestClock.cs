@@ -6,7 +6,9 @@
 // and that Sleep, DelayAsync, time cancellation, and timers are driven by virtual time.
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Tests;
+
 using NodaTime;
 
 namespace KZDev.PrimeTime.NodaTime.UnitTests;
@@ -428,9 +430,10 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     #region Day-time timer driven by virtual time
 
-#if NET
     /// <summary>
-    ///   Verifies that a local time-of-day timer fires when virtual time reaches the target time of day.
+    ///   Verifies that a local time-of-day timer fires when virtual time reaches the target time of day, and that
+    ///   <see cref="IClockTimer.ElapsedTime"/> / <see cref="IClockTimer.TimeUntilNextCallback"/> match the virtual schedule
+    ///   before and after the first fire.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_Local_WhenAdvanceReachesTargetTimeOfDay_Fires ()
@@ -445,8 +448,79 @@ public class UsingIPrimeTestClock : UnitTestBase
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Advance(Duration.FromHours(1));
         fireCount.Should().Be(0);
+        registration.ElapsedTime.Should().Be(-1);
+        long msUntilFirstFire = (long)Duration.FromHours(1).TotalMilliseconds;
+        registration.TimeUntilNextCallback.Should()
+            .BeInRange(msUntilFirstFire - VirtualClockTimerAssertionToleranceMilliseconds,
+                msUntilFirstFire + VirtualClockTimerAssertionToleranceMilliseconds);
         clock.Advance(Duration.FromHours(1));
         fireCount.Should().Be(1);
+        registration.ElapsedTime.Should().Be(0);
+        long msUntilNextDay = (long)Duration.FromHours(24).TotalMilliseconds;
+        registration.TimeUntilNextCallback.Should()
+            .BeInRange(msUntilNextDay - VirtualClockTimerAssertionToleranceMilliseconds,
+                msUntilNextDay + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+    /// <summary>
+    ///   Verifies that before the first fire, <see cref="IClockTimer.ElapsedTime"/> is <c>-1</c> and
+    ///   <see cref="IClockTimer.TimeUntilNextCallback"/> matches the gap to the next local occurrence.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Local_BeforeDue_ElapsedTimeNegativeOne_TimeUntilNextMatchesVirtualSchedule ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 1, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        LocalTime threeAm = new(3, 0, 0);
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(threeAm, () => { },
+            cancellationToken: TestContext.Current.CancellationToken);
+        timer.ElapsedTime.Should().Be(-1);
+        long expectedMs = (long)Duration.FromHours(2).TotalMilliseconds;
+        timer.TimeUntilNextCallback.Should()
+            .BeInRange(expectedMs - VirtualClockTimerAssertionToleranceMilliseconds,
+                expectedMs + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+    /// <summary>
+    ///   Verifies that after a local day-time callback, advancing virtual time increases
+    ///   <see cref="IClockTimer.ElapsedTime"/> in line with the virtual local clock.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Local_AfterFire_Advance_ElapsedTimeTracksVirtualLocalClock ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 2, 59, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        LocalTime threeAm = new(3, 0, 0);
+        int fireCount = 0;
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(threeAm, () => fireCount++,
+            cancellationToken: TestContext.Current.CancellationToken);
+        clock.Advance(Duration.FromMinutes(1));
+        fireCount.Should().Be(1);
+        clock.Advance(Duration.FromHours(1));
+        long expectedMs = (long)Duration.FromHours(1).TotalMilliseconds;
+        timer.ElapsedTime.Should()
+            .BeInRange(expectedMs - VirtualClockTimerAssertionToleranceMilliseconds,
+                expectedMs + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+#if NET
+    /// <summary>
+    ///   Verifies UTC time-of-day registrations use the virtual UTC clock for
+    ///   <see cref="IClockTimer.TimeUntilNextCallback"/>.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Utc_BeforeDue_TimeUntilNextCallbackUsesUtcDayBoundary ()
+    {
+        Instant initial = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        UtcTimeOfDay twoPmUtc = new UtcTimeOfDay(new TimeOnly(14, 0));
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(twoPmUtc, () => { },
+            cancellationToken: TestContext.Current.CancellationToken);
+        timer.IsLocalTimeRepresentation.Should().BeFalse();
+        long expectedMs = (long)Duration.FromHours(4).TotalMilliseconds;
+        timer.TimeUntilNextCallback.Should()
+            .BeInRange(expectedMs - VirtualClockTimerAssertionToleranceMilliseconds,
+                expectedMs + VirtualClockTimerAssertionToleranceMilliseconds);
     }
 #endif
 
