@@ -12,9 +12,6 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public sealed partial class PrimeTestClock
 {
-    private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
-    private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
-
     private Instant _now;
     private readonly DateTimeZone _zone;
 
@@ -109,34 +106,6 @@ public sealed partial class PrimeTestClock
         return sinceMidnight.ToDuration().ToTimeSpan();
     }
 
-    /// <summary>
-    ///   Clamps <paramref name="duration"/> for BCL delay APIs (virtual sleep / delay).
-    /// </summary>
-    private static TimeSpan ToTimeSpanForDelay (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return TimeSpan.Zero;
-
-        if (duration >= MaxDurationForDelay)
-            return TimeSpan.MaxValue;
-
-        return duration.ToTimeSpan();
-    }
-
-    /// <summary>
-    ///   Clamps <paramref name="duration"/> for <see cref="CancellationTokenSource"/> delay limits.
-    /// </summary>
-    private static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return TimeSpan.Zero;
-
-        if (duration >= MaxDurationForCancellationToken)
-            return TimeSpan.FromMilliseconds(int.MaxValue);
-
-        return duration.ToTimeSpan();
-    }
-
     #region IPrimeTestClock Implementation — Noda
 
     /// <inheritdoc />
@@ -162,15 +131,15 @@ public sealed partial class PrimeTestClock
 
     /// <inheritdoc />
     public void Advance (Duration duration) =>
-        Advance(duration.ToTimeSpan());
+        Advance(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
 
     /// <inheritdoc />
     public void RunFor (Duration duration) =>
-        RunFor(duration.ToTimeSpan());
+        RunFor(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
 
     /// <inheritdoc />
     public void Start (Duration? rate = null) =>
-        Start(rate?.ToTimeSpan());
+        Start(rate is { } d ? NodaDurationBclConversions.ToTimeSpanForTimerInterval(d) : null);
 
     #endregion IPrimeTestClock Implementation — Noda
 
@@ -256,15 +225,15 @@ public sealed partial class PrimeTestClock
 
     /// <inheritdoc />
     public void Sleep (Duration duration) =>
-        Sleep(ToTimeSpanForDelay(duration));
+        Sleep(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
 
     /// <inheritdoc />
     public Task DelayAsync (Duration duration) =>
-        DelayAsync(ToTimeSpanForDelay(duration));
+        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
 
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken) =>
-        DelayAsync(ToTimeSpanForDelay(duration), cancellationToken);
+        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration), cancellationToken);
 
     #endregion IPrimeTime / IPrimeClock — Delays (Duration)
 
@@ -272,21 +241,21 @@ public sealed partial class PrimeTestClock
 
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter) =>
-        GetTimeCancellationToken(ToTimeSpanForCancellationToken(cancelAfter));
+        GetTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter));
 
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken) =>
-        LinkTimeCancellationToken(ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
+        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
 
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
         CancellationToken token2) =>
-        LinkTimeCancellationToken(ToTimeSpanForCancellationToken(cancelAfter), token1, token2);
+        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), token1, token2);
 
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens) =>
-        LinkTimeCancellationToken(ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
+        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
 
     #endregion IPrimeTime / IPrimeClock — Time cancellation (Duration)
 
@@ -298,7 +267,8 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), callback, cancellationToken, repeat, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, repeat,
+            timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -307,7 +277,8 @@ public sealed partial class PrimeTestClock
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), callback, cancellationToken, state, repeat, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
+            repeat, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -316,7 +287,8 @@ public sealed partial class PrimeTestClock
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), callback, cancellationToken, state, repeat, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
+            repeat, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -324,7 +296,8 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(callbackTime.ToTimeSpan(), callback, cancellationToken, repeat, timerOptions);
+        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
+            repeat, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -333,7 +306,8 @@ public sealed partial class PrimeTestClock
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(callbackTime.ToTimeSpan(), callback, cancellationToken, state, repeat, timerOptions);
+        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
+            state, repeat, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -341,7 +315,8 @@ public sealed partial class PrimeTestClock
         Action callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), repeatInterval.ToTimeSpan(), callback, cancellationToken, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -350,7 +325,9 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), repeatInterval.ToTimeSpan(), callback, cancellationToken, state, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
+            timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
@@ -359,7 +336,9 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(callbackTime.ToTimeSpan(), repeatInterval.ToTimeSpan(), callback, cancellationToken, state, timerOptions);
+        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
+            timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -367,7 +346,8 @@ public sealed partial class PrimeTestClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(callbackTime.ToTimeSpan(), repeatInterval.ToTimeSpan(), callback, cancellationToken, timerOptions);
+        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -376,7 +356,9 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(callbackTime.ToTimeSpan(), repeatInterval.ToTimeSpan(), callback, cancellationToken, state, timerOptions);
+        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
+            timerOptions);
 
     #endregion IPrimeClock Implementation — Interval timers (Duration)
 

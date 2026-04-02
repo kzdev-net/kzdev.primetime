@@ -18,8 +18,6 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class PrimeClock
 {
-    private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
-    private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
     private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
     private readonly IClock _clock;
@@ -77,50 +75,6 @@ internal sealed partial class PrimeClock
         {
             return BclDateTimeZone.ForSystemDefault();
         }
-    }
-
-    /// <summary>
-    ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use with BCL
-    ///   delay and cancellation APIs. Negative or zero duration maps to
-    ///   <see cref="TimeSpan.Zero"/>. Durations greater than
-    ///   <see cref="TimeSpan.MaxValue"/> are clamped to <see cref="TimeSpan.MaxValue"/>
-    ///   to avoid <see cref="OverflowException"/> from <see cref="Duration.ToTimeSpan"/>.
-    /// </summary>
-    private static TimeSpan ToTimeSpanForDelay (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-        {
-            return TimeSpan.Zero;
-        }
-
-        if (duration >= MaxDurationForDelay)
-        {
-            return TimeSpan.MaxValue;
-        }
-
-        return duration.ToTimeSpan();
-    }
-
-    /// <summary>
-    ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for use when creating
-    ///   <see cref="CancellationTokenSource"/> instances. Negative or zero duration maps to
-    ///   <see cref="TimeSpan.Zero"/>. Durations greater than <see cref="int.MaxValue"/>
-    ///   milliseconds are clamped to that value (as a <see cref="TimeSpan"/>), because
-    ///   <see cref="CancellationTokenSource"/> only accepts delays up to that limit.
-    /// </summary>
-    private static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-        {
-            return TimeSpan.Zero;
-        }
-
-        if (duration >= MaxDurationForCancellationToken)
-        {
-            return TimeSpan.FromMilliseconds(int.MaxValue);
-        }
-
-        return duration.ToTimeSpan();
     }
 
     #region Interface Implementations
@@ -187,27 +141,27 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     /// <remarks>
     ///   Durations greater than <see cref="TimeSpan.MaxValue"/> are automatically clamped
-    ///   to <see cref="TimeSpan.MaxValue"/> by <see cref="ToTimeSpanForDelay"/>. In that
+    ///   to <see cref="TimeSpan.MaxValue"/> before the underlying BCL delay call. In that
     ///   case, <see cref="Thread.Sleep(TimeSpan)"/> blocks for approximately 29,000 years,
     ///   so passing unreasonably large durations is still undesirable despite the clamping.
     /// </remarks>
     public void Sleep (Duration duration)
     {
-        TimeSpan ts = ToTimeSpanForDelay(duration);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         Thread.Sleep(ts);
     }
 
     /// <inheritdoc />
     public Task DelayAsync (Duration duration)
     {
-        TimeSpan ts = ToTimeSpanForDelay(duration);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         return Task.Delay(ts);
     }
 
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
     {
-        TimeSpan ts = ToTimeSpanForDelay(duration);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         return Task.Delay(ts, cancellationToken);
     }
 
@@ -218,7 +172,7 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
     {
-        TimeSpan ts = ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource cts = new(ts);
         return new TimeCancellationTokenSource(cts);
     }
@@ -226,7 +180,7 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
     {
-        TimeSpan ts = ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeCts = new(ts);
         CancellationTokenSource linkedCts =
             CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
@@ -237,7 +191,7 @@ internal sealed partial class PrimeClock
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
         CancellationToken token2)
     {
-        TimeSpan ts = ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeCts = new(ts);
         CancellationTokenSource linkedCts =
             CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
@@ -248,7 +202,7 @@ internal sealed partial class PrimeClock
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens)
     {
-        TimeSpan ts = ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeCts = new(ts);
         CancellationTokenSource linkedCts =
             CancellationTokenSource.CreateLinkedTokenSource([timeCts.Token, .. cancellationTokens]);
@@ -266,7 +220,7 @@ internal sealed partial class PrimeClock
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
     {
-        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
         return new ClockIntervalTimerRegistration(this,
             callbackPeriod,
             repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
@@ -285,7 +239,7 @@ internal sealed partial class PrimeClock
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
     {
-        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
         return new ClockIntervalTimerRegistration(this,
             callbackPeriod,
             repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
@@ -304,8 +258,8 @@ internal sealed partial class PrimeClock
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            (repeat ? callbackTime : NoRepeatSentinel).ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeat ? callbackTime : NoRepeatSentinel),
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
@@ -319,7 +273,7 @@ internal sealed partial class PrimeClock
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
     {
-        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
         return new ClockIntervalTimerRegistration(this,
             callbackPeriod,
             repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
@@ -338,7 +292,7 @@ internal sealed partial class PrimeClock
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
     {
-        TimeSpan callbackPeriod = callbackTime.ToTimeSpan();
+        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
         return new ClockIntervalTimerRegistration(this,
             callbackPeriod,
             repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
@@ -356,8 +310,8 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            repeatInterval.ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
             IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
@@ -372,8 +326,8 @@ internal sealed partial class PrimeClock
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            repeatInterval.ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
             IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
@@ -388,8 +342,8 @@ internal sealed partial class PrimeClock
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            repeatInterval.ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
             IntervalTimerCallbackKind.ContextActionWithToken,
             callback,
             state,
@@ -403,8 +357,8 @@ internal sealed partial class PrimeClock
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            repeatInterval.ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
             IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
@@ -419,8 +373,8 @@ internal sealed partial class PrimeClock
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            callbackTime.ToTimeSpan(),
-            repeatInterval.ToTimeSpan(),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
             IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,

@@ -116,14 +116,17 @@ internal sealed partial class ClockIntervalTimerRegistration
     public bool Change (Duration interval)
     {
         Duration repeat = IsRepeating ? interval : NoRepeatSentinel;
-        return Change(interval.ToTimeSpan(), repeat.ToTimeSpan());
+        return Change(NodaDurationBclConversions.ToTimeSpanForTimerInterval(interval),
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeat));
     }
 
     /// <inheritdoc />
     public bool Change (Duration nextInterval, Duration repeatInterval)
     {
-        TimeSpan nextTs = nextInterval.ToTimeSpan();
-        TimeSpan repeatTs = repeatInterval == NoRepeatSentinel ? Timeout.InfiniteTimeSpan : repeatInterval.ToTimeSpan();
+        TimeSpan nextTs = NodaDurationBclConversions.ToTimeSpanForTimerInterval(nextInterval);
+        TimeSpan repeatTs = repeatInterval == NoRepeatSentinel
+            ? Timeout.InfiniteTimeSpan
+            : NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval);
         return Change(nextTs, repeatTs);
     }
 

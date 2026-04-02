@@ -6,10 +6,10 @@ using NodaTime;
 namespace KZDev.PrimeTime;
 
 /// <content>
-///   NodaTime-specific partial of <see cref="PrimeClock"/>: BCL <see cref="IPrimeTime"/> forwards,
-///   <see cref="TimeSpan"/> timer overloads, and day-time registration using
-///   <see cref="ClockDayTimeTimerRegistration"/>. Lives in <c>KZDev.PrimeTime.NodaTime</c>
-///   only (not Common.Shared), so shared sources stay BCL-only aside from namespace conditionals.
+///   NodaTime-specific partial of <see cref="PrimeClock"/>: additive <see cref="LocalTime"/> and BCL
+///   time-of-day registration types, plus <see cref="ClockDayTimeTimerRegistration"/>. Shared BCL and
+///   <see cref="Duration"/> members on <see cref="PrimeClock"/> use <see cref="NodaDurationBclConversions"/> so
+///   <see cref="Duration"/> maps to the same <see cref="TimeSpan"/> timer semantics as the SystemClock stack.
 /// </content>
 internal sealed partial class PrimeClock
 {
