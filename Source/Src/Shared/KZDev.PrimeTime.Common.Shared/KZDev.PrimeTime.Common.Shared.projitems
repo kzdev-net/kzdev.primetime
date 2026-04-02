@@ -33,5 +33,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\DayTimeTimerOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\LocalTimeOfDay.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\UtcTimeOfDay.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PrimeClockServiceCollectionExtensions.Shared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PrimeClockTimeProviderExtensions.Shared.cs" />
   </ItemGroup>
 </Project>

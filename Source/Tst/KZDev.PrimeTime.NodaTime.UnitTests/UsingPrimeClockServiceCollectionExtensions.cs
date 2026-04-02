@@ -1,0 +1,59 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
+using AwesomeAssertions;
+using KZDev.PrimeTime;
+using KZDev.PrimeTime.Tests;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace KZDev.PrimeTime.NodaTime.UnitTests;
+
+/// <summary>
+///   Unit tests for <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
+///   with the NodaTime-backed <see cref="PrimeClock"/> implementation.
+/// </summary>
+public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
+{
+    #region Constructors/Finalizers
+
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="UsingPrimeClockServiceCollectionExtensions"/> class.
+    /// </summary>
+    /// <param name="xUnitTestOutputHelper">
+    ///   The xUnit test output helper that can be used to output test messages.
+    /// </param>
+    public UsingPrimeClockServiceCollectionExtensions (ITestOutputHelper xUnitTestOutputHelper)
+        : base(xUnitTestOutputHelper)
+    {
+    }
+
+    #endregion Constructors/Finalizers
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
+    ///   throws <see cref="ArgumentNullException"/> when the service collection is null.
+    /// </summary>
+    [Fact]
+    public void AddPrimeClock_WithNullServices_ThrowsArgumentNullException ()
+    {
+        IServiceCollection? services = null;
+        Action act = () => services!.AddPrimeClock();
+        act.Should().Throw<ArgumentNullException>().WithParameterName("services");
+    }
+
+    /// <summary>
+    ///   Verifies that after <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>,
+    ///   building the provider resolves <see cref="IPrimeClock"/> as a <see cref="PrimeClock"/> singleton.
+    /// </summary>
+    [Fact]
+    public void AddPrimeClock_BuildServiceProvider_ResolvesIPrimeClockAsPrimeClockSingleton ()
+    {
+        IServiceCollection services = new ServiceCollection();
+        services.AddPrimeClock();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IPrimeClock clock = provider.GetRequiredService<IPrimeClock>();
+        clock.Should().NotBeNull().And.BeOfType<PrimeClock>();
+        IPrimeClock second = provider.GetRequiredService<IPrimeClock>();
+        second.Should().BeSameAs(clock);
+    }
+}

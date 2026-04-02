@@ -1,21 +1,25 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
 
 /// <summary>
-///   Extension methods for obtaining a <see cref="TimeProvider"/> from PrimeTime BCL clocks.
+///   Extension methods for obtaining a <see cref="TimeProvider"/> from PrimeTime clocks.
 /// </summary>
-public static class PrimeClockTimeProviderExtensions
+public static partial class PrimeClockTimeProviderExtensions
 {
     /// <summary>
-    ///   Returns a <see cref="TimeProvider"/> that uses the given PrimeTime BCL clock
+    ///   Returns a <see cref="TimeProvider"/> that uses the given PrimeTime clock
     ///   for <see cref="TimeProvider.GetUtcNow"/>, <see cref="TimeProvider.GetLocalNow"/>,
     ///   and <see cref="TimeProvider.CreateTimer"/>.
     /// </summary>
     /// <param name="clock">
-    ///   The PrimeTime BCL clock (e.g. <see cref="PrimeClock"/> or
-    ///   <see cref="PrimeTestClock"/>).
+    ///   The PrimeTime clock (e.g. <see cref="PrimeClock"/> or
+    ///   <see cref="IPrimeTestClock"/> implementation).
     /// </param>
     /// <returns>
     ///   A <see cref="TimeProvider"/> backed by <paramref name="clock"/>. When

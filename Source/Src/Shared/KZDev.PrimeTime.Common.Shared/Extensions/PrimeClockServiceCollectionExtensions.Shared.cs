@@ -2,13 +2,18 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
+
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
+#else
+namespace KZDev.PrimeTime;
+#endif
 
 /// <summary>
-///   Extension methods for adding PrimeTime BCL clock services to an
+///   Extension methods for adding PrimeTime clock services to an
 ///   <see cref="IServiceCollection"/>.
 /// </summary>
-public static class PrimeClockServiceCollectionExtensions
+public static partial class PrimeClockServiceCollectionExtensions
 {
     /// <summary>
     ///   Adds the default <see cref="IPrimeClock"/> implementation
@@ -28,4 +33,3 @@ public static class PrimeClockServiceCollectionExtensions
             throw new ArgumentNullException(nameof(services)) :
             services.AddSingleton<IPrimeClock, PrimeClock>();
 }
-
