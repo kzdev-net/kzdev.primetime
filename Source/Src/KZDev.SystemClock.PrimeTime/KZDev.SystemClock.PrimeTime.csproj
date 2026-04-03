@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<RootNamespace>KZDev.SystemClock.PrimeTime</RootNamespace>
 		<AssemblyName>KZDev.SystemClock.PrimeTime</AssemblyName>
 		<PackageId>KZDev.SystemClock.PrimeTime</PackageId>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

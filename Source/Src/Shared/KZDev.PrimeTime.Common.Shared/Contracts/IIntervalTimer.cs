@@ -38,8 +38,8 @@ public interface IIntervalTimer : IClockTimer
     ///     yet completed.
     ///   </para>
     ///   <para>
-    ///     Implementations in the SystemClock stack may expose this as TimeSpan;
-    ///     NodaTime stack as Duration. This common contract uses milliseconds to remain
+    ///     Implementations in <c>KZDev.SystemClock.PrimeTime</c> may expose this as <see cref="TimeSpan"/>;
+    ///     <c>KZDev.PrimeTime</c> (NodaTime) as <c>Duration</c>. This common contract uses milliseconds to remain
     ///     time-type agnostic.
     ///   </para>
     /// </remarks>
@@ -61,8 +61,8 @@ public interface IIntervalTimer : IClockTimer
     ///     the next callback after the current callback completes.
     ///   </para>
     ///   <para>
-    ///     Implementations in the SystemClock stack may expose this as TimeSpan;
-    ///     NodaTime stack as Duration. This common contract uses milliseconds. A value of -1
+    ///     Implementations in <c>KZDev.SystemClock.PrimeTime</c> may expose this as <see cref="TimeSpan"/>;
+    ///     <c>KZDev.PrimeTime</c> (NodaTime) as <c>Duration</c>. This common contract uses milliseconds. A value of -1
     ///     indicates no next callback or not applicable.
     ///   </para>
     /// </remarks>

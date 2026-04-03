@@ -7,10 +7,17 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+#if SYSTEMCLOCK
 /// <content>
 ///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeClock"/>
 ///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based).
 /// </content>
+#else
+/// <content>
+///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeClock"/>
+///   in <c>KZDev.PrimeTime</c> (NodaTime-based).
+/// </content>
+#endif
 internal sealed partial class PrimeClock : IPrimeClock
 {
     #region Interface Implementations
