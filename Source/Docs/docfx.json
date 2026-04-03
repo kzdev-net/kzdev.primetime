@@ -14,17 +14,6 @@
                     ]
                 },
                 {
-                    "src": "../../artifacts/bin/KZDev.PrimeTime.NodaTime/release_net8.0",
-                    "dest": "api",
-                    "cwd": "src",
-                    "properties": {
-                        "TargetFramework": "net8.0"
-                    },
-                    "files": [
-                        "**/*.dll"
-                    ]
-                },
-                {
                     "src": "../../artifacts/bin/KZDev.SystemClock.PrimeTime/release_net8.0",
                     "dest": "api",
                     "cwd": "src",

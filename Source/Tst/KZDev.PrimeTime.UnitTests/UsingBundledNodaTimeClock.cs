@@ -10,8 +10,8 @@ using Xunit;
 namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
-///   Smoke tests that the NodaTime-backed clock resolves from DI when the test project references the
-///   <c>KZDev.PrimeTime.NodaTime</c> implementation (same contract surface as the bundled NuGet layout).
+///   Smoke tests that the NodaTime-backed clock resolves from DI when the test project references
+///   <c>KZDev.PrimeTime</c> (full <see cref="IPrimeClock"/> surface including NodaTime members).
 /// </summary>
 public class UsingBundledNodaTimeClock : UnitTestBase
 {
@@ -31,7 +31,7 @@ public class UsingBundledNodaTimeClock : UnitTestBase
     #endregion Constructors/Finalizers
 
     /// <summary>
-    ///   Verifies that registering the bundled NodaTime clock resolves <c>IPrimeClock</c> from a built service provider.
+    ///   Verifies that registering the NodaTime-backed clock resolves <c>IPrimeClock</c> from a built service provider.
     /// </summary>
     [Fact]
     public void AddPrimeClock_BuildServiceProvider_ResolvesIPrimeClock ()

@@ -3,14 +3,9 @@
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-      <Description>PrimeTime time, clock, and timer contracts plus a bundled NodaTime-based clock implementation (IPrimeClock / PrimeClock). Use this package when you want NodaTime integration; use KZDev.SystemClock.PrimeTime if you only need BCL-based clocks and prefer not to depend on NodaTime.</Description>
-      <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    <Description>PrimeTime time, clock, and timer contracts plus a bundled NodaTime-based clock implementation (IPrimeClock / PrimeClock). Use this package when you want NodaTime integration; use KZDev.SystemClock.PrimeTime if you only need BCL-based clocks and prefer not to depend on NodaTime.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
@@ -22,25 +17,11 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" />
   </ItemGroup>
 
-  <!--
-    PrivateAssets=all: the nuspec must not list KZDev.PrimeTime.NodaTime as a package dependency (that project is not published).
-    ReferenceOutputAssembly=false: the main assembly still references shared contract sources, so importing NodaTime outputs would
-    duplicate those types at compile time (CS0436); this link only build-orders the implementation project.
-    CopyProjectReferencesToPackage: copy KZDev.PrimeTime.NodaTime.dll into this nupkg. Pattern:
-    https://josef.codes/dotnet-pack-include-referenced-projects/
-    Consumers: prefer KZDev.PrimeTime (NodaTime stack) or KZDev.SystemClock.PrimeTime (BCL-only) by design; referencing both
-    is usually unnecessary and can confuse DI/clock selection. Do not add a project or package reference to KZDev.PrimeTime.NodaTime
-    alongside this package—that would duplicate the bundled implementation.
-  -->
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveProjectReferences">
-    <MSBuild Projects="$(MSBuildThisFileDirectory)..\KZDev.PrimeTime.NodaTime\KZDev.PrimeTime.NodaTime.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">
-      <Output TaskParameter="TargetOutputs" ItemName="_NodaTimePrimaryOutput" />
-    </MSBuild>
-    <ItemGroup>
-      <BuildOutputInPackage Include="@(_NodaTimePrimaryOutput)" Condition="'%(Extension)' == '.dll'">
-        <TargetPath>%(Filename)%(Extension)</TargetPath>
-      </BuildOutputInPackage>
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <InternalsVisibleTo Include="KZDev.PrimeTime.NodaTime.UnitTests" />
+  </ItemGroup>
+
+  <Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />
+  <Import Project="..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 
 </Project>
