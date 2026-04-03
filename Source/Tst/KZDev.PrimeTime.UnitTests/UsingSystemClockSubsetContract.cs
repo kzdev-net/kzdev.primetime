@@ -10,11 +10,10 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
-///   Contract tests ensuring every BCL-facing member declared on
-///   <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> and
-///   <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> is also present on the Noda assembly types
-///   <see cref="IPrimeTime"/> and <see cref="IPrimeClock"/> with the same name, return type,
-///   and parameter types (subset / superset parity for shared surface).
+///   Contract tests ensuring every BCL-facing member declared on the subset assembly
+///   (<c>KZDev.SystemClock.PrimeTime</c>) is also present on the full-package assembly
+///   (<c>KZDev.PrimeTime</c>, built from the same shared sources plus NodaTime overload partials)
+///   with the same name, return type, and parameter types (subset / superset parity for shared surface).
 /// </summary>
 public class UsingSystemClockSubsetContract : UnitTestBase
 {
@@ -73,14 +72,97 @@ public class UsingSystemClockSubsetContract : UnitTestBase
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
     }
 
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> has a matching
+    ///   method on <see cref="IClockIntervalTimer"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> exists on
+    ///   <see cref="IClockIntervalTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> has a matching
+    ///   method on <see cref="IClockTimer"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> exists on
+    ///   <see cref="IClockTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> has a matching
+    ///   method on <see cref="IPrimeTestClock"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> exists on
+    ///   <see cref="IPrimeTestClock"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+    }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> has a matching
+    ///   method on <see cref="IClockDayTimeTimer"/> (BCL time-of-day surface is <c>#if NET</c> in shared sources; not present on
+    ///   <c>netstandard2.0</c> builds).
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> exists on
+    ///   <see cref="IClockDayTimeTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
+    }
+#endif
+
     #region Private helpers
 
     /// <summary>
     ///   Asserts that for every public instance method declared on <paramref name="subsetInterface"/>,
     ///   <paramref name="supersetInterface"/> exposes a method with the same signature shape.
     /// </summary>
-    /// <param name="subsetInterface">The SystemClock contract interface type.</param>
-    /// <param name="supersetInterface">The Noda contract interface type.</param>
+    /// <param name="subsetInterface">The SystemClock (<c>KZDev.SystemClock.PrimeTime</c>) contract interface type.</param>
+    /// <param name="supersetInterface">The full package (<c>KZDev.PrimeTime</c>) contract interface type.</param>
     private static void AssertInterfaceMethodsSubset (Type subsetInterface, Type supersetInterface)
     {
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
@@ -89,7 +171,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
         {
             MethodInfo? match = FindMatchingMethod(supersetInterface, subsetMethod, flags);
             match.Should().NotBeNull(
-                $"Noda {supersetInterface.Name} should declare a method matching SystemClock {subsetInterface.Name}.{DescribeMethod(subsetMethod)}");
+                $"Full package {supersetInterface.Name} should declare a method matching SystemClock {subsetInterface.Name}.{DescribeMethod(subsetMethod)}");
         }
     }
 
@@ -98,7 +180,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     ///   exists on <paramref name="supersetInterface"/> with the same property type.
     /// </summary>
     /// <param name="subsetInterface">The SystemClock contract interface type.</param>
-    /// <param name="supersetInterface">The Noda contract interface type.</param>
+    /// <param name="supersetInterface">The full package contract interface type.</param>
     private static void AssertInterfacePropertiesSubset (Type subsetInterface, Type supersetInterface)
     {
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
@@ -112,9 +194,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 
             PropertyInfo? superProp = supersetInterface.GetProperty(subsetProp.Name, flags);
             superProp.Should().NotBeNull(
-                $"Noda {supersetInterface.Name} should declare property {subsetProp.Name} present on SystemClock {subsetInterface.Name}");
+                $"Full package {supersetInterface.Name} should declare property {subsetProp.Name} present on SystemClock {subsetInterface.Name}");
             TypesMatchAcrossProductAssemblies(subsetProp.PropertyType, superProp!.PropertyType).Should().BeTrue(
-                $"property {subsetProp.Name} type should match between SystemClock and Noda contracts");
+                $"property {subsetProp.Name} type should match between SystemClock and full-package contracts");
         }
     }
 
@@ -146,7 +228,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     ///   return type, and parameter types).
     /// </summary>
     /// <param name="subsetMethod">The method from the SystemClock interface.</param>
-    /// <param name="supersetMethod">The candidate method from the Noda interface.</param>
+    /// <param name="supersetMethod">The candidate method from the full-package interface.</param>
     /// <returns>
     ///   <see langword="true"/> when the methods match; otherwise <see langword="false"/>.
     /// </returns>
@@ -224,10 +306,10 @@ public class UsingSystemClockSubsetContract : UnitTestBase
         }
 
         const string systemClockNs = "KZDev.SystemClock.PrimeTime";
-        const string nodaNs = "KZDev.PrimeTime";
+        const string fullPackageNs = "KZDev.PrimeTime";
         bool subsetIsSystemClock = string.Equals(subsetNs, systemClockNs, StringComparison.Ordinal);
-        bool superIsNoda = string.Equals(superNs, nodaNs, StringComparison.Ordinal);
-        if (subsetIsSystemClock && superIsNoda)
+        bool superIsFullPackage = string.Equals(superNs, fullPackageNs, StringComparison.Ordinal);
+        if (subsetIsSystemClock && superIsFullPackage)
         {
             return true;
         }
