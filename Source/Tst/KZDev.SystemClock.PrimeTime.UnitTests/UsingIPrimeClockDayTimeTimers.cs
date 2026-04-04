@@ -1,8 +1,5 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
-//
-// Unit tests for IPrimeClock RegisterTimeOfDay and RegisterAsyncTimeOfDay.
-// Uses real time; use PrimeTestClock for fully deterministic day-time timer tests.
 
 #if NET
 
@@ -15,6 +12,9 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
 ///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (local/UTC, options, Change).
 /// </summary>
+/// <remarks>
+///   Uses wall-clock delays; prefer <see cref="PrimeTestClock"/> for fully deterministic day-time timer tests.
+/// </remarks>
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
     /// <summary>

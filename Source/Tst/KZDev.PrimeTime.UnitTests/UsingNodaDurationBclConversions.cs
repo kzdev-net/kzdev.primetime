@@ -24,6 +24,10 @@ public sealed class UsingNodaDurationBclConversions
     private static readonly Duration DurationStrictlyBeyondTimeSpanMaxValue =
         Duration.FromTimeSpan(TimeSpan.MaxValue) + Duration.FromMilliseconds(1);
 
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForDelay"/> maps zero and negative
+    ///   <see cref="Duration"/> values to <see cref="TimeSpan.Zero"/> for BCL delay semantics.
+    /// </summary>
     [Fact]
     public void ToTimeSpanForDelay_WhenNonPositive_ReturnsZero ()
     {
@@ -31,12 +35,20 @@ public sealed class UsingNodaDurationBclConversions
         NodaDurationBclConversions.ToTimeSpanForDelay(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
     }
 
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForDelay"/> clamps durations above
+    ///   <see cref="TimeSpan.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
+    /// </summary>
     [Fact]
     public void ToTimeSpanForDelay_WhenExceedsTimeSpanMaxValue_ReturnsTimeSpanMaxValue ()
     {
         NodaDurationBclConversions.ToTimeSpanForDelay(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(TimeSpan.MaxValue);
     }
 
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForCancellationToken"/> caps huge
+    ///   durations at <see cref="int.MaxValue"/> milliseconds as a <see cref="TimeSpan"/>.
+    /// </summary>
     [Fact]
     public void ToTimeSpanForCancellationToken_WhenExceedsIntMillisCap_ReturnsIntMaxValueAsTimeSpan ()
     {
@@ -45,6 +57,10 @@ public sealed class UsingNodaDurationBclConversions
         ts.Should().Be(TimeSpan.FromMilliseconds(int.MaxValue));
     }
 
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> clamps positive
+    ///   durations above <see cref="TimeSpan.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
+    /// </summary>
     [Fact]
     public void ToTimeSpanForTimerInterval_WhenPositiveAndBeyondTimeSpanMaxValue_ReturnsTimeSpanMaxValue ()
     {
@@ -52,6 +68,10 @@ public sealed class UsingNodaDurationBclConversions
             TimeSpan.MaxValue);
     }
 
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> preserves
+    ///   <see cref="Timeout.InfiniteTimeSpan"/> for one-shot timer due-time registration.
+    /// </summary>
     [Fact]
     public void ToTimeSpanForTimerInterval_WhenInfiniteDueTime_PreservesInfiniteTimeSpan ()
     {

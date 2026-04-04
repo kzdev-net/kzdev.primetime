@@ -1,10 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for IPrimeTestClock and PrimeTestClock.
-// Verifies SetInstant, SetTime, SetLocalTime, Advance, RunFor, Start/Stop, ClockEvents,
-// and that Sleep, DelayAsync, time cancellation, and timers are driven by virtual time.
-
 using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
@@ -16,8 +12,15 @@ namespace KZDev.PrimeTime.UnitTests;
 /// <summary>
 ///   Unit tests for <see cref="IPrimeTestClock"/> and <see cref="PrimeTestClock"/>.
 /// </summary>
+/// <remarks>
+///   Covers set-instant/time/local-time APIs, advance and run-for, start/stop, clock events, and virtual-time-driven
+///   sleep, delay, time cancellation, and timers.
+/// </remarks>
 public class UsingIPrimeTestClock : UnitTestBase
 {
+    /// <summary>
+    ///   Wall-clock guard for loops that wait for a sleep completion flag while advancing virtual time on another path.
+    /// </summary>
     private static readonly Duration SleepTestRealTimeTimeout = Duration.FromSeconds(5);
 
     #region Constructors/Finalizers

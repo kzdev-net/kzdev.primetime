@@ -57,6 +57,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     #endregion Constructors/Finalizers
 
+    /// <summary>
+    ///   Asserts that <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a one-shot registration
+    ///   with a positive repeat interval throws <see cref="InvalidOperationException"/>.
+    /// </summary>
+    /// <param name="registration">The timer registration to exercise.</param>
     private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
     {
         Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));

@@ -1,9 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// Unit tests for PrimeClock (SUT). Delays and time-based cancellation use system time;
-// use PrimeTestClock for fully deterministic tests.
-
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
@@ -13,6 +10,10 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="PrimeClock"/> (IPrimeTime delay and time-cancellation members).
 ///   Different test genres are grouped in regions.
 /// </summary>
+/// <remarks>
+///   Delay and time-cancellation scenarios use wall-clock time; use <see cref="PrimeTestClock"/> for fully
+///   deterministic tests.
+/// </remarks>
 public class UsingPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers

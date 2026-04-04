@@ -1,8 +1,5 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
-//
-// Deterministic tests using Microsoft.Extensions.TimeProvider.Testing.FakeTimeProvider (NET only).
-// The package is not available for netstandard2.0.
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
