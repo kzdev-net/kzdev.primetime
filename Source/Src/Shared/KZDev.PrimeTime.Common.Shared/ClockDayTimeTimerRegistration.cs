@@ -18,41 +18,139 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
+    /// <summary>
+    ///   One calendar day for delay clamping when the next fire is in the past.
+    /// </summary>
     private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+
+    /// <summary>
+    ///   Monotonic id source for registrations.
+    /// </summary>
     private static int _nextId;
 
 #if NET10_OR_GREATER
+    /// <summary>
+    ///   Protects mutable registration and timer fields.
+    /// </summary>
     private readonly Lock _gate = new();
 #else
+    /// <summary>
+    ///   Protects mutable registration and timer fields.
+    /// </summary>
     private readonly object _gate = new();
 #endif
 
+    /// <summary>
+    ///   Clock used for scheduling and reading "now".
+    /// </summary>
     private IPrimeClock _clock;
+
+    /// <summary>
+    ///   When <c>true</c>, callbacks capture execution context.
+    /// </summary>
     private bool _captureContext;
+
+    /// <summary>
+    ///   Shape of the user callback delegate.
+    /// </summary>
     private IntervalTimerCallbackKind _callbackKind;
+
+    /// <summary>
+    ///   User callback delegate.
+    /// </summary>
     private Delegate _callback;
+
+    /// <summary>
+    ///   Optional state for context callbacks.
+    /// </summary>
     private object? _callbackState;
+
+    /// <summary>
+    ///   External cancellation token for this registration.
+    /// </summary>
     private CancellationToken _cancellationToken;
+
+    /// <summary>
+    ///   Registration for <see cref="_cancellationToken"/> cancellation.
+    /// </summary>
     private CancellationTokenRegistration _cancelRegistration;
+
+    /// <summary>
+    ///   Concurrent invocation policy from options.
+    /// </summary>
     private ConcurrentTriggerProcessing _concurrentTriggerProcessing;
+
+    /// <summary>
+    ///   Skipped-time behavior from options.
+    /// </summary>
     private SkippedTimeBehavior _skippedTimeBehavior;
+
+    /// <summary>
+    ///   Duplicate-trigger behavior from options.
+    /// </summary>
     private DuplicateTimeBehavior _duplicateTimeBehavior;
+
+    /// <summary>
+    ///   Unique registration id.
+    /// </summary>
     private int _id;
+
+    /// <summary>
+    ///   Underlying BCL timer between day-time fires.
+    /// </summary>
     private Timer? _timer;
+
+    /// <summary>
+    ///   Current logical timer state.
+    /// </summary>
     private TimerState _state;
+
+    /// <summary>
+    ///   When <c>false</c>, no further callbacks are scheduled.
+    /// </summary>
     private bool _enabled = true;
+
+    /// <summary>
+    ///   When <c>true</c>, this registration has been disposed.
+    /// </summary>
     private bool _disposed;
+
+    /// <summary>
+    ///   Number of callbacks currently executing.
+    /// </summary>
     private int _callbacksRunning;
+
+    /// <summary>
+    ///   When <c>true</c>, external cancellation was requested.
+    /// </summary>
     private bool _cancelRequested;
+
+    /// <summary>
+    ///   When <c>true</c>, a sequential run is pending after the current callback.
+    /// </summary>
     private bool _pendingRunSequential;
 
 #if NET
+    /// <summary>
+    ///   Whether this registration uses local time-of-day (partial).
+    /// </summary>
     private partial bool IsLocalDayTimeSchedule { get; }
 
+    /// <summary>
+    ///   Whether this registration uses UTC time-of-day (partial).
+    /// </summary>
     private partial bool IsUtcDayTimeSchedule { get; }
 
+    /// <summary>
+    ///   Applies a new local time-of-day schedule (partial).
+    /// </summary>
+    /// <param name="value">New local time of day.</param>
     private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value);
 
+    /// <summary>
+    ///   Applies a new UTC time-of-day schedule (partial).
+    /// </summary>
+    /// <param name="value">New UTC time of day.</param>
     private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value);
 
 #endif
@@ -62,6 +160,19 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   Completes initialization shared by stack-specific constructors.
     /// </summary>
+    /// <param name="clock">The clock used for scheduling and time queries.</param>
+    /// <param name="callbackKind">The kind of callback delegate to invoke.</param>
+    /// <param name="callback">The delegate invoked when the timer fires.</param>
+    /// <param name="callbackState">
+    ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
+    /// </param>
+    /// <param name="options">
+    ///   Day-time timer options, or <c>null</c> to use default option values.
+    /// </param>
+    /// <param name="cancellationToken">Token that cancels the registration.</param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     private void FinishConstruction (
         IPrimeClock clock,
         IntervalTimerCallbackKind callbackKind,
@@ -186,29 +297,60 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   Captures <see cref="RegisteredTime"/> for this day-time registration (partial).
+    /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer ();
 
+    /// <summary>
+    ///   Returns registered time in the registration basis (partial).
+    /// </summary>
     private partial DateTimeOffset GetRegisteredTimeOffset ();
 
+    /// <summary>
+    ///   Whether properties use local representation (partial).
+    /// </summary>
     private partial bool GetIsLocalTimeRepresentation ();
 
+    /// <summary>
+    ///   Computes delay until the next scheduled fire (partial).
+    /// </summary>
     private partial TimeSpan GetDelayUntilNextForTimer ();
 
+    /// <summary>
+    ///   Records the next fire from a wall-clock delay (partial).
+    /// </summary>
+    /// <param name="delay">Delay until the next tick.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
 
     /// <summary>
-    ///   Clears the next-fire marker and records the callback start instant/offset for elapsed queries.
+    ///   Clears the next-fire marker and records the callback start for elapsed-time queries (partial).
     /// </summary>
     private partial void RecordDayTimeCallbackTickStarted ();
 
+    /// <summary>
+    ///   Elapsed milliseconds since last callback while <see cref="_gate"/> is held (partial).
+    /// </summary>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
 
+    /// <summary>
+    ///   Milliseconds until next callback while <see cref="_gate"/> is held (partial).
+    /// </summary>
     private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
 
+    /// <summary>
+    ///   Converts <paramref name="delay"/> to BCL timer milliseconds when valid (partial).
+    /// </summary>
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
 
+    /// <summary>
+    ///   Retry delay when running sequential day-time triggers (partial).
+    /// </summary>
     private partial int GetRunSequentiallyRetryMilliseconds ();
 
+    /// <summary>
+    ///   Cancels the registration and disarms the BCL timer.
+    /// </summary>
     private void OnCancelRequested ()
     {
         lock (_gate)
@@ -222,6 +364,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   Computes and arms the next day-time callback.
+    /// </summary>
     private void ScheduleNext ()
     {
         lock (_gate)
@@ -241,6 +386,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   Re-arms the timer after a short delay for sequential trigger retry.
+    /// </summary>
     private void ScheduleNextAfterShortDelay ()
     {
         lock (_gate)
@@ -257,6 +405,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   BCL timer callback for the next day-time fire.
+    /// </summary>
+    /// <param name="_">Unused state object.</param>
     private void OnTimerTick (object? _)
     {
         lock (_gate)
@@ -320,6 +472,12 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   Invokes the user callback synchronously or starts async completion handling.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///   <see cref="_callbackKind"/> is not supported.
+    /// </exception>
     private void RunCallback ()
     {
         void InvokeSync (Action run)
@@ -368,6 +526,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
 
+    /// <summary>
+    ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
+    /// </summary>
+    /// <param name="run">Async callback invocation.</param>
     private void RunAsyncAndScheduleAfter (Func<ValueTask> run)
     {
         ValueTask vt = run();
@@ -386,6 +548,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             TaskScheduler.Default);
     }
 
+    /// <summary>
+    ///   Decrements in-flight count after async work and schedules the next fire.
+    /// </summary>
     private void ScheduleNextFromAsync ()
     {
         lock (_gate)

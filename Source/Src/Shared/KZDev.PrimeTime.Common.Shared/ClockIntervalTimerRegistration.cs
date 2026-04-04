@@ -14,34 +14,111 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTimer
 {
+    /// <summary>
+    ///   Monotonic id assigned to each registration.
+    /// </summary>
     private static int _nextId;
+
+    /// <summary>
+    ///   Clock used for scheduling and reading "now".
+    /// </summary>
     private readonly IPrimeClock _clock;
+
+    /// <summary>
+    ///   When <c>true</c>, timer callbacks capture execution context.
+    /// </summary>
     private readonly bool _captureContext;
+
+    /// <summary>
+    ///   Shape of the user callback delegate.
+    /// </summary>
     private readonly IntervalTimerCallbackKind _callbackKind;
+
+    /// <summary>
+    ///   User callback delegate.
+    /// </summary>
     private readonly Delegate _callback;
+
+    /// <summary>
+    ///   Optional state for context callbacks.
+    /// </summary>
     private readonly object? _callbackState;
+
+    /// <summary>
+    ///   External cancellation token for this registration.
+    /// </summary>
     private readonly CancellationToken _cancellationToken;
+
+    /// <summary>
+    ///   Registration for <see cref="_cancellationToken"/> cancellation.
+    /// </summary>
     private readonly CancellationTokenRegistration _cancelRegistration;
+
 #if NET10_OR_GREATER
+    /// <summary>
+    ///   Protects mutable registration and timer fields.
+    /// </summary>
     private readonly Lock _gate = new();
 #else
+    /// <summary>
+    ///   Protects mutable registration and timer fields.
+    /// </summary>
     private readonly object _gate = new();
 #endif
+
+    /// <summary>
+    ///   Current logical <see cref="IClockTimer.State"/>.
+    /// </summary>
     private TimerState _state;
+
+    /// <summary>
+    ///   Underlying BCL one-shot timer used between callbacks.
+    /// </summary>
     private Timer? _timer;
+
+    /// <summary>
+    ///   When <c>false</c>, no further callbacks are scheduled.
+    /// </summary>
     private bool _enabled = true;
+
+    /// <summary>
+    ///   When <c>true</c>, this registration has been disposed.
+    /// </summary>
     private bool _disposed;
+
+    /// <summary>
+    ///   Number of callbacks currently executing.
+    /// </summary>
     private int _callbacksRunning;
+
+    /// <summary>
+    ///   When <c>true</c>, external cancellation was requested.
+    /// </summary>
     private bool _cancelRequested;
 
+    /// <summary>
+    ///   Initial delay and current per-tick delay basis (stack-specific partial).
+    /// </summary>
     private partial TimeSpan InitialCallbackTimeSpan { get; set; }
 
+    /// <summary>
+    ///   Repeat interval between callbacks, or infinite for one-shot.
+    /// </summary>
     private partial TimeSpan RepeatTimeSpanInterval { get; set; }
 
+    /// <summary>
+    ///   Next scheduled callback instant in UTC-offset form (partial).
+    /// </summary>
     private partial DateTimeOffset? NextCallbackUtc { get; set; }
 
+    /// <summary>
+    ///   Last callback start instant in UTC-offset form (partial).
+    /// </summary>
     private partial DateTimeOffset? LastCallbackUtc { get; set; }
 
+    /// <summary>
+    ///   Whether this registration repeats after the first fire.
+    /// </summary>
     private partial bool IsRepeatingTimer { get; }
 
     #region Constructors/Finalizers
@@ -75,6 +152,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <param name="cancellationToken">
     ///   Token to cancel the registration.
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     internal ClockIntervalTimerRegistration (IPrimeClock clock,
         TimeSpan initialCallbackTime,
         TimeSpan repeatInterval,
@@ -200,10 +280,19 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
+    /// <summary>
+    ///   Captures <see cref="RegisteredTime"/> from the clock per local/UTC option (partial).
+    /// </summary>
     private partial void CaptureRegisteredTime ();
 
+    /// <summary>
+    ///   Returns <see cref="RegisteredTime"/> in the registration time basis (partial).
+    /// </summary>
     private partial DateTimeOffset GetRegisteredTime ();
 
+    /// <summary>
+    ///   Computes elapsed milliseconds since last callback per contract (partial).
+    /// </summary>
     private partial long GetElapsedTime ();
 
     /// <summary>
@@ -227,6 +316,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// </summary>
     private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ();
 
+    /// <summary>
+    ///   Cancels the registration and disarms the BCL timer.
+    /// </summary>
     private void OnCancelRequested ()
     {
         lock (_gate)
@@ -240,6 +332,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
+    /// <summary>
+    ///   Schedules or reschedules the next callback after <paramref name="delay"/>.
+    /// </summary>
+    /// <param name="delay">Delay until the next tick.</param>
     private void ScheduleNext (TimeSpan delay)
     {
         if (!TryGetTimerMillisecondsForSchedule(delay, out int ms))
@@ -251,6 +347,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer.Change(ms, Timeout.Infinite);
     }
 
+    /// <summary>
+    ///   BCL timer callback: runs on a thread-pool thread and invokes the user callback.
+    /// </summary>
+    /// <param name="_">Unused state object.</param>
     private void OnTimerTick (object? _)
     {
         lock (_gate)
@@ -285,6 +385,15 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
+    /// <summary>
+    ///   Dispatches the user callback synchronously or starts async completion handling.
+    /// </summary>
+    /// <param name="stateDuringCallback">Timer state set for the duration of the callback.</param>
+    /// <param name="resetAfter">Whether repeat interval resets after completion.</param>
+    /// <param name="isRepeating">Whether this is a repeating registration.</param>
+    /// <exception cref="InvalidOperationException">
+    ///   <see cref="_callbackKind"/> is not supported.
+    /// </exception>
     private void RunCallback (TimerState stateDuringCallback, bool resetAfter, bool isRepeating)
     {
         void InvokeSync (Action run)
@@ -339,6 +448,12 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         OnSyncCallbackCompleted(resetAfter, isRepeating);
     }
 
+    /// <summary>
+    ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
+    /// </summary>
+    /// <param name="run">Async callback invocation.</param>
+    /// <param name="resetAfter">Whether repeat interval resets after completion.</param>
+    /// <param name="isRepeating">Whether this is a repeating registration.</param>
     private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating)
     {
         ValueTask vt = run();
@@ -359,6 +474,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             TaskScheduler.Default);
     }
 
+    /// <summary>
+    ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
+    /// </summary>
+    /// <param name="resetAfter">Unused; reserved for symmetry with async path.</param>
+    /// <param name="isRepeating">Whether this registration repeats.</param>
     private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating)
     {
         lock (_gate)
@@ -376,6 +496,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
+    /// <summary>
+    ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.
+    /// </summary>
+    /// <param name="resetAfter">Unused; reserved for symmetry with sync path.</param>
+    /// <param name="isRepeating">Whether this registration repeats.</param>
     private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating)
     {
         lock (_gate)

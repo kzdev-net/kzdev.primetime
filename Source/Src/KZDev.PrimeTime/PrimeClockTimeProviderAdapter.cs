@@ -1,9 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-// TimeProvider adapter for IPrimeClock so code using TimeProvider gets time and timers from the
-// PrimeTime NodaTime clock (production or test).
-
 using System.Threading;
 using System.Threading.Tasks;
 using NodaTime;
@@ -28,6 +25,12 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
         #region Constructors/Finalizers
 
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="PrimeClockTimerToITimerAdapter"/> class.
+        /// </summary>
+        /// <param name="registration">
+        ///   The underlying PrimeTime interval timer registration.
+        /// </param>
         internal PrimeClockTimerToITimerAdapter (IClockIntervalTimer registration)
         {
             _registration = registration;
@@ -38,6 +41,10 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         #region Interface Implementations
 
         /// <inheritdoc />
+        /// <exception cref="InvalidOperationException">
+        ///   The underlying <see cref="IClockIntervalTimer"/> rejects the change (for example, converting a
+        ///   one-shot registration to repeating).
+        /// </exception>
         public bool Change (TimeSpan dueTime, TimeSpan period)
         {
             Duration next = Duration.FromTimeSpan(dueTime);
@@ -91,6 +98,9 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
 
     /// <inheritdoc />
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     public override ITimer CreateTimer (TimerCallback callback,
         object? state,
         TimeSpan dueTime,

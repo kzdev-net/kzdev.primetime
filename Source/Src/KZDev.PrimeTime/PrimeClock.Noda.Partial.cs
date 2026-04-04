@@ -15,8 +15,12 @@ internal sealed partial class PrimeClock
 {
 #if NET
     /// <summary>
-    ///   Converts a <see cref="TimeOnly"/> (wall-clock) to <see cref="LocalTime"/> for Noda day-time scheduling.
+    ///   Converts a <see cref="TimeOnly"/> wall-clock value to <see cref="LocalTime"/> for Noda day-time scheduling.
     /// </summary>
+    /// <param name="t">The wall-clock time of day.</param>
+    /// <returns>
+    ///   The equivalent Noda <see cref="LocalTime"/>.
+    /// </returns>
     private static LocalTime TimeOnlyToLocalTime (TimeOnly t) =>
         new(t.Hour, t.Minute, t.Second, t.Millisecond);
 

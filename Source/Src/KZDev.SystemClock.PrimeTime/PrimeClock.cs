@@ -14,6 +14,9 @@ namespace KZDev.SystemClock.PrimeTime;
 /// </remarks>
 internal sealed partial class PrimeClock
 {
+    /// <summary>
+    ///   The <see cref="TimeProvider"/> used for current UTC and local time (<see cref="GetUtcNow"/> and related APIs).
+    /// </summary>
     private readonly TimeProvider _timeProvider;
 
     #region Constructors/Finalizers
@@ -34,6 +37,9 @@ internal sealed partial class PrimeClock
     /// <param name="timeProvider">
     ///   The time provider used to obtain the current UTC and local time.
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="timeProvider"/> is <c>null</c>.
+    /// </exception>
     public PrimeClock (TimeProvider timeProvider)
     {
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));

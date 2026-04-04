@@ -20,11 +20,19 @@ namespace KZDev.PrimeTime;
 /// </remarks>
 public sealed class TimeCancellationTokenSource : IDisposable
 {
-    // Token exposed via Token; disposed with this wrapper.
+    /// <summary>
+    ///   Primary source whose <see cref="Token"/> is exposed; disposed when this wrapper is disposed.
+    /// </summary>
     private readonly CancellationTokenSource _primary;
-    // Extra CTS instances created for linking (e.g. time-based source) that must be disposed with the wrapper.
+
+    /// <summary>
+    ///   Optional extra sources (for example the time-based leg of a linked token) disposed with this wrapper.
+    /// </summary>
     private readonly CancellationTokenSource[]? _additionalToDispose;
-    // Non-zero after Dispose completes; read with Volatile for thread-safe disposal checks.
+
+    /// <summary>
+    ///   Non-zero after <see cref="Dispose"/> completes; read with <see cref="Volatile"/> for disposal checks.
+    /// </summary>
     private int _disposed;
 
     #region Constructors/Finalizers
@@ -40,7 +48,7 @@ public sealed class TimeCancellationTokenSource : IDisposable
     ///   time-based sources). May be null or empty.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    ///   <paramref name="primary"/> is null.
+    ///   <paramref name="primary"/> is <c>null</c>.
     /// </exception>
     internal TimeCancellationTokenSource (CancellationTokenSource primary,
         CancellationTokenSource[]? additionalToDispose = null)
@@ -104,10 +112,11 @@ public sealed class TimeCancellationTokenSource : IDisposable
     ///   True if an exception should be thrown if cancellation is successful; otherwise false.
     /// </param>
     /// <remarks>
-    ///   Delegates to <see cref="CancellationTokenSource.Cancel(bool)"/>; when
+    ///   Delegates to <see cref="CancellationTokenSource.Cancel(bool)"/>. When
     ///   <paramref name="throwOnFirstException"/> is <c>true</c>, the first exception from a
-    ///   registered cancellation callback is propagated; otherwise an
-    ///   <see cref="AggregateException"/> may be thrown when multiple callbacks fail.
+    ///   failing registered callback is thrown directly (see the BCL method). When it is
+    ///   <c>false</c>, failures from multiple callbacks may be wrapped in an
+    ///   <see cref="AggregateException"/>.
     /// </remarks>
     /// <exception cref="AggregateException">
     ///   <paramref name="throwOnFirstException"/> is <c>false</c> and one or more registered

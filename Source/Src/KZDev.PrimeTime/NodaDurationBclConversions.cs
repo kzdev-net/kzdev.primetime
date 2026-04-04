@@ -14,7 +14,15 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal static class NodaDurationBclConversions
 {
+    /// <summary>
+    ///   Largest <see cref="Duration"/> that maps to <see cref="TimeSpan.MaxValue"/> for BCL delay and sleep APIs.
+    /// </summary>
     private static readonly Duration MaxDurationForDelay = Duration.FromTimeSpan(TimeSpan.MaxValue);
+
+    /// <summary>
+    ///   Largest <see cref="Duration"/> that maps to a span of <c>int.MaxValue</c> milliseconds for
+    ///   <see cref="CancellationTokenSource"/> timer construction.
+    /// </summary>
     private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
 
     /// <summary>
@@ -28,6 +36,10 @@ internal static class NodaDurationBclConversions
     ///   <see cref="TimeSpan.Zero"/> when <paramref name="duration"/> is zero or negative,
     ///   <see cref="TimeSpan.MaxValue"/> when it exceeds the BCL representable range, otherwise the equivalent span.
     /// </returns>
+    /// <exception cref="OverflowException">
+    ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
+    ///   <see cref="TimeSpan"/> in the branch that calls it.
+    /// </exception>
     internal static TimeSpan ToTimeSpanForDelay (Duration duration)
     {
         if (duration <= Duration.Zero)
@@ -54,6 +66,10 @@ internal static class NodaDurationBclConversions
     ///   <see cref="TimeSpan.Zero"/> when <paramref name="duration"/> is zero or negative; otherwise a span capped at
     ///   <c>int.MaxValue</c> milliseconds when the duration exceeds that limit.
     /// </returns>
+    /// <exception cref="OverflowException">
+    ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
+    ///   <see cref="TimeSpan"/> in the branch that calls it.
+    /// </exception>
     internal static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
     {
         if (duration <= Duration.Zero)
@@ -88,6 +104,10 @@ internal static class NodaDurationBclConversions
     ///   <see cref="TimeSpan"/> values passed into shared timer and virtual-time registration (including
     ///   non-positive and sentinel spans such as <see cref="Timeout.InfiniteTimeSpan"/>).
     /// </remarks>
+    /// <exception cref="OverflowException">
+    ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
+    ///   <see cref="TimeSpan"/>.
+    /// </exception>
     internal static TimeSpan ToTimeSpanForTimerInterval (Duration duration)
     {
         if (duration > Duration.Zero && duration >= MaxDurationForDelay)

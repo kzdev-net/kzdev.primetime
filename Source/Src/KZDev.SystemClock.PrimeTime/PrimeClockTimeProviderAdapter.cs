@@ -43,6 +43,10 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         #region Interface Implementations
 
         /// <inheritdoc />
+        /// <exception cref="InvalidOperationException">
+        ///   The underlying <see cref="IClockIntervalTimer"/> rejects the change (for example, converting a
+        ///   one-shot registration to repeating).
+        /// </exception>
         public bool Change (TimeSpan dueTime, TimeSpan period)
         {
             TimeSpan repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
@@ -95,6 +99,9 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
 
     /// <inheritdoc />
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="callback"/> is <c>null</c>.
+    /// </exception>
     public override ITimer CreateTimer (TimerCallback callback,
         object? state,
         TimeSpan dueTime,

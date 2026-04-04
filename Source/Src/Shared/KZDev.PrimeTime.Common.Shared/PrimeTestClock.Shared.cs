@@ -1,10 +1,7 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -23,27 +20,59 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 {
     #region Nested types — Pending delay and time expiry
 
+    /// <summary>
+    ///   A virtual-time delay that completes a <see cref="TaskCompletionSource{TResult}"/> when
+    ///   <see cref="PrimeTestClock.Advance"/> reaches <see cref="DueUtc"/>.
+    /// </summary>
     private sealed class PendingDelay
     {
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="PendingDelay"/> class.
+        /// </summary>
+        /// <param name="dueUtc">Virtual UTC instant when the delay completes.</param>
+        /// <param name="taskCompletionSource">Completion source signaled when due.</param>
         public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> taskCompletionSource)
         {
             DueUtc = dueUtc;
             TaskCompletionSource = taskCompletionSource;
         }
 
+        /// <summary>
+        ///   Gets the virtual UTC instant when this delay completes.
+        /// </summary>
         public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the task completion source completed when the delay elapses.
+        /// </summary>
         public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
 
+        /// <summary>
+        ///   Completes the delay successfully if not already completed.
+        /// </summary>
         public void Complete ()
         {
             TaskCompletionSource.TrySetResult(true);
         }
     }
 
+    /// <summary>
+    ///   A time-based cancellation entry that cancels its wrapper when virtual UTC reaches
+    ///   <see cref="ExpireUtc"/>.
+    /// </summary>
     private sealed class TimeExpiryEntry
     {
+        /// <summary>
+        ///   Cancellation wrapper whose token is cancelled when virtual time reaches <see cref="ExpireUtc"/>.
+        /// </summary>
         private readonly TimeCancellationTokenSource _wrapper;
 
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="TimeExpiryEntry"/> class.
+        /// </summary>
+        /// <param name="expireUtc">Virtual UTC instant when cancellation is requested.</param>
+        /// <param name="wrapper">Wrapper whose token should be cancelled at expiry.</param>
+        /// <param name="timeCts">Unused; reserved for future use.</param>
         public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
             CancellationTokenSource? timeCts = null)
         {
@@ -51,8 +80,14 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             _wrapper = wrapper;
         }
 
+        /// <summary>
+        ///   Gets the virtual UTC instant when cancellation is requested.
+        /// </summary>
         public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
 
+        /// <summary>
+        ///   Requests cancellation on the wrapper, ignoring <see cref="ObjectDisposedException"/> if already disposed.
+        /// </summary>
         public void Cancel ()
         {
             try
@@ -70,31 +105,114 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     #region Nested types — Virtual interval timer
 
+    /// <summary>
+    ///   Base type for virtual interval timers scheduled against <see cref="PrimeTestClock"/> time.
+    /// </summary>
     private abstract partial class VirtualIntervalTimerBase : IClockIntervalTimer
     {
+        /// <summary>
+        ///   When <c>true</c>, registration uses local-offset representation for registered time.
+        /// </summary>
         private readonly bool _isLocalTimeRepresentation;
+
+        /// <summary>
+        ///   When <c>true</c>, repeat interval is measured from callback completion.
+        /// </summary>
         private readonly bool _resetAfterCallback;
 
+        /// <summary>
+        ///   Gets the owning test clock.
+        /// </summary>
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the callback delegate shape for this registration.
+        /// </summary>
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the user callback delegate.
+        /// </summary>
         protected Delegate Callback { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets optional state passed to context-based callbacks.
+        /// </summary>
         protected object? CallbackState { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the cancellation token associated with this registration.
+        /// </summary>
         protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
+
 #if NET10_OR_GREATER
+        /// <summary>
+        ///   Synchronizes access to this registration's mutable fields.
+        /// </summary>
         protected Lock Gate { [DebuggerStepThrough] get; } = new();
 #else
+        /// <summary>
+        ///   Synchronizes access to this registration's mutable fields.
+        /// </summary>
         protected object Gate { [DebuggerStepThrough] get; } = new();
 #endif
+
+        /// <summary>
+        ///   Gets or sets the virtual UTC instant of the next scheduled callback, if any.
+        /// </summary>
         protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets the virtual UTC instant when the last callback started, if any.
+        /// </summary>
         protected DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets the logical timer state.
+        /// </summary>
         protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+
+        /// <summary>
+        ///   Gets or sets whether further callbacks may be scheduled.
+        /// </summary>
         protected bool IntervalTimerEnabled { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = true;
+
+        /// <summary>
+        ///   Gets or sets whether this registration has been disposed.
+        /// </summary>
         protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets whether external cancellation was requested.
+        /// </summary>
         protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets how many callbacks are currently in flight.
+        /// </summary>
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets the delay until the first or next rescheduled callback.
+        /// </summary>
         protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets the repeat interval, or <see cref="Timeout.InfiniteTimeSpan"/> for one-shot.
+        /// </summary>
         protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
 
+        /// <summary>
+        ///   Initializes base state for a virtual interval timer registration.
+        /// </summary>
+        /// <param name="clock">The test clock that owns this registration.</param>
+        /// <param name="initialCallbackTime">Delay until the first callback.</param>
+        /// <param name="repeatInterval">Repeat interval, or infinite for one-shot.</param>
+        /// <param name="callbackKind">Callback delegate shape.</param>
+        /// <param name="callback">The callback delegate.</param>
+        /// <param name="callbackState">Optional state for context callbacks.</param>
+        /// <param name="options">Interval options, or <c>null</c> for defaults.</param>
+        /// <param name="cancellationToken">Token that cancels this registration.</param>
         protected VirtualIntervalTimerBase (PrimeTestClock clock,
             TimeSpan initialCallbackTime,
             TimeSpan repeatInterval,
@@ -130,17 +248,35 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public int Id { [DebuggerStepThrough] get; }
+
+        /// <inheritdoc />
         public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+
+        /// <inheritdoc />
         public bool IsTimeOfDay => false;
+
+        /// <inheritdoc />
         public bool IsRepeating => RepeatInterval != Timeout.InfiniteTimeSpan && RepeatInterval > TimeSpan.Zero;
+
+        /// <inheritdoc />
         public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
+
+        /// <inheritdoc />
         public bool IsCancelled => State == TimerState.Cancelled;
+
+        /// <inheritdoc />
         public bool IsLocalTimeRepresentation => _isLocalTimeRepresentation;
+
+        /// <inheritdoc />
         public bool IsActive =>
             State != TimerState.Cancelled && State != TimerState.Disposed && IntervalTimerEnabled;
+
+        /// <inheritdoc />
         public bool CallbacksProcessing => CallbacksRunning > 0;
 
+        /// <inheritdoc />
         public bool Enabled
         {
             get => IntervalTimerEnabled && !IsCancelled && State != TimerState.Disposed;
@@ -158,8 +294,10 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         TimerState IClockTimer.State => State;
 
+        /// <inheritdoc />
         public long ElapsedTime
         {
             get
@@ -178,6 +316,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public long TimeUntilNextCallback
         {
             get
@@ -198,6 +337,13 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Returns whether this registration is due at the given virtual UTC instant.
+        /// </summary>
+        /// <param name="now">Current virtual UTC time from the test clock.</param>
+        /// <returns>
+        ///   <c>true</c> if a callback should run at <paramref name="now"/>; otherwise <c>false</c>.
+        /// </returns>
         public bool IsDue (DateTimeOffset now)
         {
             lock (Gate)
@@ -210,8 +356,15 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Runs the callback when this registration is due at <paramref name="now"/>.
+        /// </summary>
+        /// <param name="now">Virtual UTC instant passed from <see cref="PrimeTestClock.Advance"/>.</param>
         public abstract void RunDueCallback (DateTimeOffset now);
 
+        /// <summary>
+        ///   Handles cancellation token registration: marks cancelled and removes from the clock.
+        /// </summary>
         protected void OnCancelRequested ()
         {
             lock (Gate)
@@ -226,9 +379,14 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Clock.RemoveIntervalTimer(this);
         }
 
+        /// <inheritdoc />
         public bool Change (TimeSpan interval) =>
             Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
 
+        /// <inheritdoc />
+        /// <exception cref="InvalidOperationException">
+        ///   This registration is one-shot and <paramref name="repeatInterval"/> is a finite positive interval.
+        /// </exception>
         public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
         {
             lock (Gate)
@@ -248,6 +406,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public void Cancel ()
         {
             lock (Gate)
@@ -262,6 +421,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Clock.RemoveIntervalTimer(this);
         }
 
+        /// <inheritdoc />
         public bool Stop ()
         {
             lock (Gate)
@@ -274,6 +434,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public bool Start ()
         {
             lock (Gate)
@@ -289,6 +450,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public void Dispose ()
         {
             lock (Gate)
@@ -304,8 +466,22 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
     }
 
+    /// <summary>
+    ///   Virtual interval timer implementation that invokes the user callback when due.
+    /// </summary>
     private sealed partial class VirtualIntervalTimer : VirtualIntervalTimerBase
     {
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="VirtualIntervalTimer"/> class.
+        /// </summary>
+        /// <param name="clock">The owning test clock.</param>
+        /// <param name="initialCallbackTime">Delay until the first callback.</param>
+        /// <param name="repeatInterval">Repeat interval, or infinite for one-shot.</param>
+        /// <param name="callbackKind">Callback delegate shape.</param>
+        /// <param name="callback">The callback delegate.</param>
+        /// <param name="callbackState">Optional callback state.</param>
+        /// <param name="options">Interval options, or <c>null</c> for defaults.</param>
+        /// <param name="cancellationToken">Token that cancels this registration.</param>
         public VirtualIntervalTimer (PrimeTestClock clock,
             TimeSpan initialCallbackTime,
             TimeSpan repeatInterval,
@@ -318,6 +494,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         {
         }
 
+        /// <inheritdoc />
         public override void RunDueCallback (DateTimeOffset now)
         {
             bool resetAfter;
@@ -350,6 +527,15 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Invokes the registered callback synchronously or schedules async completion.
+        /// </summary>
+        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="isRepeating">Whether this is a repeating timer.</param>
+        /// <param name="now">Virtual instant at which the callback was due.</param>
+        /// <exception cref="InvalidOperationException">
+        ///   <see cref="CallbackKind"/> is not supported.
+        /// </exception>
         private void RunCallback (bool resetAfter, bool isRepeating, DateTimeOffset now)
         {
             void InvokeSync (Action run)
@@ -389,6 +575,13 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             OnSyncCallbackCompleted(resetAfter, isRepeating, now);
         }
 
+        /// <summary>
+        ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
+        /// </summary>
+        /// <param name="run">The async callback invocation.</param>
+        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="isRepeating">Whether this is a repeating timer.</param>
+        /// <param name="now">Virtual instant at which the callback was due.</param>
         private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating, DateTimeOffset now)
         {
             ValueTask vt = run();
@@ -410,6 +603,12 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                 TaskScheduler.Default);
         }
 
+        /// <summary>
+        ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
+        /// </summary>
+        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="isRepeating">Whether this is a repeating timer.</param>
+        /// <param name="now">Virtual instant when the callback ran.</param>
         private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
         {
             lock (Gate)
@@ -427,6 +626,12 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.
+        /// </summary>
+        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="isRepeating">Whether this is a repeating timer.</param>
+        /// <param name="now">Virtual instant when the callback ran.</param>
         private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
         {
             lock (Gate)
@@ -450,22 +655,63 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 #if NET || !SYSTEMCLOCK
     #region Nested types — Virtual day-time timer
 
+    /// <summary>
+    ///   Base type for virtual time-of-day timers driven by <see cref="PrimeTestClock"/> time.
+    /// </summary>
     private abstract partial class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
+        /// <summary>
+        ///   One calendar day as a <see cref="TimeSpan"/> for arithmetic in partial implementations.
+        /// </summary>
         private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
+        /// <summary>
+        ///   Gets the owning test clock.
+        /// </summary>
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets whether this registration uses local time-of-day versus UTC time-of-day.
+        /// </summary>
         protected bool IsLocal { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the callback delegate shape for this registration.
+        /// </summary>
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the user callback delegate.
+        /// </summary>
         protected Delegate Callback { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets optional state passed to context-based callbacks.
+        /// </summary>
         protected object? CallbackState { [DebuggerStepThrough] get; }
+
+        /// <summary>
+        ///   Gets the cancellation token associated with this registration.
+        /// </summary>
         protected CancellationToken CancellationToken { [DebuggerStepThrough] get; }
+
 #if NET10_OR_GREATER
+        /// <summary>
+        ///   Synchronizes access to this registration's mutable fields.
+        /// </summary>
         protected Lock Gate { [DebuggerStepThrough] get; } = new();
 #else
+        /// <summary>
+        ///   Synchronizes access to this registration's mutable fields.
+        /// </summary>
         protected object Gate { [DebuggerStepThrough] get; } = new();
 #endif
+
+        /// <summary>
+        ///   Gets or sets the next scheduled callback instant in UTC.
+        /// </summary>
         protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
         /// <summary>
         ///   The instant of the last callback.
         /// </summary>
@@ -514,19 +760,63 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         ///   </para>
         /// </remarks>
         protected DateTimeOffset? LastCallbackAt { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets the logical timer state.
+        /// </summary>
         protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
+
+        /// <summary>
+        ///   Gets or sets whether day-time callbacks are enabled.
+        /// </summary>
         protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
+
+        /// <summary>
+        ///   Gets or sets whether this registration has been disposed.
+        /// </summary>
         protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets whether external cancellation was requested.
+        /// </summary>
         protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Gets or sets how many callbacks are currently in flight.
+        /// </summary>
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
         /// <summary>
         ///   Time of day since local or UTC midnight (depending on <see cref="IsLocal"/>).
         /// </summary>
         protected TimeSpan TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+        /// <summary>
+        ///   Concurrent invocation policy copied from registration options.
+        /// </summary>
         private readonly ConcurrentTriggerProcessing _concurrentTriggerProcessing;
+
+        /// <summary>
+        ///   Skipped-time policy copied from registration options.
+        /// </summary>
         private readonly SkippedTimeBehavior _skippedTimeBehavior;
+
+        /// <summary>
+        ///   Duplicate-trigger policy copied from registration options.
+        /// </summary>
         private readonly DuplicateTimeBehavior _duplicateTimeBehavior;
 
+        /// <summary>
+        ///   Initializes base state for a virtual day-time timer registration.
+        /// </summary>
+        /// <param name="clock">The owning test clock.</param>
+        /// <param name="isLocal"><c>true</c> for local time-of-day; <c>false</c> for UTC.</param>
+        /// <param name="targetTimeOfDay">Time of day since midnight in the chosen basis.</param>
+        /// <param name="callbackKind">Callback delegate shape.</param>
+        /// <param name="callback">The callback delegate.</param>
+        /// <param name="callbackState">Optional callback state.</param>
+        /// <param name="options">Day-time options, or <c>null</c> for defaults.</param>
+        /// <param name="cancellationToken">Token that cancels this registration.</param>
         protected VirtualDayTimeTimerBase (PrimeTestClock clock,
             bool isLocal,
             TimeSpan targetTimeOfDay,
@@ -562,20 +852,44 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public int Id { [DebuggerStepThrough] get; }
+
+        /// <inheritdoc />
         public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+
+        /// <inheritdoc />
         public bool IsTimeOfDay => true;
+
+        /// <inheritdoc />
         public bool IsResetAfterCallback => false;
+
+        /// <inheritdoc />
         public bool IsLocalTimeRepresentation => IsLocal;
+
+        /// <inheritdoc />
         public bool IsRepeating => true;
+
+        /// <inheritdoc />
         public bool IsCancelled => State == TimerState.Cancelled;
+
+        /// <inheritdoc />
         public bool IsActive =>
             State != TimerState.Cancelled && State != TimerState.Disposed && EnabledDayTime;
+
+        /// <inheritdoc />
         public bool CallbacksProcessing => CallbacksRunning > 0;
+
+        /// <inheritdoc />
         public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get => _concurrentTriggerProcessing; }
+
+        /// <inheritdoc />
         public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get => _skippedTimeBehavior; }
+
+        /// <inheritdoc />
         public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get => _duplicateTimeBehavior; }
 
+        /// <inheritdoc />
         public bool Enabled
         {
             get => EnabledDayTime && !IsCancelled && State != TimerState.Disposed;
@@ -600,6 +914,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         TimerState IClockTimer.State => State;
 
         /// <summary>
@@ -615,6 +930,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         protected DateTimeOffset GetOffsetRepresentationForTimer (DateTimeOffset virtualUtcInstant) =>
             IsLocal ? Clock.ToLocalOffset(virtualUtcInstant) : virtualUtcInstant;
 
+        /// <inheritdoc />
         public long ElapsedTime
         {
             get
@@ -633,6 +949,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public long TimeUntilNextCallback
         {
             get
@@ -650,6 +967,13 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Returns whether this day-time registration is due at the given virtual UTC instant.
+        /// </summary>
+        /// <param name="now">Current virtual UTC time from the test clock.</param>
+        /// <returns>
+        ///   <c>true</c> if a callback should run at <paramref name="now"/>; otherwise <c>false</c>.
+        /// </returns>
         public bool IsDue (DateTimeOffset now)
         {
             lock (Gate)
@@ -662,8 +986,17 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Runs the day-time callback when due at <paramref name="now"/>.
+        /// </summary>
+        /// <param name="now">Virtual UTC instant from <see cref="PrimeTestClock.Advance"/>.</param>
         public abstract void RunDueCallback (DateTimeOffset now);
 
+        /// <summary>
+        ///   Computes the next UTC instant when <see cref="TargetTimeOfDay"/> should fire on or after <paramref name="now"/>.
+        /// </summary>
+        /// <param name="now">Current virtual UTC instant.</param>
+        /// <returns>The next scheduled fire instant in UTC, or <c>null</c> if not applicable.</returns>
         protected DateTimeOffset? ComputeNextDue (DateTimeOffset now)
         {
             if (IsLocal)
@@ -682,6 +1015,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Handles cancellation: marks the registration cancelled and removes it from the clock.
+        /// </summary>
         protected void OnCancelRequested ()
         {
             lock (Gate)
@@ -697,6 +1033,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
 
 #if NET
+        /// <inheritdoc />
         public bool Change (LocalTimeOfDay newTimeOfDay)
         {
             if (!IsLocal)
@@ -712,6 +1049,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public bool Change (UtcTimeOfDay newTimeOfDay)
         {
             if (IsLocal)
@@ -728,6 +1066,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
 #endif
 
+        /// <inheritdoc />
         public void Cancel ()
         {
             lock (Gate)
@@ -742,6 +1081,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Clock.RemoveDayTimeTimer(this);
         }
 
+        /// <inheritdoc />
         public bool Stop ()
         {
             lock (Gate)
@@ -754,6 +1094,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public bool Start ()
         {
             lock (Gate)
@@ -769,6 +1110,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <inheritdoc />
         public void Dispose ()
         {
             lock (Gate)
@@ -784,8 +1126,22 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
     }
 
+    /// <summary>
+    ///   Virtual day-time timer that invokes the user callback when the scheduled time-of-day is reached.
+    /// </summary>
     private sealed partial class VirtualDayTimeTimer : VirtualDayTimeTimerBase
     {
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="VirtualDayTimeTimer"/> class.
+        /// </summary>
+        /// <param name="clock">The owning test clock.</param>
+        /// <param name="isLocal"><c>true</c> for local time-of-day; <c>false</c> for UTC.</param>
+        /// <param name="targetTimeOfDay">Time of day since midnight in the chosen basis.</param>
+        /// <param name="callbackKind">Callback delegate shape.</param>
+        /// <param name="callback">The callback delegate.</param>
+        /// <param name="callbackState">Optional callback state.</param>
+        /// <param name="options">Day-time options, or <c>null</c> for defaults.</param>
+        /// <param name="cancellationToken">Token that cancels this registration.</param>
         public VirtualDayTimeTimer (PrimeTestClock clock,
             bool isLocal,
             TimeSpan targetTimeOfDay,
@@ -798,6 +1154,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         {
         }
 
+        /// <inheritdoc />
         public override void RunDueCallback (DateTimeOffset now)
         {
             lock (Gate)
@@ -826,6 +1183,12 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
 
+        /// <summary>
+        ///   Invokes the registered synchronous or async-blocking callback.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///   <see cref="VirtualDayTimeTimerBase.CallbackKind"/> is not supported.
+        /// </exception>
         private void RunCallback ()
         {
             switch (CallbackKind)
@@ -865,6 +1228,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// </summary>
     private abstract partial class VirtualIntervalTimerBase
     {
+        /// <summary>
+        ///   Sentinel <see cref="Duration"/> mapped to <see cref="Timeout.InfiniteTimeSpan"/> for one-shot repeat intervals.
+        /// </summary>
         private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
         /// <inheritdoc />
@@ -885,19 +1251,57 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     #endregion Nested types — Noda virtual interval extensions
 #endif
 
+    /// <summary>
+    ///   Monotonically assigned registration id for virtual timers.
+    /// </summary>
     private static int _nextTimerId;
+
 #if NET10_OR_GREATER
+    /// <summary>
+    ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
+    /// </summary>
     private readonly Lock _gate = new();
 #else
+    /// <summary>
+    ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
+    /// </summary>
     private readonly object _gate = new();
 #endif
+
+    /// <summary>
+    ///   Whether <see cref="Start"/> is driving automatic <see cref="Advance"/> on a background thread.
+    /// </summary>
     private bool _isRunning;
+
+    /// <summary>
+    ///   Background thread used when <see cref="_isRunning"/> is <c>true</c>.
+    /// </summary>
     private Thread? _runThread;
+
+    /// <summary>
+    ///   Virtual time advanced per real second when running automatically.
+    /// </summary>
     private TimeSpan _runRate = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///   Pending <see cref="Sleep"/> and <see cref="DelayAsync"/> completions ordered by due instant.
+    /// </summary>
     private readonly List<PendingDelay> _pendingDelays = [];
+
+    /// <summary>
+    ///   Active time-based cancellation entries ordered by expiry instant.
+    /// </summary>
     private readonly List<TimeExpiryEntry> _timeExpiryEntries = [];
+
+    /// <summary>
+    ///   Active virtual interval timer registrations.
+    /// </summary>
     private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
+
 #if NET || !SYSTEMCLOCK
+    /// <summary>
+    ///   Active virtual day-time timer registrations.
+    /// </summary>
     private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
 #endif
 
@@ -907,6 +1311,11 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// </summary>
     public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
 
+    /// <summary>
+    ///   Converts a virtual UTC instant to local-offset representation used by local-time APIs.
+    /// </summary>
+    /// <param name="utcNowOffset">Virtual instant in UTC offset form.</param>
+    /// <returns>Same instant in the clock's local coordinate system.</returns>
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset);
 
     /// <summary>
@@ -917,12 +1326,28 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// <returns>The offset from UTC at that local wall time.</returns>
     private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified);
 
+    /// <summary>
+    ///   Sets the virtual UTC instant while <see cref="_gate"/> is held.
+    /// </summary>
+    /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset);
 
+    /// <summary>
+    ///   Reads the virtual UTC instant while <see cref="_gate"/> is held.
+    /// </summary>
+    /// <returns>The current virtual UTC time.</returns>
     private partial DateTimeOffset ReadVirtualUtcNowLocked ();
 
+    /// <summary>
+    ///   Adds virtual elapsed time while <see cref="_gate"/> is held.
+    /// </summary>
+    /// <param name="duration">Amount of virtual time to add (may be clamped by partial implementations).</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration);
 
+    /// <summary>
+    ///   Raises <see cref="ClockEvents"/> after the virtual UTC instant changed.
+    /// </summary>
+    /// <param name="utcNowOffset">The new virtual UTC time to report.</param>
     private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset);
 
     #region Local time-of-day scheduling
@@ -965,6 +1390,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     #region Private helpers
 
+    /// <summary>
+    ///   Background loop: sleeps one real second, then advances virtual time by <see cref="_runRate"/>.
+    /// </summary>
     private void RunLoop ()
     {
         while (true)
@@ -982,6 +1410,10 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
     }
 
+    /// <summary>
+    ///   Removes an interval registration from the active list (under <see cref="_gate"/>).
+    /// </summary>
+    /// <param name="timer">The registration to remove.</param>
     private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
     {
         lock (_gate)
@@ -989,12 +1421,26 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
 #if NET || !SYSTEMCLOCK
+    /// <summary>
+    ///   Removes a day-time registration from the active list (under <see cref="_gate"/>).
+    /// </summary>
+    /// <param name="timer">The registration to remove.</param>
     private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
     {
         lock (_gate)
             _dayTimeTimers.Remove(timer);
     }
 
+    /// <summary>
+    ///   Registers a local time-of-day timer and adds it to <see cref="_dayTimeTimers"/>.
+    /// </summary>
+    /// <param name="targetTimeOfDay">Time of day since local midnight.</param>
+    /// <param name="kind">Callback shape.</param>
+    /// <param name="callback">User callback.</param>
+    /// <param name="state">Optional state.</param>
+    /// <param name="options">Day-time options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new registration.</returns>
     private IClockDayTimeTimer RegisterTimeOfDayLocal (TimeSpan targetTimeOfDay,
         IntervalTimerCallbackKind kind,
         Delegate callback,
@@ -1015,6 +1461,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         return t;
     }
 
+    /// <summary>
+    ///   Registers a UTC time-of-day timer and adds it to <see cref="_dayTimeTimers"/>.
+    /// </summary>
+    /// <param name="targetTimeOfDay">Time of day since UTC midnight.</param>
+    /// <param name="kind">Callback shape.</param>
+    /// <param name="callback">User callback.</param>
+    /// <param name="state">Optional state.</param>
+    /// <param name="options">Day-time options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new registration.</returns>
     private IClockDayTimeTimer RegisterTimeOfDayUtc (TimeSpan targetTimeOfDay,
         IntervalTimerCallbackKind kind,
         Delegate callback,

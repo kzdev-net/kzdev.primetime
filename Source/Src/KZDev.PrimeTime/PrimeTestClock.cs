@@ -58,7 +58,14 @@ public sealed partial class PrimeTestClock
 
     #endregion Nested types
 
+    /// <summary>
+    ///   The time zone used for local zoned date and time in virtual time.
+    /// </summary>
     private readonly DateTimeZone _zone;
+
+    /// <summary>
+    ///   The current virtual instant on the UTC timeline; read and updated under the shared gate lock.
+    /// </summary>
     private Instant _now;
 
     #region Constructors/Finalizers
@@ -87,6 +94,9 @@ public sealed partial class PrimeTestClock
     /// </summary>
     /// <param name="initialInstant">The initial virtual instant.</param>
     /// <param name="zone">The zone used for local "now" values.</param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="zone"/> is <c>null</c>.
+    /// </exception>
     public PrimeTestClock (Instant initialInstant, DateTimeZone zone)
     {
         _now = initialInstant;
@@ -173,6 +183,16 @@ public sealed partial class PrimeTestClock
 
     #endregion IPrimeClock Implementation — Now (Noda)
 
+    /// <summary>
+    ///   Resolves the system default time zone for local projections, using the BCL provider or
+    ///   <see cref="BclDateTimeZone.ForSystemDefault"/> when the provider has no mapping.
+    /// </summary>
+    /// <returns>
+    ///   A <see cref="DateTimeZone"/> representing the system default local zone.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///   The system does not provide a time zone (can be thrown by the fallback).
+    /// </exception>
     private static DateTimeZone GetSystemDefaultTimeZone ()
     {
         try
@@ -196,27 +216,63 @@ public sealed partial class PrimeTestClock
         return sinceMidnight.ToDuration().ToTimeSpan();
     }
 
+    /// <summary>
+    ///   Projects a UTC instant as a <see cref="DateTimeOffset"/> in this clock's configured zone.
+    /// </summary>
+    /// <param name="utcNowOffset">The virtual instant in UTC.</param>
+    /// <returns>
+    ///   The same instant with an offset according to the clock's zone.
+    /// </returns>
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset)
     {
         Instant instant = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
         return instant.InZone(_zone).ToDateTimeOffset();
     }
 
+    /// <summary>
+    ///   Gets the UTC offset of this clock's configured zone for an unspecified-kind local wall-clock value.
+    /// </summary>
+    /// <param name="localUnspecified">The local date and time without a <see cref="DateTime.Kind"/>.</param>
+    /// <returns>
+    ///   The offset applied when interpreting <paramref name="localUnspecified"/> in that zone.
+    /// </returns>
     private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified)
     {
         LocalDateTime ldt = LocalDateTime.FromDateTime(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
         return _zone.AtLeniently(ldt).Offset.ToTimeSpan();
     }
 
+    /// <summary>
+    ///   Sets the virtual instant from a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
+    /// </summary>
+    /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
         _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
 
+    /// <summary>
+    ///   Reads the virtual instant as a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
+    /// </summary>
+    /// <returns>
+    ///   The current virtual time with zero offset (UTC).
+    /// </returns>
     private partial DateTimeOffset ReadVirtualUtcNowLocked () =>
         new DateTimeOffset(_now.ToDateTimeUtc(), TimeSpan.Zero);
 
+    /// <summary>
+    ///   Advances virtual time. The caller must hold the gate lock.
+    /// </summary>
+    /// <param name="duration">The virtual elapsed time to add.</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration) =>
         _now += Duration.FromTimeSpan(duration);
 
+    /// <summary>
+    ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> with <see cref="NodaClockTimeChangedEventArgs"/> created from
+    ///   the virtual instant read under the gate lock (expected to correspond to <paramref name="utcNowOffset"/> when
+    ///   callers update virtual time and then raise in sequence).
+    /// </summary>
+    /// <param name="utcNowOffset">
+    ///   The virtual UTC time after the change (the BCL partial forwards this value to <see cref="ClockTimeChangedEventArgs"/>).
+    /// </param>
     private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset)
     {
         Instant snapshot;

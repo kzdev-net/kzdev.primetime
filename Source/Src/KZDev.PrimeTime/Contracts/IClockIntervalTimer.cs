@@ -23,9 +23,12 @@ public partial interface IClockIntervalTimer
     /// </returns>
     /// <remarks>
     ///   For a currently non-repeating timer, passing a positive
-    ///   <paramref name="repeatInterval"/> may be disallowed by the implementation
-    ///   (for example, throw <see cref="InvalidOperationException"/>).
+    ///   <paramref name="repeatInterval"/> may be disallowed by the implementation.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    ///   This registration is one-shot (not repeating) and <paramref name="repeatInterval"/> is a
+    ///   positive duration, which would convert it to a repeating timer.
+    /// </exception>
     bool Change (Duration nextInterval, Duration repeatInterval);
     //--------------------------------------------------------------------------------
     /// <summary>

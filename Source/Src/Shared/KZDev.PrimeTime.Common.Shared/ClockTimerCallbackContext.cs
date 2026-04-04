@@ -19,6 +19,9 @@ namespace KZDev.PrimeTime;
 [StructLayout(LayoutKind.Auto)]
 public readonly struct ClockTimerCallbackContext : IEquatable<ClockTimerCallbackContext>
 {
+    /// <summary>
+    ///   Gets the debugger display string for this context.
+    /// </summary>
     [ExcludeFromCodeCoverage]
     private string DisplayValue => $"{Registration.Id} (Registered @ {Registration.RegisteredTime})";
 
@@ -33,6 +36,9 @@ public readonly struct ClockTimerCallbackContext : IEquatable<ClockTimerCallback
     /// <param name="callbackState">
     ///   The state passed when the timer was registered, or <c>null</c>.
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="registration"/> is <c>null</c>.
+    /// </exception>
     public ClockTimerCallbackContext (IClockTimer registration, object? callbackState)
     {
         Registration = registration ?? throw new ArgumentNullException(nameof(registration));

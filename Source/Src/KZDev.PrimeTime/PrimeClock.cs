@@ -18,9 +18,19 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class PrimeClock
 {
+    /// <summary>
+    ///   Sentinel <see cref="Duration"/> matching <see cref="Timeout.InfiniteTimeSpan"/> for one-shot (non-repeating) timers.
+    /// </summary>
     private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
+    /// <summary>
+    ///   The NodaTime clock that supplies the current instant.
+    /// </summary>
     private readonly IClock _clock;
+
+    /// <summary>
+    ///   The time zone used for local zoned date and time projections.
+    /// </summary>
     private readonly DateTimeZone _systemDefaultZone;
 
     #region Constructors/Finalizers
@@ -44,6 +54,9 @@ internal sealed partial class PrimeClock
     /// <param name="systemDefaultZone">
     ///   The time zone used for local "now" values (typically the system default).
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="clock"/> or <paramref name="systemDefaultZone"/> is <c>null</c>.
+    /// </exception>
     public PrimeClock (IClock clock, DateTimeZone systemDefaultZone)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));

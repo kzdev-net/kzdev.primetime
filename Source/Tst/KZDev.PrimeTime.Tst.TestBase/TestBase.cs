@@ -30,6 +30,9 @@ public abstract class TestBase
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="xUnitTestOutputHelper"/> is <c>null</c>.
+    /// </exception>
     protected TestBase (ITestOutputHelper xUnitTestOutputHelper)
     {
         XUnitTestOutputHelper = xUnitTestOutputHelper ?? throw new ArgumentNullException(nameof(xUnitTestOutputHelper));
