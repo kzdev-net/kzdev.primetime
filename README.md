@@ -1,21 +1,22 @@
 # KZDev.PrimeTime
 
-This is the repository for the ['KZDev.PrimeTime'](https://www.nuget.org/packages/KZDev.PrimeTime) nuget package that contains ...
+This repository ships two related NuGet libraries for time, clocks, and scheduling in .NET. Pick **one** package per application; they are **mutually exclusive** (do not reference both).
+
+## Packages
+
+- **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** — Contracts and timer abstractions plus **NodaTime-backed** clocks and timers. Use `IPrimeClock`, `PrimeClock`, and related types in the **`KZDev.PrimeTime`** namespace. NodaTime support is included in this package; there is no separate NodaTime PrimeTime package to install.
+
+- **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** — The same service names (`IPrimeClock`, `PrimeClock`, `IPrimeTestClock`, `PrimeTestClock`) with **BCL / `TimeProvider` only**, in the **`KZDev.SystemClock.PrimeTime`** namespace. Use this when you want to avoid a NodaTime dependency.
 
 ## Using the library
 
-- **KZDev.PrimeTime** (this package) provides shared contracts and types: `IPrimeTime`, timer interfaces, options, and enums. Clock selection is left to the host.
-- For a BCL/system clock implementation, add **KZDev.PrimeTime.SystemClock** and use `IPrimeSystemClock` / `PrimeSystemClock`.
-- For a NodaTime-based clock, add **KZDev.PrimeTime.NodaTime** and use `IPrimeClock` / `PrimeClock`.
-
-Reference the main package plus the stack package(s) you need so you can use either or both clock stacks.
+Install the package that matches your stack. Register services with the DI extension methods for that package (for example, `AddPrimeClock` on `IServiceCollection`). The published API documentation describes both deliverables.
 
 ## Features
 
-
 ## Documentation
 
-Full documentation for the package is available on the [PrimeTime Documentation](https://kzdev-net.github.io/kzdev.primetime/) page.
+Full documentation for the libraries is available on the [PrimeTime Documentation](https://kzdev-net.github.io/kzdev.primetime/) page.
 
 ## Future Features
 
