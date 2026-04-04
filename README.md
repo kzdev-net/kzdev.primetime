@@ -2,11 +2,13 @@
 
 This repository ships two related NuGet libraries for time, clocks, and scheduling in .NET. Pick **one** package per application; they are **mutually exclusive** (do not reference both).
 
+**KZDev.PrimeTime** is the **superset** package: it includes everything in the subset plus NodaTime-specific APIs on the same abstractions (for example, extra overloads on `IPrimeClock`). **KZDev.SystemClock.PrimeTime** is a **strict BCL subset**: shared service names and the common contract surface match the superset where they overlap, without a NodaTime dependency.
+
 ## Packages
 
-- **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** — Contracts and timer abstractions plus **NodaTime-backed** clocks and timers. Use `IPrimeClock`, `PrimeClock`, and related types in the **`KZDev.PrimeTime`** namespace. NodaTime support is included in this package; there is no separate NodaTime PrimeTime package to install.
+- **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** — Contracts and timer abstractions plus **NodaTime-backed** clocks and timers. Use `IPrimeClock`, `PrimeClock`, and related types in the **`KZDev.PrimeTime`** namespace. NodaTime support ships in this package only (there is no separate `KZDev.PrimeTime.NodaTime` package).
 
-- **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** — The same service names (`IPrimeClock`, `PrimeClock`, `IPrimeTestClock`, `PrimeTestClock`) with **BCL / `TimeProvider` only**, in the **`KZDev.SystemClock.PrimeTime`** namespace. Use this when you want to avoid a NodaTime dependency.
+- **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** — The same service names (`IPrimeClock`, `PrimeClock`, `IPrimeTestClock`, `PrimeTestClock`) with **BCL / `TimeProvider` only**, in the **`KZDev.SystemClock.PrimeTime`** namespace. Use this when you want the shared model without NodaTime.
 
 ## Using the library
 

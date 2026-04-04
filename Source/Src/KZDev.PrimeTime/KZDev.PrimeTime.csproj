@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- DocFX reflects KZDev.PrimeTime.dll from artifacts; copy NodaTime next to it for assembly resolution. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Description>PrimeTime time, clock, and timer contracts plus a bundled NodaTime-based clock implementation (IPrimeClock / PrimeClock). Use this package when you want NodaTime integration; use KZDev.SystemClock.PrimeTime if you only need BCL-based clocks and prefer not to depend on NodaTime.</Description>
+    <Description>PrimeTime superset: contracts plus NodaTime clocks (IPrimeClock/PrimeClock) with NodaTime overloads. Prefer KZDev.SystemClock.PrimeTime for a BCL-only subset.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 

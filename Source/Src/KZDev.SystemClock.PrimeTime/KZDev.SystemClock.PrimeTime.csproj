@@ -6,6 +6,7 @@
 		<RootNamespace>KZDev.SystemClock.PrimeTime</RootNamespace>
 		<AssemblyName>KZDev.SystemClock.PrimeTime</AssemblyName>
 		<PackageId>KZDev.SystemClock.PrimeTime</PackageId>
+		<Description>PrimeTime strict BCL subset: shared IPrimeClock/PrimeClock model using TimeProvider only; no NodaTime. Prefer KZDev.PrimeTime for the NodaTime superset.</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<DefineConstants>$(DefineConstants);SYSTEMCLOCK</DefineConstants>
 	</PropertyGroup>

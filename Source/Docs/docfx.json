@@ -10,7 +10,7 @@
                         "TargetFramework": "net8.0"
                     },
                     "files": [
-                        "**/*.dll"
+                        "KZDev.PrimeTime.dll"
                     ]
                 },
                 {
@@ -21,7 +21,7 @@
                         "TargetFramework": "net8.0"
                     },
                     "files": [
-                        "**/*.dll"
+                        "KZDev.SystemClock.PrimeTime.dll"
                     ]
                 }
             ],
