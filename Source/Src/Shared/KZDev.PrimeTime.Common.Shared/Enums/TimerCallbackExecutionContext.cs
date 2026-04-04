@@ -12,6 +12,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public enum TimerCallbackExecutionContext
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Capture the current execution context when the timer is registered and restore it when
     ///   invoking the callback. This is the default so callbacks run in the same context as the
@@ -25,5 +26,6 @@ public enum TimerCallbackExecutionContext
     ///   avoiding context capture is desired for performance or isolation.
     /// </summary>
     Unsafe
+    //----------------------------------------------------------------------------
 }
 //################################################################################

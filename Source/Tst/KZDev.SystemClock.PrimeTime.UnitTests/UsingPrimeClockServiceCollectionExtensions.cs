@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>.
 /// </summary>
@@ -14,6 +15,7 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeClockServiceCollectionExtensions"/> class.
     /// </summary>
@@ -24,6 +26,7 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -38,6 +41,7 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         Action act = () => services!.AddPrimeClock();
         act.Should().Throw<ArgumentNullException>().WithParameterName("services");
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that after <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>,
@@ -54,4 +58,6 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         IPrimeClock second = provider.GetRequiredService<IPrimeClock>();
         second.Should().BeSameAs(clock);
     }
+    //----------------------------------------------------------------------------
 }
+//################################################################################

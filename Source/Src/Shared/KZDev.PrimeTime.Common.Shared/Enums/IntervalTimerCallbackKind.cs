@@ -7,11 +7,13 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+//################################################################################
 /// <summary>
 ///   Internal callback type for interval and day-time timer invocations.
 /// </summary>
 internal enum IntervalTimerCallbackKind
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Parameterless <see cref="Action"/> callback.
     /// </summary>
@@ -39,4 +41,6 @@ internal enum IntervalTimerCallbackKind
     ///   <see cref="CancellationToken"/>, and returns <see cref="ValueTask"/>.
     /// </summary>
     ContextAsync
+    //----------------------------------------------------------------------------
 }
+//################################################################################

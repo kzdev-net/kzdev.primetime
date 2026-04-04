@@ -3,34 +3,52 @@
 
 namespace KZDev.SystemClock.PrimeTime;
 
+//################################################################################
 /// <summary>
 ///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>
 ///   for interval timers.
 /// </summary>
 internal sealed partial class ClockIntervalTimerRegistration
 {
-    private DateTimeOffset _registeredTime;
+        //----------------------------------------------------------------------------
+private DateTimeOffset _registeredTime;
     private TimeSpan _initialCallbackTime;
     private TimeSpan _repeatInterval;
 
     private DateTimeOffset? _nextCallbackUtc;
     private DateTimeOffset? _lastCallbackUtc;
+    //----------------------------------------------------------------------------
 
-    private partial TimeSpan InitialCallbackTimeSpan { get => _initialCallbackTime; set => _initialCallbackTime = value; }
+        //----------------------------------------------------------------------------
+private partial TimeSpan InitialCallbackTimeSpan { get => _initialCallbackTime; set => _initialCallbackTime = value; }
+    //----------------------------------------------------------------------------
 
-    private partial TimeSpan RepeatTimeSpanInterval { get => _repeatInterval; set => _repeatInterval = value; }
+        //----------------------------------------------------------------------------
+private partial TimeSpan RepeatTimeSpanInterval { get => _repeatInterval; set => _repeatInterval = value; }
+    //----------------------------------------------------------------------------
 
-    private partial DateTimeOffset? NextCallbackUtc { get => _nextCallbackUtc; set => _nextCallbackUtc = value; }
+        //----------------------------------------------------------------------------
+private partial DateTimeOffset? NextCallbackUtc { get => _nextCallbackUtc; set => _nextCallbackUtc = value; }
+    //----------------------------------------------------------------------------
 
-    private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
+        //----------------------------------------------------------------------------
+private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
+    //----------------------------------------------------------------------------
 
-    private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
+        //----------------------------------------------------------------------------
+private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
+    //----------------------------------------------------------------------------
 
-    private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowOffset : _clock.UtcNowOffset;
+        //----------------------------------------------------------------------------
+private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowOffset : _clock.UtcNowOffset;
+    //----------------------------------------------------------------------------
 
-    private partial DateTimeOffset GetRegisteredTime () => _registeredTime;
+        //----------------------------------------------------------------------------
+private partial DateTimeOffset GetRegisteredTime () => _registeredTime;
+    //----------------------------------------------------------------------------
 
-    private partial long GetElapsedTime ()
+        //----------------------------------------------------------------------------
+private partial long GetElapsedTime ()
     {
         lock (_gate)
         {
@@ -44,8 +62,10 @@ internal sealed partial class ClockIntervalTimerRegistration
             return (long)(now - last).TotalMilliseconds;
         }
     }
+    //----------------------------------------------------------------------------
 
-    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
+        //----------------------------------------------------------------------------
+private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
     {
         if (delay < TimeSpan.Zero || delay == Timeout.InfiniteTimeSpan)
         {
@@ -58,16 +78,22 @@ internal sealed partial class ClockIntervalTimerRegistration
         milliseconds = (int)msLong;
         return true;
     }
+    //----------------------------------------------------------------------------
 
-    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowOffset + delay;
+        //----------------------------------------------------------------------------
+private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowOffset + delay;
+    //----------------------------------------------------------------------------
 
-    private partial void RecordIntervalCallbackStarted ()
+        //----------------------------------------------------------------------------
+private partial void RecordIntervalCallbackStarted ()
     {
         LastCallbackUtc = _clock.UtcNowOffset;
         NextCallbackUtc = null;
     }
+    //----------------------------------------------------------------------------
 
-    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
+        //----------------------------------------------------------------------------
+private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
     {
         if (!IsRepeating && LastCallbackUtc.HasValue)
             return -1;
@@ -80,4 +106,6 @@ internal sealed partial class ClockIntervalTimerRegistration
             return (long)RepeatTimeSpanInterval.TotalMilliseconds;
         return (long)(next - now).TotalMilliseconds;
     }
+    //----------------------------------------------------------------------------
 }
+//################################################################################

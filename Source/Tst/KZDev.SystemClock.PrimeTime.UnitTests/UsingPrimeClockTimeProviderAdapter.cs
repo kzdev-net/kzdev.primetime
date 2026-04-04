@@ -10,6 +10,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="PrimeClockTimeProviderAdapter"/> and
 ///   <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>.
@@ -18,6 +19,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeClockTimeProviderAdapter"/> class.
     /// </summary>
@@ -28,6 +30,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -44,6 +47,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         TimeProvider provider = clock.ToTimeProvider();
         provider.Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>
@@ -56,6 +60,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         Action act = () => clock!.ToTimeProvider();
         act.Should().Throw<ArgumentNullException>().WithParameterName("clock");
     }
+    //----------------------------------------------------------------------------
 
     #endregion ToTimeProvider extension
 
@@ -74,6 +79,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         TimeProvider provider = clock.ToTimeProvider();
         provider.GetUtcNow().Should().Be(setTime);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that the TimeProvider's GetUtcNow advances when the test clock is advanced.
@@ -88,6 +94,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         clock.Advance(TimeSpan.FromHours(2));
         provider.GetUtcNow().Should().Be(initial + TimeSpan.FromHours(2));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that the TimeProvider's GetUtcNow advances when RunFor is called.
@@ -101,6 +108,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         clock.RunFor(TimeSpan.FromMinutes(30));
         provider.GetUtcNow().Should().Be(initial + TimeSpan.FromMinutes(30));
     }
+    //----------------------------------------------------------------------------
 
     #endregion GetUtcNow driven by test clock
 
@@ -124,6 +132,7 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         clock.Advance(TimeSpan.FromMinutes(10));
         fired.Should().Be(1);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a repeating timer created via the adapter fires multiple times when
@@ -144,7 +153,9 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         clock.Advance(TimeSpan.FromMinutes(5));
         fired.Should().Be(3);
     }
+    //----------------------------------------------------------------------------
 
     #endregion CreateTimer driven by test clock
 }
+//################################################################################
 

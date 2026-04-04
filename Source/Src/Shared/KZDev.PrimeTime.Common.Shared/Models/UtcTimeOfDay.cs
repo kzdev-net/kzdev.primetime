@@ -8,7 +8,6 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
-//################################################################################
 /// <summary>
 ///   Represents a time of day in UTC, as a <see cref="TimeOnly"/> wrapper with semantic
 ///   meaning for use in day-time timers and scheduling.
@@ -74,6 +73,5 @@ public readonly struct UtcTimeOfDay : IEquatable<UtcTimeOfDay>
 
     #endregion Operators
 }
-//################################################################################
 
 #endif

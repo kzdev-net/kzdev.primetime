@@ -10,12 +10,14 @@ using NodaTime;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
 ///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (Change(LocalTime), options).
 /// </summary>
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Short delay from "now" used to compute a time-of-day that fires soon.
     /// </summary>
@@ -35,9 +37,11 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>
     private static readonly Duration CallbackSettle = Duration.FromMilliseconds(50);
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClockDayTimeTimers"/> class.
     /// </summary>
@@ -48,6 +52,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -77,6 +82,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a local time-of-day timer returns a registration with
@@ -108,6 +114,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         dayTimer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunFirst);
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Local time-of-day — fire and contract
 
@@ -137,6 +144,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that RegisterAsyncTimeOfDay invokes the async callback and completes.
@@ -162,6 +170,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Callback overloads (context, async)
 
@@ -194,6 +203,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockDayTimeTimer.Change(Duration)"/> on a
@@ -211,6 +221,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         timer.Change(Duration.FromSeconds(1)).Should().BeFalse();
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Change(LocalTime)
 
@@ -236,6 +247,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         timer.State.Should().Be(TimerState.Cancelled);
         timer.IsCancelled.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that registering with default <see cref="DayTimeTimerOptions"/> (null)
@@ -257,7 +269,9 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         dayTimer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunLast);
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Cancel and options
 }
+//################################################################################
 

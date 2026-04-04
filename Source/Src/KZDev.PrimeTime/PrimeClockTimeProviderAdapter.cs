@@ -7,6 +7,7 @@ using NodaTime;
 
 namespace KZDev.PrimeTime;
 
+//################################################################################
 /// <summary>
 ///   Adapts an <see cref="IPrimeClock"/> to <see cref="TimeProvider"/> so that
 ///   components depending on <see cref="TimeProvider"/> (e.g. <see cref="TimeProvider.GetUtcNow"/>,
@@ -19,12 +20,16 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
     #region Nested types
 
-    private sealed class PrimeClockTimerToITimerAdapter : ITimer
+        //============================================================================
+private sealed class PrimeClockTimerToITimerAdapter : ITimer
     {
-        private readonly IClockIntervalTimer _registration;
+                //------------------------------------------------------------------------
+private readonly IClockIntervalTimer _registration;
+        //------------------------------------------------------------------------
 
         #region Constructors/Finalizers
 
+        //------------------------------------------------------------------------
         /// <summary>
         ///   Initializes a new instance of the <see cref="PrimeClockTimerToITimerAdapter"/> class.
         /// </summary>
@@ -35,11 +40,13 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         {
             _registration = registration;
         }
+        //------------------------------------------------------------------------
 
         #endregion Constructors/Finalizers
 
         #region Interface Implementations
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         /// <exception cref="InvalidOperationException">
         ///   The underlying <see cref="IClockIntervalTimer"/> rejects the change (for example, converting a
@@ -53,26 +60,35 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
                 : Duration.FromTimeSpan(period);
             return _registration.Change(next, repeat);
         }
+        //------------------------------------------------------------------------
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         public void Dispose () => _registration.Dispose();
+        //------------------------------------------------------------------------
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         public ValueTask DisposeAsync ()
         {
             _registration.Dispose();
             return default;
         }
+        //------------------------------------------------------------------------
 
         #endregion Interface Implementations
     }
+    //============================================================================
 
     #endregion Nested types
 
-    private readonly IPrimeClock _clock;
+        //----------------------------------------------------------------------------
+private readonly IPrimeClock _clock;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockTimeProviderAdapter"/> class.
     /// </summary>
@@ -86,17 +102,23 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
     #region Overrides
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public override DateTimeOffset GetUtcNow () => _clock.UtcNow.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="callback"/> is <c>null</c>.
@@ -122,6 +144,8 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
         return new PrimeClockTimerToITimerAdapter(registration);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Overrides
 }
+//################################################################################

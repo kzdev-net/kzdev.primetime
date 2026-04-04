@@ -9,6 +9,7 @@ using NodaTime.Testing;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> and <see cref="PrimeClock"/>.
 ///   Verifies that all "now" members return values consistent with a known instant and time zone.
@@ -19,7 +20,8 @@ public class UsingIPrimeClock : UnitTestBase
 {
     // Use a short sleep so tests remain fast, but keep it above typical timer/scheduler resolution
     // (≈1–15ms on most platforms) so that elapsed time can be measured reliably and deterministically.
-    private const int SleepTestDurationMilliseconds = 30;
+        //----------------------------------------------------------------------------
+private const int SleepTestDurationMilliseconds = 30;
 
     // Allow some jitter in Sleep measurements to account for OS scheduling and GC pauses without
     // masking real regressions; 15ms has proven sufficient and stable on common CI environments.
@@ -40,9 +42,11 @@ public class UsingIPrimeClock : UnitTestBase
     // Upper bound for DelayAsync elapsed time to avoid flaky failures when the task scheduler
     // or system is slightly slow; 30ms has proven sufficient across targets.
     private const int DelayAsyncUpperBoundToleranceMilliseconds = 30;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClock"/> class.
     /// </summary>
@@ -53,9 +57,11 @@ public class UsingIPrimeClock : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Asserts that an elapsed duration lies within the expected range (expected minus lower
     ///   tolerance, and optionally expected plus upper tolerance).
@@ -81,6 +87,7 @@ public class UsingIPrimeClock : UnitTestBase
         if (upperTolerance.HasValue)
             elapsed.Should().BeLessThanOrEqualTo(expected.Plus(upperTolerance.Value));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock"/> extends <see cref="IPrimeTime"/>.
@@ -90,6 +97,7 @@ public class UsingIPrimeClock : UnitTestBase
     {
         typeof(IPrimeClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> implements <see cref="IPrimeClock"/>.
@@ -100,6 +108,7 @@ public class UsingIPrimeClock : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         clock.Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> with a <see cref="FakeClock"/> at a fixed instant
@@ -124,6 +133,7 @@ public class UsingIPrimeClock : UnitTestBase
         clock.LocalNowTime.Should().Be(clock.LocalZonedNow.TimeOfDay);
         clock.LocalNowDate.Should().Be(clock.LocalZonedNow.Date);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> UTC "now" members are consistent: zone is UTC,
@@ -147,6 +157,7 @@ public class UsingIPrimeClock : UnitTestBase
         utcNow.Date.Month.Should().Be(utcNowDate.Month);
         utcNow.Date.Day.Should().Be(utcNowDate.Day);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> local "now" members are consistent:
@@ -163,6 +174,7 @@ public class UsingIPrimeClock : UnitTestBase
         localZonedNow.LocalDateTime.TimeOfDay.Should().Be(localZonedNow.TimeOfDay);
         localZonedNow.LocalDateTime.Date.Should().Be(localZonedNow.Date);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that at a fixed instant, <see cref="PrimeClock"/> with a <see cref="FakeClock"/>
@@ -181,6 +193,7 @@ public class UsingIPrimeClock : UnitTestBase
         clock.LocalNowTime.Should().Be(clock.UtcNowTime);
         clock.LocalNowDate.Should().Be(clock.UtcNowDate);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that advancing a <see cref="FakeClock"/> used by <see cref="PrimeClock"/> updates
@@ -208,6 +221,7 @@ public class UsingIPrimeClock : UnitTestBase
         clock.UtcNowTime.Should().Be(new(12, 30, 0));
         clock.LocalZonedNow.ToInstant().Should().Be(expectedAfter);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that all "now" values from <see cref="PrimeClock"/> are recent (within the last 5 seconds).
@@ -221,6 +235,7 @@ public class UsingIPrimeClock : UnitTestBase
 
         clock.NowInstant.Should().BeGreaterThan(before).And.BeLessThan(after);
     }
+    //----------------------------------------------------------------------------
 
     #region Sleep (TimeSpan and Duration)
 
@@ -237,6 +252,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.Sleep(Duration)"/> with zero completes
@@ -251,6 +267,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.Sleep(Duration)"/> with a short duration
@@ -271,6 +288,7 @@ public class UsingIPrimeClock : UnitTestBase
             Duration.FromMilliseconds(SleepTimingToleranceMilliseconds),
             Duration.FromMilliseconds(SleepUpperBoundToleranceMilliseconds));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.Sleep(Duration)"/> with a negative duration
@@ -288,6 +306,7 @@ public class UsingIPrimeClock : UnitTestBase
         elapsed.Should().BeGreaterThanOrEqualTo(Duration.Zero);
         elapsed.Should().BeLessThan(Duration.FromSeconds(1));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.Sleep(Duration)"/> with a very small duration (1ms)
@@ -304,6 +323,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeGreaterThanOrEqualTo(Duration.Zero);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that when sleep duration equals the timing tolerance, the minimum accepted
@@ -321,6 +341,7 @@ public class UsingIPrimeClock : UnitTestBase
             sleepDuration,
             Duration.FromMilliseconds(SleepTimingToleranceMilliseconds));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Sleep (TimeSpan and Duration)
 
@@ -339,6 +360,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.DelayAsync(Duration)"/> with zero completes
@@ -353,6 +375,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeLessThan(Duration.FromMilliseconds(100));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.DelayAsync(Duration)"/> with a short duration
@@ -372,6 +395,7 @@ public class UsingIPrimeClock : UnitTestBase
             Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds),
             Duration.FromMilliseconds(DelayAsyncUpperBoundToleranceMilliseconds));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.DelayAsync(Duration, CancellationToken)"/> with a
@@ -388,6 +412,7 @@ public class UsingIPrimeClock : UnitTestBase
         Instant after = clock.NowInstant;
         (after - before).Should().BeGreaterThanOrEqualTo(Duration.Zero);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that when delay duration equals the timing tolerance, the minimum accepted
@@ -405,6 +430,7 @@ public class UsingIPrimeClock : UnitTestBase
             delay,
             Duration.FromMilliseconds(DelayAsyncTimingToleranceMilliseconds));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.DelayAsync(Duration, CancellationToken)"/>
@@ -433,6 +459,7 @@ public class UsingIPrimeClock : UnitTestBase
         throwAssertion.Which.CancellationToken.Should().Be(linked);
 #endif
     }
+    //----------------------------------------------------------------------------
 
     #endregion DelayAsync (IPrimeTime and Duration)
 
@@ -460,6 +487,7 @@ public class UsingIPrimeClock : UnitTestBase
         await clock.DelayAsync(cancelAfter + additionalDelayForCancellation, TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.GetTimeCancellationToken(Duration)"/> with a
@@ -476,6 +504,7 @@ public class UsingIPrimeClock : UnitTestBase
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(exceedingMax);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
     }
+    //----------------------------------------------------------------------------
 
     #endregion GetTimeCancellationToken (Duration)
 
@@ -496,6 +525,7 @@ public class UsingIPrimeClock : UnitTestBase
         userCts.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.LinkTimeCancellationToken(Duration, CancellationToken, CancellationToken)"/>
@@ -513,6 +543,7 @@ public class UsingIPrimeClock : UnitTestBase
         cts1.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeClock.LinkTimeCancellationToken(Duration, CancellationToken[])"/>
@@ -530,6 +561,7 @@ public class UsingIPrimeClock : UnitTestBase
         cts2.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a linked time cancellation source's token expires after the specified
@@ -546,7 +578,9 @@ public class UsingIPrimeClock : UnitTestBase
         await clock.DelayAsync(Duration.FromMilliseconds(70), TestContext.Current.CancellationToken);
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion LinkTimeCancellationToken (Duration)
 }
+//################################################################################
 

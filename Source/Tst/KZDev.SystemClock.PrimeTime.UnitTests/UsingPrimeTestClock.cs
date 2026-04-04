@@ -6,6 +6,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="IPrimeTestClock"/> and <see cref="PrimeTestClock"/>.
 /// </summary>
@@ -16,14 +17,17 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 /// </remarks>
 public class UsingPrimeTestClock : UnitTestBase
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Wall-clock guard for loops that wait for a virtual sleep completion flag while advancing virtual time on
     ///   another path.
     /// </summary>
     private static readonly TimeSpan SleepTestRealTimeTimeout = TimeSpan.FromSeconds(5);
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeTestClock"/> class.
     /// </summary>
@@ -34,6 +38,7 @@ public class UsingPrimeTestClock : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -49,6 +54,7 @@ public class UsingPrimeTestClock : UnitTestBase
         typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeTestTime));
         typeof(IPrimeTestClock).GetInterfaces().Should().Contain(typeof(IPrimeClock));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeTestClock"/> implements <see cref="IPrimeTestClock"/>.
@@ -59,6 +65,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         clock.Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeTestClock"/> default constructor sets a non-default UtcNowOffset.
@@ -69,6 +76,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         clock.UtcNowOffset.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeTestClock"/> with initial time returns that time from UtcNowOffset.
@@ -80,6 +88,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.UtcNowOffset.Should().Be(initial);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Contract and construction
 
@@ -97,6 +106,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.UtcNowOffset.Should().Be(setTime);
         clock.UtcNowDateTime.Should().Be(setTime.UtcDateTime);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Advance"/> adds duration to virtual time.
@@ -109,6 +119,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromHours(2));
         clock.UtcNowOffset.Should().Be(initial + TimeSpan.FromHours(2));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with zero does not change time.
@@ -121,6 +132,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.Zero);
         clock.UtcNowOffset.Should().Be(initial);
     }
+    //----------------------------------------------------------------------------
 
     #endregion SetTime and Advance
 
@@ -137,6 +149,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.RunFor(TimeSpan.FromMinutes(30));
         clock.UtcNowOffset.Should().Be(initial + TimeSpan.FromMinutes(30));
     }
+    //----------------------------------------------------------------------------
 
     #endregion RunFor
 
@@ -151,6 +164,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         clock.IsRunning.Should().BeFalse();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Stop"/> returns false when not running.
@@ -161,6 +175,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         clock.Stop().Should().BeFalse();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Start"/> and <see cref="IPrimeTestClock.Stop"/> set
@@ -176,6 +191,7 @@ public class UsingPrimeTestClock : UnitTestBase
         stopped.Should().BeTrue();
         clock.IsRunning.Should().BeFalse();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Start and Stop
 
@@ -195,6 +211,7 @@ public class UsingPrimeTestClock : UnitTestBase
         received.Should().NotBeNull();
         received!.Value.Should().Be(setTime);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when Advance is called.
@@ -210,6 +227,7 @@ public class UsingPrimeTestClock : UnitTestBase
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + TimeSpan.FromHours(1));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when RunFor is called.
@@ -225,6 +243,7 @@ public class UsingPrimeTestClock : UnitTestBase
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + TimeSpan.FromMinutes(15));
     }
+    //----------------------------------------------------------------------------
 
     #endregion ClockEvents
 
@@ -266,6 +285,7 @@ public class UsingPrimeTestClock : UnitTestBase
             sleepRegistered.Dispose();
         }
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that Sleep(0) completes immediately on a test clock.
@@ -277,6 +297,7 @@ public class UsingPrimeTestClock : UnitTestBase
         Action act = () => clock.Sleep(TimeSpan.Zero);
         act.Should().NotThrow();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Sleep driven by virtual time
 
@@ -297,6 +318,7 @@ public class UsingPrimeTestClock : UnitTestBase
         await delayTask;
         delayTask.Status.Should().Be(TaskStatus.RanToCompletion);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that DelayAsync(TimeSpan, CancellationToken) throws
@@ -319,6 +341,7 @@ public class UsingPrimeTestClock : UnitTestBase
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
+    //----------------------------------------------------------------------------
 
     #endregion DelayAsync driven by virtual time
 
@@ -337,6 +360,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromSeconds(2));
         tcs.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Time cancellation driven by virtual time
 
@@ -362,6 +386,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromSeconds(10));
         fireCount.Should().Be(1);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a repeating interval timer fires multiple times as virtual time advances.
@@ -383,6 +408,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromSeconds(2));
         fireCount.Should().Be(4);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Interval timer driven by virtual time
 
@@ -411,5 +437,6 @@ public class UsingPrimeTestClock : UnitTestBase
     #endregion Day-time timer driven by virtual time
 #endif
 }
+//################################################################################
 
 

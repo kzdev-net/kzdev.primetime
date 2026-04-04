@@ -13,22 +13,22 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public partial interface IClockTimer : IDisposable
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   A unique identifier for this timer registration instance.
     /// </summary>
     int Id { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the time (UTC or local per registration options) at which this timer was registered.
     /// </summary>
     DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Indicates whether the timer has been cancelled.
     /// </summary>
     bool IsCancelled { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a time-of-day clock registration or a time-interval
     ///   clock registration.
@@ -38,12 +38,12 @@ public partial interface IClockTimer : IDisposable
     ///   time interval clock registration.
     /// </value>
     bool IsTimeOfDay { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a repeating timer registration or not.
     /// </summary>
     bool IsRepeating { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether the properties on this registration are based on local time
     ///   or UTC time. Timers by default are based on UTC time, but can be configured
@@ -51,7 +51,7 @@ public partial interface IClockTimer : IDisposable
     ///   timer option during registration.
     /// </summary>
     bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this timer registration is currently active. This will
     ///   return <c>false</c> if the registration has been cancelled, if
@@ -60,12 +60,12 @@ public partial interface IClockTimer : IDisposable
     ///   <see cref="TimerState.Disabled"/>.
     /// </summary>
     bool IsActive { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the current state of this timer registration.
     /// </summary>
     TimerState State { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether there are currently callbacks being processed for this timer registration.
     /// </summary>
@@ -74,7 +74,7 @@ public partial interface IClockTimer : IDisposable
     ///   even if there are callbacks currently being processed.
     /// </remarks>
     bool CallbacksProcessing { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets or sets the enabled state of this timer registration. When this is set to
     ///   <c>false</c>, the <see cref="State"/> will be set to <see cref="TimerState.Disabled"/>
@@ -94,7 +94,7 @@ public partial interface IClockTimer : IDisposable
     ///   </para>
     /// </remarks>
     bool Enabled { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Cancels this timer registration. When this is called, the <see cref="State"/>
     ///   will be set to <see cref="TimerState.Cancelled"/> and <see cref="IsActive"/>
@@ -102,7 +102,7 @@ public partial interface IClockTimer : IDisposable
     ///   can not be restarted.
     /// </summary>
     void Cancel ();
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Calling this method will stop the timer registration from signalling any further
     ///   callbacks. This has the exact same effect as setting <see cref="Enabled"/> to
@@ -113,7 +113,7 @@ public partial interface IClockTimer : IDisposable
     ///   stopped (or inactive) and no action was taken.
     /// </returns>
     bool Stop ();
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Calling this method will restart the timer if it is not already running. This
     ///   has the exact same effect as setting <see cref="Enabled"/> to <c>true</c>.
@@ -123,6 +123,6 @@ public partial interface IClockTimer : IDisposable
     ///   running and no action was taken, or if the timer has been cancelled or disposed.
     /// </returns>
     bool Start ();
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

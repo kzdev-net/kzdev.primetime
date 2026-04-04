@@ -14,13 +14,16 @@ namespace KZDev.SystemClock.PrimeTime;
 /// </remarks>
 internal sealed partial class PrimeClock
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   The <see cref="TimeProvider"/> used for current UTC and local time (<see cref="GetUtcNow"/> and related APIs).
     /// </summary>
     private readonly TimeProvider _timeProvider;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
     ///   <see cref="TimeProvider.System"/> as the time source.
@@ -29,7 +32,9 @@ internal sealed partial class PrimeClock
         : this(TimeProvider.System)
     {
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
     ///   specified time provider.
@@ -44,6 +49,7 @@ internal sealed partial class PrimeClock
     {
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -51,17 +57,25 @@ internal sealed partial class PrimeClock
 
     #region IPrimeClock Implementation
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset LocalNowOffset => _timeProvider.GetLocalNow();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowOffset => _timeProvider.GetUtcNow();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime => _timeProvider.GetLocalNow().LocalDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime => _timeProvider.GetUtcNow().UtcDateTime;
+    //----------------------------------------------------------------------------
 
 #if NET
     /// <inheritdoc />

@@ -12,22 +12,22 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public interface IDayTimeTimer : IClockTimer
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the concurrent trigger processing setting for this registration.
     /// </summary>
     ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the skipped time behavior setting for this registration.
     /// </summary>
     SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the duplicate time behavior setting for this registration.
     /// </summary>
     DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
     /// </summary>
@@ -49,7 +49,7 @@ public interface IDayTimeTimer : IClockTimer
     ///   </para>
     /// </remarks>
     long ElapsedTime { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time remaining until the next scheduled callback for this registration.
     /// </summary>
@@ -66,6 +66,6 @@ public interface IDayTimeTimer : IClockTimer
     ///   </para>
     /// </remarks>
     long TimeUntilNextCallback { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

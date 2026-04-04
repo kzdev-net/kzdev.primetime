@@ -8,12 +8,14 @@ using NodaTime;
 
 namespace KZDev.PrimeTime;
 
+//################################################################################
 /// <summary>
 ///   NodaTime partial for <see cref="ClockDayTimeTimerRegistration"/> (instant/duration basis).
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration
 {
-    private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
+        //----------------------------------------------------------------------------
+private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
 
     /// <summary>
     ///   Indicates whether the configured time of day is interpreted in UTC or local zone per day.
@@ -22,9 +24,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private LocalTime _targetTimeOfDay;
     private Instant? _nextCallbackInstant;
     private Instant? _lastCallbackInstant;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with Noda <see cref="LocalTime"/> scheduling.
     /// </summary>
@@ -47,15 +51,19 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _targetTimeOfDay = timeOfDay;
         FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the instant at which this registration was created.
     /// </summary>
     public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
+    //----------------------------------------------------------------------------
 
-    private static int DurationToTimerMilliseconds (Duration duration)
+        //----------------------------------------------------------------------------
+private static int DurationToTimerMilliseconds (Duration duration)
     {
         if (duration <= Duration.Zero)
             return Timeout.Infinite;
@@ -72,14 +80,22 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return int.MaxValue;
         }
     }
+    //----------------------------------------------------------------------------
 
-    private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
+        //----------------------------------------------------------------------------
+private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
+    //----------------------------------------------------------------------------
 
-    private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
+        //----------------------------------------------------------------------------
+private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
-    private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
+        //----------------------------------------------------------------------------
+private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
+    //----------------------------------------------------------------------------
 
-    private TimeSpan GetDelayUntilNextAsTimeSpan ()
+        //----------------------------------------------------------------------------
+private TimeSpan GetDelayUntilNextAsTimeSpan ()
     {
         Duration d = GetDelayUntilNextDuration();
         try
@@ -91,8 +107,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return TimeSpan.FromDays(1);
         }
     }
+    //----------------------------------------------------------------------------
 
-    private Duration GetDelayUntilNextDuration ()
+        //----------------------------------------------------------------------------
+private Duration GetDelayUntilNextDuration ()
     {
         Instant now = _clock.NowInstant;
         if (_utcTimeOfDaySchedule)
@@ -122,19 +140,27 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
         return nextLocalZdt.ToInstant() - now;
     }
+    //----------------------------------------------------------------------------
 
-    private partial TimeSpan GetDelayUntilNextForTimer () => GetDelayUntilNextAsTimeSpan();
+        //----------------------------------------------------------------------------
+private partial TimeSpan GetDelayUntilNextForTimer () => GetDelayUntilNextAsTimeSpan();
+    //----------------------------------------------------------------------------
 
-    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
+        //----------------------------------------------------------------------------
+private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
         _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
+    //----------------------------------------------------------------------------
 
-    private partial void RecordDayTimeCallbackTickStarted ()
+        //----------------------------------------------------------------------------
+private partial void RecordDayTimeCallbackTickStarted ()
     {
         _nextCallbackInstant = null;
         _lastCallbackInstant = _clock.NowInstant;
     }
+    //----------------------------------------------------------------------------
 
-    private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
+        //----------------------------------------------------------------------------
+private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
         if (_lastCallbackInstant is not { } last)
             return -1;
@@ -145,8 +171,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return 0;
         return (long)(now - last).TotalMilliseconds;
     }
+    //----------------------------------------------------------------------------
 
-    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
+        //----------------------------------------------------------------------------
+private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
     {
         if (_nextCallbackInstant is not { } next)
             return -1;
@@ -155,8 +183,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return 0;
         return (long)(next - now).TotalMilliseconds;
     }
+    //----------------------------------------------------------------------------
 
-    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
+        //----------------------------------------------------------------------------
+private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
     {
         Duration d = Duration.FromTimeSpan(delay);
         int ms = DurationToTimerMilliseconds(d);
@@ -168,14 +198,17 @@ internal sealed partial class ClockDayTimeTimerRegistration
         milliseconds = ms;
         return true;
     }
+    //----------------------------------------------------------------------------
 
-    private partial int GetRunSequentiallyRetryMilliseconds ()
+        //----------------------------------------------------------------------------
+private partial int GetRunSequentiallyRetryMilliseconds ()
     {
         int ms = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
         if (ms <= 0)
             return 1;
         return ms;
     }
+    //----------------------------------------------------------------------------
 
 #if NET
     private partial bool IsLocalDayTimeSchedule => !_utcTimeOfDaySchedule;
@@ -193,6 +226,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
     #region IClockDayTimeTimer Implementation
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Change (LocalTime timeOfDay)
     {
@@ -207,11 +241,15 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Change (Duration interval) => false;
+    //----------------------------------------------------------------------------
 
     #endregion IClockDayTimeTimer Implementation
 
     #endregion Interface Implementations
 }
+//################################################################################

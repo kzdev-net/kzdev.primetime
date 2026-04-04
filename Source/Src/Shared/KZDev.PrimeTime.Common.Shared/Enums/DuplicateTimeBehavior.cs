@@ -12,6 +12,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public enum DuplicateTimeBehavior
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Only the last duplicate time invokes the callback; the earlier duplicate does not.
     /// </summary>
@@ -21,5 +22,6 @@ public enum DuplicateTimeBehavior
     ///   Only the first duplicate time invokes the callback; later duplicates do not.
     /// </summary>
     RunFirst
+    //----------------------------------------------------------------------------
 }
 //################################################################################

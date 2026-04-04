@@ -4,16 +4,16 @@ using System.Diagnostics;
 namespace KZDev.SystemClock.PrimeTime;
 #else
 namespace KZDev.PrimeTime;
+//################################################################################
 #endif
 
-//################################################################################
 /// <summary>
 ///   Timer options for setting up interval callback timers.
 /// </summary>
 [DebuggerStepThrough]
 public record IntervalTimerOptions : TimerOptions
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets when the repeating interval is started relative to each callback.
     /// </summary>
@@ -35,7 +35,7 @@ public record IntervalTimerOptions : TimerOptions
     public bool ResetIntervalAfterCallback { get; init; }
 #else
     public bool ResetIntervalAfterCallback { get; set; }
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
 }
 //################################################################################

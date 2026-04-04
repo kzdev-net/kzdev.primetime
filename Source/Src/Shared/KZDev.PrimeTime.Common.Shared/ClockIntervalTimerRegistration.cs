@@ -9,11 +9,13 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+//################################################################################
 /// <summary>
 ///   Implementation of <see cref="IClockIntervalTimer"/> used by <see cref="PrimeClock"/>.
 /// </summary>
 internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTimer
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Monotonic id assigned to each registration.
     /// </summary>
@@ -95,34 +97,46 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     ///   When <c>true</c>, external cancellation was requested.
     /// </summary>
     private bool _cancelRequested;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initial delay and current per-tick delay basis (stack-specific partial).
     /// </summary>
     private partial TimeSpan InitialCallbackTimeSpan { get; set; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Repeat interval between callbacks, or infinite for one-shot.
     /// </summary>
     private partial TimeSpan RepeatTimeSpanInterval { get; set; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Next scheduled callback instant in UTC-offset form (partial).
     /// </summary>
     private partial DateTimeOffset? NextCallbackUtc { get; set; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Last callback start instant in UTC-offset form (partial).
     /// </summary>
     private partial DateTimeOffset? LastCallbackUtc { get; set; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Whether this registration repeats after the first fire.
     /// </summary>
     private partial bool IsRepeatingTimer { get; }
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
     /// </summary>
@@ -192,27 +206,40 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         State = TimerState.Active;
         ScheduleNext(initialCallbackTime);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public int Id { [DebuggerStepThrough] get; }
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get => GetRegisteredTime(); }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsTimeOfDay => false;
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsResetAfterCallback { [DebuggerStepThrough] get; }
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsRepeating { [DebuggerStepThrough] get => IsRepeatingTimer; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsCancelled => _state == TimerState.Cancelled;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsActive
     {
@@ -227,13 +254,19 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimerState State { [DebuggerStepThrough] get => _state; [DebuggerStepThrough] private set => _state = value; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool CallbacksProcessing => _callbacksRunning > 0;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Enabled
     {
@@ -257,7 +290,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public long ElapsedTime
     {
@@ -267,7 +302,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             return GetElapsedTime();
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public long TimeUntilNextCallback
     {
@@ -279,43 +316,59 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Captures <see cref="RegisteredTime"/> from the clock per local/UTC option (partial).
     /// </summary>
     private partial void CaptureRegisteredTime ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns <see cref="RegisteredTime"/> in the registration time basis (partial).
     /// </summary>
     private partial DateTimeOffset GetRegisteredTime ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes elapsed milliseconds since last callback per contract (partial).
     /// </summary>
     private partial long GetElapsedTime ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   When <c>true</c>, converts <paramref name="delay"/> to a due-time in milliseconds for
     ///   <see cref="Timer"/>; when <c>false</c>, the registration should not arm the timer.
     /// </summary>
     private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Records the logical next callback instant/offset as <c>now + delay</c> for the active time basis.
     /// </summary>
     private partial void SetNextCallbackScheduledForDelay (TimeSpan delay);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Marks the start of a timer callback: records "last callback" and clears the next-callback marker.
     /// </summary>
     private partial void RecordIntervalCallbackStarted ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="_gate"/> is held.
     /// </summary>
     private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Cancels the registration and disarms the BCL timer.
     /// </summary>
@@ -331,7 +384,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Schedules or reschedules the next callback after <paramref name="delay"/>.
     /// </summary>
@@ -346,7 +401,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         else
             _timer.Change(ms, Timeout.Infinite);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   BCL timer callback: runs on a thread-pool thread and invokes the user callback.
     /// </summary>
@@ -384,7 +441,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Dispatches the user callback synchronously or starts async completion handling.
     /// </summary>
@@ -447,7 +506,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
         OnSyncCallbackCompleted(resetAfter, isRepeating);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
@@ -473,7 +534,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             TaskContinuationOptions.None,
             TaskScheduler.Default);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
     /// </summary>
@@ -495,7 +558,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             ScheduleNext(next);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.
     /// </summary>
@@ -516,11 +581,13 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             ScheduleNext(RepeatTimeSpanInterval);
         }
     }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
     #region IClockIntervalTimer Implementation
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
     {
@@ -540,11 +607,15 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Change (TimeSpan interval) =>
         Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Cancel ()
     {
@@ -558,7 +629,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
     {
@@ -572,7 +645,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Start ()
     {
@@ -588,7 +663,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Dispose ()
     {
@@ -604,8 +681,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer = null;
         }
     }
+    //----------------------------------------------------------------------------
 
     #endregion IClockIntervalTimer Implementation
 
     #endregion Interface Implementations
 }
+//################################################################################

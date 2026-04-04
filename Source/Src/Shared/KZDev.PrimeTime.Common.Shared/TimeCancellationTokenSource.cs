@@ -20,6 +20,7 @@ namespace KZDev.PrimeTime;
 /// </remarks>
 public sealed class TimeCancellationTokenSource : IDisposable
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Primary source whose <see cref="Token"/> is exposed; disposed when this wrapper is disposed.
     /// </summary>
@@ -34,9 +35,11 @@ public sealed class TimeCancellationTokenSource : IDisposable
     ///   Non-zero after <see cref="Dispose"/> completes; read with <see cref="Volatile"/> for disposal checks.
     /// </summary>
     private int _disposed;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="TimeCancellationTokenSource"/> class.
     /// </summary>
@@ -56,9 +59,11 @@ public sealed class TimeCancellationTokenSource : IDisposable
         _primary = primary ?? throw new ArgumentNullException(nameof(primary));
         _additionalToDispose = additionalToDispose;
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the cancellation token associated with the primary source.
     /// </summary>
@@ -74,7 +79,9 @@ public sealed class TimeCancellationTokenSource : IDisposable
             return _primary.Token;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets whether cancellation has been requested for this token.
     /// </summary>
@@ -90,7 +97,9 @@ public sealed class TimeCancellationTokenSource : IDisposable
             return _primary.IsCancellationRequested;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Communicates a request for cancellation.
     /// </summary>
@@ -103,7 +112,9 @@ public sealed class TimeCancellationTokenSource : IDisposable
             throw new ObjectDisposedException(nameof(TimeCancellationTokenSource));
         _primary.Cancel();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Communicates a request for cancellation and specifies whether an exception
     ///   should be thrown if cancellation is successful.
@@ -131,9 +142,11 @@ public sealed class TimeCancellationTokenSource : IDisposable
             throw new ObjectDisposedException(nameof(TimeCancellationTokenSource));
         _primary.Cancel(throwOnFirstException);
     }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Disposes the primary <see cref="CancellationTokenSource"/> and any additional sources
     ///   supplied at construction.
@@ -151,6 +164,7 @@ public sealed class TimeCancellationTokenSource : IDisposable
         foreach (CancellationTokenSource cts in _additionalToDispose)
             cts.Dispose();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Interface Implementations
 }

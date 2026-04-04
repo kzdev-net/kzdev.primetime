@@ -12,7 +12,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public interface IIntervalTimer : IClockTimer
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this repeating registration was set up to restart the timer
     ///   interval after each callback completes, or restart the timer interval before
@@ -23,7 +23,7 @@ public interface IIntervalTimer : IClockTimer
     ///   for non-repeating registrations.
     /// </remarks>
     bool IsResetAfterCallback { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
     /// </summary>
@@ -44,7 +44,7 @@ public interface IIntervalTimer : IClockTimer
     ///   </para>
     /// </remarks>
     long ElapsedTime { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time remaining until the next callback for this registration.
     /// </summary>
@@ -67,6 +67,6 @@ public interface IIntervalTimer : IClockTimer
     ///   </para>
     /// </remarks>
     long TimeUntilNextCallback { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

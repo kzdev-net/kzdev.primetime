@@ -9,12 +9,14 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+//################################################################################
 /// <summary>
 ///   Extension methods for adding PrimeTime clock services to an
 ///   <see cref="IServiceCollection"/>.
 /// </summary>
 public static partial class PrimeClockServiceCollectionExtensions
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Adds the default <see cref="IPrimeClock"/> implementation
     ///   (<see cref="PrimeClock"/>) as a singleton in the service collection.
@@ -32,4 +34,6 @@ public static partial class PrimeClockServiceCollectionExtensions
         services is null ?
             throw new ArgumentNullException(nameof(services)) :
             services.AddSingleton<IPrimeClock, PrimeClock>();
+    //----------------------------------------------------------------------------
 }
+//################################################################################

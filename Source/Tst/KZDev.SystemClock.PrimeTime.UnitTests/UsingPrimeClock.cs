@@ -6,6 +6,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="PrimeClock"/> (IPrimeTime delay and time-cancellation members).
 ///   Different test genres are grouped in regions.
@@ -18,6 +19,7 @@ public class UsingPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeClock"/> class.
     /// </summary>
@@ -28,6 +30,7 @@ public class UsingPrimeClock : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -44,6 +47,7 @@ public class UsingPrimeClock : UnitTestBase
         Action act = () => clock.Sleep(TimeSpan.Zero);
         act.Should().NotThrow();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.Sleep(int)"/> with zero completes immediately
@@ -56,6 +60,7 @@ public class UsingPrimeClock : UnitTestBase
         Action act = () => clock.Sleep(0);
         act.Should().NotThrow();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.Sleep(TimeSpan)"/> with a short duration
@@ -71,6 +76,7 @@ public class UsingPrimeClock : UnitTestBase
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).Should().BeGreaterThanOrEqualTo(sleepDuration.Subtract(TimeSpan.FromMilliseconds(20)));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.Sleep(int)"/> with a short duration in ms
@@ -86,6 +92,7 @@ public class UsingPrimeClock : UnitTestBase
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(sleepMs - 20);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Sleep
 
@@ -102,6 +109,7 @@ public class UsingPrimeClock : UnitTestBase
         Func<Task> act = async () => await clock.DelayAsync(TimeSpan.Zero);
         await act.Should().NotThrowAsync();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.DelayAsync(int)"/> with zero completes
@@ -114,6 +122,7 @@ public class UsingPrimeClock : UnitTestBase
         Func<Task> act = async () => await clock.DelayAsync(0);
         await act.Should().NotThrowAsync();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan)"/> with a short duration
@@ -129,6 +138,7 @@ public class UsingPrimeClock : UnitTestBase
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).Should().BeGreaterThanOrEqualTo(delay.Subtract(TimeSpan.FromMilliseconds(25)));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.DelayAsync(int)"/> with a short duration in ms
@@ -144,6 +154,7 @@ public class UsingPrimeClock : UnitTestBase
         DateTimeOffset after = DateTimeOffset.UtcNow;
         (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(delayMs - 25);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.DelayAsync(TimeSpan, CancellationToken)"/>
@@ -164,6 +175,7 @@ public class UsingPrimeClock : UnitTestBase
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.DelayAsync(int, CancellationToken)"/>
@@ -184,6 +196,7 @@ public class UsingPrimeClock : UnitTestBase
         Func<Task> act = async () => await delayTask;
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
+    //----------------------------------------------------------------------------
 
     #endregion DelayAsync
 
@@ -204,6 +217,7 @@ public class UsingPrimeClock : UnitTestBase
         await clock.DelayAsync(cancelAfter.Add(additionalDelayForCancellation), TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.GetTimeCancellationToken(int)"/> returns
@@ -220,6 +234,7 @@ public class UsingPrimeClock : UnitTestBase
         await clock.DelayAsync(cancelAfterMs + additionalDelayForCancellationMs, TestContext.Current.CancellationToken);
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion GetTimeCancellationToken
 
@@ -241,6 +256,7 @@ public class UsingPrimeClock : UnitTestBase
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
         await Task.CompletedTask;
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(TimeSpan, CancellationToken, CancellationToken)"/>
@@ -258,6 +274,7 @@ public class UsingPrimeClock : UnitTestBase
         cts1.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(TimeSpan, CancellationToken[])"/>
@@ -275,6 +292,7 @@ public class UsingPrimeClock : UnitTestBase
         cts2.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime.LinkTimeCancellationToken(int, CancellationToken)"/>
@@ -290,6 +308,7 @@ public class UsingPrimeClock : UnitTestBase
         userCts.Cancel();
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a linked time cancellation source's token expires after the specified time
@@ -306,8 +325,10 @@ public class UsingPrimeClock : UnitTestBase
         await clock.DelayAsync(TimeSpan.FromMilliseconds(140), TestContext.Current.CancellationToken);
         linkedSource.Token.IsCancellationRequested.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion LinkTimeCancellationToken
 }
+//################################################################################
 
 

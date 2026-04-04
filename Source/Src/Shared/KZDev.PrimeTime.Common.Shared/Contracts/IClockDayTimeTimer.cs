@@ -17,7 +17,6 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
 {
 #if NET
 
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Changes the target local time of day for this registration.
     /// </summary>
@@ -28,7 +27,6 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
     ///   registration was cancelled, disposed, or otherwise invalid.
     /// </returns>
     bool Change (LocalTimeOfDay newTimeOfDay);
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Changes the target UTC time of day for this registration.
     /// </summary>
@@ -39,7 +37,6 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
     ///   registration was cancelled, disposed, or otherwise invalid.
     /// </returns>
     bool Change (UtcTimeOfDay newTimeOfDay);
-    //--------------------------------------------------------------------------------
 
 #endif
 }

@@ -9,6 +9,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for shared common timer contracts, enums, and options. Verifies each type
 ///   exists with the specified members, enums have expected values, and option types can be
@@ -18,6 +19,7 @@ public class UsingCommonTimerContracts : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingCommonTimerContracts"/> class.
     /// </summary>
@@ -28,6 +30,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -42,6 +45,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         typeof(IClockTimer).IsInterface.Should().BeTrue();
         typeof(IClockTimer).GetInterfaces().Should().Contain(typeof(IDisposable));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockTimer"/> declares all required properties (ID, IsCancelled, State, etc.).
@@ -58,6 +62,7 @@ public class UsingCommonTimerContracts : UnitTestBase
             prop.Should().NotBeNull($"IClockTimer should declare property {name}");
         }
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockTimer"/> declares Cancel, Stop, and Start methods.
@@ -70,6 +75,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         timerType.GetMethod("Stop").Should().NotBeNull();
         timerType.GetMethod("Start").Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockTimer.Id"/> is of type <see cref="int"/>.
@@ -81,6 +87,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(int));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockTimer.State"/> is of type <see cref="TimerState"/>.
@@ -92,6 +99,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(TimerState));
     }
+    //----------------------------------------------------------------------------
 
     #endregion IClockTimer contract
 
@@ -105,6 +113,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         typeof(IDayTimeTimer).GetInterfaces().Should().Contain(typeof(IClockTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IDayTimeTimer"/> declares ConcurrentTriggerProcessing, SkippedTimeBehavior, and DuplicateTimeBehavior.
@@ -117,6 +126,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         dayTimeType.GetProperty("SkippedTimeBehavior").Should().NotBeNull();
         dayTimeType.GetProperty("DuplicateTimeBehavior").Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     #endregion IDayTimeTimer contract
 
@@ -130,6 +140,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         typeof(IIntervalTimer).GetInterfaces().Should().Contain(typeof(IClockTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IIntervalTimer"/> declares IsResetAfterCallback, ElapsedTime, and TimeUntilNextCallback.
@@ -142,6 +153,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         intervalType.GetProperty("ElapsedTime").Should().NotBeNull();
         intervalType.GetProperty("TimeUntilNextCallback").Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IIntervalTimer.ElapsedTime"/> is of type <see cref="long"/>.
@@ -153,6 +165,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(long));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IIntervalTimer.TimeUntilNextCallback"/> is of type <see cref="long"/>.
@@ -164,6 +177,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(long));
     }
+    //----------------------------------------------------------------------------
 
     #endregion IIntervalTimer contract
 
@@ -179,6 +193,7 @@ public class UsingCommonTimerContracts : UnitTestBase
             "RepeatCycle", "RepeatProcessingCallback"];
         Enum.GetNames(typeof(TimerState)).Should().BeEquivalentTo(expected);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="TimerState.Active"/> has the value zero.
@@ -188,6 +203,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         ((int)TimerState.Active).Should().Be(0);
     }
+    //----------------------------------------------------------------------------
 
     #endregion TimerState enum
 
@@ -202,6 +218,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         string[] expected = ["Skip", "RunConcurrently", "RunSequentially"];
         Enum.GetNames(typeof(ConcurrentTriggerProcessing)).Should().BeEquivalentTo(expected);
     }
+    //----------------------------------------------------------------------------
 
     #endregion ConcurrentTriggerProcessing enum
 
@@ -216,6 +233,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         string[] expected = ["Skip", "RunAfter", "RunBefore"];
         Enum.GetNames(typeof(SkippedTimeBehavior)).Should().BeEquivalentTo(expected);
     }
+    //----------------------------------------------------------------------------
 
     #endregion SkippedTimeBehavior enum
 
@@ -230,6 +248,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         string[] expected = ["RunLast", "RunFirst"];
         Enum.GetNames(typeof(DuplicateTimeBehavior)).Should().BeEquivalentTo(expected);
     }
+    //----------------------------------------------------------------------------
 
     #endregion DuplicateTimeBehavior enum
 
@@ -244,6 +263,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         string[] expected = ["Capture", "Unsafe"];
         Enum.GetNames(typeof(TimerCallbackExecutionContext)).Should().BeEquivalentTo(expected);
     }
+    //----------------------------------------------------------------------------
 
     #endregion TimerCallbackExecutionContext enum
 
@@ -257,6 +277,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         typeof(TimerOptions).IsAbstract.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="TimerOptions"/> declares LocalTimeRepresentation and CallbackExecutionContext properties.
@@ -267,6 +288,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         typeof(TimerOptions).GetProperty("LocalTimeRepresentation").Should().NotBeNull();
         typeof(TimerOptions).GetProperty("CallbackExecutionContext").Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     #endregion TimerOptions
 
@@ -280,6 +302,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         typeof(IntervalTimerOptions).BaseType.Should().Be(typeof(TimerOptions));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that default <see cref="IntervalTimerOptions"/> has ResetIntervalAfterCallback false and CallbackExecutionContext Capture.
@@ -291,6 +314,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         options.ResetIntervalAfterCallback.Should().BeFalse();
         options.CallbackExecutionContext.Should().Be(TimerCallbackExecutionContext.Capture);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IntervalTimerOptions"/> can be constructed with ResetIntervalAfterCallback set to true.
@@ -301,6 +325,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         IntervalTimerOptions options = new() { ResetIntervalAfterCallback = true };
         options.ResetIntervalAfterCallback.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion IntervalTimerOptions
 
@@ -314,6 +339,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     {
         typeof(DayTimeTimerOptions).BaseType.Should().Be(typeof(TimerOptions));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that default <see cref="DayTimeTimerOptions"/> has expected SkippedTimeBehavior, DuplicateTimeBehavior, and CallbackExecutionContext.
@@ -326,6 +352,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         options.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunLast);
         options.CallbackExecutionContext.Should().Be(TimerCallbackExecutionContext.Capture);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="DayTimeTimerOptions"/> can be constructed with all option properties set.
@@ -343,6 +370,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         options.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunBefore);
         options.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunFirst);
     }
+    //----------------------------------------------------------------------------
 
     #endregion DayTimeTimerOptions
 
@@ -360,6 +388,7 @@ public class UsingCommonTimerContracts : UnitTestBase
         prop.Should().NotBeNull();
         prop.PropertyType.Should().Be(typeof(bool));
     }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTestTime contract
 
@@ -380,6 +409,8 @@ public class UsingCommonTimerContracts : UnitTestBase
         clockEvents.Should().NotBeNull();
         clockEvents!.EventHandlerType.Should().Be(typeof(EventHandler<ClockTimeChangedEventArgs>));
     }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock contract
 }
+//################################################################################

@@ -12,12 +12,14 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+//################################################################################
 /// <summary>
 ///   Shared implementation of day-time timer registration: lifecycle, callback dispatch,
 ///   and scheduling orchestration. Time-basis storage and delay math live in partials.
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   One calendar day for delay clamping when the next fire is in the past.
     /// </summary>
@@ -129,6 +131,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     ///   When <c>true</c>, a sequential run is pending after the current callback.
     /// </summary>
     private bool _pendingRunSequential;
+    //----------------------------------------------------------------------------
 
 #if NET
     /// <summary>
@@ -157,6 +160,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Completes initialization shared by stack-specific constructors.
     /// </summary>
@@ -210,51 +214,79 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         _state = TimerState.Active;
         ScheduleNext();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public int Id { [DebuggerStepThrough] get => _id; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get => GetRegisteredTimeOffset(); }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsTimeOfDay => true;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsResetAfterCallback => false;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get => GetIsLocalTimeRepresentation(); }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsRepeating => true;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsCancelled => _state == TimerState.Cancelled;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsActive =>
         _state != TimerState.Cancelled &&
         _state != TimerState.Disposed &&
         _enabled;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimerState State => _state;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool CallbacksProcessing => _callbacksRunning > 0;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get => _concurrentTriggerProcessing; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get => _skippedTimeBehavior; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get => _duplicateTimeBehavior; }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Enabled
     {
@@ -272,7 +304,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public long ElapsedTime
     {
@@ -284,7 +318,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public long TimeUntilNextCallback
     {
@@ -296,58 +332,80 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             }
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Captures <see cref="RegisteredTime"/> for this day-time registration (partial).
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns registered time in the registration basis (partial).
     /// </summary>
     private partial DateTimeOffset GetRegisteredTimeOffset ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Whether properties use local representation (partial).
     /// </summary>
     private partial bool GetIsLocalTimeRepresentation ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes delay until the next scheduled fire (partial).
     /// </summary>
     private partial TimeSpan GetDelayUntilNextForTimer ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Records the next fire from a wall-clock delay (partial).
     /// </summary>
     /// <param name="delay">Delay until the next tick.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-fire marker and records the callback start for elapsed-time queries (partial).
     /// </summary>
     private partial void RecordDayTimeCallbackTickStarted ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Elapsed milliseconds since last callback while <see cref="_gate"/> is held (partial).
     /// </summary>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Milliseconds until next callback while <see cref="_gate"/> is held (partial).
     /// </summary>
     private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts <paramref name="delay"/> to BCL timer milliseconds when valid (partial).
     /// </summary>
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Retry delay when running sequential day-time triggers (partial).
     /// </summary>
     private partial int GetRunSequentiallyRetryMilliseconds ();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Cancels the registration and disarms the BCL timer.
     /// </summary>
@@ -363,7 +421,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes and arms the next day-time callback.
     /// </summary>
@@ -385,7 +445,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 _timer.Change(ms, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Re-arms the timer after a short delay for sequential trigger retry.
     /// </summary>
@@ -404,7 +466,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 _timer.Change(ms, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   BCL timer callback for the next day-time fire.
     /// </summary>
@@ -471,7 +535,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 ScheduleNext();
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Invokes the user callback synchronously or starts async completion handling.
     /// </summary>
@@ -525,7 +591,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 throw new InvalidOperationException($"Unsupported callback kind: {_callbackKind}");
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
@@ -547,7 +615,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             TaskContinuationOptions.None,
             TaskScheduler.Default);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Decrements in-flight count after async work and schedules the next fire.
     /// </summary>
@@ -567,6 +637,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
         ScheduleNext();
     }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
@@ -607,6 +678,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
 #endif
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Cancel ()
     {
@@ -620,7 +692,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
     {
@@ -634,7 +708,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Start ()
     {
@@ -650,7 +726,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             return true;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Dispose ()
     {
@@ -666,7 +744,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer = null;
         }
     }
+    //----------------------------------------------------------------------------
 
     #endregion Interface Implementations
 }
+//################################################################################
 #endif

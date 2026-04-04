@@ -9,6 +9,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Contract tests ensuring every BCL-facing member declared on the subset assembly
 ///   (<c>KZDev.SystemClock.PrimeTime</c>) is also present on the full-package assembly
@@ -19,6 +20,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingSystemClockSubsetContract"/> class.
     /// </summary>
@@ -29,11 +31,13 @@ public class UsingSystemClockSubsetContract : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
     #region Private helpers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Asserts that for every public instance method declared on <paramref name="subsetInterface"/>,
     ///   <paramref name="supersetInterface"/> exposes a method with the same signature shape.
@@ -51,7 +55,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
                 $"Full package {supersetInterface.Name} should declare a method matching SystemClock {subsetInterface.Name}.{DescribeMethod(subsetMethod)}");
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Asserts that every parameterless public instance property on <paramref name="subsetInterface"/>
     ///   exists on <paramref name="supersetInterface"/> with the same property type.
@@ -76,7 +82,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
                 $"property {subsetProp.Name} type should match between SystemClock and full-package contracts");
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Finds a method on <paramref name="supersetInterface"/> that matches <paramref name="subsetMethod"/>.
     /// </summary>
@@ -99,7 +107,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 
         return null;
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Determines whether two interface methods represent the same contract shape (name, generic arity,
     ///   return type, and parameter types).
@@ -158,7 +168,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 
         return true;
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether two types are the same reference or the same logical PrimeTime contract type
     ///   compiled into <c>KZDev.SystemClock.PrimeTime</c> versus <c>KZDev.PrimeTime</c> (shared sources).
@@ -193,7 +205,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 
         return string.Equals(subsetNs, superNs, StringComparison.Ordinal);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Builds a short diagnostic string for a <see cref="MethodInfo"/>.
     /// </summary>
@@ -207,6 +221,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
         string parameterList = string.Join(", ", parameters.Select(static p => p.ParameterType.Name));
         return $"{method.ReturnType.Name} {method.Name}({parameterList})";
     }
+    //----------------------------------------------------------------------------
 
     #endregion Private helpers
 
@@ -219,6 +234,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> has a matching
@@ -229,6 +245,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> exists on
@@ -239,6 +256,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> exists on
@@ -249,6 +267,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> has a matching
@@ -259,6 +278,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> exists on
@@ -269,6 +289,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> has a matching
@@ -279,6 +300,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> exists on
@@ -289,6 +311,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> has a matching
@@ -299,6 +322,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> exists on
@@ -309,6 +333,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
     }
+    //----------------------------------------------------------------------------
 
 #if NET8_0_OR_GREATER
     /// <summary>
@@ -333,3 +358,4 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     }
 #endif
 }
+//################################################################################

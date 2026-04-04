@@ -6,6 +6,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> and <see cref="PrimeClock"/>.
 ///   Verifies that all "now" members (including time-only and date-only on .NET) return values
@@ -16,6 +17,7 @@ public partial class UsingIPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClock"/> class.
     /// </summary>
@@ -26,6 +28,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
@@ -37,6 +40,7 @@ public partial class UsingIPrimeClock : UnitTestBase
     {
         typeof(IPrimeClock).GetInterfaces().Should().Contain(typeof(IPrimeTime));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> implements <see cref="IPrimeClock"/>.
@@ -47,6 +51,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         clock.Should().NotBeNull();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> constructed with an explicit
@@ -62,6 +67,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         clock.LocalNowOffset.Should().BeAfter(TimeProvider.System.GetLocalNow().AddSeconds(-2)).
             And.BeBefore(TimeProvider.System.GetLocalNow().AddSeconds(2));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> throws when given a null time provider.
@@ -72,6 +78,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         Action act = () => _ = new PrimeClock(null!);
         act.Should().Throw<ArgumentNullException>().WithParameterName("timeProvider");
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that UTC "now" members are consistent: UtcNowOffset.UtcDateTime matches UtcNowDateTime,
@@ -97,6 +104,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         DateOnly.FromDateTime(UtcNowDateTime).Should().Be(UtcNowDateOnly);
 #endif
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that local "now" members are consistent: LocalNowOffset.DateTime matches LocalNowDateTime,
@@ -122,6 +130,7 @@ public partial class UsingIPrimeClock : UnitTestBase
         DateOnly.FromDateTime(LocalNowDateTime).Should().Be(LocalNowDateOnly);
 #endif
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that all "now" values are recent (within the last 5 seconds).
@@ -136,7 +145,9 @@ public partial class UsingIPrimeClock : UnitTestBase
         clock.UtcNowOffset.Should().BeAfter(before).And.BeBefore(after);
         clock.LocalNowOffset.Should().BeAfter(before.ToLocalTime().AddSeconds(-2)).And.BeBefore(after.ToLocalTime().AddSeconds(2));
     }
+    //----------------------------------------------------------------------------
 
 }
+//################################################################################
 
 

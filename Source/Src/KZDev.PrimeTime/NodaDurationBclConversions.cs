@@ -7,6 +7,7 @@ using NodaTime;
 
 namespace KZDev.PrimeTime;
 
+//################################################################################
 /// <summary>
 ///   Centralizes <see cref="Duration"/> to BCL <see cref="TimeSpan"/> conversions for the Noda stack
 ///   so delays, cancellation timers, interval registration, and virtual clock advances stay aligned with
@@ -14,6 +15,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal static class NodaDurationBclConversions
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Largest <see cref="Duration"/> that maps to <see cref="TimeSpan.MaxValue"/> for BCL delay and sleep APIs.
     /// </summary>
@@ -24,7 +26,9 @@ internal static class NodaDurationBclConversions
     ///   <see cref="CancellationTokenSource"/> timer construction.
     /// </summary>
     private static readonly Duration MaxDurationForCancellationToken = Duration.FromMilliseconds(int.MaxValue);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for BCL delay APIs
     ///   (<see cref="Thread.Sleep(TimeSpan)"/>, <see cref="Task.Delay(TimeSpan)"/>, and related).
@@ -54,7 +58,9 @@ internal static class NodaDurationBclConversions
 
         return duration.ToTimeSpan();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for <see cref="CancellationTokenSource"/>
     ///   timer limits.
@@ -84,7 +90,9 @@ internal static class NodaDurationBclConversions
 
         return duration.ToTimeSpan();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a <see cref="Duration"/> to <see cref="TimeSpan"/> for interval timer registration, timer
     ///   <c>Change</c> operations, and virtual clock deltas so behavior matches <see cref="IPrimeClock"/>
@@ -117,4 +125,6 @@ internal static class NodaDurationBclConversions
 
         return duration.ToTimeSpan();
     }
+    //----------------------------------------------------------------------------
 }
+//################################################################################

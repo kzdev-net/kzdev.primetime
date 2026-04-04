@@ -3,9 +3,11 @@
 
 namespace KZDev.PrimeTime.Tests;
 
+//################################################################################
 /// <summary>
 ///   Base class for all test preparation helper classes.
 /// </summary>
 public abstract class TestPrepBase
 {
 }
+//################################################################################

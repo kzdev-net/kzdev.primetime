@@ -10,6 +10,7 @@ using NodaTime;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer
 ///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating,
@@ -17,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingIPrimeClockIntervalTimers : UnitTestBase
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Short initial delay used by many tests.
     /// </summary>
@@ -41,9 +43,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>
     private static readonly Duration CallbackSettle = Duration.FromMilliseconds(50);
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClockIntervalTimers"/> class.
     /// </summary>
@@ -54,9 +58,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Asserts that <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a one-shot registration
     ///   with a positive repeat interval throws <see cref="InvalidOperationException"/>.
@@ -67,6 +73,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
         act.Should().Throw<InvalidOperationException>();
     }
+    //----------------------------------------------------------------------------
 
     #region One-shot
 
@@ -95,6 +102,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a one-shot timer with state passes the state and registration
@@ -120,6 +128,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that when a one-shot timer is registered with an already cancelled
@@ -140,6 +149,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.State.Should().Be(TimerState.Cancelled);
         timer.IsCancelled.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that cancelling a one-shot timer before it fires prevents the callback
@@ -157,6 +167,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
     }
+    //----------------------------------------------------------------------------
 
     #endregion One-shot
 
@@ -198,6 +209,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         (secondCallbackTime - firstCallbackTime).Should().BeGreaterThanOrEqualTo(RepeatInterval.Minus(TimingTolerance));
         timer.State.Should().BeOneOf(TimerState.RepeatCycle, TimerState.RepeatProcessingCallback);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a repeating timer with <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/>
@@ -224,6 +236,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         times.Count.Should().BeGreaterThan(1);
         (times[1] - times[0]).Should().BeGreaterThanOrEqualTo(RepeatInterval.Minus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Repeating and reset behavior
 
@@ -255,6 +268,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Wait((WaitMargin + newInterval).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - afterChange).Should().BeGreaterThanOrEqualTo(newInterval.Minus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that calling <see cref="IClockIntervalTimer.Change(Duration)"/> on a completed
@@ -287,6 +301,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a repeating
@@ -321,6 +336,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         if (times.Count >= 2)
             (times[1] - times[0]).Should().BeGreaterThanOrEqualTo(newRepeat.Minus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that calling <see cref="IClockIntervalTimer.Change(Duration, Duration)"/> on a
@@ -335,6 +351,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             cancellationToken: TestContext.Current.CancellationToken);
         AssertChangeToRepeatingThrows(timer);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Change
 
@@ -362,6 +379,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.State.Should().Be(TimerState.Active);
         signal.Wait((WaitMargin + ShortDelay).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Stop / Start
 
@@ -390,6 +408,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.State.Should().Be(TimerState.Completed);
         (firedAt!.Value - start).Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a one-shot async timer with state passes the state to the callback
@@ -412,6 +431,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a repeating async timer with
@@ -445,6 +465,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             "next tick must be scheduled after async callback completes, so gap includes repeat interval plus async work");
         betweenFirstAndSecond.Should().BeLessThanOrEqualTo(RepeatInterval.Plus(asyncWork).Plus(TimingTolerance));
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that with Unsafe option the timer callback is invoked (execution context is not
@@ -465,6 +486,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
+    //----------------------------------------------------------------------------
 
     #endregion Async and Unsafe
 
@@ -493,6 +515,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.ElapsedTime.Should().BeGreaterThanOrEqualTo(0);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration)"/> returns <c>false</c>
@@ -508,7 +531,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.Dispose();
         timer.Change(Duration.FromMilliseconds(50)).Should().BeFalse();
     }
+    //----------------------------------------------------------------------------
 
     #endregion Properties
 }
+//################################################################################
 

@@ -4,16 +4,16 @@ using System.Diagnostics;
 namespace KZDev.SystemClock.PrimeTime;
 #else
 namespace KZDev.PrimeTime;
+//################################################################################
 #endif
 
-//################################################################################
 /// <summary>
 ///   Timer options for setting up time-of-day callback timers.
 /// </summary>
 [DebuggerStepThrough]
 public record DayTimeTimerOptions : TimerOptions
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets whether more than one callback is allowed to run concurrently.
     /// </summary>
@@ -21,8 +21,9 @@ public record DayTimeTimerOptions : TimerOptions
     public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; init; }
 #else
     public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; set; }
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets how skipped times are handled during clock transitions.
     /// </summary>
@@ -30,8 +31,9 @@ public record DayTimeTimerOptions : TimerOptions
     public SkippedTimeBehavior SkippedTimeBehavior { get; init; } = SkippedTimeBehavior.RunAfter;
 #else
     public SkippedTimeBehavior SkippedTimeBehavior { get; set; } = SkippedTimeBehavior.RunAfter;
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets how duplicate trigger times are handled during clock transitions.
     /// </summary>
@@ -39,7 +41,7 @@ public record DayTimeTimerOptions : TimerOptions
     public DuplicateTimeBehavior DuplicateTimeBehavior { get; init; } = DuplicateTimeBehavior.RunLast;
 #else
     public DuplicateTimeBehavior DuplicateTimeBehavior { get; set; } = DuplicateTimeBehavior.RunLast;
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
 }
 //################################################################################

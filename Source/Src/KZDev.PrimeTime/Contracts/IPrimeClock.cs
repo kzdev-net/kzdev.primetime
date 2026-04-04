@@ -15,67 +15,67 @@ public partial interface IPrimeClock : IPrimeTime
 {
     #region IPrimeClock — Now (instant and zoned date and time)
 
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current instant on the global timeline (UTC).
     /// </summary>
     Instant NowInstant { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date and time in the system default time zone as a
     ///   <see cref="LocalDateTime"/> (no time zone information).
     /// </summary>
     LocalDateTime LocalNow { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time in UTC as a <see cref="ZonedDateTime"/>.
     /// </summary>
     ZonedDateTime UtcNow { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time in the system default time zone as a
     ///   <see cref="ZonedDateTime"/>.
     /// </summary>
     ZonedDateTime LocalZonedNow { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time in UTC as a <see cref="ZonedDateTime"/>.
     ///   Equivalent to <see cref="UtcNow"/> for symmetry with <see cref="LocalZonedNow"/>.
     /// </summary>
     ZonedDateTime UtcZonedNow { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Now (instant and zoned date and time)
 
     #region IPrimeClock — Now (time-only and date-only)
 
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local time of day (no date component) in the system default zone.
     /// </summary>
     LocalTime LocalNowTime { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC time of day (no date component).
     /// </summary>
     LocalTime UtcNowTime { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date (no time component) in the system default zone.
     /// </summary>
     LocalDate LocalNowDate { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date (no time component).
     /// </summary>
     LocalDate UtcNowDate { [DebuggerStepThrough] get; }
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Now (time-only and date-only)
 
     #region IPrimeClock — Interval timers (RegisterTimer)
 
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback.
     /// </summary>
@@ -93,7 +93,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
     /// </summary>
@@ -113,7 +113,7 @@ public partial interface IPrimeClock : IPrimeTime
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
     /// </summary>
@@ -133,7 +133,7 @@ public partial interface IPrimeClock : IPrimeTime
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with an asynchronous callback.
     /// </summary>
@@ -151,7 +151,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -171,7 +171,7 @@ public partial interface IPrimeClock : IPrimeTime
         object? state = null,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback).
     /// </summary>
@@ -189,7 +189,7 @@ public partial interface IPrimeClock : IPrimeTime
         Action callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context).
     /// </summary>
@@ -209,7 +209,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
     /// </summary>
@@ -229,7 +229,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
     /// </summary>
@@ -247,7 +247,7 @@ public partial interface IPrimeClock : IPrimeTime
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback with context).
     /// </summary>
@@ -267,14 +267,13 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Interval timers (RegisterTimer)
 
     #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
 #if NET
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
     /// </summary>
@@ -293,7 +292,6 @@ public partial interface IPrimeClock : IPrimeTime
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
     /// </summary>
@@ -311,7 +309,6 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -329,7 +326,6 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.
     /// </summary>
@@ -345,7 +341,6 @@ public partial interface IPrimeClock : IPrimeTime
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -363,9 +358,8 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
 #else
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
     /// </summary>
@@ -381,7 +375,7 @@ public partial interface IPrimeClock : IPrimeTime
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
     /// </summary>
@@ -390,7 +384,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -399,7 +393,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.
     /// </summary>
@@ -407,7 +401,7 @@ public partial interface IPrimeClock : IPrimeTime
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -416,7 +410,7 @@ public partial interface IPrimeClock : IPrimeTime
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 #endif
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)

@@ -13,6 +13,7 @@ namespace KZDev.PrimeTime;
 ///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based).
 /// </content>
 #else
+//################################################################################
 /// <content>
 ///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeClock"/>
 ///   in <c>KZDev.PrimeTime</c> (NodaTime-based).
@@ -24,56 +25,73 @@ internal sealed partial class PrimeClock : IPrimeClock
 
     #region IPrimeTime Implementation
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Sleep (TimeSpan sleepTime)
     {
         Thread.Sleep(sleepTime);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Sleep (int sleepMilliseconds)
     {
         Thread.Sleep(sleepMilliseconds);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (TimeSpan delayTime)
     {
         return Task.Delay(delayTime);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (int millisecondsDelay)
     {
         return Task.Delay(millisecondsDelay);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken)
     {
         return Task.Delay(delayTime, cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken)
     {
         return Task.Delay(millisecondsDelay, cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
     {
         CancellationTokenSource cts = new(cancelTime);
         return new TimeCancellationTokenSource(cts);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
     {
         CancellationTokenSource cts = new(cancelMilliseconds);
         return new TimeCancellationTokenSource(cts);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
         CancellationToken token2)
@@ -82,7 +100,9 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
         CancellationToken token2)
@@ -91,7 +111,9 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
     {
@@ -99,7 +121,9 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
     {
@@ -107,7 +131,9 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens)
     {
@@ -118,7 +144,9 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(all);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         params CancellationToken[] cancellationTokens)
@@ -130,11 +158,13 @@ internal sealed partial class PrimeClock : IPrimeClock
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(all);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTime Implementation
 
     #region IPrimeClock — Interval timers
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action<ClockTimerCallbackContext> callback,
@@ -150,7 +180,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -166,7 +198,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action callback,
@@ -181,7 +215,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -197,7 +233,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         Func<CancellationToken, ValueTask> callback,
@@ -212,7 +250,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
@@ -228,7 +268,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
@@ -244,7 +286,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
@@ -259,7 +303,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
@@ -275,7 +321,9 @@ internal sealed partial class PrimeClock : IPrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
@@ -290,6 +338,7 @@ internal sealed partial class PrimeClock : IPrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Interval timers
 
@@ -437,3 +486,4 @@ internal sealed partial class PrimeClock : IPrimeClock
 
     #endregion Interface Implementations
 }
+//################################################################################

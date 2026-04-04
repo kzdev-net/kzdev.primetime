@@ -4,16 +4,16 @@ using System.Diagnostics;
 namespace KZDev.SystemClock.PrimeTime;
 #else
 namespace KZDev.PrimeTime;
+//################################################################################
 #endif
 
-//################################################################################
 /// <summary>
 ///   The timer options for setting up callback timers.
 /// </summary>
 [DebuggerStepThrough]
 public abstract record TimerOptions
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets whether timer registration times are represented in local time or UTC.
     ///   By default, all timer registration properties are represented in UTC. For time-of-day
@@ -29,8 +29,9 @@ public abstract record TimerOptions
     public bool LocalTimeRepresentation { get; init; }
 #else
     public bool LocalTimeRepresentation { get; set; }
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets whether timer callbacks capture and restore the calling execution context or run
     ///   without it (Unsafe). Default is <see cref="TimerCallbackExecutionContext.Capture"/>.
@@ -39,7 +40,7 @@ public abstract record TimerOptions
     public TimerCallbackExecutionContext CallbackExecutionContext { get; init; } = TimerCallbackExecutionContext.Capture;
 #else
     public TimerCallbackExecutionContext CallbackExecutionContext { get; set; } = TimerCallbackExecutionContext.Capture;
+    //----------------------------------------------------------------------------
 #endif
-    //--------------------------------------------------------------------------------
 }
 //################################################################################

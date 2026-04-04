@@ -10,6 +10,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public enum ConcurrentTriggerProcessing
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Concurrent trigger processing is not allowed. If a trigger fires while a callback is
     ///   running, the new trigger is skipped (no callback for that time of day).
@@ -33,5 +34,6 @@ public enum ConcurrentTriggerProcessing
     ///   callback completes.
     /// </summary>
     RunSequentially
+    //----------------------------------------------------------------------------
 }
 //################################################################################

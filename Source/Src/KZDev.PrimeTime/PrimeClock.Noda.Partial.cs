@@ -5,6 +5,7 @@ using NodaTime;
 
 namespace KZDev.PrimeTime;
 
+//################################################################################
 /// <content>
 ///   NodaTime-specific partial of <see cref="PrimeClock"/>: additive <see cref="LocalTime"/> and BCL
 ///   time-of-day registration types, plus <see cref="ClockDayTimeTimerRegistration"/>. Shared BCL and
@@ -210,6 +211,7 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
 #else
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action callback,
@@ -222,7 +224,9 @@ internal sealed partial class PrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext> callback,
@@ -236,7 +240,9 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -250,7 +256,9 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<CancellationToken, ValueTask> callback,
@@ -263,7 +271,9 @@ internal sealed partial class PrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -277,9 +287,11 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 #endif
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
     #endregion Interface Implementations
 }
+//################################################################################

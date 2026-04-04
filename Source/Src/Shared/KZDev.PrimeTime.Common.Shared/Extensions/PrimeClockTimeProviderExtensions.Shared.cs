@@ -7,11 +7,13 @@ namespace KZDev.SystemClock.PrimeTime;
 namespace KZDev.PrimeTime;
 #endif
 
+//################################################################################
 /// <summary>
 ///   Extension methods for obtaining a <see cref="TimeProvider"/> from PrimeTime clocks.
 /// </summary>
 public static partial class PrimeClockTimeProviderExtensions
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a <see cref="TimeProvider"/> that uses the given PrimeTime clock
     ///   for <see cref="TimeProvider.GetUtcNow"/>, <see cref="TimeProvider.GetLocalNow"/>,
@@ -36,4 +38,6 @@ public static partial class PrimeClockTimeProviderExtensions
             throw new ArgumentNullException(nameof(clock));
         return new PrimeClockTimeProviderAdapter(clock);
     }
+    //----------------------------------------------------------------------------
 }
+//################################################################################

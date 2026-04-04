@@ -5,7 +5,7 @@ namespace KZDev.PrimeTime;
 //################################################################################
 public partial interface IClockIntervalTimer
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Changes the next callback time and, for repeating interval timers, the repeat interval
     ///   (NodaTime <see cref="Duration"/> overload).
@@ -30,7 +30,7 @@ public partial interface IClockIntervalTimer
     ///   positive duration, which would convert it to a repeating timer.
     /// </exception>
     bool Change (Duration nextInterval, Duration repeatInterval);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Changes the interval of this registration (NodaTime <see cref="Duration"/> overload).
     /// </summary>
@@ -49,6 +49,6 @@ public partial interface IClockIntervalTimer
     ///   intervals separately.
     /// </remarks>
     bool Change (Duration interval);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

@@ -8,6 +8,7 @@ using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.UnitTests;
 
+//################################################################################
 /// <summary>
 ///   Unit tests for the <see cref="IPrimeTime"/> contract on the NodaTime implementation assembly
 ///   (<c>KZDev.PrimeTime</c>). The BCL subset under <c>KZDev.SystemClock.PrimeTime</c> is covered by
@@ -17,6 +18,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
 {
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeTimeContract"/> class.
     /// </summary>
@@ -27,9 +29,11 @@ public class UsingIPrimeTimeContract : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Resolves the runtime <see cref="Type"/> for <see cref="IPrimeTime"/> from the assembly referenced by this test project.
     /// </summary>
@@ -40,6 +44,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
     {
         return typeof(IPrimeTime);
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that the referenced PrimeTime assembly exposes the <see cref="IPrimeTime"/> interface type.
@@ -50,6 +55,7 @@ public class UsingIPrimeTimeContract : UnitTestBase
         Type primeTimeInterfaceType = GetIPrimeTimeType();
         primeTimeInterfaceType.IsInterface.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTime"/> declares Sleep and DelayAsync methods.
@@ -64,4 +70,6 @@ public class UsingIPrimeTimeContract : UnitTestBase
         hasSleep.Should().BeTrue();
         hasDelayAsync.Should().BeTrue();
     }
+    //----------------------------------------------------------------------------
 }
+//################################################################################

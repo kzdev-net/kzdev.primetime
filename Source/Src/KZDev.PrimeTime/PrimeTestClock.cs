@@ -6,6 +6,7 @@ using NodaTime.TimeZones;
 
 namespace KZDev.PrimeTime;
 
+//################################################################################
 /// <summary>
 ///   NodaTime virtual instant storage, zone mapping, and Noda-specific surface for
 ///   <see cref="PrimeTestClock"/>.
@@ -14,6 +15,7 @@ public sealed partial class PrimeTestClock
 {
     #region Nested types
 
+    //============================================================================
     /// <summary>
     ///   Noda <see cref="IClockDayTimeTimer"/> change overloads for shared virtual day-time timers.
     /// </summary>
@@ -23,13 +25,16 @@ public sealed partial class PrimeTestClock
 
         #region IClockTimer (Noda) Implementation
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         public Instant RegisteredInstant => Instant.FromDateTimeOffset(RegisteredTime);
+        //------------------------------------------------------------------------
 
         #endregion IClockTimer (Noda) Implementation
 
         #region IClockDayTimeTimer (Noda) Implementation
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         public bool Change (LocalTime timeOfDay)
         {
@@ -47,17 +52,22 @@ public sealed partial class PrimeTestClock
                 return true;
             }
         }
+        //------------------------------------------------------------------------
 
+        //------------------------------------------------------------------------
         /// <inheritdoc />
         public bool Change (Duration interval) => false;
+        //------------------------------------------------------------------------
 
         #endregion IClockDayTimeTimer (Noda) Implementation
 
         #endregion Interface Implementations
     }
+    //============================================================================
 
     #endregion Nested types
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   The time zone used for local zoned date and time in virtual time.
     /// </summary>
@@ -67,9 +77,11 @@ public sealed partial class PrimeTestClock
     ///   The current virtual instant on the UTC timeline; read and updated under the shared gate lock.
     /// </summary>
     private Instant _now;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with virtual time set to the current system instant.
     /// </summary>
@@ -78,7 +90,9 @@ public sealed partial class PrimeTestClock
         _now = SystemClock.Instance.GetCurrentInstant();
         _zone = GetSystemDefaultTimeZone();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with the specified initial instant and system default zone.
     /// </summary>
@@ -88,7 +102,9 @@ public sealed partial class PrimeTestClock
         _now = initialInstant;
         _zone = GetSystemDefaultTimeZone();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with the specified initial instant and time zone.
     /// </summary>
@@ -102,11 +118,13 @@ public sealed partial class PrimeTestClock
         _now = initialInstant;
         _zone = zone ?? throw new ArgumentNullException(nameof(zone));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
     #region IPrimeClock Implementation — Now (Noda)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Instant NowInstant
     {
@@ -116,7 +134,9 @@ public sealed partial class PrimeTestClock
                 return _now;
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcNow
     {
@@ -126,7 +146,9 @@ public sealed partial class PrimeTestClock
                 return _now.InUtc();
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime LocalZonedNow
     {
@@ -136,36 +158,57 @@ public sealed partial class PrimeTestClock
                 return _now.InZone(_zone);
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcZonedNow => UtcNow;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset LocalNowOffset => LocalZonedNow.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowOffset => UtcNow.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDateTime LocalNow => LocalZonedNow.LocalDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime LocalNowTime => LocalZonedNow.TimeOfDay;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime UtcNowTime => UtcNow.TimeOfDay;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate LocalNowDate => LocalZonedNow.Date;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate UtcNowDate => UtcNow.Date;
+    //----------------------------------------------------------------------------
 
 #if NET
     /// <inheritdoc />
@@ -183,6 +226,7 @@ public sealed partial class PrimeTestClock
 
     #endregion IPrimeClock Implementation — Now (Noda)
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Resolves the system default time zone for local projections, using the BCL provider or
     ///   <see cref="BclDateTimeZone.ForSystemDefault"/> when the provider has no mapping.
@@ -204,7 +248,9 @@ public sealed partial class PrimeTestClock
             return BclDateTimeZone.ForSystemDefault();
         }
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts <see cref="LocalTime"/> to a time-of-day <see cref="TimeSpan"/> since midnight.
     /// </summary>
@@ -215,7 +261,9 @@ public sealed partial class PrimeTestClock
         Period sinceMidnight = Period.Between(LocalTime.Midnight, t);
         return sinceMidnight.ToDuration().ToTimeSpan();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Projects a UTC instant as a <see cref="DateTimeOffset"/> in this clock's configured zone.
     /// </summary>
@@ -228,7 +276,9 @@ public sealed partial class PrimeTestClock
         Instant instant = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
         return instant.InZone(_zone).ToDateTimeOffset();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the UTC offset of this clock's configured zone for an unspecified-kind local wall-clock value.
     /// </summary>
@@ -241,14 +291,18 @@ public sealed partial class PrimeTestClock
         LocalDateTime ldt = LocalDateTime.FromDateTime(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
         return _zone.AtLeniently(ldt).Offset.ToTimeSpan();
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets the virtual instant from a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
         _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Reads the virtual instant as a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
     /// </summary>
@@ -257,14 +311,18 @@ public sealed partial class PrimeTestClock
     /// </returns>
     private partial DateTimeOffset ReadVirtualUtcNowLocked () =>
         new DateTimeOffset(_now.ToDateTimeUtc(), TimeSpan.Zero);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Advances virtual time. The caller must hold the gate lock.
     /// </summary>
     /// <param name="duration">The virtual elapsed time to add.</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration) =>
         _now += Duration.FromTimeSpan(duration);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> with <see cref="NodaClockTimeChangedEventArgs"/> created from
     ///   the virtual instant read under the gate lock (expected to correspond to <paramref name="utcNowOffset"/> when
@@ -281,11 +339,13 @@ public sealed partial class PrimeTestClock
 
         ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
     }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
     #region IPrimeTestClock Implementation — Noda
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void SetInstant (Instant instant)
     {
@@ -295,7 +355,9 @@ public sealed partial class PrimeTestClock
 
         RaiseClockEventsAfterVirtualUtcChange(utc);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void SetLocalTime (LocalDateTime localDateTime)
     {
@@ -306,61 +368,83 @@ public sealed partial class PrimeTestClock
 
         RaiseClockEventsAfterVirtualUtcChange(utc);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Advance (Duration duration) =>
         Advance(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void RunFor (Duration duration) =>
         RunFor(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (Duration? rate = null) =>
         Start(rate is { } d ? NodaDurationBclConversions.ToTimeSpanForTimerInterval(d) : null);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock Implementation — Noda
 
     #region IPrimeTime / IPrimeClock — Delays (Duration)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Sleep (Duration duration) =>
         Sleep(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration) =>
         DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken) =>
         DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration), cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTime / IPrimeClock — Delays (Duration)
 
     #region IPrimeTime / IPrimeClock — Time cancellation (Duration)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter) =>
         GetTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter));
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken) =>
         LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
         CancellationToken token2) =>
         LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), token1, token2);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens) =>
         LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTime / IPrimeClock — Time cancellation (Duration)
 
     #region IPrimeClock Implementation — Interval timers (Duration)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action callback,
@@ -369,7 +453,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, repeat,
             timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<ClockTimerCallbackContext> callback,
@@ -379,7 +465,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
             repeat, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -389,7 +477,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
             repeat, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<CancellationToken, ValueTask> callback,
@@ -398,7 +488,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
             repeat, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -408,7 +500,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
             state, repeat, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -417,7 +511,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -428,7 +524,9 @@ public sealed partial class PrimeTestClock
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
             timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -439,7 +537,9 @@ public sealed partial class PrimeTestClock
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
             timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -448,7 +548,9 @@ public sealed partial class PrimeTestClock
         IntervalTimerOptions? timerOptions = null) =>
         RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -459,11 +561,13 @@ public sealed partial class PrimeTestClock
         RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
             timerOptions);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation — Interval timers (Duration)
 
     #region IPrimeClock Implementation — Time-of-day timers (LocalTime)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action callback,
@@ -471,7 +575,9 @@ public sealed partial class PrimeTestClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.SimpleAction, callback, null,
             timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext> callback,
@@ -480,7 +586,9 @@ public sealed partial class PrimeTestClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAction, callback, state,
             timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -489,7 +597,9 @@ public sealed partial class PrimeTestClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextActionWithToken, callback,
             state, timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<CancellationToken, ValueTask> callback,
@@ -497,7 +607,9 @@ public sealed partial class PrimeTestClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.SimpleAsync, callback, null,
             timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -506,8 +618,10 @@ public sealed partial class PrimeTestClock
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAsync, callback, state,
             timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation — Time-of-day timers (LocalTime)
 
     #endregion Interface Implementations
 }
+//################################################################################

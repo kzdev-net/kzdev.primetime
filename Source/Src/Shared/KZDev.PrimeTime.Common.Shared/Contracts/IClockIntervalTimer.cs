@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public partial interface IClockIntervalTimer : IIntervalTimer
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Changes the next callback time and, for repeating timers, the repeat interval.
     /// </summary>
@@ -35,7 +35,7 @@ public partial interface IClockIntervalTimer : IIntervalTimer
     ///   finite, positive interval, which would convert it to a repeating timer.
     /// </exception>
     bool Change (TimeSpan nextInterval, TimeSpan repeatInterval);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Changes the interval of this registration.
     /// </summary>
@@ -54,6 +54,6 @@ public partial interface IClockIntervalTimer : IIntervalTimer
     ///   intervals separately.
     /// </remarks>
     bool Change (TimeSpan interval);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

@@ -18,6 +18,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class PrimeClock
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sentinel <see cref="Duration"/> matching <see cref="Timeout.InfiniteTimeSpan"/> for one-shot (non-repeating) timers.
     /// </summary>
@@ -32,9 +33,11 @@ internal sealed partial class PrimeClock
     ///   The time zone used for local zoned date and time projections.
     /// </summary>
     private readonly DateTimeZone _systemDefaultZone;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
     ///   <see cref="SystemClock.Instance"/> and the BCL system default time zone.
@@ -43,7 +46,9 @@ internal sealed partial class PrimeClock
         : this(SystemClock.Instance, GetSystemDefaultTimeZone())
     {
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
     ///   specified clock and system default time zone.
@@ -62,9 +67,11 @@ internal sealed partial class PrimeClock
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _systemDefaultZone = systemDefaultZone ?? throw new ArgumentNullException(nameof(systemDefaultZone));
     }
+    //----------------------------------------------------------------------------
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the system default time zone for use as the local zone. Prefers the BCL
     ///   provider's GetSystemDefault() when the system default is mapped; otherwise
@@ -89,49 +96,76 @@ internal sealed partial class PrimeClock
             return BclDateTimeZone.ForSystemDefault();
         }
     }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
     #region IPrimeClock Implementation
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Instant NowInstant => _clock.GetCurrentInstant();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcNow => _clock.GetCurrentInstant().InUtc();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime LocalZonedNow => _clock.GetCurrentInstant().InZone(_systemDefaultZone);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcZonedNow => UtcNow;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDateTime LocalNow => LocalZonedNow.LocalDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime LocalNowTime => LocalZonedNow.TimeOfDay;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime UtcNowTime => UtcNow.TimeOfDay;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate LocalNowDate => LocalZonedNow.Date;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate UtcNowDate => UtcNow.Date;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset LocalNowOffset => LocalZonedNow.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowOffset => UtcNow.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+    //----------------------------------------------------------------------------
 
 #if NET
     /// <inheritdoc />
@@ -151,6 +185,7 @@ internal sealed partial class PrimeClock
 
     #region IPrimeClock — Delays (Duration)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     /// <remarks>
     ///   Durations greater than <see cref="TimeSpan.MaxValue"/> are automatically clamped
@@ -163,25 +198,31 @@ internal sealed partial class PrimeClock
         TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         Thread.Sleep(ts);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration)
     {
         TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         return Task.Delay(ts);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
     {
         TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
         return Task.Delay(ts, cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Delays (Duration)
 
     #region IPrimeClock — Time cancellation (Duration)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
     {
@@ -189,7 +230,9 @@ internal sealed partial class PrimeClock
         CancellationTokenSource cts = new(ts);
         return new TimeCancellationTokenSource(cts);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
     {
@@ -199,7 +242,9 @@ internal sealed partial class PrimeClock
             CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
         CancellationToken token2)
@@ -210,7 +255,9 @@ internal sealed partial class PrimeClock
             CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens)
@@ -221,11 +268,13 @@ internal sealed partial class PrimeClock
             CancellationTokenSource.CreateLinkedTokenSource([timeCts.Token, .. cancellationTokens]);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Time cancellation (Duration)
 
     #region IPrimeClock — Interval timers (RegisterTimer)
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action callback,
@@ -243,7 +292,9 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<ClockTimerCallbackContext> callback,
@@ -262,7 +313,9 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -278,7 +331,9 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<CancellationToken, ValueTask> callback,
@@ -296,7 +351,9 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
@@ -315,7 +372,9 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
     }
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -330,7 +389,9 @@ internal sealed partial class PrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -346,7 +407,9 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -362,7 +425,9 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -377,7 +442,9 @@ internal sealed partial class PrimeClock
             null,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
         Duration repeatInterval,
@@ -393,6 +460,7 @@ internal sealed partial class PrimeClock
             state,
             timerOptions,
             cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Interval timers (RegisterTimer)
 

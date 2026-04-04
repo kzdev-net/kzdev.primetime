@@ -11,6 +11,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public enum SkippedTimeBehavior
 {
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   The timer is skipped and no callback is invoked for the skipped time.
     /// </summary>
@@ -46,5 +47,6 @@ public enum SkippedTimeBehavior
     ///   </para>
     /// </remarks>
     RunBefore
+    //----------------------------------------------------------------------------
 }
 //################################################################################

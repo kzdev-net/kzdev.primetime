@@ -19,7 +19,7 @@ public partial interface IPrimeTime
 {
     #region IPrimeTime — Delays (TimeSpan)
 
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Suspends the current thread for the specified amount of time.
     /// </summary>
@@ -35,7 +35,7 @@ public partial interface IPrimeTime
     /// </exception>
     /// <seealso cref="Thread.Sleep(TimeSpan)"/>
     void Sleep(TimeSpan sleepTime);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Suspends the current thread for the specified number of milliseconds.
     /// </summary>
@@ -51,7 +51,7 @@ public partial interface IPrimeTime
     /// </exception>
     /// <seealso cref="Thread.Sleep(int)"/>
     void Sleep(int sleepMilliseconds);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified time interval.
     /// </summary>
@@ -64,7 +64,7 @@ public partial interface IPrimeTime
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
     Task DelayAsync(TimeSpan delayTime);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified number of milliseconds.
     /// </summary>
@@ -75,7 +75,7 @@ public partial interface IPrimeTime
     ///   <paramref name="millisecondsDelay"/> is less than -1.
     /// </exception>
     Task DelayAsync(int millisecondsDelay);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified time interval.
     /// </summary>
@@ -94,7 +94,7 @@ public partial interface IPrimeTime
     ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
     Task DelayAsync(TimeSpan delayTime, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified number of milliseconds.
     /// </summary>
@@ -111,13 +111,13 @@ public partial interface IPrimeTime
     ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
     Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTime — Delays (TimeSpan)
 
     #region IPrimeTime — Time cancellation (TimeSpan)
 
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token expires after the specified time. The
     ///   caller is responsible for disposing the returned instance when no longer needed.
@@ -133,7 +133,7 @@ public partial interface IPrimeTime
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
     TimeCancellationTokenSource GetTimeCancellationToken(TimeSpan cancelTime);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token expires after the specified time. The
     ///   caller is responsible for disposing the returned instance when no longer needed.
@@ -148,7 +148,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
     TimeCancellationTokenSource GetTimeCancellationToken(int cancelMilliseconds);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
     ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
@@ -172,7 +172,7 @@ public partial interface IPrimeTime
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds,
         CancellationToken token1, CancellationToken token2);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
     ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
@@ -197,7 +197,7 @@ public partial interface IPrimeTime
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime,
         CancellationToken token1, CancellationToken token2);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when either the specified
     ///   time elapses or the given cancellation token is cancelled. Disposing the
@@ -218,7 +218,7 @@ public partial interface IPrimeTime
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when either the specified
     ///   time elapses or the given cancellation token is cancelled. Disposing the
@@ -238,7 +238,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
     ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
@@ -263,7 +263,7 @@ public partial interface IPrimeTime
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime,
         params CancellationToken[] cancellationTokens);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
     ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
@@ -287,7 +287,7 @@ public partial interface IPrimeTime
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds,
         params CancellationToken[] cancellationTokens);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeTime — Time cancellation (TimeSpan)
 }

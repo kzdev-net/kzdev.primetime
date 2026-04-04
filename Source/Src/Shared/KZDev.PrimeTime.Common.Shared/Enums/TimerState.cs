@@ -10,7 +10,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public enum TimerState
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   The timer is active and is not processing any callbacks.
     /// </summary>
@@ -24,12 +24,10 @@ public enum TimerState
     ///   </para>
     /// </remarks>
     Active,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer has been cancelled.
     /// </summary>
     Cancelled,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer has finished all callbacks. Applies only to non-repeating timers.
     /// </summary>
@@ -42,17 +40,14 @@ public enum TimerState
     ///   </para>
     /// </remarks>
     Completed,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer has been disabled or stopped.
     /// </summary>
     Disabled,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer has been disposed.
     /// </summary>
     Disposed,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer is processing at least one callback.
     /// </summary>
@@ -67,7 +62,6 @@ public enum TimerState
     ///   </para>
     /// </remarks>
     ProcessingCallback,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   The timer is in a repeat cycle where the interval resets before the callback runs.
     ///   Interval timers only.
@@ -76,7 +70,6 @@ public enum TimerState
     ///   No callback is running in this state.
     /// </remarks>
     RepeatCycle,
-    //--------------------------------------------------------------------------------
     /// <summary>
     ///   A callback is running and the repeat interval resets before the callback (interval
     ///   timers only).
@@ -86,6 +79,6 @@ public enum TimerState
     ///   <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> set to <c>false</c>.
     /// </remarks>
     RepeatProcessingCallback
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################

@@ -9,7 +9,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current instant (UTC) of the clock to the specified value. When the
     ///   clock is not running, this is the instant returned by <see cref="IPrimeClock.NowInstant"/>
@@ -19,7 +19,7 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The new current instant on the global timeline.
     /// </param>
     void SetInstant (Instant instant);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Sets the current time of the clock to the specified local date and time,
     ///   interpreted in the clock's default (local) time zone.
@@ -28,7 +28,7 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The new current local date and time.
     /// </param>
     void SetLocalTime (LocalDateTime localDateTime);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Advances the clock's virtual time by the specified duration. Pending delays
     ///   (Sleep, DelayAsync) that are due by the new time complete, time-based
@@ -39,7 +39,7 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The amount of virtual time to add to the current instant.
     /// </param>
     void Advance (Duration duration);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Advances the clock's virtual time by the specified duration, processing all
     ///   due delays, time cancellations, and timer callbacks. Equivalent to
@@ -49,7 +49,7 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The amount of virtual time to advance.
     /// </param>
     void RunFor (Duration duration);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Starts automatic advancement of virtual time at the given rate (e.g. 1 second
     ///   of real time = <paramref name="rate"/> of virtual time). When the clock is
@@ -60,6 +60,6 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   use 1 second of virtual time per real second.
     /// </param>
     void Start (Duration? rate = null);
-    //--------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 }
 //################################################################################
