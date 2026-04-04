@@ -4,6 +4,7 @@
 #if NET || !SYSTEMCLOCK
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;

@@ -2,6 +2,8 @@
 // This file is part of the PrimeTime project.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -27,6 +29,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="utcTimeOfDaySchedule">
     ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
     /// </param>
+#if NET
+    [SetsRequiredMembers]
+#endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
         LocalTime timeOfDay,
         IntervalTimerCallbackKind callbackKind,

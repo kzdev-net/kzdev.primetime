@@ -1,6 +1,7 @@
 #if NET
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 namespace KZDev.SystemClock.PrimeTime;
 
 /// <summary>
@@ -19,6 +20,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Initializes a new instance for a local-time day-time timer.
     /// </summary>
+#if NET
+    [SetsRequiredMembers]
+#endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
         LocalTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,
@@ -33,6 +37,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Initializes a new instance for a UTC day-time timer.
     /// </summary>
+#if NET
+    [SetsRequiredMembers]
+#endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
         UtcTimeOfDay timeOfDay,
         IntervalTimerCallbackKind callbackKind,
@@ -44,6 +51,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
     }
 
+#if NET
+    [SetsRequiredMembers]
+#endif
     private ClockDayTimeTimerRegistration (IPrimeClock clock,
         bool isLocal,
         TimeOnly targetTimeOfDay,

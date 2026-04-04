@@ -1,4 +1,5 @@
-#if NET
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -14,6 +15,8 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public partial interface IClockDayTimeTimer : IDayTimeTimer
 {
+#if NET
+
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Changes the target local time of day for this registration.
@@ -37,7 +40,7 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
     /// </returns>
     bool Change (UtcTimeOfDay newTimeOfDay);
     //--------------------------------------------------------------------------------
-}
-//################################################################################
 
 #endif
+}
+//################################################################################

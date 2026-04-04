@@ -3,7 +3,7 @@ using NodaTime;
 namespace KZDev.PrimeTime;
 
 //################################################################################
-public partial interface IClockDayTimeTimer : IDayTimeTimer
+public partial interface IClockDayTimeTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>
