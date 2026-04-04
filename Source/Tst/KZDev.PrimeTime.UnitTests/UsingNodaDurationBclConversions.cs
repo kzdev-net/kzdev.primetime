@@ -9,7 +9,7 @@ using KZDev.PrimeTime;
 
 using NodaTime;
 
-namespace KZDev.PrimeTime.NodaTime.UnitTests;
+namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Validates Noda <see cref="Duration"/> to BCL conversion helpers used for superset alignment with

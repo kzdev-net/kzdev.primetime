@@ -6,7 +6,7 @@ using KZDev.PrimeTime;
 using KZDev.PrimeTime.Tests;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KZDev.PrimeTime.NodaTime.UnitTests;
+namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>

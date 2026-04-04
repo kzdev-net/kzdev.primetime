@@ -8,7 +8,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
 
-namespace KZDev.PrimeTime.NodaTime.UnitTests;
+namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer

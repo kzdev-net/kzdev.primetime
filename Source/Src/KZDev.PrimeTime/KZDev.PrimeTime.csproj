@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="KZDev.PrimeTime.NodaTime.UnitTests" />
+    <InternalsVisibleTo Include="KZDev.PrimeTime.UnitTests" />
   </ItemGroup>
 
   <Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />

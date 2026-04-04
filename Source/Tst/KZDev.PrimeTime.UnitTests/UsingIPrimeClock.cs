@@ -7,7 +7,7 @@ using KZDev.PrimeTime.Tests;
 using NodaTime;
 using NodaTime.Testing;
 
-namespace KZDev.PrimeTime.NodaTime.UnitTests;
+namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> and <see cref="PrimeClock"/>.
@@ -216,8 +216,8 @@ public class UsingIPrimeClock : UnitTestBase
     public void PrimeClock_NowMembersAreRecent ()
     {
         IPrimeClock clock = new PrimeClock();
-        Instant before = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(5));
-        Instant after = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromSeconds(5));
+        Instant before = global::NodaTime.SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromSeconds(5));
+        Instant after = global::NodaTime.SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromSeconds(5));
 
         clock.NowInstant.Should().BeGreaterThan(before).And.BeLessThan(after);
     }

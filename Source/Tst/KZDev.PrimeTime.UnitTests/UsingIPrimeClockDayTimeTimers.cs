@@ -8,7 +8,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
 
-namespace KZDev.PrimeTime.NodaTime.UnitTests;
+namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
@@ -149,7 +149,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         {
             firedAt = clock.NowInstant;
             signal.Set();
-            return default; // completed ValueTask; ValueTask.CompletedTask is .NET 5+ only (net481 incompatible)
+            return default; // completed ValueTask; use default for .NET Standard 2.0 compatibility where ValueTask.CompletedTask is unavailable
+
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
