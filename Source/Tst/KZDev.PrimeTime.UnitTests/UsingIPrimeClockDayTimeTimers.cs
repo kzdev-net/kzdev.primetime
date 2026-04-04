@@ -36,6 +36,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     /// </summary>
     private static readonly Duration CallbackSettle = Duration.FromMilliseconds(50);
 
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClockDayTimeTimers"/> class.
     /// </summary>
@@ -46,6 +48,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     #region Local time-of-day — fire and contract
 

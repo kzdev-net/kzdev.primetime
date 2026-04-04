@@ -18,6 +18,8 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingIPrimeTestClock : UnitTestBase
 {
+    private static readonly Duration SleepTestRealTimeTimeout = Duration.FromSeconds(5);
+
     #region Constructors/Finalizers
 
     /// <summary>
@@ -32,8 +34,6 @@ public class UsingIPrimeTestClock : UnitTestBase
     }
 
     #endregion Constructors/Finalizers
-
-    private static readonly Duration SleepTestRealTimeTimeout = Duration.FromSeconds(5);
 
     #region Contract and construction
 

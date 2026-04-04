@@ -23,6 +23,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private Instant? _nextCallbackInstant;
     private Instant? _lastCallbackInstant;
 
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance with Noda <see cref="LocalTime"/> scheduling.
     /// </summary>
@@ -46,10 +48,30 @@ internal sealed partial class ClockDayTimeTimerRegistration
         FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
     }
 
+    #endregion Constructors/Finalizers
+
     /// <summary>
     ///   Gets the instant at which this registration was created.
     /// </summary>
     public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
+
+    private static int DurationToTimerMilliseconds (Duration duration)
+    {
+        if (duration <= Duration.Zero)
+            return Timeout.Infinite;
+        try
+        {
+            TimeSpan ts = duration.ToTimeSpan();
+            long msLong = (long)Math.Min(ts.TotalMilliseconds, int.MaxValue);
+            if (msLong <= 0)
+                return Timeout.Infinite;
+            return (int)msLong;
+        }
+        catch (OverflowException)
+        {
+            return int.MaxValue;
+        }
+    }
 
     private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
 
@@ -134,24 +156,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return (long)(next - now).TotalMilliseconds;
     }
 
-    private static int DurationToTimerMilliseconds (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return Timeout.Infinite;
-        try
-        {
-            TimeSpan ts = duration.ToTimeSpan();
-            long msLong = (long)Math.Min(ts.TotalMilliseconds, int.MaxValue);
-            if (msLong <= 0)
-                return Timeout.Infinite;
-            return (int)msLong;
-        }
-        catch (OverflowException)
-        {
-            return int.MaxValue;
-        }
-    }
-
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
     {
         Duration d = Duration.FromTimeSpan(delay);
@@ -185,6 +189,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _targetTimeOfDay = new LocalTime(value.Hour, value.Minute, value.Second, value.Millisecond);
 #endif
 
+    #region Interface Implementations
+
     #region IClockDayTimeTimer Implementation
 
     /// <inheritdoc />
@@ -206,4 +212,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     public bool Change (Duration interval) => false;
 
     #endregion IClockDayTimeTimer Implementation
+
+    #endregion Interface Implementations
 }

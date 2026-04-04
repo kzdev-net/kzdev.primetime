@@ -150,47 +150,6 @@ public partial interface IPrimeTime
     TimeCancellationTokenSource GetTimeCancellationToken(int cancelMilliseconds);
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Returns a disposable wrapper whose token is cancelled when either the specified
-    ///   time elapses or the given cancellation token is cancelled. Disposing the
-    ///   returned instance disposes all underlying sources (including internal time-based
-    ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
-    /// </summary>
-    /// <param name="cancelTime">
-    ///   The time to wait before cancelling the token.
-    /// </param>
-    /// <param name="cancellationToken">
-    ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
-    /// </param>
-    /// <returns>
-    ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
-    /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
-    ///   infinite timeout, or too large to express in milliseconds).
-    /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
-    /// <summary>
-    ///   Returns a disposable wrapper whose token is cancelled when either the specified
-    ///   time elapses or the given cancellation token is cancelled. Disposing the
-    ///   returned instance disposes all underlying sources (including internal time-based
-    ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
-    /// </summary>
-    /// <param name="cancelMilliseconds">
-    ///   The number of milliseconds to wait before cancelling the token.
-    /// </param>
-    /// <param name="cancellationToken">
-    ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
-    /// </param>
-    /// <returns>
-    ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
-    /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    ///   <paramref name="cancelMilliseconds"/> is less than -1.
-    /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds, CancellationToken cancellationToken);
-    //--------------------------------------------------------------------------------
-    /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
     ///   elapses or any of the given tokens is cancelled. Disposing the returned instance
     ///   disposes all underlying sources (including internal time-based sources). The caller
@@ -238,6 +197,47 @@ public partial interface IPrimeTime
     /// </exception>
     TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime,
         CancellationToken token1, CancellationToken token2);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns a disposable wrapper whose token is cancelled when either the specified
+    ///   time elapses or the given cancellation token is cancelled. Disposing the
+    ///   returned instance disposes all underlying sources (including internal time-based
+    ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
+    /// </summary>
+    /// <param name="cancelTime">
+    ///   The time to wait before cancelling the token.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
+    /// </param>
+    /// <returns>
+    ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
+    ///   infinite timeout, or too large to express in milliseconds).
+    /// </exception>
+    TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime, CancellationToken cancellationToken);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns a disposable wrapper whose token is cancelled when either the specified
+    ///   time elapses or the given cancellation token is cancelled. Disposing the
+    ///   returned instance disposes all underlying sources (including internal time-based
+    ///   sources). The caller is responsible for disposing the returned instance when no longer needed.
+    /// </summary>
+    /// <param name="cancelMilliseconds">
+    ///   The number of milliseconds to wait before cancelling the token.
+    /// </param>
+    /// <param name="cancellationToken">
+    ///   The cancellation token to link; when it is cancelled, the returned wrapper's token is cancelled.
+    /// </param>
+    /// <returns>
+    ///   A <see cref="TimeCancellationTokenSource"/>. Caller must dispose.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   <paramref name="cancelMilliseconds"/> is less than -1.
+    /// </exception>
+    TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds, CancellationToken cancellationToken);
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time

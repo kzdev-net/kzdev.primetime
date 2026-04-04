@@ -13,10 +13,6 @@ namespace KZDev.PrimeTime;
 /// </content>
 internal sealed partial class PrimeClock
 {
-    #region Interface Implementations
-
-    #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
-
 #if NET
     /// <summary>
     ///   Converts a <see cref="TimeOnly"/> (wall-clock) to <see cref="LocalTime"/> for Noda day-time scheduling.
@@ -24,6 +20,13 @@ internal sealed partial class PrimeClock
     private static LocalTime TimeOnlyToLocalTime (TimeOnly t) =>
         new(t.Hour, t.Minute, t.Second, t.Millisecond);
 
+#endif
+
+    #region Interface Implementations
+
+    #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
+#if NET
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action callback,

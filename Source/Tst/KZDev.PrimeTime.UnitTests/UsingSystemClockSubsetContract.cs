@@ -17,143 +17,20 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingSystemClockSubsetContract : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingSystemClockSubsetContract"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    #region Constructors/Finalizers
-
     public UsingSystemClockSubsetContract (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
 
     #endregion Constructors/Finalizers
-
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> has a matching
-    ///   method on <see cref="IPrimeTime"/>.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeTimeSubset_OnNodaIPrimeTime_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> has a matching
-    ///   method on <see cref="IPrimeClock"/>.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> exists on
-    ///   <see cref="IPrimeTime"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeTimeSubset_OnNodaIPrimeTime_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> exists on
-    ///   <see cref="IPrimeClock"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> has a matching
-    ///   method on <see cref="IClockIntervalTimer"/>.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> exists on
-    ///   <see cref="IClockIntervalTimer"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> has a matching
-    ///   method on <see cref="IClockTimer"/>.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> exists on
-    ///   <see cref="IClockTimer"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> has a matching
-    ///   method on <see cref="IPrimeTestClock"/>.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> exists on
-    ///   <see cref="IPrimeTestClock"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
-    }
-
-#if NET8_0_OR_GREATER
-    /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> has a matching
-    ///   method on <see cref="IClockDayTimeTimer"/> (BCL time-of-day surface is <c>#if NET</c> in shared sources; not present on
-    ///   <c>netstandard2.0</c> builds).
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllMethodsMatch ()
-    {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
-    }
-
-    /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> exists on
-    ///   <see cref="IClockDayTimeTimer"/> with the same type.
-    /// </summary>
-    [Fact]
-    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllPropertiesMatch ()
-    {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
-    }
-#endif
 
     #region Private helpers
 
@@ -332,4 +209,127 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     }
 
     #endregion Private helpers
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> has a matching
+    ///   method on <see cref="IPrimeTime"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTimeSubset_OnNodaIPrimeTime_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> has a matching
+    ///   method on <see cref="IPrimeClock"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTime"/> exists on
+    ///   <see cref="IPrimeTime"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTimeSubset_OnNodaIPrimeTime_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTime), typeof(IPrimeTime));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeClock"/> exists on
+    ///   <see cref="IPrimeClock"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> has a matching
+    ///   method on <see cref="IClockIntervalTimer"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockIntervalTimer"/> exists on
+    ///   <see cref="IClockIntervalTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockIntervalTimerSubset_OnFullIClockIntervalTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockIntervalTimer), typeof(IClockIntervalTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> has a matching
+    ///   method on <see cref="IClockTimer"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockTimer"/> exists on
+    ///   <see cref="IClockTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockTimerSubset_OnFullIClockTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockTimer), typeof(IClockTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> has a matching
+    ///   method on <see cref="IPrimeTestClock"/>.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> exists on
+    ///   <see cref="IPrimeTestClock"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+    }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> has a matching
+    ///   method on <see cref="IClockDayTimeTimer"/> (BCL time-of-day surface is <c>#if NET</c> in shared sources; not present on
+    ///   <c>netstandard2.0</c> builds).
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllMethodsMatch ()
+    {
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
+    }
+
+    /// <summary>
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IClockDayTimeTimer"/> exists on
+    ///   <see cref="IClockDayTimeTimer"/> with the same type.
+    /// </summary>
+    [Fact]
+    public void SystemClock_IClockDayTimeTimerSubset_OnFullIClockDayTimeTimer_AllPropertiesMatch ()
+    {
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IClockDayTimeTimer), typeof(IClockDayTimeTimer));
+    }
+#endif
 }

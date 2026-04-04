@@ -21,74 +21,18 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public sealed partial class PrimeTestClock : IPrimeTestClock
 {
-    private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset);
-
-    /// <summary>
-    ///   Returns the UTC offset for a local wall-clock calendar <see cref="DateTime"/> in the same time zone
-    ///   the clock uses for <see cref="LocalNowOffset"/>.
-    /// </summary>
-    /// <param name="localUnspecified">Local date and time with <see cref="DateTime.Kind"/> <see cref="DateTimeKind.Unspecified"/>.</param>
-    /// <returns>The offset from UTC at that local wall time.</returns>
-    private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified);
-
-    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset);
-
-    private partial DateTimeOffset ReadVirtualUtcNowLocked ();
-
-    private partial void AddVirtualTimeLocked (TimeSpan duration);
-
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset);
-
-    #region Local time-of-day scheduling
-
-    /// <summary>
-    ///   Computes the UTC instant of the next occurrence of <paramref name="targetTimeOfDay"/> on or after
-    ///   <paramref name="localNow"/>, using <paramref name="getLocalWallClockUtcOffset"/> to resolve the UTC offset for
-    ///   the scheduled local wall-clock instant (including across daylight saving time transitions).
-    /// </summary>
-    /// <param name="localNow">
-    ///   Current time in the local coordinate system (same interpretation as <see cref="LocalNowOffset"/>).
-    /// </param>
-    /// <param name="targetTimeOfDay">Time of day since local midnight.</param>
-    /// <param name="getLocalWallClockUtcOffset">
-    ///   Returns the UTC offset for a local wall-clock <see cref="DateTime"/> with kind
-    ///   <see cref="DateTimeKind.Unspecified"/>.
-    /// </param>
-    /// <returns>The next due instant in UTC.</returns>
-    internal static DateTimeOffset ComputeNextLocalTimeOfDayAsUtc (DateTimeOffset localNow, TimeSpan targetTimeOfDay,
-        Func<DateTime, TimeSpan> getLocalWallClockUtcOffset)
-    {
-        // Base the next occurrence on the current local calendar date (local wall-clock midnight).
-        DateTime todayMidnight = localNow.Date;
-        DateTime nextDt = todayMidnight + targetTimeOfDay;
-        // If today's target time-of-day is not strictly in the future, schedule the same clock time on the next day.
-        if (nextDt <= localNow.DateTime)
-            nextDt = nextDt.AddDays(1);
-        // Unspecified wall-clock time is interpreted in the clock's local zone, including when that instant is
-        // ambiguous (fall-back) or not otherwise representable as a single wall time (spring-forward gap).
-        DateTime nextLocalUnspecified = DateTime.SpecifyKind(nextDt, DateTimeKind.Unspecified);
-        // Delegate returns the UTC offset for that wall time: for ambiguous times it applies the zone's resolution
-        // rules; for skipped times it maps to a defined instant (for example, per BCL or Noda lenient mapping).
-        TimeSpan nextLocalOffset = getLocalWallClockUtcOffset(nextLocalUnspecified);
-        // Wall clock plus resolved offset is fixed; convert to UTC so the scheduled instant is unambiguous downstream.
-        DateTimeOffset nextLocal = new(nextLocalUnspecified, nextLocalOffset);
-        return nextLocal.ToUniversalTime();
-    }
-
-    #endregion Local time-of-day scheduling
-
     #region Nested types — Pending delay and time expiry
 
     private sealed class PendingDelay
     {
-        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
-        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
-
         public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> taskCompletionSource)
         {
             DueUtc = dueUtc;
             TaskCompletionSource = taskCompletionSource;
         }
+
+        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
+        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
 
         public void Complete ()
         {
@@ -98,7 +42,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     private sealed class TimeExpiryEntry
     {
-        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
         private readonly TimeCancellationTokenSource _wrapper;
 
         public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
@@ -107,6 +50,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             ExpireUtc = expireUtc;
             _wrapper = wrapper;
         }
+
+        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
 
         public void Cancel ()
         {
@@ -127,6 +72,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     private abstract partial class VirtualIntervalTimerBase : IClockIntervalTimer
     {
+        private readonly bool _isLocalTimeRepresentation;
+        private readonly bool _resetAfterCallback;
+
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         protected Delegate Callback { [DebuggerStepThrough] get; }
@@ -146,8 +94,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        private readonly bool _isLocalTimeRepresentation;
-        private readonly bool _resetAfterCallback;
 
         protected VirtualIntervalTimerBase (PrimeTestClock clock,
             TimeSpan initialCallbackTime,
@@ -506,6 +452,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     private abstract partial class VirtualDayTimeTimerBase : IClockDayTimeTimer
     {
+        private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
         protected bool IsLocal { [DebuggerStepThrough] get; }
         protected IntervalTimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
@@ -613,8 +561,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                 }
             }
         }
-
-        private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
         public int Id { [DebuggerStepThrough] get; }
         public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
@@ -960,6 +906,62 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   Occurs when the clock's current time has changed.
     /// </summary>
     public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
+
+    private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset);
+
+    /// <summary>
+    ///   Returns the UTC offset for a local wall-clock calendar <see cref="DateTime"/> in the same time zone
+    ///   the clock uses for <see cref="LocalNowOffset"/>.
+    /// </summary>
+    /// <param name="localUnspecified">Local date and time with <see cref="DateTime.Kind"/> <see cref="DateTimeKind.Unspecified"/>.</param>
+    /// <returns>The offset from UTC at that local wall time.</returns>
+    private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified);
+
+    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset);
+
+    private partial DateTimeOffset ReadVirtualUtcNowLocked ();
+
+    private partial void AddVirtualTimeLocked (TimeSpan duration);
+
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset);
+
+    #region Local time-of-day scheduling
+
+    /// <summary>
+    ///   Computes the UTC instant of the next occurrence of <paramref name="targetTimeOfDay"/> on or after
+    ///   <paramref name="localNow"/>, using <paramref name="getLocalWallClockUtcOffset"/> to resolve the UTC offset for
+    ///   the scheduled local wall-clock instant (including across daylight saving time transitions).
+    /// </summary>
+    /// <param name="localNow">
+    ///   Current time in the local coordinate system (same interpretation as <see cref="LocalNowOffset"/>).
+    /// </param>
+    /// <param name="targetTimeOfDay">Time of day since local midnight.</param>
+    /// <param name="getLocalWallClockUtcOffset">
+    ///   Returns the UTC offset for a local wall-clock <see cref="DateTime"/> with kind
+    ///   <see cref="DateTimeKind.Unspecified"/>.
+    /// </param>
+    /// <returns>The next due instant in UTC.</returns>
+    internal static DateTimeOffset ComputeNextLocalTimeOfDayAsUtc (DateTimeOffset localNow, TimeSpan targetTimeOfDay,
+        Func<DateTime, TimeSpan> getLocalWallClockUtcOffset)
+    {
+        // Base the next occurrence on the current local calendar date (local wall-clock midnight).
+        DateTime todayMidnight = localNow.Date;
+        DateTime nextDt = todayMidnight + targetTimeOfDay;
+        // If today's target time-of-day is not strictly in the future, schedule the same clock time on the next day.
+        if (nextDt <= localNow.DateTime)
+            nextDt = nextDt.AddDays(1);
+        // Unspecified wall-clock time is interpreted in the clock's local zone, including when that instant is
+        // ambiguous (fall-back) or not otherwise representable as a single wall time (spring-forward gap).
+        DateTime nextLocalUnspecified = DateTime.SpecifyKind(nextDt, DateTimeKind.Unspecified);
+        // Delegate returns the UTC offset for that wall time: for ambiguous times it applies the zone's resolution
+        // rules; for skipped times it maps to a defined instant (for example, per BCL or Noda lenient mapping).
+        TimeSpan nextLocalOffset = getLocalWallClockUtcOffset(nextLocalUnspecified);
+        // Wall clock plus resolved offset is fixed; convert to UTC so the scheduled instant is unambiguous downstream.
+        DateTimeOffset nextLocal = new(nextLocalUnspecified, nextLocalOffset);
+        return nextLocal.ToUniversalTime();
+    }
+
+    #endregion Local time-of-day scheduling
 
     #region Private helpers
 
@@ -1424,28 +1426,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
-    {
-        return LinkTimeCancellationToken(TimeSpan.FromMilliseconds(cancelMilliseconds), cancellationToken);
-    }
-
-    /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         CancellationToken token1,
         CancellationToken token2)
@@ -1482,6 +1462,28 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
+    {
+        CancellationTokenSource timeCts = new();
+        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
+        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
+
+        lock (_gate)
+        {
+            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
+            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
+        }
+
+        return wrapper;
+    }
+
+    /// <inheritdoc />
+    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
+    {
+        return LinkTimeCancellationToken(TimeSpan.FromMilliseconds(cancelMilliseconds), cancellationToken);
+    }
+
+    /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
         params CancellationToken[] cancellationTokens)
     {
@@ -1514,26 +1516,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
-        Action callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeat ? callbackTime : Timeout.InfiniteTimeSpan,
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-        lock (_gate)
-            _intervalTimers.Add(intervalTimer);
-        return intervalTimer;
-    }
-
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1575,8 +1557,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
-        Func<CancellationToken, ValueTask> callback,
+    public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
+        Action callback,
         CancellationToken cancellationToken,
         bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
@@ -1584,7 +1566,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeat ? callbackTime : Timeout.InfiniteTimeSpan,
-            IntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1616,16 +1598,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
-        TimeSpan repeatInterval,
-        Action callback,
+    public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+        Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
+        bool repeat = false,
         IntervalTimerOptions? timerOptions = null)
     {
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
-            repeatInterval,
-            IntervalTimerCallbackKind.SimpleAction,
+            repeat ? callbackTime : Timeout.InfiniteTimeSpan,
+            IntervalTimerCallbackKind.SimpleAsync,
             callback,
             null,
             timerOptions,
@@ -1678,16 +1660,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+    public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
-        Func<CancellationToken, ValueTask> callback,
+        Action callback,
         CancellationToken cancellationToken,
         IntervalTimerOptions? timerOptions = null)
     {
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
             callbackTime,
             repeatInterval,
-            IntervalTimerCallbackKind.SimpleAsync,
+            IntervalTimerCallbackKind.SimpleAction,
             callback,
             null,
             timerOptions,
@@ -1711,6 +1693,26 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             IntervalTimerCallbackKind.ContextAsync,
             callback,
             state,
+            timerOptions,
+            cancellationToken);
+        lock (_gate)
+            _intervalTimers.Add(intervalTimer);
+        return intervalTimer;
+    }
+
+    /// <inheritdoc />
+    public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
+        TimeSpan repeatInterval,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        IntervalTimerOptions? timerOptions = null)
+    {
+        VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
+            callbackTime,
+            repeatInterval,
+            IntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
             timerOptions,
             cancellationToken);
         lock (_gate)
@@ -1722,13 +1724,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
 #if NET
     #region IPrimeClock Implementation — Day-time timers
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAction, callback, null, timerOptions, cancellationToken);
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
@@ -1748,13 +1743,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAsync, callback, null, timerOptions, cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -1762,11 +1750,18 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
 
     /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAction, callback, null, timerOptions, cancellationToken);
+        RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAction, callback, null, timerOptions, cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAsync, callback, null, timerOptions, cancellationToken);
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
@@ -1786,18 +1781,25 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAsync, callback, null, timerOptions, cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAction, callback, null, timerOptions, cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), IntervalTimerCallbackKind.SimpleAsync, callback, null, timerOptions, cancellationToken);
 
     #endregion IPrimeClock Implementation — Day-time timers
 #endif

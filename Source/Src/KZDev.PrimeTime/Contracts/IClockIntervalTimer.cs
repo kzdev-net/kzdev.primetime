@@ -7,25 +7,6 @@ public partial interface IClockIntervalTimer
 {
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Changes the interval of this registration (NodaTime <see cref="Duration"/> overload).
-    /// </summary>
-    /// <param name="interval">
-    ///   The duration until the next callback. For a repeating timer, this also
-    ///   becomes the repeat interval.
-    /// </param>
-    /// <returns>
-    ///   <c>true</c> if the change was applied; <c>false</c> if the registration was
-    ///   cancelled, disposed, or otherwise invalid.
-    /// </returns>
-    /// <remarks>
-    ///   Does not change whether the timer is repeating or one-shot. For a repeating
-    ///   timer, <paramref name="interval"/> is used for both the next and subsequent
-    ///   intervals. Use <see cref="Change(Duration, Duration)"/> to set next and repeat
-    ///   intervals separately.
-    /// </remarks>
-    bool Change (Duration interval);
-    //--------------------------------------------------------------------------------
-    /// <summary>
     ///   Changes the next callback time and, for repeating interval timers, the repeat interval
     ///   (NodaTime <see cref="Duration"/> overload).
     /// </summary>
@@ -46,6 +27,25 @@ public partial interface IClockIntervalTimer
     ///   (for example, throw <see cref="InvalidOperationException"/>).
     /// </remarks>
     bool Change (Duration nextInterval, Duration repeatInterval);
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Changes the interval of this registration (NodaTime <see cref="Duration"/> overload).
+    /// </summary>
+    /// <param name="interval">
+    ///   The duration until the next callback. For a repeating timer, this also
+    ///   becomes the repeat interval.
+    /// </param>
+    /// <returns>
+    ///   <c>true</c> if the change was applied; <c>false</c> if the registration was
+    ///   cancelled, disposed, or otherwise invalid.
+    /// </returns>
+    /// <remarks>
+    ///   Does not change whether the timer is repeating or one-shot. For a repeating
+    ///   timer, <paramref name="interval"/> is used for both the next and subsequent
+    ///   intervals. Use <see cref="Change(Duration, Duration)"/> to set next and repeat
+    ///   intervals separately.
+    /// </remarks>
+    bool Change (Duration interval);
     //--------------------------------------------------------------------------------
 }
 //################################################################################

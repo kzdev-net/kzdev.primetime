@@ -18,6 +18,8 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 /// </summary>
 public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingPrimeTestClockVirtualDayTimeMetrics"/> class.
     /// </summary>
@@ -26,6 +28,8 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
         : base(xUnitTestOutputHelper)
     {
     }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Computes the expected value in milliseconds for <see cref="IClockTimer.TimeUntilNextCallback"/> before the

@@ -34,20 +34,26 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// </summary>
     private static readonly TimeSpan CallbackSettle = TimeSpan.FromMilliseconds(50);
 
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeClockIntervalTimers"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The xUnit test output helper for diagnostic output.
     /// </param>
-    #region Constructors/Finalizers
-
     public UsingIPrimeClockIntervalTimers (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
 
     #endregion Constructors/Finalizers
+
+    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
+    {
+        Action act = () => registration.Change(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(50));
+        act.Should().Throw<InvalidOperationException>();
+    }
 
     #region One-shot
 
@@ -300,12 +306,6 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + TimeSpan.FromSeconds(1), () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         AssertChangeToRepeatingThrows(timer);
-    }
-
-    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
-    {
-        Action act = () => registration.Change(TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(50));
-        act.Should().Throw<InvalidOperationException>();
     }
 
     #endregion Change

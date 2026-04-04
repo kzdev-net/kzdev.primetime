@@ -15,6 +15,8 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 /// </summary>
 public class UsingPrimeTestClock : UnitTestBase
 {
+    private static readonly TimeSpan SleepTestRealTimeTimeout = TimeSpan.FromSeconds(5);
+
     #region Constructors/Finalizers
 
     /// <summary>
@@ -29,8 +31,6 @@ public class UsingPrimeTestClock : UnitTestBase
     }
 
     #endregion Constructors/Finalizers
-
-    private static readonly TimeSpan SleepTestRealTimeTimeout = TimeSpan.FromSeconds(5);
 
     #region Contract and construction
 

@@ -16,7 +16,59 @@ namespace KZDev.SystemClock.PrimeTime;
 /// </summary>
 internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
+    #region Nested types
+
+    private sealed class ClockIntervalTimerToITimerAdapter : ITimer
+    {
+        private readonly IClockIntervalTimer _registration;
+
+        #region Constructors/Finalizers
+
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="ClockIntervalTimerToITimerAdapter"/> class.
+        /// </summary>
+        /// <param name="registration">
+        ///   The underlying PrimeTime interval timer registration.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="registration"/> is <c>null</c>.
+        /// </exception>
+        internal ClockIntervalTimerToITimerAdapter (IClockIntervalTimer registration)
+        {
+            _registration = registration ?? throw new ArgumentNullException(nameof(registration));
+        }
+
+        #endregion Constructors/Finalizers
+
+        #region Interface Implementations
+
+        /// <inheritdoc />
+        public bool Change (TimeSpan dueTime, TimeSpan period)
+        {
+            TimeSpan repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
+                ? Timeout.InfiniteTimeSpan
+                : period;
+            return _registration.Change(dueTime, repeat);
+        }
+
+        /// <inheritdoc />
+        public void Dispose () => _registration.Dispose();
+
+        /// <inheritdoc />
+        public ValueTask DisposeAsync ()
+        {
+            _registration.Dispose();
+            return default;
+        }
+
+        #endregion Interface Implementations
+    }
+
+    #endregion Nested types
+
     private readonly IPrimeClock _clock;
+
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockTimeProviderAdapter"/> class.
@@ -31,6 +83,10 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
+
+    #endregion Constructors/Finalizers
+
+    #region Overrides
 
     /// <inheritdoc />
     public override DateTimeOffset GetUtcNow () => _clock.UtcNowOffset;
@@ -60,42 +116,5 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         return new ClockIntervalTimerToITimerAdapter(registration);
     }
 
-    private sealed class ClockIntervalTimerToITimerAdapter : ITimer
-    {
-        private readonly IClockIntervalTimer _registration;
-
-        /// <summary>
-        ///   Initializes a new instance of the <see cref="ClockIntervalTimerToITimerAdapter"/> class.
-        /// </summary>
-        /// <param name="registration">
-        ///   The underlying PrimeTime interval timer registration.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        ///   <paramref name="registration"/> is <c>null</c>.
-        /// </exception>
-        internal ClockIntervalTimerToITimerAdapter (IClockIntervalTimer registration)
-        {
-            _registration = registration ?? throw new ArgumentNullException(nameof(registration));
-        }
-
-        /// <inheritdoc />
-        public bool Change (TimeSpan dueTime, TimeSpan period)
-        {
-            TimeSpan repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
-                ? Timeout.InfiniteTimeSpan
-                : period;
-            return _registration.Change(dueTime, repeat);
-        }
-
-        /// <inheritdoc />
-        public void Dispose () => _registration.Dispose();
-
-        /// <inheritdoc />
-        public ValueTask DisposeAsync ()
-        {
-            _registration.Dispose();
-            return default;
-        }
-    }
+    #endregion Overrides
 }
-

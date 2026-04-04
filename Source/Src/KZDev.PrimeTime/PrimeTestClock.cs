@@ -12,8 +12,54 @@ namespace KZDev.PrimeTime;
 /// </summary>
 public sealed partial class PrimeTestClock
 {
-    private Instant _now;
+    #region Nested types
+
+    /// <summary>
+    ///   Noda <see cref="IClockDayTimeTimer"/> change overloads for shared virtual day-time timers.
+    /// </summary>
+    private abstract partial class VirtualDayTimeTimerBase
+    {
+        #region Interface Implementations
+
+        #region IClockTimer (Noda) Implementation
+
+        /// <inheritdoc />
+        public Instant RegisteredInstant => Instant.FromDateTimeOffset(RegisteredTime);
+
+        #endregion IClockTimer (Noda) Implementation
+
+        #region IClockDayTimeTimer (Noda) Implementation
+
+        /// <inheritdoc />
+        public bool Change (LocalTime timeOfDay)
+        {
+            if (!IsLocal)
+                return false;
+
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return false;
+                TargetTimeOfDay = LocalTimeToTargetTimeOfDay(timeOfDay);
+                if (Enabled)
+                    NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+
+                return true;
+            }
+        }
+
+        /// <inheritdoc />
+        public bool Change (Duration interval) => false;
+
+        #endregion IClockDayTimeTimer (Noda) Implementation
+
+        #endregion Interface Implementations
+    }
+
+    #endregion Nested types
+
     private readonly DateTimeZone _zone;
+    private Instant _now;
 
     #region Constructors/Finalizers
 
@@ -48,100 +94,6 @@ public sealed partial class PrimeTestClock
     }
 
     #endregion Constructors/Finalizers
-
-    #region Virtual time hooks
-
-    private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset)
-    {
-        Instant instant = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
-        return instant.InZone(_zone).ToDateTimeOffset();
-    }
-
-    private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified)
-    {
-        LocalDateTime ldt = LocalDateTime.FromDateTime(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
-        return _zone.AtLeniently(ldt).Offset.ToTimeSpan();
-    }
-
-    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
-        _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
-
-    private partial DateTimeOffset ReadVirtualUtcNowLocked () =>
-        new DateTimeOffset(_now.ToDateTimeUtc(), TimeSpan.Zero);
-
-    private partial void AddVirtualTimeLocked (TimeSpan duration) =>
-        _now += Duration.FromTimeSpan(duration);
-
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset)
-    {
-        Instant snapshot;
-        lock (_gate)
-            snapshot = _now;
-
-        ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
-    }
-
-    #endregion Virtual time hooks
-
-    private static DateTimeZone GetSystemDefaultTimeZone ()
-    {
-        try
-        {
-            return DateTimeZoneProviders.Bcl.GetSystemDefault();
-        }
-        catch (DateTimeZoneNotFoundException)
-        {
-            return BclDateTimeZone.ForSystemDefault();
-        }
-    }
-
-    /// <summary>
-    ///   Converts <see cref="LocalTime"/> to a time-of-day <see cref="TimeSpan"/> since midnight.
-    /// </summary>
-    /// <param name="t">The local time of day.</param>
-    /// <returns>Elapsed time since midnight matching <paramref name="t"/>.</returns>
-    private static TimeSpan LocalTimeToTargetTimeOfDay (LocalTime t)
-    {
-        Period sinceMidnight = Period.Between(LocalTime.Midnight, t);
-        return sinceMidnight.ToDuration().ToTimeSpan();
-    }
-
-    #region IPrimeTestClock Implementation — Noda
-
-    /// <inheritdoc />
-    public void SetInstant (Instant instant)
-    {
-        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (_gate)
-            SetVirtualUtcNowLocked(utc);
-
-        RaiseClockEventsAfterVirtualUtcChange(utc);
-    }
-
-    /// <inheritdoc />
-    public void SetLocalTime (LocalDateTime localDateTime)
-    {
-        Instant instant = localDateTime.InZoneLeniently(_zone).ToInstant();
-        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (_gate)
-            SetVirtualUtcNowLocked(utc);
-
-        RaiseClockEventsAfterVirtualUtcChange(utc);
-    }
-
-    /// <inheritdoc />
-    public void Advance (Duration duration) =>
-        Advance(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
-
-    /// <inheritdoc />
-    public void RunFor (Duration duration) =>
-        RunFor(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
-
-    /// <inheritdoc />
-    public void Start (Duration? rate = null) =>
-        Start(rate is { } d ? NodaDurationBclConversions.ToTimeSpanForTimerInterval(d) : null);
-
-    #endregion IPrimeTestClock Implementation — Noda
 
     #region IPrimeClock Implementation — Now (Noda)
 
@@ -220,6 +172,98 @@ public sealed partial class PrimeTestClock
 #endif
 
     #endregion IPrimeClock Implementation — Now (Noda)
+
+    private static DateTimeZone GetSystemDefaultTimeZone ()
+    {
+        try
+        {
+            return DateTimeZoneProviders.Bcl.GetSystemDefault();
+        }
+        catch (DateTimeZoneNotFoundException)
+        {
+            return BclDateTimeZone.ForSystemDefault();
+        }
+    }
+
+    /// <summary>
+    ///   Converts <see cref="LocalTime"/> to a time-of-day <see cref="TimeSpan"/> since midnight.
+    /// </summary>
+    /// <param name="t">The local time of day.</param>
+    /// <returns>Elapsed time since midnight matching <paramref name="t"/>.</returns>
+    private static TimeSpan LocalTimeToTargetTimeOfDay (LocalTime t)
+    {
+        Period sinceMidnight = Period.Between(LocalTime.Midnight, t);
+        return sinceMidnight.ToDuration().ToTimeSpan();
+    }
+
+    private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset)
+    {
+        Instant instant = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
+        return instant.InZone(_zone).ToDateTimeOffset();
+    }
+
+    private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified)
+    {
+        LocalDateTime ldt = LocalDateTime.FromDateTime(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
+        return _zone.AtLeniently(ldt).Offset.ToTimeSpan();
+    }
+
+    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
+        _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
+
+    private partial DateTimeOffset ReadVirtualUtcNowLocked () =>
+        new DateTimeOffset(_now.ToDateTimeUtc(), TimeSpan.Zero);
+
+    private partial void AddVirtualTimeLocked (TimeSpan duration) =>
+        _now += Duration.FromTimeSpan(duration);
+
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset)
+    {
+        Instant snapshot;
+        lock (_gate)
+            snapshot = _now;
+
+        ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
+    }
+
+    #region Interface Implementations
+
+    #region IPrimeTestClock Implementation — Noda
+
+    /// <inheritdoc />
+    public void SetInstant (Instant instant)
+    {
+        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
+        lock (_gate)
+            SetVirtualUtcNowLocked(utc);
+
+        RaiseClockEventsAfterVirtualUtcChange(utc);
+    }
+
+    /// <inheritdoc />
+    public void SetLocalTime (LocalDateTime localDateTime)
+    {
+        Instant instant = localDateTime.InZoneLeniently(_zone).ToInstant();
+        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
+        lock (_gate)
+            SetVirtualUtcNowLocked(utc);
+
+        RaiseClockEventsAfterVirtualUtcChange(utc);
+    }
+
+    /// <inheritdoc />
+    public void Advance (Duration duration) =>
+        Advance(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+
+    /// <inheritdoc />
+    public void RunFor (Duration duration) =>
+        RunFor(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+
+    /// <inheritdoc />
+    public void Start (Duration? rate = null) =>
+        Start(rate is { } d ? NodaDurationBclConversions.ToTimeSpanForTimerInterval(d) : null);
+
+    #endregion IPrimeTestClock Implementation — Noda
 
     #region IPrimeTime / IPrimeClock — Delays (Duration)
 
@@ -407,43 +451,7 @@ public sealed partial class PrimeTestClock
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAsync, callback, state,
             timerOptions, cancellationToken);
 
-    /// <summary>
-    ///   Noda <see cref="IClockDayTimeTimer"/> change overloads for shared virtual day-time timers.
-    /// </summary>
-    private abstract partial class VirtualDayTimeTimerBase
-    {
-        #region IClockTimer (Noda) Implementation
-
-        /// <inheritdoc />
-        public Instant RegisteredInstant => Instant.FromDateTimeOffset(RegisteredTime);
-
-        #endregion IClockTimer (Noda) Implementation
-
-        #region IClockDayTimeTimer (Noda) Implementation
-
-        /// <inheritdoc />
-        public bool Change (LocalTime timeOfDay)
-        {
-            if (!IsLocal)
-                return false;
-
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return false;
-                TargetTimeOfDay = LocalTimeToTargetTimeOfDay(timeOfDay);
-                if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
-
-                return true;
-            }
-        }
-
-        /// <inheritdoc />
-        public bool Change (Duration interval) => false;
-
-        #endregion IClockDayTimeTimer (Noda) Implementation
-    }
-
     #endregion IPrimeClock Implementation — Time-of-day timers (LocalTime)
+
+    #endregion Interface Implementations
 }

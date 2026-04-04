@@ -10,6 +10,12 @@ namespace KZDev.PrimeTime.Tests;
 /// </summary>
 public abstract class UnitTestBase : TestBase
 {
+    /// <summary>
+    ///   Millisecond half-range (<c>±</c>) for inclusive virtual-clock timer assertions that use AwesomeAssertions
+    ///   <c>BeInRange</c> around an expected millisecond value.
+    /// </summary>
+    protected const int VirtualClockTimerAssertionToleranceMilliseconds = 2500;
+
     #region Constructors/Finalizers
 
     /// <summary>
@@ -24,14 +30,4 @@ public abstract class UnitTestBase : TestBase
     }
 
     #endregion Constructors/Finalizers
-
-    #region Virtual clock assertion tolerances
-
-    /// <summary>
-    ///   Millisecond half-range (<c>±</c>) for inclusive virtual-clock timer assertions that use AwesomeAssertions
-    ///   <c>BeInRange</c> around an expected millisecond value.
-    /// </summary>
-    protected const int VirtualClockTimerAssertionToleranceMilliseconds = 2500;
-
-    #endregion Virtual clock assertion tolerances
 }

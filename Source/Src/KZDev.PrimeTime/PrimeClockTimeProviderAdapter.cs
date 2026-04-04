@@ -20,7 +20,51 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
+    #region Nested types
+
+    private sealed class PrimeClockTimerToITimerAdapter : ITimer
+    {
+        private readonly IClockIntervalTimer _registration;
+
+        #region Constructors/Finalizers
+
+        internal PrimeClockTimerToITimerAdapter (IClockIntervalTimer registration)
+        {
+            _registration = registration;
+        }
+
+        #endregion Constructors/Finalizers
+
+        #region Interface Implementations
+
+        /// <inheritdoc />
+        public bool Change (TimeSpan dueTime, TimeSpan period)
+        {
+            Duration next = Duration.FromTimeSpan(dueTime);
+            Duration repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
+                ? Duration.FromTimeSpan(Timeout.InfiniteTimeSpan)
+                : Duration.FromTimeSpan(period);
+            return _registration.Change(next, repeat);
+        }
+
+        /// <inheritdoc />
+        public void Dispose () => _registration.Dispose();
+
+        /// <inheritdoc />
+        public ValueTask DisposeAsync ()
+        {
+            _registration.Dispose();
+            return default;
+        }
+
+        #endregion Interface Implementations
+    }
+
+    #endregion Nested types
+
     private readonly IPrimeClock _clock;
+
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClockTimeProviderAdapter"/> class.
@@ -35,6 +79,10 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
+
+    #endregion Constructors/Finalizers
+
+    #region Overrides
 
     /// <inheritdoc />
     public override DateTimeOffset GetUtcNow () => _clock.UtcNow.ToDateTimeOffset();
@@ -65,30 +113,5 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         return new PrimeClockTimerToITimerAdapter(registration);
     }
 
-    private sealed class PrimeClockTimerToITimerAdapter : ITimer
-    {
-        private readonly IClockIntervalTimer _registration;
-
-        internal PrimeClockTimerToITimerAdapter (IClockIntervalTimer registration)
-        {
-            _registration = registration;
-        }
-
-        public bool Change (TimeSpan dueTime, TimeSpan period)
-        {
-            Duration next = Duration.FromTimeSpan(dueTime);
-            Duration repeat = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
-                ? Duration.FromTimeSpan(Timeout.InfiniteTimeSpan)
-                : Duration.FromTimeSpan(period);
-            return _registration.Change(next, repeat);
-        }
-
-        public void Dispose () => _registration.Dispose();
-
-        public ValueTask DisposeAsync ()
-        {
-            _registration.Dispose();
-            return default;
-        }
-    }
+    #endregion Overrides
 }

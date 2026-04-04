@@ -18,8 +18,14 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
-    private static int _nextId;
     private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
+    private static int _nextId;
+
+#if NET10_OR_GREATER
+    private readonly Lock _gate = new();
+#else
+    private readonly object _gate = new();
+#endif
 
     private IPrimeClock _clock;
     private bool _captureContext;
@@ -32,11 +38,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private SkippedTimeBehavior _skippedTimeBehavior;
     private DuplicateTimeBehavior _duplicateTimeBehavior;
     private int _id;
-#if NET10_OR_GREATER
-    private readonly Lock _gate = new();
-#else
-    private readonly object _gate = new();
-#endif
     private Timer? _timer;
     private TimerState _state;
     private bool _enabled = true;
@@ -45,30 +46,18 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private bool _cancelRequested;
     private bool _pendingRunSequential;
 
-    private partial void CaptureRegisteredTimeForDayTimer ();
+#if NET
+    private partial bool IsLocalDayTimeSchedule { get; }
 
-    private partial DateTimeOffset GetRegisteredTimeOffset ();
+    private partial bool IsUtcDayTimeSchedule { get; }
 
-    private partial bool GetIsLocalTimeRepresentation ();
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value);
 
-    private partial TimeSpan GetDelayUntilNextForTimer ();
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value);
 
-    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
+#endif
 
-    /// <summary>
-    ///   Clears the next-fire marker and records the callback start instant/offset for elapsed queries.
-    /// </summary>
-    private partial void RecordDayTimeCallbackTickStarted ();
-
-    private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
-
-    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
-
-    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
-
-    private partial int GetRunSequentiallyRetryMilliseconds ();
-
-    #region Constructors
+    #region Constructors/Finalizers
 
     /// <summary>
     ///   Completes initialization shared by stack-specific constructors.
@@ -111,7 +100,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         ScheduleNext();
     }
 
-    #endregion Constructors
+    #endregion Constructors/Finalizers
 
     /// <inheritdoc />
     public int Id { [DebuggerStepThrough] get => _id; }
@@ -196,6 +185,29 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             }
         }
     }
+
+    private partial void CaptureRegisteredTimeForDayTimer ();
+
+    private partial DateTimeOffset GetRegisteredTimeOffset ();
+
+    private partial bool GetIsLocalTimeRepresentation ();
+
+    private partial TimeSpan GetDelayUntilNextForTimer ();
+
+    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
+
+    /// <summary>
+    ///   Clears the next-fire marker and records the callback start instant/offset for elapsed queries.
+    /// </summary>
+    private partial void RecordDayTimeCallbackTickStarted ();
+
+    private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
+
+    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
+
+    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
+
+    private partial int GetRunSequentiallyRetryMilliseconds ();
 
     private void OnCancelRequested ()
     {
@@ -391,15 +403,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         ScheduleNext();
     }
 
+    #region Interface Implementations
+
 #if NET
-    private partial bool IsLocalDayTimeSchedule { get; }
-
-    private partial bool IsUtcDayTimeSchedule { get; }
-
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value);
-
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value);
-
     /// <inheritdoc />
     public bool Change (LocalTimeOfDay newTimeOfDay)
     {
@@ -433,6 +439,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             return true;
         }
     }
+
 #endif
 
     /// <inheritdoc />
@@ -494,5 +501,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer = null;
         }
     }
+
+    #endregion Interface Implementations
 }
 #endif

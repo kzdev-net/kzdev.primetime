@@ -15,13 +15,6 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
 {
     //--------------------------------------------------------------------------------
     /// <summary>
-    ///   Occurs when the clock's current time has changed (e.g. after
-    ///   <see cref="SetTime"/>, <see cref="Advance"/>, <see cref="RunFor"/>, or
-    ///   automatic advancement from <see cref="Start"/>).
-    /// </summary>
-    event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
-    //--------------------------------------------------------------------------------
-    /// <summary>
     ///   Sets the current UTC time of the clock to the specified value. When the clock
     ///   is not running, this is the time returned by UtcNowOffset and related members.
     /// </summary>
@@ -70,6 +63,13 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   the clock was not running.
     /// </returns>
     bool Stop ();
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Occurs when the clock's current time has changed (e.g. after
+    ///   <see cref="SetTime"/>, <see cref="Advance"/>, <see cref="RunFor"/>, or
+    ///   automatic advancement from <see cref="Start"/>).
+    /// </summary>
+    event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
     //--------------------------------------------------------------------------------
 }
 //################################################################################

@@ -22,23 +22,17 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     private readonly object? _callbackState;
     private readonly CancellationToken _cancellationToken;
     private readonly CancellationTokenRegistration _cancelRegistration;
-    private TimerState _state;
 #if NET10_OR_GREATER
     private readonly Lock _gate = new();
 #else
     private readonly object _gate = new();
 #endif
+    private TimerState _state;
     private Timer? _timer;
     private bool _enabled = true;
     private bool _disposed;
     private int _callbacksRunning;
     private bool _cancelRequested;
-
-    private partial void CaptureRegisteredTime ();
-
-    private partial DateTimeOffset GetRegisteredTime ();
-
-    private partial long GetElapsedTime();
 
     private partial TimeSpan InitialCallbackTimeSpan { get; set; }
 
@@ -49,27 +43,6 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     private partial DateTimeOffset? LastCallbackUtc { get; set; }
 
     private partial bool IsRepeatingTimer { get; }
-
-    /// <summary>
-    ///   When <c>true</c>, converts <paramref name="delay"/> to a due-time in milliseconds for
-    ///   <see cref="Timer"/>; when <c>false</c>, the registration should not arm the timer.
-    /// </summary>
-    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds);
-
-    /// <summary>
-    ///   Records the logical next callback instant/offset as <c>now + delay</c> for the active time basis.
-    /// </summary>
-    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay);
-
-    /// <summary>
-    ///   Marks the start of a timer callback: records "last callback" and clears the next-callback marker.
-    /// </summary>
-    private partial void RecordIntervalCallbackStarted ();
-
-    /// <summary>
-    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="_gate"/> is held.
-    /// </summary>
-    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ();
 
     #region Constructors/Finalizers
 
@@ -226,6 +199,33 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             }
         }
     }
+
+    private partial void CaptureRegisteredTime ();
+
+    private partial DateTimeOffset GetRegisteredTime ();
+
+    private partial long GetElapsedTime ();
+
+    /// <summary>
+    ///   When <c>true</c>, converts <paramref name="delay"/> to a due-time in milliseconds for
+    ///   <see cref="Timer"/>; when <c>false</c>, the registration should not arm the timer.
+    /// </summary>
+    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds);
+
+    /// <summary>
+    ///   Records the logical next callback instant/offset as <c>now + delay</c> for the active time basis.
+    /// </summary>
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay);
+
+    /// <summary>
+    ///   Marks the start of a timer callback: records "last callback" and clears the next-callback marker.
+    /// </summary>
+    private partial void RecordIntervalCallbackStarted ();
+
+    /// <summary>
+    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="_gate"/> is held.
+    /// </summary>
+    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ();
 
     private void OnCancelRequested ()
     {
@@ -392,11 +392,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
 
-    #region IClockIntervalTimer Implementation
+    #region Interface Implementations
 
-    /// <inheritdoc />
-    public bool Change (TimeSpan interval) =>
-        Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
+    #region IClockIntervalTimer Implementation
 
     /// <inheritdoc />
     public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
@@ -417,6 +415,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             return true;
         }
     }
+
+    /// <inheritdoc />
+    public bool Change (TimeSpan interval) =>
+        Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
 
     /// <inheritdoc />
     public void Cancel ()
@@ -479,4 +481,6 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     }
 
     #endregion IClockIntervalTimer Implementation
+
+    #endregion Interface Implementations
 }

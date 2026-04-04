@@ -16,14 +16,14 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingCommonTimerContracts : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingCommonTimerContracts"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    #region Constructors/Finalizers
-
     public UsingCommonTimerContracts (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {

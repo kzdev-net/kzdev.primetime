@@ -19,25 +19,6 @@ internal sealed partial class ClockIntervalTimerRegistration
     private Instant? _nextCallbackInstant;
     private Instant? _lastCallbackInstant;
 
-    private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
-
-    private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
-
-    private partial long GetElapsedTime ()
-    {
-        lock (_gate)
-        {
-            if (_lastCallbackInstant is not { } last)
-                return -1;
-            if (_callbacksRunning > 0)
-                return 0;
-            Instant now = _clock.NowInstant;
-            if (last >= now)
-                return 0;
-            return (long)(now - last).TotalMilliseconds;
-        }
-    }
-
     private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackDuration.ToTimeSpan(); [DebuggerStepThrough] set => _initialCallbackDuration = Duration.FromTimeSpan(value); }
 
     private partial TimeSpan RepeatTimeSpanInterval { [DebuggerStepThrough] get => _repeatInterval.ToTimeSpan(); [DebuggerStepThrough] set => _repeatInterval = Duration.FromTimeSpan(value); }
@@ -66,6 +47,25 @@ internal sealed partial class ClockIntervalTimerRegistration
         catch (OverflowException)
         {
             return int.MaxValue;
+        }
+    }
+
+    private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
+
+    private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
+
+    private partial long GetElapsedTime ()
+    {
+        lock (_gate)
+        {
+            if (_lastCallbackInstant is not { } last)
+                return -1;
+            if (_callbacksRunning > 0)
+                return 0;
+            Instant now = _clock.NowInstant;
+            if (last >= now)
+                return 0;
+            return (long)(now - last).TotalMilliseconds;
         }
     }
 
@@ -110,6 +110,8 @@ internal sealed partial class ClockIntervalTimerRegistration
         return (long)(next - now).TotalMilliseconds;
     }
 
+    #region Interface Implementations
+
     #region IClockIntervalTimer Implementation
 
     /// <inheritdoc />
@@ -131,4 +133,6 @@ internal sealed partial class ClockIntervalTimerRegistration
     }
 
     #endregion IClockIntervalTimer Implementation
+
+    #endregion Interface Implementations
 }

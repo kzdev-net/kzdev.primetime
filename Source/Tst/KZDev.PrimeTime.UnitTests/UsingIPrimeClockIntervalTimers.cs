@@ -57,6 +57,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     #endregion Constructors/Finalizers
 
+    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
+    {
+        Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
+        act.Should().Throw<InvalidOperationException>();
+    }
+
     #region One-shot
 
     /// <summary>
@@ -323,12 +329,6 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         AssertChangeToRepeatingThrows(timer);
-    }
-
-    private static void AssertChangeToRepeatingThrows (IClockIntervalTimer registration)
-    {
-        Action act = () => registration.Change(Duration.FromMilliseconds(50), Duration.FromMilliseconds(50));
-        act.Should().Throw<InvalidOperationException>();
     }
 
     #endregion Change

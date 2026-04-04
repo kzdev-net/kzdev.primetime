@@ -16,6 +16,16 @@ internal sealed partial class ClockIntervalTimerRegistration
     private DateTimeOffset? _nextCallbackUtc;
     private DateTimeOffset? _lastCallbackUtc;
 
+    private partial TimeSpan InitialCallbackTimeSpan { get => _initialCallbackTime; set => _initialCallbackTime = value; }
+
+    private partial TimeSpan RepeatTimeSpanInterval { get => _repeatInterval; set => _repeatInterval = value; }
+
+    private partial DateTimeOffset? NextCallbackUtc { get => _nextCallbackUtc; set => _nextCallbackUtc = value; }
+
+    private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
+
+    private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
+
     private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowOffset : _clock.UtcNowOffset;
 
     private partial DateTimeOffset GetRegisteredTime () => _registeredTime;
@@ -34,16 +44,6 @@ internal sealed partial class ClockIntervalTimerRegistration
             return (long)(now - last).TotalMilliseconds;
         }
     }
-
-    private partial TimeSpan InitialCallbackTimeSpan { get => _initialCallbackTime; set => _initialCallbackTime = value; }
-
-    private partial TimeSpan RepeatTimeSpanInterval { get => _repeatInterval; set => _repeatInterval = value; }
-
-    private partial DateTimeOffset? NextCallbackUtc { get => _nextCallbackUtc; set => _nextCallbackUtc = value; }
-
-    private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
-
-    private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
 
     private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
     {

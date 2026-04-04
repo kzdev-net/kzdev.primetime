@@ -17,6 +17,25 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private DateTimeOffset? _nextCallbackUtc;
     private DateTimeOffset? _lastCallbackUtc;
 
+    #region Constructors/Finalizers
+
+#if NET
+    [SetsRequiredMembers]
+#endif
+    private ClockDayTimeTimerRegistration (IPrimeClock clock,
+        bool isLocal,
+        TimeOnly targetTimeOfDay,
+        IntervalTimerCallbackKind callbackKind,
+        Delegate callback,
+        object? callbackState,
+        DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+    {
+        _isLocal = isLocal;
+        _targetTimeOfDay = targetTimeOfDay;
+        FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
+    }
+
     /// <summary>
     ///   Initializes a new instance for a local-time day-time timer.
     /// </summary>
@@ -51,22 +70,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
     }
 
-#if NET
-    [SetsRequiredMembers]
-#endif
-    private ClockDayTimeTimerRegistration (IPrimeClock clock,
-        bool isLocal,
-        TimeOnly targetTimeOfDay,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        _isLocal = isLocal;
-        _targetTimeOfDay = targetTimeOfDay;
-        FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
-    }
+    #endregion Constructors/Finalizers
 
     private partial void CaptureRegisteredTimeForDayTimer () =>
         _registeredTime = _clock.UtcNowOffset;

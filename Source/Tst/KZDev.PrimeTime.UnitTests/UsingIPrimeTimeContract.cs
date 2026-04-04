@@ -15,20 +15,31 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingIPrimeTimeContract : UnitTestBase
 {
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="UsingIPrimeTimeContract"/> class.
     /// </summary>
     /// <param name="xUnitTestOutputHelper">
     ///   The Xunit test output helper that can be used to output test messages.
     /// </param>
-    #region Constructors/Finalizers
-
     public UsingIPrimeTimeContract (ITestOutputHelper xUnitTestOutputHelper)
         : base(xUnitTestOutputHelper)
     {
     }
 
     #endregion Constructors/Finalizers
+
+    /// <summary>
+    ///   Resolves the runtime <see cref="Type"/> for <see cref="IPrimeTime"/> from the assembly referenced by this test project.
+    /// </summary>
+    /// <returns>
+    ///   The <see cref="Type"/> of <see cref="IPrimeTime"/>.
+    /// </returns>
+    private static Type GetIPrimeTimeType ()
+    {
+        return typeof(IPrimeTime);
+    }
 
     /// <summary>
     ///   Verifies that the referenced PrimeTime assembly exposes the <see cref="IPrimeTime"/> interface type.
@@ -52,16 +63,5 @@ public class UsingIPrimeTimeContract : UnitTestBase
         bool hasDelayAsync = methods.Any(m => m.Name == "DelayAsync");
         hasSleep.Should().BeTrue();
         hasDelayAsync.Should().BeTrue();
-    }
-
-    /// <summary>
-    ///   Resolves the runtime <see cref="Type"/> for <see cref="IPrimeTime"/> from the assembly referenced by this test project.
-    /// </summary>
-    /// <returns>
-    ///   The <see cref="Type"/> of <see cref="IPrimeTime"/>.
-    /// </returns>
-    private static Type GetIPrimeTimeType ()
-    {
-        return typeof(IPrimeTime);
     }
 }

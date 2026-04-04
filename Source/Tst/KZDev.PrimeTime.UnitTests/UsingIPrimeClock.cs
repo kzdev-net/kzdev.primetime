@@ -17,21 +17,6 @@ namespace KZDev.PrimeTime.UnitTests;
 /// </summary>
 public class UsingIPrimeClock : UnitTestBase
 {
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="UsingIPrimeClock"/> class.
-    /// </summary>
-    /// <param name="xUnitTestOutputHelper">
-    ///   The xUnit test output helper that can be used to output test messages.
-    /// </param>
-    #region Constructors/Finalizers
-
-    public UsingIPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
-        : base(xUnitTestOutputHelper)
-    {
-    }
-
-    #endregion Constructors/Finalizers
-
     // Use a short sleep so tests remain fast, but keep it above typical timer/scheduler resolution
     // (≈1–15ms on most platforms) so that elapsed time can be measured reliably and deterministically.
     private const int SleepTestDurationMilliseconds = 30;
@@ -55,6 +40,21 @@ public class UsingIPrimeClock : UnitTestBase
     // Upper bound for DelayAsync elapsed time to avoid flaky failures when the task scheduler
     // or system is slightly slow; 30ms has proven sufficient across targets.
     private const int DelayAsyncUpperBoundToleranceMilliseconds = 30;
+
+    #region Constructors/Finalizers
+
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="UsingIPrimeClock"/> class.
+    /// </summary>
+    /// <param name="xUnitTestOutputHelper">
+    ///   The xUnit test output helper that can be used to output test messages.
+    /// </param>
+    public UsingIPrimeClock (ITestOutputHelper xUnitTestOutputHelper)
+        : base(xUnitTestOutputHelper)
+    {
+    }
+
+    #endregion Constructors/Finalizers
 
     /// <summary>
     ///   Asserts that an elapsed duration lies within the expected range (expected minus lower

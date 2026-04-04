@@ -7,6 +7,8 @@ public sealed partial class PrimeTestClock
 {
     private DateTimeOffset _utcNow;
 
+    #region Constructors/Finalizers
+
     /// <summary>
     ///   Initializes a new instance with virtual UTC time set to <see cref="DateTimeOffset.UtcNow"/>.
     /// </summary>
@@ -23,6 +25,8 @@ public sealed partial class PrimeTestClock
     {
         _utcNow = initialUtcTime;
     }
+
+    #endregion Constructors/Finalizers
 
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset) =>
         TimeZoneInfo.ConvertTime(utcNowOffset, TimeZoneInfo.Local);
