@@ -447,107 +447,17 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, repeat,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
-            repeat, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken, state,
-            repeat, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
-            repeat, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime), callback, cancellationToken,
-            state, repeat, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+            callback,
+            cancellationToken,
+            state,
             timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, timerOptions);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -559,7 +469,10 @@ public sealed partial class PrimeTestClock
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval), callback, cancellationToken, state,
+            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+            callback,
+            cancellationToken,
+            state,
             timerOptions);
     //----------------------------------------------------------------------------
 
@@ -570,42 +483,11 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.SimpleAction, callback, null,
-            timerOptions, cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAction, callback, state,
-            timerOptions, cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextActionWithToken, callback,
-            state, timerOptions, cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.SimpleAsync, callback, null,
             timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
 

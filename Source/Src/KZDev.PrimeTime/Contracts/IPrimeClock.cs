@@ -77,121 +77,8 @@ public partial interface IPrimeClock
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Registers a one-shot or repeating interval timer with a synchronous callback.
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a one-shot or repeating interval timer with an asynchronous callback.
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
-    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options.</param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback).
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="timerOptions">Optional timer options.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context).
+    ///   Registers an interval timer with an initial delay, a repeat interval, and a synchronous callback that receives
+    ///   timer context. Other <see cref="Duration"/>-based <c>RegisterTimer</c> overloads are extension methods.
     /// </summary>
     /// <param name="callbackTime">Duration until the first callback.</param>
     /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
@@ -211,45 +98,8 @@ public partial interface IPrimeClock
         IntervalTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional timer options.</param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
-    /// </summary>
-    /// <param name="callbackTime">Duration until the first callback.</param>
-    /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
-    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional timer options.</param>
-    /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback with context).
+    ///   Registers an interval timer with an initial delay, a repeat interval, and an asynchronous callback that receives
+    ///   timer context and cancellation token. Other <see cref="Duration"/>-based <c>RegisterAsyncTimer</c> overloads are extension methods.
     /// </summary>
     /// <param name="callbackTime">Duration until the first callback.</param>
     /// <param name="repeatInterval">Interval for subsequent callbacks; use a non-positive duration for one-shot.</param>
@@ -273,29 +123,10 @@ public partial interface IPrimeClock
 
     #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
-#if NET
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
-    /// </summary>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <returns>
-    ///   An <see cref="IClockDayTimeTimer"/> supporting change operations via NodaTime
-    ///   <see cref="LocalTime"/> and BCL <see cref="LocalTimeOfDay"/>.
-    /// </returns>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
+    ///   Other <see cref="LocalTime"/> <c>RegisterTimeOfDay</c> overloads are extension methods.
     /// </summary>
     /// <param name="timeOfDay">The local time of day at which to fire.</param>
     /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
@@ -305,7 +136,7 @@ public partial interface IPrimeClock
     /// </param>
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> supporting NodaTime <see cref="LocalTime"/> change overloads.</returns>
+    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
@@ -313,41 +144,8 @@ public partial interface IPrimeClock
         DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
-    /// </summary>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> supporting NodaTime <see cref="LocalTime"/> change overloads.</returns>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback.
-    /// </summary>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> supporting NodaTime <see cref="LocalTime"/> change overloads.</returns>
-    IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
+    ///   Other <see cref="LocalTime"/> <c>RegisterAsyncTimeOfDay</c> overloads are extension methods.
     /// </summary>
     /// <param name="timeOfDay">The local time of day at which to fire.</param>
     /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
@@ -357,67 +155,13 @@ public partial interface IPrimeClock
     /// </param>
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> supporting NodaTime <see cref="LocalTime"/> change overloads.</returns>
+    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
-#else
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
-    /// </summary>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> handle.</returns>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and state.
-    /// </summary>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
-    /// </summary>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback.
-    /// </summary>
-    IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
-    /// </summary>
-    IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
-    //----------------------------------------------------------------------------
-#endif
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 }

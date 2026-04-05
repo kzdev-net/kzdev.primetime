@@ -135,8 +135,9 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
         IClockIntervalTimer registration = _clock.RegisterTimer(dueTime,
             repeatInterval,
-            () => callback(state),
+            _ => callback(state),
             CancellationToken.None,
+            null,
             timerOptions: null);
 
         return new ClockIntervalTimerToITimerAdapter(registration);

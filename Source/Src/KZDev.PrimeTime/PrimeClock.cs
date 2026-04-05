@@ -18,23 +18,6 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class PrimeClock
 {
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Sentinel <see cref="Duration"/> matching <see cref="Timeout.InfiniteTimeSpan"/> for one-shot (non-repeating) timers.
-    /// </summary>
-    private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
-
-    /// <summary>
-    ///   The NodaTime clock that supplies the current instant.
-    /// </summary>
-    private readonly IClock _clock;
-
-    /// <summary>
-    ///   The time zone used for local zoned date and time projections.
-    /// </summary>
-    private readonly DateTimeZone _systemDefaultZone;
-    //----------------------------------------------------------------------------
-
 #if NET
     //----------------------------------------------------------------------------
     /// <summary>
@@ -50,6 +33,18 @@ internal sealed partial class PrimeClock
     //----------------------------------------------------------------------------
 
 #endif
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   The NodaTime clock that supplies the current instant.
+    /// </summary>
+    private readonly IClock _clock;
+
+    /// <summary>
+    ///   The time zone used for local zoned date and time projections.
+    /// </summary>
+    private readonly DateTimeZone _systemDefaultZone;
+    //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
 
@@ -293,123 +288,6 @@ internal sealed partial class PrimeClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
-        return new ClockIntervalTimerRegistration(this,
-            callbackPeriod,
-            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
-        return new ClockIntervalTimerRegistration(this,
-            callbackPeriod,
-            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
-            IntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeat ? callbackTime : NoRepeatSentinel),
-            IntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
-        return new ClockIntervalTimerRegistration(this,
-            callbackPeriod,
-            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
-            IntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        bool repeat = false,
-        IntervalTimerOptions? timerOptions = null)
-    {
-        TimeSpan callbackPeriod = NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime);
-        return new ClockIntervalTimerRegistration(this,
-            callbackPeriod,
-            repeat ? callbackPeriod : NoRepeatSentinel.ToTimeSpan(),
-            IntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
         Duration repeatInterval,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
@@ -421,41 +299,6 @@ internal sealed partial class PrimeClock
             IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
-            IntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
-            IntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
             timerOptions,
             cancellationToken);
     //----------------------------------------------------------------------------
@@ -485,33 +328,11 @@ internal sealed partial class PrimeClock
 #if NET
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
@@ -523,20 +344,6 @@ internal sealed partial class PrimeClock
 
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            true,
-            TimeOnlyToLocalTime(timeOfDay.Value),
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken,
         object? state = null,
@@ -547,35 +354,6 @@ internal sealed partial class PrimeClock
             IntervalTimerCallbackKind.ContextAction,
             callback,
             state,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            true,
-            TimeOnlyToLocalTime(timeOfDay.Value),
-            IntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            true,
-            TimeOnlyToLocalTime(timeOfDay.Value),
-            IntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
             timerOptions,
             cancellationToken);
 
@@ -594,162 +372,41 @@ internal sealed partial class PrimeClock
             timerOptions,
             cancellationToken);
 
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-#else
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.SimpleAction,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextActionWithToken,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.SimpleAsync,
-            callback,
-            null,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            IntervalTimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
 #endif
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
