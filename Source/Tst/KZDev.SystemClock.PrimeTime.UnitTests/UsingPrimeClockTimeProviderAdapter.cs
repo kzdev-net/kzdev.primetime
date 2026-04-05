@@ -8,6 +8,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
@@ -113,9 +114,41 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that the adapter reports local time consistently with its exposed
+    ///   <see cref="TimeProvider.LocalTimeZone"/>.
+    /// </summary>
+    [Fact]
+    public void GetLocalNow_UsesProviderLocalTimeZone ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        TimeProvider provider = clock.ToTimeProvider();
+
+        provider.GetLocalNow().Should().Be(TimeZoneInfo.ConvertTime(provider.GetUtcNow(), provider.LocalTimeZone));
+        provider.LocalTimeZone.Should().Be(clock.LocalScheduleTimeZone);
+    }
+    //----------------------------------------------------------------------------
+
     #endregion GetUtcNow driven by test clock
 
     #region CreateTimer driven by test clock
+
+    /// <summary>
+    ///   Verifies that <see cref="TimeProvider.CreateTimer(TimerCallback, object?, TimeSpan, TimeSpan)"/>
+    ///   throws <see cref="ArgumentNullException"/> when the callback is null.
+    /// </summary>
+    [Fact]
+    public void CreateTimer_WithNullCallback_ThrowsArgumentNullException ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        TimeProvider provider = clock.ToTimeProvider();
+
+        Action act = () => provider.CreateTimer(null!, null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("callback");
+    }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that a timer created via the adapter fires when the test clock is advanced
@@ -155,6 +188,71 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
         fired.Should().Be(2);
         clock.Advance(TimeSpan.FromMinutes(5));
         fired.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a negative period is treated as one-shot by the adapter.
+    /// </summary>
+    [Fact]
+    public void CreateTimer_WithNegativePeriod_FiresOnlyOnce ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        TimeProvider provider = clock.ToTimeProvider();
+        int fired = 0;
+
+        using ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(-1));
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(TimeSpan.FromMinutes(10));
+
+        fired.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that changing a created timer reschedules the next fire using the adapter.
+    /// </summary>
+    [Fact]
+    public void CreateTimer_Change_ReschedulesNextFire ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        TimeProvider provider = clock.ToTimeProvider();
+        int fired = 0;
+
+        using ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+        timer.Change(TimeSpan.FromMinutes(2), Timeout.InfiniteTimeSpan).Should().BeTrue();
+        clock.Advance(TimeSpan.FromMinutes(1));
+        fired.Should().Be(0);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        fired.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that disposing a created timer asynchronously prevents future callbacks.
+    /// </summary>
+    [Fact]
+    public async Task CreateTimer_DisposeAsync_PreventsFutureCallbacks ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        TimeProvider provider = clock.ToTimeProvider();
+        int fired = 0;
+
+        ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+        fired.Should().Be(1);
+
+        await timer.DisposeAsync();
+        clock.Advance(TimeSpan.FromMinutes(10));
+
+        fired.Should().Be(1);
     }
     //----------------------------------------------------------------------------
 

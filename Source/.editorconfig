@@ -50,7 +50,7 @@ dotnet_style_qualification_for_event = false:suggestion
 [*.cs]
 
 # License header
-file_header_template = Copyright (c) Kevin Zehrer. All rights reserved.\nThis file is part of the PrimeTime project.
+file_header_template = Copyright (c) Kevin Zehrer\nLicensed under the MIT License. See LICENSE file in the project root for full license information.
 
 
 # .NET Naming Styles

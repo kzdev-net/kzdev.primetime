@@ -4,8 +4,9 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
-using KZDev.PrimeTime;
+
 using KZDev.PrimeTime.Tests;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KZDev.PrimeTime.UnitTests;
@@ -62,6 +63,28 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         clock.Should().NotBeNull().And.BeOfType<PrimeClock>();
         IPrimeClock second = provider.GetRequiredService<IPrimeClock>();
         second.Should().BeSameAs(clock);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
+    ///   returns the same service collection instance for fluent chaining and adds a singleton
+    ///   descriptor for <see cref="IPrimeClock"/> implemented by <see cref="PrimeClock"/>.
+    /// </summary>
+    [Fact]
+    public void AddPrimeClock_ReturnsSameServiceCollectionAndRegistersSingletonDescriptor ()
+    {
+        IServiceCollection services = new ServiceCollection();
+
+        IServiceCollection returned = services.AddPrimeClock();
+
+        returned.Should().BeSameAs(services);
+        services.Should().ContainSingle();
+
+        ServiceDescriptor descriptor = services.Single();
+        descriptor.ServiceType.Should().Be(typeof(IPrimeClock));
+        descriptor.ImplementationType.Should().Be(typeof(PrimeClock));
+        descriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
     }
     //----------------------------------------------------------------------------
 }
