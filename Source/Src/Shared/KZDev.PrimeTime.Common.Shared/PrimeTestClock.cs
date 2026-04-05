@@ -946,12 +946,14 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         private readonly ConcurrentTriggerProcessing _concurrentTriggerProcessing;
 
         /// <summary>
-        ///   Skipped-time policy copied from registration options.
+        ///   Skipped-time policy from registration options (same resolution as
+        ///   <see cref="ClockDayTimeTimerRegistration"/>).
         /// </summary>
         private readonly SkippedTimeBehavior _skippedTimeBehavior;
 
         /// <summary>
-        ///   Duplicate-trigger policy copied from registration options.
+        ///   Duplicate-trigger policy from registration options (same resolution as
+        ///   <see cref="ClockDayTimeTimerRegistration"/>).
         /// </summary>
         private readonly DuplicateTimeBehavior _duplicateTimeBehavior;
         //------------------------------------------------------------------------
@@ -984,9 +986,10 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Callback = callback;
             CallbackState = callbackState;
             CancellationToken = cancellationToken;
-            _concurrentTriggerProcessing = options?.ConcurrentTriggerProcessing ?? ConcurrentTriggerProcessing.RunSequentially;
-            _skippedTimeBehavior = options?.SkippedTimeBehavior ?? SkippedTimeBehavior.RunAfter;
-            _duplicateTimeBehavior = options?.DuplicateTimeBehavior ?? DuplicateTimeBehavior.RunFirst;
+            DayTimeTimerOptions resolvedOptions = options ?? new DayTimeTimerOptions();
+            _concurrentTriggerProcessing = resolvedOptions.ConcurrentTriggerProcessing;
+            _skippedTimeBehavior = resolvedOptions.SkippedTimeBehavior;
+            _duplicateTimeBehavior = resolvedOptions.DuplicateTimeBehavior;
             Id = Interlocked.Increment(ref _nextTimerId);
             RegisteredTime = Clock.UtcNowOffset;
             NextDueUtc = ComputeNextDue(clock.UtcNowOffset);
@@ -1184,16 +1187,54 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <summary>
-        ///   Computes the next UTC instant when <see cref="TargetTimeOfDay"/> should fire on or after <paramref name="now"/>.
+        ///   Computes the next UTC instant when <see cref="TargetTimeOfDay"/> should fire on or after the clock&apos;s
+        ///   current instant, using the same local wall-time policies as production
+        ///   (<see cref="DayTimeBclLocalWallTimeScheduling"/> and the NodaTime scheduling helper in the superset assembly).
         /// </summary>
-        /// <param name="now">Current virtual UTC instant.</param>
+        /// <param name="now">Current virtual UTC instant (used for UTC day-time; local scheduling uses the clock&apos;s local &quot;now&quot;).</param>
         /// <returns>The next scheduled fire instant in UTC, or <c>null</c> if not applicable.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     For <see cref="IsLocal"/> on the System Clock stack, the schedule zone is
+        ///     <see cref="IPrimeClock.LocalScheduleTimeZone"/> (see <see cref="PrimeTestClock.LocalScheduleTimeZone"/>),
+        ///     which is not injectable on <see cref="PrimeTestClock"/>; deterministic DST edge tests should use the Noda
+        ///     <see cref="PrimeTestClock"/> constructor that accepts a <c>NodaTime.DateTimeZone</c>.
+        ///   </para>
+        /// </remarks>
         protected DateTimeOffset? ComputeNextDue (DateTimeOffset now)
         {
             if (IsLocal)
             {
-                return ComputeNextLocalTimeOfDayAsUtc(Clock.LocalNowOffset, TargetTimeOfDay,
-                    dt => Clock.GetLocalWallClockUtcOffset(dt));
+#if SYSTEMCLOCK
+                TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(
+                    Clock.LocalNowOffset,
+                    Clock.LocalScheduleTimeZone,
+                    TimeOnly.FromTimeSpan(TargetTimeOfDay),
+                    _skippedTimeBehavior,
+                    _duplicateTimeBehavior);
+                if (delay <= TimeSpan.Zero)
+                {
+                    delay = TimeSpan.FromDays(1);
+                }
+
+                DateTimeOffset scheduleBasis = Clock.LocalNowOffset;
+                return new DateTimeOffset((scheduleBasis + delay).UtcDateTime, TimeSpan.Zero);
+#else
+                LocalTime targetLocal = LocalTime.FromTicksSinceMidnight(TargetTimeOfDay.Ticks);
+                Duration delayNoda = DayTimeNodaLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(
+                    Clock.NowInstant,
+                    Clock._zone,
+                    targetLocal,
+                    _skippedTimeBehavior,
+                    _duplicateTimeBehavior);
+                if (delayNoda <= Duration.Zero)
+                {
+                    delayNoda = Duration.FromDays(1);
+                }
+
+                Instant fireInstant = Clock.NowInstant + delayNoda;
+                return new DateTimeOffset(fireInstant.ToDateTimeUtc(), TimeSpan.Zero);
+#endif
             }
             else
             {
@@ -1593,6 +1634,11 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   <paramref name="localNow"/>, using <paramref name="getLocalWallClockUtcOffset"/> to resolve the UTC offset for
     ///   the scheduled local wall-clock instant (including across daylight saving time transitions).
     /// </summary>
+    /// <remarks>
+    ///   Virtual local day-time timers use <see cref="DayTimeBclLocalWallTimeScheduling"/> (System Clock) or
+    ///   DayTimeNodaLocalWallTimeScheduling (superset assembly) instead of this method so skipped/duplicate policies
+    ///   match production.
+    /// </remarks>
     /// <param name="localNow">
     ///   Current time in the local coordinate system (same interpretation as <see cref="LocalNowOffset"/>).
     /// </param>

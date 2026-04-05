@@ -1,8 +1,6 @@
-// Copyright (c) Kevin Zehrer
-// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
 
-using System.Threading;
-using System.Threading.Tasks;
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -20,11 +18,11 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
     #region Nested types
 
-        //============================================================================
-private sealed class PrimeClockTimerToITimerAdapter : ITimer
+    //============================================================================
+    private sealed class PrimeClockTimerToITimerAdapter : ITimer
     {
-                //------------------------------------------------------------------------
-private readonly IClockIntervalTimer _registration;
+        //------------------------------------------------------------------------
+        private readonly IClockIntervalTimer _registration;
         //------------------------------------------------------------------------
 
         #region Constructors/Finalizers
@@ -82,8 +80,8 @@ private readonly IClockIntervalTimer _registration;
 
     #endregion Nested types
 
-        //----------------------------------------------------------------------------
-private readonly IPrimeClock _clock;
+    //----------------------------------------------------------------------------
+    private readonly IPrimeClock _clock;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers

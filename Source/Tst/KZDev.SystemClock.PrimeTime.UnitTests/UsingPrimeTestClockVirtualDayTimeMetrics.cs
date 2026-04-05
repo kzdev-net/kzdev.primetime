@@ -39,9 +39,9 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     Uses the same scheduling rule as production: <see cref="PrimeTestClock.ComputeNextLocalTimeOfDayAsUtc"/>
-    ///     with <see cref="TimeZoneInfo.Local"/> to resolve offsets (including across DST). The delegate must stay
-    ///     aligned with BCL <see cref="PrimeTestClock"/>'s <c>GetLocalWallClockUtcOffset</c> implementation.
+    ///     Uses <see cref="DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime"/> with
+    ///     <see cref="IPrimeClock.LocalScheduleTimeZone"/> and default <see cref="DayTimeTimerOptions"/> (same as
+    ///     production <see cref="ClockDayTimeTimerRegistration"/> local scheduling).
     ///   </para>
     /// </remarks>
     /// <param name="clock">The virtual test clock (local "now" is <see cref="IPrimeTestClock.LocalNowOffset"/>).</param>
@@ -52,10 +52,11 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     /// </returns>
     private static long ExpectedMillisecondsUntilNextLocalFire (IPrimeTestClock clock, TimeOnly targetTimeOfDay)
     {
-        DateTimeOffset localNow = clock.LocalNowOffset;
-        DateTimeOffset nextDueUtc = PrimeTestClock.ComputeNextLocalTimeOfDayAsUtc(localNow, targetTimeOfDay.ToTimeSpan(),
-            dt => TimeZoneInfo.Local.GetUtcOffset(dt));
-        return (long)(nextDueUtc - localNow.ToUniversalTime()).TotalMilliseconds;
+        DayTimeTimerOptions defaults = new();
+        TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset,
+            clock.LocalScheduleTimeZone, targetTimeOfDay, defaults.SkippedTimeBehavior, defaults.DuplicateTimeBehavior);
+        DateTimeOffset nextDueUtc = new DateTimeOffset((clock.LocalNowOffset + delay).UtcDateTime, TimeSpan.Zero);
+        return (long)(nextDueUtc - clock.UtcNowOffset).TotalMilliseconds;
     }
 
     /// <summary>
@@ -73,7 +74,7 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
             cancellationToken: TestContext.Current.CancellationToken);
         timer.ElapsedTime.Should().Be(-1);
         long expectedMs = ExpectedMillisecondsUntilNextLocalFire(clock, threeAm);
-        // Virtual time and ComputeNextLocalTimeOfDayAsUtc are deterministic; no real-clock slack required.
+        // Virtual time and the BCL scheduling oracle are deterministic; no real-clock slack required.
         timer.TimeUntilNextCallback.Should().Be(expectedMs);
     }
 
