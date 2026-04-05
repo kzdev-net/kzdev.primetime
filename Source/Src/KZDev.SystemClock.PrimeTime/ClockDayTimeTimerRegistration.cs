@@ -35,12 +35,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Scheduled start of the next callback, if one is pending.
     /// </summary>
-    private DateTimeOffset? _nextCallbackUtc;
+    private DateTimeOffset? _nextCallbackScheduledOffset;
 
     /// <summary>
     ///   Start of the most recent callback, if any.
     /// </summary>
-    private DateTimeOffset? _lastCallbackUtc;
+    private DateTimeOffset? _lastCallbackStartedOffset;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -82,7 +82,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Initializes a new instance for a local-time day-time timer.
     /// </summary>
     /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="timeOfDay">Local time of day for recurring fires.</param>
+    /// <param name="localTimeOfDay">Local time of day for recurring fires.</param>
     /// <param name="callbackKind">Shape of the user callback.</param>
     /// <param name="callback">User callback delegate.</param>
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
@@ -92,13 +92,13 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
+        LocalTimeOfDay localTimeOfDay,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
-        : this(clock, false, timeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
+        : this(clock, false, localTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
     {
     }
     //----------------------------------------------------------------------------
@@ -108,7 +108,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Initializes a new instance for a UTC day-time timer.
     /// </summary>
     /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="timeOfDay">UTC time of day for recurring fires.</param>
+    /// <param name="utcTimeOfDay">UTC time of day for recurring fires.</param>
     /// <param name="callbackKind">Shape of the user callback.</param>
     /// <param name="callback">User callback delegate.</param>
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
@@ -118,13 +118,13 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        UtcTimeOfDay timeOfDay,
+        UtcTimeOfDay utcTimeOfDay,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
-        : this(clock, true, timeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
+        : this(clock, true, utcTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
     {
     }
     //----------------------------------------------------------------------------
@@ -173,18 +173,18 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The nonnegative delay until the next fire, or one day if the computed delay is nonpositive.</returns>
     private partial TimeSpan GetDelayUntilNextForTimer ()
     {
-        DateTimeOffset now = GetScheduleNowOffset();
-        DateOnly today = DateOnly.FromDateTime(now.DateTime);
-        DateTime nextDt = today.ToDateTime(_targetTimeOfDay);
-        if (nextDt <= now.DateTime)
-            nextDt = today.AddDays(1).ToDateTime(_targetTimeOfDay);
-        DateTimeOffset nextOff = _utcTimeOfDaySchedule
-            ? new DateTimeOffset(nextDt, TimeSpan.Zero)
-            : new DateTimeOffset(nextDt, now.Offset);
-        TimeSpan delay = nextOff - now;
-        if (delay <= TimeSpan.Zero)
-            delay = TimeSpan.FromDays(1);
-        return delay;
+        DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
+        DateOnly scheduleCalendarDate = DateOnly.FromDateTime(scheduleNowOffset.DateTime);
+        DateTime nextOccurrenceDateTime = scheduleCalendarDate.ToDateTime(_targetTimeOfDay);
+        if (nextOccurrenceDateTime <= scheduleNowOffset.DateTime)
+            nextOccurrenceDateTime = scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay);
+        DateTimeOffset nextFireDateTimeOffset = _utcTimeOfDaySchedule
+            ? new DateTimeOffset(nextOccurrenceDateTime, TimeSpan.Zero)
+            : new DateTimeOffset(nextOccurrenceDateTime, scheduleNowOffset.Offset);
+        TimeSpan delayUntilNextFire = nextFireDateTimeOffset - scheduleNowOffset;
+        if (delayUntilNextFire <= TimeSpan.Zero)
+            delayUntilNextFire = TimeSpan.FromDays(1);
+        return delayUntilNextFire;
     }
     //----------------------------------------------------------------------------
 
@@ -194,7 +194,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     /// <param name="delay">Delay from now until the next fire.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
-        _nextCallbackUtc = GetScheduleNowOffset() + delay;
+        _nextCallbackScheduledOffset = GetScheduleNowOffset() + delay;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -203,8 +203,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     private partial void RecordDayTimeCallbackTickStarted ()
     {
-        _nextCallbackUtc = null;
-        _lastCallbackUtc = GetScheduleNowOffset();
+        _nextCallbackScheduledOffset = null;
+        _lastCallbackStartedOffset = GetScheduleNowOffset();
     }
     //----------------------------------------------------------------------------
 
@@ -218,14 +218,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
-        if (_lastCallbackUtc is not { } last)
+        if (_lastCallbackStartedOffset is not { } lastCallbackStartOffset)
             return -1;
         if (_callbacksRunning > 0)
             return 0;
-        DateTimeOffset now = GetScheduleNowOffset();
-        if (last >= now)
+        DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
+        if (lastCallbackStartOffset >= scheduleNowOffset)
             return 0;
-        return (long)(now - last).TotalMilliseconds;
+        return (long)(scheduleNowOffset - lastCallbackStartOffset).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -238,12 +238,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
     {
-        if (_nextCallbackUtc is not { } next)
+        if (_nextCallbackScheduledOffset is not { } pendingNextFireOffset)
             return -1;
-        DateTimeOffset now = GetScheduleNowOffset();
-        if (next <= now)
+        DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
+        if (pendingNextFireOffset <= scheduleNowOffset)
             return 0;
-        return (long)(next - now).TotalMilliseconds;
+        return (long)(pendingNextFireOffset - scheduleNowOffset).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -256,10 +256,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>Always <c>true</c> for this BCL basis.</returns>
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
     {
-        long msLong = (long)Math.Min(delay.TotalMilliseconds, int.MaxValue);
-        if (msLong < 0)
-            msLong = 0;
-        milliseconds = (int)msLong;
+        long totalMillisecondsClamped = (long)Math.Min(delay.TotalMilliseconds, int.MaxValue);
+        if (totalMillisecondsClamped < 0)
+            totalMillisecondsClamped = 0;
+        milliseconds = (int)totalMillisecondsClamped;
         return true;
     }
     //----------------------------------------------------------------------------
@@ -271,10 +271,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>A positive millisecond count suitable for the underlying timer.</returns>
     private partial int GetRunSequentiallyRetryMilliseconds ()
     {
-        int ms = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
-        if (ms <= 0)
+        int retryMilliseconds = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
+        if (retryMilliseconds <= 0)
             return 1;
-        return ms;
+        return retryMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -291,14 +291,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
     /// </summary>
-    /// <param name="value">New time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value) => _targetTimeOfDay = value;
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
 
     /// <summary>
     ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
     /// </summary>
-    /// <param name="value">New time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value) => _targetTimeOfDay = value;
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
 }
 //################################################################################
 #endif

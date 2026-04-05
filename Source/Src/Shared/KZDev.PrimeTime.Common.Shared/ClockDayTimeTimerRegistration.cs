@@ -26,9 +26,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
 
     /// <summary>
-    ///   Monotonic id source for registrations.
+    ///   Monotonic sequence source for registration identifiers.
     /// </summary>
-    private static int _nextId;
+    private static int _nextRegistrationIdentifier;
 
     /// <summary>
     ///   Protects mutable registration and timer fields.
@@ -90,9 +90,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private DuplicateTimeBehavior _duplicateTimeBehavior;
 
     /// <summary>
-    ///   Unique registration id.
+    ///   Unique registration identifier.
     /// </summary>
-    private int _id;
+    private int _registrationIdentifier;
 
     /// <summary>
     ///   Underlying BCL timer between day-time fires.
@@ -144,14 +144,14 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   Applies a new local time-of-day schedule (partial).
     /// </summary>
-    /// <param name="value">New local time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value);
+    /// <param name="newTimeOfDay">New local time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay);
 
     /// <summary>
     ///   Applies a new UTC time-of-day schedule (partial).
     /// </summary>
-    /// <param name="value">New UTC time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value);
+    /// <param name="newTimeOfDay">New UTC time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay);
 
 #endif
 
@@ -187,14 +187,14 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         _callbackState = callbackState;
 
-        DayTimeTimerOptions opts = options ?? new DayTimeTimerOptions();
-        _concurrentTriggerProcessing = opts.ConcurrentTriggerProcessing;
-        _skippedTimeBehavior = opts.SkippedTimeBehavior;
-        _duplicateTimeBehavior = opts.DuplicateTimeBehavior;
-        _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
+        DayTimeTimerOptions resolvedOptions = options ?? new DayTimeTimerOptions();
+        _concurrentTriggerProcessing = resolvedOptions.ConcurrentTriggerProcessing;
+        _skippedTimeBehavior = resolvedOptions.SkippedTimeBehavior;
+        _duplicateTimeBehavior = resolvedOptions.DuplicateTimeBehavior;
+        _captureContext = resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
         _cancellationToken = cancellationToken;
 
-        _id = Interlocked.Increment(ref _nextId);
+        _registrationIdentifier = Interlocked.Increment(ref _nextRegistrationIdentifier);
         CaptureRegisteredTimeForDayTimer();
 
         if (cancellationToken.CanBeCanceled)
@@ -217,7 +217,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public int Id { [DebuggerStepThrough] get => _id; }
+    public int Id { [DebuggerStepThrough] get => _registrationIdentifier; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -430,16 +430,16 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
                 return;
-            TimeSpan delay = GetDelayUntilNextForTimer();
-            if (delay <= TimeSpan.Zero)
-                delay = OneDay;
-            if (!TryGetTimerMillisecondsFromDelay(delay, out int ms))
+            TimeSpan delayUntilNextFire = GetDelayUntilNextForTimer();
+            if (delayUntilNextFire <= TimeSpan.Zero)
+                delayUntilNextFire = OneDay;
+            if (!TryGetTimerMillisecondsFromDelay(delayUntilNextFire, out int timerMilliseconds))
                 return;
-            SetNextCallbackScheduledFromDelay(delay);
+            SetNextCallbackScheduledFromDelay(delayUntilNextFire);
             if (_timer is null)
-                _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
+                _timer = new Timer(OnTimerTick, null, timerMilliseconds, Timeout.Infinite);
             else
-                _timer.Change(ms, Timeout.Infinite);
+                _timer.Change(timerMilliseconds, Timeout.Infinite);
         }
     }
     //----------------------------------------------------------------------------
@@ -454,13 +454,13 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
                 return;
-            int ms = GetRunSequentiallyRetryMilliseconds();
-            if (ms <= 0)
-                ms = 1;
+            int retryMilliseconds = GetRunSequentiallyRetryMilliseconds();
+            if (retryMilliseconds <= 0)
+                retryMilliseconds = 1;
             if (_timer is null)
-                _timer = new Timer(OnTimerTick, null, ms, Timeout.Infinite);
+                _timer = new Timer(OnTimerTick, null, retryMilliseconds, Timeout.Infinite);
             else
-                _timer.Change(ms, Timeout.Infinite);
+                _timer.Change(retryMilliseconds, Timeout.Infinite);
         }
     }
     //----------------------------------------------------------------------------
@@ -469,8 +469,8 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   BCL timer callback for the next day-time fire.
     /// </summary>
-    /// <param name="_">Unused state object.</param>
-    private void OnTimerTick (object? _)
+    /// <param name="unusedTimerState">Unused state object passed by <see cref="Timer"/>.</param>
+    private void OnTimerTick (object? unusedTimerState)
     {
         lock (_gate)
         {
@@ -502,7 +502,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _callbacksRunning++;
         }
 
-        bool isAsync = _callbackKind == IntervalTimerCallbackKind.SimpleAsync ||
+        bool callbackIsAsynchronous = _callbackKind == IntervalTimerCallbackKind.SimpleAsync ||
             _callbackKind == IntervalTimerCallbackKind.ContextAsync;
         try
         {
@@ -510,7 +510,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
         finally
         {
-            if (!isAsync)
+            if (!callbackIsAsynchronous)
             {
                 lock (_gate)
                 {
@@ -518,15 +518,15 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 }
             }
         }
-        if (!isAsync)
+        if (!callbackIsAsynchronous)
         {
-            bool doRetry;
+            bool shouldRetryAfterSequentialCallback;
             lock (_gate)
             {
-                doRetry = _pendingRunSequential;
+                shouldRetryAfterSequentialCallback = _pendingRunSequential;
                 _pendingRunSequential = false;
             }
-            if (doRetry)
+            if (shouldRetryAfterSequentialCallback)
                 ScheduleNextAfterShortDelay();
             else
                 ScheduleNext();
@@ -547,10 +547,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         {
             if (_captureContext && !ExecutionContext.IsFlowSuppressed())
             {
-                ExecutionContext? ec = ExecutionContext.Capture();
-                if (ec is not null)
+                ExecutionContext? executionContext = ExecutionContext.Capture();
+                if (executionContext is not null)
                 {
-                    ExecutionContext.Run(ec, _ => run(), null);
+                    ExecutionContext.Run(executionContext, ignoredState => run(), null);
                     return;
                 }
             }
@@ -597,15 +597,15 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <param name="run">Async callback invocation.</param>
     private void RunAsyncAndScheduleAfter (Func<ValueTask> run)
     {
-        ValueTask vt = run();
-        if (vt.IsCompletedSuccessfully)
+        ValueTask callbackValueTask = run();
+        if (callbackValueTask.IsCompletedSuccessfully)
         {
             ScheduleNextFromAsync();
             return;
         }
-        vt.AsTask().ContinueWith((_, state) =>
+        callbackValueTask.AsTask().ContinueWith((completedTask, registrationState) =>
             {
-                ((ClockDayTimeTimerRegistration)state!).ScheduleNextFromAsync();
+                ((ClockDayTimeTimerRegistration)registrationState!).ScheduleNextFromAsync();
             },
             this,
             CancellationToken.None,

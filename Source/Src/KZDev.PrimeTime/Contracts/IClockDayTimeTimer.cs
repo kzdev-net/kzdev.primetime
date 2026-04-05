@@ -10,14 +10,14 @@ public partial interface IClockDayTimeTimer
     ///   Changes the time of day at which this registration fires (NodaTime
     ///   <see cref="LocalTime"/> overload; local semantic day-time registrations).
     /// </summary>
-    /// <param name="timeOfDay">
+    /// <param name="targetTimeOfDay">
     ///   The new local time of day for the next and subsequent triggers.
     /// </param>
     /// <returns>
     ///   <c>true</c> if the change was applied; <c>false</c> if the registration was
     ///   cancelled, disposed, or otherwise invalid.
     /// </returns>
-    bool Change (LocalTime timeOfDay);
+    bool Change (LocalTime targetTimeOfDay);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Interval-style <see cref="Duration"/> change is not applicable for time-of-day

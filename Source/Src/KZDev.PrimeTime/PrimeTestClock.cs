@@ -36,7 +36,7 @@ public sealed partial class PrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool Change (LocalTime timeOfDay)
+        public bool Change (LocalTime targetTimeOfDay)
         {
             if (!IsLocal)
                 return false;
@@ -45,7 +45,7 @@ public sealed partial class PrimeTestClock
             {
                 if (Disposed || State == TimerState.Cancelled)
                     return false;
-                TargetTimeOfDay = LocalTimeToTargetTimeOfDay(timeOfDay);
+                TargetTimeOfDay = LocalTimeToTargetTimeOfDay(targetTimeOfDay);
                 if (Enabled)
                     NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
 
@@ -428,9 +428,9 @@ public sealed partial class PrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
-        CancellationToken token2) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), token1, token2);
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
+        CancellationToken secondCancellationToken) =>
+        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), firstCancellationToken, secondCancellationToken);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

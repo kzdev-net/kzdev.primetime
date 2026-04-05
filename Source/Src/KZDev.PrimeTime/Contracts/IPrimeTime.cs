@@ -118,10 +118,10 @@ public partial interface IPrimeTime
     /// <param name="cancelAfter">
     ///   The duration to wait before cancelling the token.
     /// </param>
-    /// <param name="token1">
+    /// <param name="firstCancellationToken">
     ///   The first cancellation token to link.
     /// </param>
-    /// <param name="token2">
+    /// <param name="secondCancellationToken">
     ///   The second cancellation token to link.
     /// </param>
     /// <returns>
@@ -132,8 +132,8 @@ public partial interface IPrimeTime
     ///   greater than <see cref="int.MaxValue"/> milliseconds are clamped to that value,
     ///   which is the maximum delay supported by <see cref="CancellationTokenSource"/>.
     /// </remarks>
-    TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
-        CancellationToken token2);
+    TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
+        CancellationToken secondCancellationToken);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified

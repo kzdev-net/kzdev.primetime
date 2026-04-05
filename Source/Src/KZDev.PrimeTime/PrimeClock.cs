@@ -41,12 +41,12 @@ internal sealed partial class PrimeClock
     ///   Converts a <see cref="TimeOnly"/> wall-clock value to <see cref="LocalTime"/> for Noda day-time scheduling,
     ///   preserving full <see cref="TimeOnly.Ticks"/> resolution (100 nanoseconds per tick).
     /// </summary>
-    /// <param name="t">The wall-clock time of day.</param>
+    /// <param name="timeOnly">The wall-clock time of day.</param>
     /// <returns>
     ///   The equivalent Noda <see cref="LocalTime"/> from <see cref="LocalTime.FromTicksSinceMidnight"/>.
     /// </returns>
-    private static LocalTime TimeOnlyToLocalTime (TimeOnly t) =>
-        LocalTime.FromTicksSinceMidnight(t.Ticks);
+    private static LocalTime TimeOnlyToLocalTime (TimeOnly timeOnly) =>
+        LocalTime.FromTicksSinceMidnight(timeOnly.Ticks);
     //----------------------------------------------------------------------------
 
 #endif
@@ -211,8 +211,8 @@ internal sealed partial class PrimeClock
     /// </remarks>
     public void Sleep (Duration duration)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        Thread.Sleep(ts);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        Thread.Sleep(timeSpan);
     }
     //----------------------------------------------------------------------------
 
@@ -220,8 +220,8 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public Task DelayAsync (Duration duration)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        return Task.Delay(ts);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        return Task.Delay(timeSpan);
     }
     //----------------------------------------------------------------------------
 
@@ -229,8 +229,8 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        return Task.Delay(ts, cancellationToken);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        return Task.Delay(timeSpan, cancellationToken);
     }
     //----------------------------------------------------------------------------
 
@@ -242,9 +242,9 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource cts = new(ts);
-        return new TimeCancellationTokenSource(cts);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        CancellationTokenSource cancellationTokenSource = new(timeSpan);
+        return new TimeCancellationTokenSource(cancellationTokenSource);
     }
     //----------------------------------------------------------------------------
 
@@ -252,24 +252,24 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeCts = new(ts);
-        CancellationTokenSource linkedCts =
-            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-        return new TimeCancellationTokenSource(linkedCts, [timeCts]);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
+        CancellationTokenSource linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, cancellationToken);
+        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
     }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken token1,
-        CancellationToken token2)
+    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
+        CancellationToken secondCancellationToken)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeCts = new(ts);
-        CancellationTokenSource linkedCts =
-            CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
-        return new TimeCancellationTokenSource(linkedCts, [timeCts]);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
+        CancellationTokenSource linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, firstCancellationToken, secondCancellationToken);
+        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
     }
     //----------------------------------------------------------------------------
 
@@ -278,11 +278,11 @@ internal sealed partial class PrimeClock
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens)
     {
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeCts = new(ts);
-        CancellationTokenSource linkedCts =
-            CancellationTokenSource.CreateLinkedTokenSource([timeCts.Token, .. cancellationTokens]);
-        return new TimeCancellationTokenSource(linkedCts, [timeCts]);
+        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
+        CancellationTokenSource linkedCancellationTokenSource =
+            CancellationTokenSource.CreateLinkedTokenSource([timeLimitedCancellationTokenSource.Token, .. cancellationTokens]);
+        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
     }
     //----------------------------------------------------------------------------
 

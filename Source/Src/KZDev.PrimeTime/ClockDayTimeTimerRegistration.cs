@@ -91,11 +91,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return Timeout.Infinite;
         try
         {
-            TimeSpan ts = duration.ToTimeSpan();
-            long msLong = (long)Math.Min(ts.TotalMilliseconds, int.MaxValue);
-            if (msLong <= 0)
+            TimeSpan timeSpan = duration.ToTimeSpan();
+            long totalMillisecondsClamped = (long)Math.Min(timeSpan.TotalMilliseconds, int.MaxValue);
+            if (totalMillisecondsClamped <= 0)
                 return Timeout.Infinite;
-            return (int)msLong;
+            return (int)totalMillisecondsClamped;
         }
         catch (OverflowException)
         {
@@ -134,10 +134,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The delay as a <see cref="TimeSpan"/>, or one day when conversion overflows.</returns>
     private TimeSpan GetDelayUntilNextAsTimeSpan ()
     {
-        Duration d = GetDelayUntilNextDuration();
+        Duration delayDuration = GetDelayUntilNextDuration();
         try
         {
-            return d.ToTimeSpan();
+            return delayDuration.ToTimeSpan();
         }
         catch (OverflowException)
         {
@@ -153,33 +153,35 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The nonnegative duration until the next fire.</returns>
     private Duration GetDelayUntilNextDuration ()
     {
-        Instant now = _clock.NowInstant;
+        Instant nowInstant = _clock.NowInstant;
         if (_utcTimeOfDaySchedule)
         {
-            ZonedDateTime nowZ = _clock.UtcNow;
-            LocalDate today = nowZ.Date;
-            LocalDateTime nextLdt = today.At(_targetTimeOfDay);
-            ZonedDateTime nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
-            if (nextZdt.ToInstant() <= now)
+            ZonedDateTime utcZonedNow = _clock.UtcNow;
+            LocalDate utcCalendarDate = utcZonedNow.Date;
+            LocalDateTime scheduleLocalDateTime = utcCalendarDate.At(_targetTimeOfDay);
+            ZonedDateTime scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
+            if (scheduleZonedDateTime.ToInstant() <= nowInstant)
             {
-                nextLdt = today.PlusDays(1).At(_targetTimeOfDay);
-                nextZdt = nextLdt.InZoneLeniently(DateTimeZone.Utc);
+                scheduleLocalDateTime = utcCalendarDate.PlusDays(1).At(_targetTimeOfDay);
+                scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
             }
 
-            return nextZdt.ToInstant() - now;
+            return scheduleZonedDateTime.ToInstant() - nowInstant;
         }
 
-        ZonedDateTime nowLocalZ = _clock.LocalZonedNow;
-        LocalDate todayLocal = nowLocalZ.Date;
-        LocalDateTime nextLocalLdt = todayLocal.At(_targetTimeOfDay);
-        ZonedDateTime nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
-        if (nextLocalZdt.ToInstant() <= now)
+        ZonedDateTime localZonedNow = _clock.LocalZonedNow;
+        LocalDate localCalendarDate = localZonedNow.Date;
+        LocalDateTime scheduleLocalDateTimeInLocalZone = localCalendarDate.At(_targetTimeOfDay);
+        ZonedDateTime scheduleZonedDateTimeInLocalZone =
+            scheduleLocalDateTimeInLocalZone.InZoneLeniently(localZonedNow.Zone);
+        if (scheduleZonedDateTimeInLocalZone.ToInstant() <= nowInstant)
         {
-            nextLocalLdt = todayLocal.PlusDays(1).At(_targetTimeOfDay);
-            nextLocalZdt = nextLocalLdt.InZoneLeniently(nowLocalZ.Zone);
+            scheduleLocalDateTimeInLocalZone = localCalendarDate.PlusDays(1).At(_targetTimeOfDay);
+            scheduleZonedDateTimeInLocalZone =
+                scheduleLocalDateTimeInLocalZone.InZoneLeniently(localZonedNow.Zone);
         }
 
-        return nextLocalZdt.ToInstant() - now;
+        return scheduleZonedDateTimeInLocalZone.ToInstant() - nowInstant;
     }
     //----------------------------------------------------------------------------
 
@@ -221,14 +223,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
-        if (_lastCallbackInstant is not { } last)
+        if (_lastCallbackInstant is not { } lastCallbackStartInstant)
             return -1;
         if (_callbacksRunning > 0)
             return 0;
-        Instant now = _clock.NowInstant;
-        if (last >= now)
+        Instant nowInstant = _clock.NowInstant;
+        if (lastCallbackStartInstant >= nowInstant)
             return 0;
-        return (long)(now - last).TotalMilliseconds;
+        return (long)(nowInstant - lastCallbackStartInstant).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -241,12 +243,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
     {
-        if (_nextCallbackInstant is not { } next)
+        if (_nextCallbackInstant is not { } nextCallbackInstant)
             return -1;
-        Instant now = _clock.NowInstant;
-        if (next <= now)
+        Instant nowInstant = _clock.NowInstant;
+        if (nextCallbackInstant <= nowInstant)
             return 0;
-        return (long)(next - now).TotalMilliseconds;
+        return (long)(nextCallbackInstant - nowInstant).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -259,14 +261,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns><c>true</c> when a finite millisecond delay is produced; <c>false</c> when the duration maps to an infinite timer.</returns>
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
     {
-        Duration d = Duration.FromTimeSpan(delay);
-        int ms = DurationToTimerMilliseconds(d);
-        if (ms == Timeout.Infinite)
+        Duration delayDuration = Duration.FromTimeSpan(delay);
+        int timerMilliseconds = DurationToTimerMilliseconds(delayDuration);
+        if (timerMilliseconds == Timeout.Infinite)
         {
             milliseconds = 0;
             return false;
         }
-        milliseconds = ms;
+        milliseconds = timerMilliseconds;
         return true;
     }
     //----------------------------------------------------------------------------
@@ -278,10 +280,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>A positive millisecond count suitable for the underlying timer.</returns>
     private partial int GetRunSequentiallyRetryMilliseconds ()
     {
-        int ms = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
-        if (ms <= 0)
+        int retryMilliseconds = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
+        if (retryMilliseconds <= 0)
             return 1;
-        return ms;
+        return retryMilliseconds;
     }
     //----------------------------------------------------------------------------
 
@@ -299,16 +301,16 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
     /// </summary>
-    /// <param name="value">New time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value) =>
-        _targetTimeOfDay = new LocalTime(value.Hour, value.Minute, value.Second, value.Millisecond);
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = new LocalTime(newTimeOfDay.Hour, newTimeOfDay.Minute, newTimeOfDay.Second, newTimeOfDay.Millisecond);
 
     /// <summary>
     ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
     /// </summary>
-    /// <param name="value">New time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value) =>
-        _targetTimeOfDay = new LocalTime(value.Hour, value.Minute, value.Second, value.Millisecond);
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = new LocalTime(newTimeOfDay.Hour, newTimeOfDay.Minute, newTimeOfDay.Second, newTimeOfDay.Millisecond);
 #endif
 
     #region Interface Implementations
@@ -328,13 +330,13 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public bool Change (LocalTime timeOfDay)
+    public bool Change (LocalTime targetTimeOfDay)
     {
         lock (_gate)
         {
             if (_disposed || _state == TimerState.Cancelled)
                 return false;
-            _targetTimeOfDay = timeOfDay;
+            _targetTimeOfDay = targetTimeOfDay;
             if (!_enabled)
                 return true;
             ScheduleNext();
