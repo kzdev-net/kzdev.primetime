@@ -173,21 +173,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return scheduleZonedDateTime.ToInstant() - nowInstant;
         }
 
-        // Local schedule: same pattern using the clock's local zone so calendar boundaries and DST
-        // line up with local wall time. InZoneLeniently resolves ambiguous/skipped local times.
+        // Local schedule: calendar boundaries and DST follow the clock's local zone; skipped and duplicate
+        // wall-time policies match DayTimeSchedulingPolicyTable (shared with the BCL stack).
         ZonedDateTime localZonedNow = _clock.LocalZonedNow;
-        LocalDate localCalendarDate = localZonedNow.Date;
-        LocalDateTime scheduleLocalDateTimeInLocalZone = localCalendarDate.At(_targetTimeOfDay);
-        ZonedDateTime scheduleZonedDateTimeInLocalZone =
-            scheduleLocalDateTimeInLocalZone.InZoneLeniently(localZonedNow.Zone);
-        if (scheduleZonedDateTimeInLocalZone.ToInstant() <= nowInstant)
-        {
-            scheduleLocalDateTimeInLocalZone = localCalendarDate.PlusDays(1).At(_targetTimeOfDay);
-            scheduleZonedDateTimeInLocalZone =
-                scheduleLocalDateTimeInLocalZone.InZoneLeniently(localZonedNow.Zone);
-        }
-
-        return scheduleZonedDateTimeInLocalZone.ToInstant() - nowInstant;
+        return DayTimeNodaLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(nowInstant,
+            localZonedNow.Zone, _targetTimeOfDay, _skippedTimeBehavior, _duplicateTimeBehavior);
     }
     //----------------------------------------------------------------------------
 
