@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
@@ -12,6 +14,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer
 ///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating, Change, Unsafe).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeClockIntervalTimers : UnitTestBase
 {
     //----------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using AwesomeAssertions;
@@ -15,6 +16,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   exists with the specified members, enums have expected values, and option types can be
 ///   constructed with expected defaults.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingCommonTimerContracts : UnitTestBase
 {
     #region Constructors/Finalizers

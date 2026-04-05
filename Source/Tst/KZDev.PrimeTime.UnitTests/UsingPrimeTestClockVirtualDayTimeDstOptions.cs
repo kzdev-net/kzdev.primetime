@@ -4,6 +4,7 @@
 #if NET
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
@@ -17,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   <see cref="DayTimeTimerOptions"/> across DST transitions (parity with
 ///   <see cref="DayTimeNodaLocalWallTimeScheduling"/>).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeTestClockVirtualDayTimeDstOptions : UnitTestBase
 {
     /// <summary>

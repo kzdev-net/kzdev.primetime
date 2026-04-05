@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using AwesomeAssertions.Specialized;
 using KZDev.PrimeTime.Tests;
@@ -16,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Uses <see cref="FakeClock"/> from NodaTime.Testing for deterministic tests with
 ///   <see cref="PrimeClock"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeClock : UnitTestBase
 {
     // Use a short sleep so tests remain fast, but keep it above typical timer/scheduler resolution

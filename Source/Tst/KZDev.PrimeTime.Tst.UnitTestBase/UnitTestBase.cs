@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using Xunit;
 
 namespace KZDev.PrimeTime.Tests;
@@ -9,6 +11,7 @@ namespace KZDev.PrimeTime.Tests;
 /// <summary>
 ///   The base class for all unit tests.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public abstract class UnitTestBase : TestBase
 {
     //----------------------------------------------------------------------------

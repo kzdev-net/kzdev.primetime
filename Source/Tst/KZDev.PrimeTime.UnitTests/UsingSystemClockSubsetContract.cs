@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using AwesomeAssertions;
@@ -16,6 +17,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   (<c>KZDev.PrimeTime</c>, built from the same shared sources plus NodaTime overload partials)
 ///   with the same name, return type, and parameter types (subset / superset parity for shared surface).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingSystemClockSubsetContract : UnitTestBase
 {
     #region Constructors/Finalizers

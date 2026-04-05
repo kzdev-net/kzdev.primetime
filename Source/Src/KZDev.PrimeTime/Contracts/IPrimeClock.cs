@@ -274,6 +274,7 @@ public partial interface IPrimeClock
     #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
     /// </summary>
@@ -292,6 +293,7 @@ public partial interface IPrimeClock
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
     /// </summary>
@@ -309,6 +311,7 @@ public partial interface IPrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -326,6 +329,7 @@ public partial interface IPrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.
     /// </summary>
@@ -341,6 +345,7 @@ public partial interface IPrimeClock
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -358,6 +363,7 @@ public partial interface IPrimeClock
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
 #else
     //----------------------------------------------------------------------------
     /// <summary>

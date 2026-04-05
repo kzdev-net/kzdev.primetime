@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using AwesomeAssertions;
 using KZDev.PrimeTime;
@@ -14,6 +15,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   (<c>KZDev.PrimeTime</c>). The BCL subset under <c>KZDev.SystemClock.PrimeTime</c> is covered by
 ///   <see cref="UsingSystemClockSubsetContract"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeTimeContract : UnitTestBase
 {
     #region Constructors/Finalizers

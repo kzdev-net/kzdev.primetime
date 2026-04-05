@@ -6,6 +6,7 @@
 #if NET
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
@@ -16,6 +17,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Verifies <see cref="IClockTimer.ElapsedTime"/> and <see cref="IClockTimer.TimeUntilNextCallback"/> for
 ///   <see cref="PrimeTestClock"/> day-time registrations across machine local time zones.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
 {
     #region Constructors/Finalizers

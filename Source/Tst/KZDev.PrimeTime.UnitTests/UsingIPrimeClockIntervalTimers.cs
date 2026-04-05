@@ -4,6 +4,8 @@
 // Unit tests for IPrimeClock interval timers. Uses real time; use PrimeTestClock for fully
 // deterministic interval timer tests.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
@@ -16,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating,
 ///   Change(Duration), Change(Duration, Duration), Unsafe).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeClockIntervalTimers : UnitTestBase
 {
     //----------------------------------------------------------------------------

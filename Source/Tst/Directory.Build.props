@@ -12,6 +12,11 @@
         <IsPackable>false</IsPackable>
         <RootNamespace>KZDev.PrimeTime.Tests</RootNamespace>
     </PropertyGroup>
+    <!--
+    Assembly-level exclusion works on modern TFMs. net481 does not allow ExcludeFromCodeCoverage on the
+    assembly (CS0592); test types under Source/Tst also use [ExcludeFromCodeCoverage] at class scope so
+    coverage tools exclude them on every target.
+    -->
     <ItemGroup Condition="'$(TargetFramework)' != 'net481'">
         <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage" />
     </ItemGroup>

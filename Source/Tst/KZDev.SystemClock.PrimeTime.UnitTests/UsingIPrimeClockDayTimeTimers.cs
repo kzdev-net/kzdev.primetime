@@ -3,6 +3,8 @@
 
 #if NET
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
@@ -15,6 +17,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 /// <remarks>
 ///   Uses wall-clock delays; prefer <see cref="PrimeTestClock"/> for fully deterministic day-time timer tests.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
     /// <summary>

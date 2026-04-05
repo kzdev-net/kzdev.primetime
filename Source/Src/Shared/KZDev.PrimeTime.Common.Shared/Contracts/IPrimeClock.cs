@@ -46,25 +46,27 @@ public partial interface IPrimeClock : IPrimeTime
     //----------------------------------------------------------------------------
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
     TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get; }
-
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
     TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get; }
-
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date as <see cref="DateOnly"/>.
     /// </summary>
     DateOnly LocalNowDateOnly { [DebuggerStepThrough] get; }
-
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date as <see cref="DateOnly"/>.
     /// </summary>
     DateOnly UtcNowDateOnly { [DebuggerStepThrough] get; }
+    //----------------------------------------------------------------------------
 #endif
 
     #endregion IPrimeClock - Now (BCL)
@@ -267,6 +269,7 @@ public partial interface IPrimeClock : IPrimeTime
 #if NET
     #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and state.
     /// </summary>
@@ -284,6 +287,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -301,6 +305,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -318,6 +323,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
     /// </summary>
@@ -333,6 +339,7 @@ public partial interface IPrimeClock : IPrimeTime
             Action callback,
             CancellationToken cancellationToken,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.
     /// </summary>
@@ -348,6 +355,7 @@ public partial interface IPrimeClock : IPrimeTime
             Func<CancellationToken, ValueTask> callback,
             CancellationToken cancellationToken,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer with a callback that receives context and state.
     /// </summary>
@@ -365,6 +373,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -382,6 +391,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -399,6 +409,7 @@ public partial interface IPrimeClock : IPrimeTime
             CancellationToken cancellationToken,
             object? state = null,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer that fires at the given UTC time each day (sync callback).
     /// </summary>
@@ -414,6 +425,7 @@ public partial interface IPrimeClock : IPrimeTime
             Action callback,
             CancellationToken cancellationToken,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer with an asynchronous callback.
     /// </summary>
@@ -429,6 +441,7 @@ public partial interface IPrimeClock : IPrimeTime
             Func<CancellationToken, ValueTask> callback,
             CancellationToken cancellationToken,
             DayTimeTimerOptions? timerOptions = null);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 #endif

@@ -3,6 +3,8 @@
 
 #if NET
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
@@ -16,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   <see cref="ClockDayTimeTimerRegistration"/> local day-time policy alignment with
 ///   <see cref="DayTimeBclLocalWallTimeScheduling"/> under a shared synthetic zone.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
 {
     /// <summary>

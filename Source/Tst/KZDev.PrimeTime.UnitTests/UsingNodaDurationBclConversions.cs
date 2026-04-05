@@ -2,6 +2,7 @@
 // This file is part of the PrimeTime project.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
 
@@ -16,6 +17,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Validates Noda <see cref="Duration"/> to BCL conversion helpers used for superset alignment with
 ///   <see cref="TimeSpan"/>-based <see cref="IPrimeClock"/> timer and delay semantics.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class UsingNodaDurationBclConversions
 {
     //----------------------------------------------------------------------------

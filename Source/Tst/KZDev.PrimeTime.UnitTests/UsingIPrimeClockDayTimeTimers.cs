@@ -4,6 +4,8 @@
 // Unit tests for IPrimeClock RegisterTimeOfDay and RegisterAsyncTimeOfDay.
 // Uses real time; use PrimeTestClock for fully deterministic day-time timer tests.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
@@ -15,6 +17,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
 ///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (Change(LocalTime), options).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
     //----------------------------------------------------------------------------

@@ -3,6 +3,8 @@
 
 #if NET
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 #pragma warning disable HAA0601
@@ -13,6 +15,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="UtcTimeOfDay"/>.
 ///   Verifies construction, equality, and that the type is distinct from <see cref="LocalTimeOfDay"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingUtcTimeOfDay : UnitTestBase
 {
     #region Constructors/Finalizers

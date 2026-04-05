@@ -2,6 +2,7 @@
 // This file is part of the PrimeTime project.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using Xunit;
 
@@ -11,6 +12,7 @@ namespace KZDev.PrimeTime.Tests;
 /// <summary>
 ///   The base class for all programmatic tests.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public abstract class TestBase
 {
     //----------------------------------------------------------------------------

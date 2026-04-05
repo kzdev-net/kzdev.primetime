@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
@@ -17,6 +19,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Covers set-instant/time/local-time APIs, advance and run-for, start/stop, clock events, and virtual-time-driven
 ///   sleep, delay, time cancellation, and timers.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class UsingIPrimeTestClock : UnitTestBase
 {
     //----------------------------------------------------------------------------

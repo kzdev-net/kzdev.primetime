@@ -3,6 +3,8 @@
 
 #if NET
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
@@ -14,6 +16,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="DayTimeBclLocalWallTimeScheduling"/> (local wall time + DST policy)
 ///   and integration with <see cref="IPrimeClock"/> day-time timers under a synthetic zone.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingDayTimeBclLocalWallTimeScheduling : UnitTestBase
 {
     /// <summary>

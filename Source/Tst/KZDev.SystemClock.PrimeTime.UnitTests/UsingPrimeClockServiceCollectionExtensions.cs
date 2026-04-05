@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 /// <summary>
 ///   Unit tests for <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
 {
     #region Constructors/Finalizers

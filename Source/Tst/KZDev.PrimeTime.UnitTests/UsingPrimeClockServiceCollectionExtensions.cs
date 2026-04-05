@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime;
 using KZDev.PrimeTime.Tests;
@@ -13,6 +15,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
 ///   with the NodaTime-backed <see cref="PrimeClock"/> implementation.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
 {
     #region Constructors/Finalizers

@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
@@ -15,6 +17,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Delay and time-cancellation scenarios use wall-clock time; use <see cref="PrimeTestClock"/> for fully
 ///   deterministic tests.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers

@@ -5,6 +5,8 @@
 // Verifies that ToTimeProvider() returns a TimeProvider driven by the PrimeTime NodaTime clock,
 // and that GetUtcNow and CreateTimer are controllable via the test clock.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 using NodaTime;
@@ -16,6 +18,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="PrimeClockTimeProviderAdapter"/> and
 ///   <see cref="PrimeClockTimeProviderExtensions.ToTimeProvider(IPrimeClock)"/>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 {
     #region Constructors/Finalizers

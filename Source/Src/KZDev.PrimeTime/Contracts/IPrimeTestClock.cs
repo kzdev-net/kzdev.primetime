@@ -7,7 +7,7 @@ namespace KZDev.PrimeTime;
 ///   NodaTime-specific test clock members: instant and local time setters, and
 ///   duration-based advance, run, and start overloads.
 /// </summary>
-public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
+public partial interface IPrimeTestClock
 {
     //----------------------------------------------------------------------------
     /// <summary>

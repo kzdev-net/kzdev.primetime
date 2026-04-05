@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
@@ -13,6 +15,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   consistent with a known time source and with each other.
 ///   On .NET, includes deterministic tests using FakeTimeProvider (Microsoft.Extensions.Time.Testing).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public partial class UsingIPrimeClock : UnitTestBase
 {
     #region Constructors/Finalizers
