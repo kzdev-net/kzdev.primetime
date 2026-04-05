@@ -173,17 +173,44 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The nonnegative delay until the next fire, or one day if the computed delay is nonpositive.</returns>
     private partial TimeSpan GetDelayUntilNextForTimer ()
     {
+        // The target time of day names a wall-clock moment on each calendar day; "now" in the same
+        // basis (UTC vs local) is the anchor for turning that into a delay until the next fire.
         DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
-        DateOnly scheduleCalendarDate = DateOnly.FromDateTime(scheduleNowOffset.DateTime);
-        DateTime nextOccurrenceDateTime = scheduleCalendarDate.ToDateTime(_targetTimeOfDay);
-        if (nextOccurrenceDateTime <= scheduleNowOffset.DateTime)
-            nextOccurrenceDateTime = scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay);
-        DateTimeOffset nextFireDateTimeOffset = _utcTimeOfDaySchedule
-            ? new DateTimeOffset(nextOccurrenceDateTime, TimeSpan.Zero)
-            : new DateTimeOffset(nextOccurrenceDateTime, scheduleNowOffset.Offset);
-        TimeSpan delayUntilNextFire = nextFireDateTimeOffset - scheduleNowOffset;
+        TimeSpan delayUntilNextFire;
+        if (_utcTimeOfDaySchedule)
+        {
+            // UTC calendar day: interpret _targetTimeOfDay on today's UTC date, then roll forward
+            // one UTC day if that instant is not strictly after the current instant.
+            DateTime nowUtc = scheduleNowOffset.UtcDateTime;
+            DateOnly scheduleCalendarDate = DateOnly.FromDateTime(nowUtc);
+            DateTime nextOccurrenceDateTime = scheduleCalendarDate.ToDateTime(_targetTimeOfDay);
+            if (nextOccurrenceDateTime <= nowUtc)
+            {
+                nextOccurrenceDateTime = scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay);
+            }
+
+            // nextOccurrenceDateTime is UTC-unspecified; pair with UTC offset so subtraction against
+            // scheduleNowOffset yields the correct elapsed time to the next fire.
+            DateTimeOffset nextFireDateTimeOffset = new(nextOccurrenceDateTime, TimeSpan.Zero);
+            delayUntilNextFire = nextFireDateTimeOffset - scheduleNowOffset;
+        }
+        else
+        {
+            // Local calendar day: next fire depends on the zone (DST gaps/overlaps) and duplicate/skipped
+            // wall-time policies; the shared helper encapsulates that next-occurrence math.
+            delayUntilNextFire =
+                DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(scheduleNowOffset,
+                _clock.LocalScheduleTimeZone, _targetTimeOfDay, _skippedTimeBehavior,
+                _duplicateTimeBehavior);
+        }
+
+        // Timer APIs expect a positive due time; clamp a zero or negative residual to one day so we
+        // reschedule rather than spin or mis-schedule at the boundary.
         if (delayUntilNextFire <= TimeSpan.Zero)
+        {
             delayUntilNextFire = TimeSpan.FromDays(1);
+        }
+
         return delayUntilNextFire;
     }
     //----------------------------------------------------------------------------

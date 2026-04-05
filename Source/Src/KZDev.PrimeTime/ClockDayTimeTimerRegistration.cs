@@ -153,9 +153,13 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The nonnegative duration until the next fire.</returns>
     private Duration GetDelayUntilNextDuration ()
     {
+        // _targetTimeOfDay picks which wall-clock time fires each day; the clock's current instant is
+        // subtracted from the next matching zoned occurrence to produce a duration for the timer.
         Instant nowInstant = _clock.NowInstant;
         if (_utcTimeOfDaySchedule)
         {
+            // UTC schedule: use today's UTC calendar date, attach _targetTimeOfDay, map through UTC.
+            // If that instant is still on or before now, use tomorrow's UTC date instead.
             ZonedDateTime utcZonedNow = _clock.UtcNow;
             LocalDate utcCalendarDate = utcZonedNow.Date;
             LocalDateTime scheduleLocalDateTime = utcCalendarDate.At(_targetTimeOfDay);
@@ -169,6 +173,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return scheduleZonedDateTime.ToInstant() - nowInstant;
         }
 
+        // Local schedule: same pattern using the clock's local zone so calendar boundaries and DST
+        // line up with local wall time. InZoneLeniently resolves ambiguous/skipped local times.
         ZonedDateTime localZonedNow = _clock.LocalZonedNow;
         LocalDate localCalendarDate = localZonedNow.Date;
         LocalDateTime scheduleLocalDateTimeInLocalZone = localCalendarDate.At(_targetTimeOfDay);

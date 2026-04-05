@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Enums\SkippedTimeBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\DuplicateTimeBehavior.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DayTimeSchedulingPolicyTable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DayTimeBclLocalWallTimeScheduling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\IntervalTimerCallbackKind.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Enums\TimerCallbackExecutionContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\TimerOptions.cs" />
