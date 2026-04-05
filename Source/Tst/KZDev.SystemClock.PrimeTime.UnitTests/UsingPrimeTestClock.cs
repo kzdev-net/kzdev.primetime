@@ -436,6 +436,76 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromHours(1));
         fireCount.Should().Be(1);
     }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that while a synchronous UTC day-time callback runs,
+    ///   <see cref="IClockTimer.CallbacksProcessing"/> is <c>true</c>.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Utc_WhileCallbackRuns_CallbacksProcessingIsTrue ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 1, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        UtcTimeOfDay threeAmUtc = new(new TimeOnly(3, 0, 0));
+        bool? seenProcessing = null;
+        IClockDayTimeTimer? registration = null;
+        registration = clock.RegisterTimeOfDay(threeAmUtc, () =>
+            {
+                seenProcessing = registration!.CallbacksProcessing;
+            },
+            cancellationToken: TestContext.Current.CancellationToken);
+        using (registration)
+        {
+            clock.Advance(TimeSpan.FromHours(2));
+        }
+
+        seenProcessing.Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that setting <see cref="IClockTimer.Enabled"/> to <c>false</c> after the first fire
+    ///   prevents the next scheduled daily occurrence when virtual time advances.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Utc_AfterFirstFire_SetEnabledFalse_AdvanceOneDay_NoSecondFire ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        UtcTimeOfDay twoAmUtc = new(new TimeOnly(2, 0, 0));
+        int fireCount = 0;
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(twoAmUtc, () => fireCount++,
+            cancellationToken: TestContext.Current.CancellationToken);
+        clock.Advance(TimeSpan.FromHours(2));
+        fireCount.Should().Be(1);
+        timer.Enabled = false;
+        clock.Advance(TimeSpan.FromDays(1));
+        fireCount.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that disabling before the first fire, then enabling again, still yields a callback
+    ///   when virtual time reaches the scheduled UTC time of day.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_Utc_DisableBeforeFirstDue_EnableThenAdvance_FiresOnce ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 1, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        UtcTimeOfDay threeAmUtc = new(new TimeOnly(3, 0, 0));
+        int fireCount = 0;
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(threeAmUtc, () => fireCount++,
+            cancellationToken: TestContext.Current.CancellationToken);
+        timer.Enabled = false;
+        clock.Advance(TimeSpan.FromHours(1));
+        fireCount.Should().Be(0);
+        timer.Enabled = true;
+        clock.Advance(TimeSpan.FromHours(1));
+        fireCount.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
 
     #endregion Day-time timer driven by virtual time
 #endif

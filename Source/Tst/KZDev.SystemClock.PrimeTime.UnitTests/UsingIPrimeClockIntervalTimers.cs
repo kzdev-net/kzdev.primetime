@@ -123,6 +123,30 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies the <see cref="PrimeClockTimerExtensions.RegisterTimer(IPrimeClock, TimeSpan, Action{ClockTimerCallbackContext, CancellationToken}, CancellationToken, object?, bool, IntervalTimerOptions?)"/>
+    ///   overload passes the registration <see cref="CancellationToken"/> through to the callback.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_OneShot_ExtensionWithContextAndToken_CallbackReceivesRegistrationCancellationToken ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        ManualResetEventSlim signal = new(false);
+        using CancellationTokenSource cts = new();
+        CancellationToken? receivedToken = null;
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay,
+            (ClockTimerCallbackContext _, CancellationToken ct) =>
+            {
+                receivedToken = ct;
+                signal.Set();
+            },
+            cts.Token);
+        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        receivedToken.Should().NotBeNull();
+        receivedToken!.Value.Should().Be(cts.Token);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that when a one-shot timer is registered with an already cancelled
     ///   <see cref="CancellationToken"/>, the timer never fires and state is
     ///   <see cref="TimerState.Cancelled"/>.
