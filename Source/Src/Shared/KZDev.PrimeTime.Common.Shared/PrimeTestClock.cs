@@ -1660,8 +1660,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         // Unspecified wall-clock time is interpreted in the clock's local zone, including when that instant is
         // ambiguous (fall-back) or not otherwise representable as a single wall time (spring-forward gap).
         DateTime nextLocalUnspecified = DateTime.SpecifyKind(nextDt, DateTimeKind.Unspecified);
-        // Delegate returns the UTC offset for that wall time: for ambiguous times it applies the zone's resolution
-        // rules; for skipped times it maps to a defined instant (for example, per BCL or Noda lenient mapping).
+        // Delegate returns the UTC offset for that wall time. Callers that need option-driven DST
+        // resolution use DayTimeBclLocalWallTimeScheduling / DayTimeNodaLocalWallTimeScheduling instead.
         TimeSpan nextLocalOffset = getLocalWallClockUtcOffset(nextLocalUnspecified);
         // Wall clock plus resolved offset is fixed; convert to UTC so the scheduled instant is unambiguous downstream.
         DateTimeOffset nextLocal = new(nextLocalUnspecified, nextLocalOffset);

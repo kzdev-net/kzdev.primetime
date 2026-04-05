@@ -17,6 +17,16 @@ namespace KZDev.PrimeTime;
 ///   Shared implementation of day-time timer registration: lifecycle, callback dispatch,
 ///   and scheduling orchestration. Time-basis storage and delay math live in partials.
 /// </summary>
+/// <remarks>
+///   <para>
+///     For local calendar day-time registrations, stack-specific partials compute the next fire
+///     using the clock's zone and the registration's <see cref="SkippedTimeBehavior"/> and
+///     <see cref="DuplicateTimeBehavior"/> (from <see cref="DayTimeTimerOptions"/>), following
+///     the same rules documented on those enums and summarized on
+///     <see cref="DayTimeSchedulingPolicyTable"/>. UTC time-of-day registrations use fixed-offset
+///     semantics; skipped/duplicate behaviors apply only to the local wall-time path.
+///   </para>
+/// </remarks>
 internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 {
     //----------------------------------------------------------------------------

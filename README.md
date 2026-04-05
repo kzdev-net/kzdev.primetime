@@ -16,6 +16,10 @@ Install the package that matches your stack. Register services with the DI exten
 
 ## Features
 
+### Day-time timers and daylight saving time
+
+Local time-of-day timers resolve the next fire using the clock’s time zone and the `SkippedTimeBehavior` and `DuplicateTimeBehavior` values on `DayTimeTimerOptions`.
+
 ## Documentation
 
 Full documentation for the libraries is available on the [PrimeTime Documentation](https://kzdev-net.github.io/kzdev.primetime/) page.
