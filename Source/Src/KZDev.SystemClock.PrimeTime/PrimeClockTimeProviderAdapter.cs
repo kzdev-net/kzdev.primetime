@@ -1,8 +1,5 @@
-// Copyright (c) Kevin Zehrer
-// Licensed under the MIT License. See LICENSE file in the project root for full license information.
-
-using System.Threading;
-using System.Threading.Tasks;
+// Copyright (c) Kevin Zehrer. All rights reserved.
+// This file is part of the PrimeTime project.
 
 namespace KZDev.SystemClock.PrimeTime;
 
@@ -19,11 +16,11 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
     #region Nested types
 
-        //============================================================================
-private sealed class ClockIntervalTimerToITimerAdapter : ITimer
+    //============================================================================
+    private sealed class ClockIntervalTimerToITimerAdapter : ITimer
     {
-                //------------------------------------------------------------------------
-private readonly IClockIntervalTimer _registration;
+        //------------------------------------------------------------------------
+        private readonly IClockIntervalTimer _registration;
         //------------------------------------------------------------------------
 
         #region Constructors/Finalizers
@@ -83,8 +80,8 @@ private readonly IClockIntervalTimer _registration;
 
     #endregion Nested types
 
-        //----------------------------------------------------------------------------
-private readonly IPrimeClock _clock;
+    //----------------------------------------------------------------------------
+    private readonly IPrimeClock _clock;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -116,7 +113,7 @@ private readonly IPrimeClock _clock;
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
+    public override TimeZoneInfo LocalTimeZone => _clock.LocalScheduleTimeZone;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

@@ -163,6 +163,43 @@ public partial class UsingIPrimeClock
         fake.Advance(TimeSpan.FromMinutes(30));
         clock.UtcNowOffset.Should().Be(start.AddDays(1).AddHours(12).AddMinutes(30));
     }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeClock.LocalScheduleTimeZone"/> matches
+    ///   <see cref="TimeProvider.System"/> local zone for the default production clock.
+    /// </summary>
+    [Fact]
+    public void PrimeClock_WithTimeProviderSystem_LocalScheduleTimeZone_MatchesProviderLocalTimeZone ()
+    {
+        IPrimeClock clock = new PrimeClock(TimeProvider.System);
+        clock.LocalScheduleTimeZone.Should().Be(TimeProvider.System.LocalTimeZone);
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeClock.LocalScheduleTimeZone"/> follows the
+    ///   <see cref="FakeTimeProvider"/> local zone so tests can inject a synthetic <see cref="TimeZoneInfo"/>.
+    /// </summary>
+    [Fact]
+    public void PrimeClock_WithFakeTimeProvider_LocalScheduleTimeZone_MatchesConfiguredZone ()
+    {
+        DateTimeOffset fixedUtc = new(2025, 3, 7, 12, 0, 0, TimeSpan.Zero);
+        FakeTimeProvider fake = new(fixedUtc);
+        TimeZoneInfo synthetic = TimeZoneInfo.CreateCustomTimeZone("Phase1Test+03", TimeSpan.FromHours(3), null, null);
+        fake.SetLocalTimeZone(synthetic);
+        IPrimeClock clock = new PrimeClock(fake);
+        clock.LocalScheduleTimeZone.Should().BeSameAs(synthetic);
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeTestClock"/> exposes <see cref="IPrimeClock.LocalScheduleTimeZone"/>
+    ///   consistent with its local-time mapping (<see cref="TimeZoneInfo.Local"/>).
+    /// </summary>
+    [Fact]
+    public void PrimeTestClock_LocalScheduleTimeZone_MatchesTimeZoneInfoLocal ()
+    {
+        IPrimeClock clock = new PrimeTestClock();
+        clock.LocalScheduleTimeZone.Should().Be(TimeZoneInfo.Local);
+    }
 #endif
 }
 //################################################################################

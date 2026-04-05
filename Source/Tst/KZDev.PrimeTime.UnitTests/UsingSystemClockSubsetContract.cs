@@ -44,12 +44,26 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     /// </summary>
     /// <param name="subsetInterface">The SystemClock (<c>KZDev.SystemClock.PrimeTime</c>) contract interface type.</param>
     /// <param name="supersetInterface">The full package (<c>KZDev.PrimeTime</c>) contract interface type.</param>
-    private static void AssertInterfaceMethodsSubset (Type subsetInterface, Type supersetInterface)
+    /// <param name="excludeSubsetPropertyAccessorNames">
+    ///   Optional subset property names whose generated accessors (<c>get_*</c>) are intentionally absent
+    ///   from the superset contract.
+    /// </param>
+    private static void AssertInterfaceMethodsSubset (Type subsetInterface, Type supersetInterface,
+        IEnumerable<string>? excludeSubsetPropertyAccessorNames = null)
     {
+        HashSet<string>? excludeAccessorMethodNames = excludeSubsetPropertyAccessorNames == null
+            ? null
+            : new HashSet<string>(excludeSubsetPropertyAccessorNames.Select(static n => "get_" + n));
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
         MethodInfo[] subsetMethods = subsetInterface.GetMethods(flags);
         foreach (MethodInfo subsetMethod in subsetMethods)
         {
+            if (excludeAccessorMethodNames != null && subsetMethod.IsSpecialName
+                && excludeAccessorMethodNames.Contains(subsetMethod.Name))
+            {
+                continue;
+            }
+
             MethodInfo? match = FindMatchingMethod(supersetInterface, subsetMethod, flags);
             match.Should().NotBeNull(
                 $"Full package {supersetInterface.Name} should declare a method matching SystemClock {subsetInterface.Name}.{DescribeMethod(subsetMethod)}");
@@ -64,13 +78,25 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     /// </summary>
     /// <param name="subsetInterface">The SystemClock contract interface type.</param>
     /// <param name="supersetInterface">The full package contract interface type.</param>
-    private static void AssertInterfacePropertiesSubset (Type subsetInterface, Type supersetInterface)
+    /// <param name="excludeSubsetPropertyNames">
+    ///   Optional subset property names intentionally omitted from the superset contract.
+    /// </param>
+    private static void AssertInterfacePropertiesSubset (Type subsetInterface, Type supersetInterface,
+        IEnumerable<string>? excludeSubsetPropertyNames = null)
     {
+        HashSet<string>? exclude = excludeSubsetPropertyNames == null
+            ? null
+            : new HashSet<string>(excludeSubsetPropertyNames);
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
         foreach (PropertyInfo subsetProp in subsetInterface.GetProperties(flags))
         {
             ParameterInfo[] indexParameters = subsetProp.GetIndexParameters();
             if (indexParameters.Length > 0)
+            {
+                continue;
+            }
+
+            if (exclude != null && exclude.Contains(subsetProp.Name))
             {
                 continue;
             }
@@ -243,7 +269,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     [Fact]
     public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllMethodsMatch ()
     {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
+        string[] systemClockOnlyAccessorProps = ["LocalScheduleTimeZone"];
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock),
+            systemClockOnlyAccessorProps);
     }
     //----------------------------------------------------------------------------
 
@@ -265,7 +293,9 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     [Fact]
     public void SystemClock_IPrimeClockSubset_OnNodaIPrimeClock_AllPropertiesMatch ()
     {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock));
+        HashSet<string> systemClockOnly = ["LocalScheduleTimeZone"];
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeClock), typeof(IPrimeClock),
+            systemClockOnly);
     }
     //----------------------------------------------------------------------------
 

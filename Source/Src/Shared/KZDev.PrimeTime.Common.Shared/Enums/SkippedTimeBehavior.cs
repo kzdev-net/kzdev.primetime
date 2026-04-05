@@ -6,19 +6,27 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Defines how a local skipped time due to clock adjustments (such as time zone changes
-///   and/or daylight saving time changes) should be handled.
+///   Defines how a local wall-clock time that does not exist on the local calendar day should be
+///   handled—typically a spring-forward gap when daylight saving time starts.
 /// </summary>
+/// <remarks>
+///   <para>
+///     This enum applies to <strong>invalid</strong> local times only. When a local wall time is
+///     <strong>ambiguous</strong> (fall-back overlap), use <see cref="DuplicateTimeBehavior"/>
+///     instead; <see cref="SkippedTimeBehavior"/> is not used in that case.
+///   </para>
+/// </remarks>
 public enum SkippedTimeBehavior
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   The timer is skipped and no callback is invoked for the skipped time.
+    ///   The timer does not fire for the nonexistent wall time; scheduling advances to the next
+    ///   valid occurrence without invoking a callback for the skipped instant.
     /// </summary>
     Skip,
 
     /// <summary>
-    ///   The timer runs as soon as possible after the skipped time.
+    ///   The timer runs as soon as possible after the skipped (nonexistent) local time.
     /// </summary>
     /// <remarks>
     ///   <para>

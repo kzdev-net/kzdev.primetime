@@ -6,20 +6,31 @@ namespace KZDev.PrimeTime;
 
 //################################################################################
 /// <summary>
-///   Indicates how duplicate trigger times should be handled. Duplicates can result from clock
-///   adjustments (such as time zone changes and/or daylight saving time changes). This does not
-///   apply to ordinary clock drift unless the drift is very substantial.
+///   Indicates which of the two possible moments on the timeline to use when the same local wall
+///   clock time occurs twice—typically a fall-back overlap when daylight saving time ends.
 /// </summary>
+/// <remarks>
+///   <para>
+///     For an ambiguous local time, the timer fires <strong>once</strong> per logical day-time
+///     occurrence (no double callback covering the duplicate window).
+///   </para>
+///   <para>
+///     <see cref="SkippedTimeBehavior"/> does not apply to ambiguous times; it applies only when
+///     the wall time does not exist (spring-forward gap).
+///   </para>
+/// </remarks>
 public enum DuplicateTimeBehavior
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Only the last duplicate time invokes the callback; the earlier duplicate does not.
+    ///   Uses the second of the two occurrences in chronological order (the later moment on the
+    ///   timeline during the overlap).
     /// </summary>
     RunLast,
 
     /// <summary>
-    ///   Only the first duplicate time invokes the callback; later duplicates do not.
+    ///   Uses the first of the two occurrences in chronological order (the earlier moment on the
+    ///   timeline during the overlap).
     /// </summary>
     RunFirst
     //----------------------------------------------------------------------------

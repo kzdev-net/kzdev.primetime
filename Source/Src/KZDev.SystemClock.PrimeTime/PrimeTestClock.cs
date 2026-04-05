@@ -96,5 +96,14 @@ public sealed partial class PrimeTestClock
     private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset) =>
         ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNowOffset));
     //----------------------------------------------------------------------------
+
+    #region IPrimeClock Implementation — Local schedule zone
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public TimeZoneInfo LocalScheduleTimeZone => TimeZoneInfo.Local;
+    //----------------------------------------------------------------------------
+
+    #endregion IPrimeClock Implementation — Local schedule zone
 }
 //################################################################################

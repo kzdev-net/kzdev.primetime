@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 ///   <see cref="LocalDateTime"/>, <see cref="ZonedDateTime"/>, <see cref="LocalTime"/>,
 ///   and <see cref="LocalDate"/>.
 /// </summary>
-public partial interface IPrimeClock : IPrimeTime
+public partial interface IPrimeClock
 {
     #region IPrimeClock — Now (instant and zoned date and time)
 
