@@ -14,15 +14,30 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration
 {
-        //----------------------------------------------------------------------------
-private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Delay applied between scheduling attempts when concurrent callbacks are disallowed and a tick is still running.
+    /// </summary>
+    private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
 
     /// <summary>
     ///   Indicates whether the configured time of day is interpreted in UTC or local zone per day.
     /// </summary>
     private readonly bool _utcTimeOfDaySchedule;
+
+    /// <summary>
+    ///   Wall-clock time of day used to compute the next fire.
+    /// </summary>
     private LocalTime _targetTimeOfDay;
+
+    /// <summary>
+    ///   Scheduled start of the next callback, if one is pending.
+    /// </summary>
     private Instant? _nextCallbackInstant;
+
+    /// <summary>
+    ///   Start of the most recent callback, if any.
+    /// </summary>
     private Instant? _lastCallbackInstant;
     //----------------------------------------------------------------------------
 
@@ -30,25 +45,32 @@ private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMillis
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Initializes a new instance with Noda <see cref="LocalTime"/> scheduling.
+    ///   Initializes a new instance for the specified schedule basis and Noda <see cref="LocalTime"/> of day.
     /// </summary>
+    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
     /// <param name="utcTimeOfDaySchedule">
     ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
     /// </param>
+    /// <param name="targetTimeOfDay">Wall-clock time of day for recurring fires.</param>
+    /// <param name="callbackKind">Shape of the user callback.</param>
+    /// <param name="callback">User callback delegate.</param>
+    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
+    /// <param name="options">Optional timer behavior options.</param>
+    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
 #if NET
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTime timeOfDay,
+        bool utcTimeOfDaySchedule,
+        LocalTime targetTimeOfDay,
         IntervalTimerCallbackKind callbackKind,
         Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
-        CancellationToken cancellationToken,
-        bool utcTimeOfDaySchedule = false)
+        CancellationToken cancellationToken)
     {
         _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
-        _targetTimeOfDay = timeOfDay;
+        _targetTimeOfDay = targetTimeOfDay;
         FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
     }
     //----------------------------------------------------------------------------
@@ -57,13 +79,13 @@ private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMillis
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the instant at which this registration was created.
+    ///   Converts a Noda <see cref="Duration"/> to a BCL timer millisecond value, clamping overflow.
     /// </summary>
-    public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
-    //----------------------------------------------------------------------------
-
-        //----------------------------------------------------------------------------
-private static int DurationToTimerMilliseconds (Duration duration)
+    /// <param name="duration">Elapsed duration to convert.</param>
+    /// <returns>
+    ///   <see cref="Timeout.Infinite"/> when the duration is nonpositive or not representable as a finite timer; otherwise a clamped millisecond count.
+    /// </returns>
+    private static int DurationToTimerMilliseconds (Duration duration)
     {
         if (duration <= Duration.Zero)
             return Timeout.Infinite;
@@ -82,20 +104,35 @@ private static int DurationToTimerMilliseconds (Duration duration)
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Persists the clock's current instant as this registration's creation time.
+    /// </summary>
+    private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <returns>The offset corresponding to <see cref="RegisteredInstant"/>.</returns>
+    private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets whether the schedule uses local time-of-day semantics.
+    /// </summary>
+    /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
+    private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private TimeSpan GetDelayUntilNextAsTimeSpan ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Converts the delay until the next fire to a <see cref="TimeSpan"/>, clamping overflow.
+    /// </summary>
+    /// <returns>The delay as a <see cref="TimeSpan"/>, or one day when conversion overflows.</returns>
+    private TimeSpan GetDelayUntilNextAsTimeSpan ()
     {
         Duration d = GetDelayUntilNextDuration();
         try
@@ -109,8 +146,12 @@ private TimeSpan GetDelayUntilNextAsTimeSpan ()
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private Duration GetDelayUntilNextDuration ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes the duration from now until the next time-of-day occurrence.
+    /// </summary>
+    /// <returns>The nonnegative duration until the next fire.</returns>
+    private Duration GetDelayUntilNextDuration ()
     {
         Instant now = _clock.NowInstant;
         if (_utcTimeOfDaySchedule)
@@ -142,25 +183,43 @@ private Duration GetDelayUntilNextDuration ()
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial TimeSpan GetDelayUntilNextForTimer () => GetDelayUntilNextAsTimeSpan();
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes the delay from now until the next time-of-day occurrence for the underlying timer.
+    /// </summary>
+    /// <returns>The delay as a <see cref="TimeSpan"/>.</returns>
+    private partial TimeSpan GetDelayUntilNextForTimer () => GetDelayUntilNextAsTimeSpan();
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Records when the next callback is expected from the given delay.
+    /// </summary>
+    /// <param name="delay">Delay from now until the next fire.</param>
+    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
         _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void RecordDayTimeCallbackTickStarted ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Clears the next-callback schedule and records the start of the current tick.
+    /// </summary>
+    private partial void RecordDayTimeCallbackTickStarted ()
     {
         _nextCallbackInstant = null;
         _lastCallbackInstant = _clock.NowInstant;
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets elapsed milliseconds since the last callback while holding the registration gate.
+    /// </summary>
+    /// <returns>
+    ///   <c>-1</c> if no prior callback exists; <c>0</c> if callbacks are running or the last start is not in the past;
+    ///   otherwise the elapsed milliseconds.
+    /// </returns>
+    private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
         if (_lastCallbackInstant is not { } last)
             return -1;
@@ -173,8 +232,14 @@ private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets remaining milliseconds until the next scheduled callback while holding the registration gate.
+    /// </summary>
+    /// <returns>
+    ///   <c>-1</c> if no next callback is scheduled; <c>0</c> if the next instant is not in the future; otherwise the remaining milliseconds.
+    /// </returns>
+    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
     {
         if (_nextCallbackInstant is not { } next)
             return -1;
@@ -185,8 +250,14 @@ private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ()
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Converts a delay into a timer duration in milliseconds when representable.
+    /// </summary>
+    /// <param name="delay">Delay until the next scheduled fire.</param>
+    /// <param name="milliseconds">When this method returns <c>true</c>, the nonnegative timer duration in milliseconds.</param>
+    /// <returns><c>true</c> when a finite millisecond delay is produced; <c>false</c> when the duration maps to an infinite timer.</returns>
+    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds)
     {
         Duration d = Duration.FromTimeSpan(delay);
         int ms = DurationToTimerMilliseconds(d);
@@ -200,8 +271,12 @@ private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int m
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial int GetRunSequentiallyRetryMilliseconds ()
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the retry delay in milliseconds when sequential callback execution is required.
+    /// </summary>
+    /// <returns>A positive millisecond count suitable for the underlying timer.</returns>
+    private partial int GetRunSequentiallyRetryMilliseconds ()
     {
         int ms = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
         if (ms <= 0)
@@ -211,18 +286,43 @@ private partial int GetRunSequentiallyRetryMilliseconds ()
     //----------------------------------------------------------------------------
 
 #if NET
+    /// <summary>
+    ///   Gets whether this registration schedules using local calendar days.
+    /// </summary>
     private partial bool IsLocalDayTimeSchedule => !_utcTimeOfDaySchedule;
 
+    /// <summary>
+    ///   Gets whether this registration schedules using UTC calendar days.
+    /// </summary>
     private partial bool IsUtcDayTimeSchedule => _utcTimeOfDaySchedule;
 
+    /// <summary>
+    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
+    /// </summary>
+    /// <param name="value">New time of day.</param>
     private partial void ApplyLocalScheduleTimeOfDay (TimeOnly value) =>
         _targetTimeOfDay = new LocalTime(value.Hour, value.Minute, value.Second, value.Millisecond);
 
+    /// <summary>
+    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
+    /// </summary>
+    /// <param name="value">New time of day.</param>
     private partial void ApplyUtcScheduleTimeOfDay (TimeOnly value) =>
         _targetTimeOfDay = new LocalTime(value.Hour, value.Minute, value.Second, value.Millisecond);
 #endif
 
     #region Interface Implementations
+
+    #region IClockTimer Implementation
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the instant at which this registration was created.
+    /// </summary>
+    public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
+    //----------------------------------------------------------------------------
+
+    #endregion IClockTimer Implementation
 
     #region IClockDayTimeTimer Implementation
 

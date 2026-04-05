@@ -30,15 +30,12 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// </summary>
     private static int _nextId;
 
-#if NET10_OR_GREATER
     /// <summary>
     ///   Protects mutable registration and timer fields.
     /// </summary>
+#if NET9_OR_GREATER
     private readonly Lock _gate = new();
 #else
-    /// <summary>
-    ///   Protects mutable registration and timer fields.
-    /// </summary>
     private readonly object _gate = new();
 #endif
 

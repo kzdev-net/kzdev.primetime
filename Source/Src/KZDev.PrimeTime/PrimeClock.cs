@@ -35,6 +35,22 @@ internal sealed partial class PrimeClock
     private readonly DateTimeZone _systemDefaultZone;
     //----------------------------------------------------------------------------
 
+#if NET
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Converts a <see cref="TimeOnly"/> wall-clock value to <see cref="LocalTime"/> for Noda day-time scheduling,
+    ///   preserving full <see cref="TimeOnly.Ticks"/> resolution (100 nanoseconds per tick).
+    /// </summary>
+    /// <param name="t">The wall-clock time of day.</param>
+    /// <returns>
+    ///   The equivalent Noda <see cref="LocalTime"/> from <see cref="LocalTime.FromTicksSinceMidnight"/>.
+    /// </returns>
+    private static LocalTime TimeOnlyToLocalTime (TimeOnly t) =>
+        LocalTime.FromTicksSinceMidnight(t.Ticks);
+    //----------------------------------------------------------------------------
+
+#endif
+
     #region Constructors/Finalizers
 
     //----------------------------------------------------------------------------
@@ -463,6 +479,279 @@ internal sealed partial class PrimeClock
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Interval timers (RegisterTimer)
+
+    #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
+#if NET
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            true,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            true,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            true,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            true,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            true,
+            TimeOnlyToLocalTime(timeOfDay.Value),
+            IntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+#else
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.SimpleAction,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAction,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+        Action<ClockTimerCallbackContext, CancellationToken> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextActionWithToken,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.SimpleAsync,
+            callback,
+            null,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken,
+        object? state = null,
+        DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this,
+            false,
+            timeOfDay,
+            IntervalTimerCallbackKind.ContextAsync,
+            callback,
+            state,
+            timerOptions,
+            cancellationToken);
+    //----------------------------------------------------------------------------
+#endif
+
+    #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
     #endregion Interface Implementations
 }
