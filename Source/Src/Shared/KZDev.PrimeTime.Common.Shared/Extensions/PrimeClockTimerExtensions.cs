@@ -1,8 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
-
-using System;
-using System.Threading.Tasks;
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;

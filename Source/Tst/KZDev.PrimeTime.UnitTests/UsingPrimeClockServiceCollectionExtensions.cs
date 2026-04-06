@@ -9,6 +9,8 @@ using KZDev.PrimeTime.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using NodaTime;
+
 namespace KZDev.PrimeTime.UnitTests;
 
 //################################################################################
@@ -68,23 +70,27 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
-    ///   returns the same service collection instance for fluent chaining and adds a singleton
-    ///   descriptor for <see cref="IPrimeClock"/> implemented by <see cref="PrimeClock"/>.
+    ///   returns the same service collection instance for fluent chaining and adds singleton
+    ///   descriptors for <see cref="IClock"/> (<see cref="NodaTime.SystemClock"/>) and
+    ///   <see cref="IPrimeClock"/> implemented by <see cref="PrimeClock"/>.
     /// </summary>
     [Fact]
-    public void AddPrimeClock_ReturnsSameServiceCollectionAndRegistersSingletonDescriptor ()
+    public void AddPrimeClock_ReturnsSameServiceCollectionAndRegistersSingletonDescriptors ()
     {
         IServiceCollection services = new ServiceCollection();
 
         IServiceCollection returned = services.AddPrimeClock();
 
         returned.Should().BeSameAs(services);
-        services.Should().ContainSingle();
+        services.Should().HaveCount(2);
 
-        ServiceDescriptor descriptor = services.Single();
-        descriptor.ServiceType.Should().Be(typeof(IPrimeClock));
-        descriptor.ImplementationType.Should().Be(typeof(PrimeClock));
-        descriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
+        ServiceDescriptor nodaClockDescriptor = services.Single(d => d.ServiceType == typeof(IClock));
+        nodaClockDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
+        nodaClockDescriptor.ImplementationInstance.Should().BeSameAs(NodaTime.SystemClock.Instance);
+
+        ServiceDescriptor primeClockDescriptor = services.Single(d => d.ServiceType == typeof(IPrimeClock));
+        primeClockDescriptor.ImplementationType.Should().Be(typeof(PrimeClock));
+        primeClockDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
     }
     //----------------------------------------------------------------------------
 }

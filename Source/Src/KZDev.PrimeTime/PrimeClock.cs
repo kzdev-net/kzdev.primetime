@@ -48,17 +48,6 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
-    ///   <see cref="SystemClock.Instance"/> and the BCL system default time zone.
-    /// </summary>
-    public PrimeClock ()
-        : this(SystemClock.Instance, GetSystemDefaultTimeZone())
-    {
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
     ///   specified clock and system default time zone.
     /// </summary>
@@ -71,10 +60,34 @@ internal sealed partial class PrimeClock
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="clock"/> or <paramref name="systemDefaultZone"/> is <c>null</c>.
     /// </exception>
-    public PrimeClock (IClock clock, DateTimeZone systemDefaultZone)
+    internal PrimeClock (IClock clock, DateTimeZone systemDefaultZone)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _systemDefaultZone = systemDefaultZone ?? throw new ArgumentNullException(nameof(systemDefaultZone));
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
+    ///   <see cref="SystemClock.Instance"/> and the BCL system default time zone.
+    /// </summary>
+    internal PrimeClock ()
+        : this(SystemClock.Instance)
+    {
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
+    ///   specified clock and system default time zone.
+    /// </summary>
+    /// <param name="clock">
+    ///   The NodaTime clock used to obtain the current instant.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="clock"/> is <c>null</c>.
+    /// </exception>
+    public PrimeClock (IClock clock) :
+            this(clock, GetSystemDefaultTimeZone())
+    {
     }
     //----------------------------------------------------------------------------
 

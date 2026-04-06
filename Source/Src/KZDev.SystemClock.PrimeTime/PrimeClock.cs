@@ -28,12 +28,10 @@ internal sealed partial class PrimeClock
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class using
     ///   <see cref="TimeProvider.System"/> as the time source.
     /// </summary>
-    public PrimeClock ()
+    internal PrimeClock ()
         : this(TimeProvider.System)
     {
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance of the <see cref="PrimeClock"/> class with the
