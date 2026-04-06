@@ -66,8 +66,8 @@ public partial class UsingIPrimeClock : UnitTestBase
         IPrimeClock clock = new PrimeClock(TimeProvider.System);
         DateTimeOffset before = TimeProvider.System.GetUtcNow().AddSeconds(-1);
         DateTimeOffset after = TimeProvider.System.GetUtcNow().AddSeconds(1);
-        clock.UtcNowOffset.Should().BeAfter(before).And.BeBefore(after);
-        clock.LocalNowOffset.Should().BeAfter(TimeProvider.System.GetLocalNow().AddSeconds(-2)).
+        clock.UtcNowDateTimeOffset.Should().BeAfter(before).And.BeBefore(after);
+        clock.LocalNowDateTimeOffset.Should().BeAfter(TimeProvider.System.GetLocalNow().AddSeconds(-2)).
             And.BeBefore(TimeProvider.System.GetLocalNow().AddSeconds(2));
     }
     //----------------------------------------------------------------------------
@@ -84,22 +84,22 @@ public partial class UsingIPrimeClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that UTC "now" members are consistent: UtcNowOffset.UtcDateTime matches UtcNowDateTime,
+    ///   Verifies that UTC "now" members are consistent: UtcNowDateTimeOffset.UtcDateTime matches UtcNowDateTime,
     ///   and UtcNowTimeOnly/UtcNowDateOnly match the time/date components of UtcNowDateTime.
     /// </summary>
     [Fact]
     public void PrimeClock_UtcNowMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
-        DateTimeOffset UtcNowOffset = clock.UtcNowOffset;
+        DateTimeOffset UtcNowDateTimeOffset = clock.UtcNowDateTimeOffset;
         DateTime UtcNowDateTime = clock.UtcNowDateTime;
 #if NET
         TimeOnly UtcNowTimeOnly = clock.UtcNowTimeOnly;
         DateOnly UtcNowDateOnly = clock.UtcNowDateOnly;
 #endif
 
-        UtcNowOffset.Offset.Should().Be(TimeSpan.Zero);
-        UtcNowOffset.UtcDateTime.Should().BeCloseTo(UtcNowDateTime, TimeSpan.FromMilliseconds(50));
+        UtcNowDateTimeOffset.Offset.Should().Be(TimeSpan.Zero);
+        UtcNowDateTimeOffset.UtcDateTime.Should().BeCloseTo(UtcNowDateTime, TimeSpan.FromMilliseconds(50));
         UtcNowDateTime.Kind.Should().Be(DateTimeKind.Utc);
 #if NET
         long timeTicks = Math.Abs(TimeOnly.FromDateTime(UtcNowDateTime).Ticks - UtcNowTimeOnly.Ticks);
@@ -110,22 +110,22 @@ public partial class UsingIPrimeClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that local "now" members are consistent: LocalNowOffset.DateTime matches LocalNowDateTime,
+    ///   Verifies that local "now" members are consistent: LocalNowDateTimeOffset.DateTime matches LocalNowDateTime,
     ///   and LocalNowTimeOnly/LocalNowDateOnly match the time/date components of LocalNowDateTime.
     /// </summary>
     [Fact]
     public void PrimeClock_LocalNowMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
-        DateTimeOffset LocalNowOffset = clock.LocalNowOffset;
+        DateTimeOffset LocalNowDateTimeOffset = clock.LocalNowDateTimeOffset;
         DateTime LocalNowDateTime = clock.LocalNowDateTime;
 #if NET
         TimeOnly LocalNowTimeOnly = clock.LocalNowTimeOnly;
         DateOnly LocalNowDateOnly = clock.LocalNowDateOnly;
 #endif
 
-        LocalNowOffset.Offset.Should().Be(TimeZoneInfo.Local.GetUtcOffset(LocalNowOffset.DateTime));
-        LocalNowOffset.DateTime.Should().BeCloseTo(LocalNowDateTime, TimeSpan.FromMilliseconds(50));
+        LocalNowDateTimeOffset.Offset.Should().Be(TimeZoneInfo.Local.GetUtcOffset(LocalNowDateTimeOffset.DateTime));
+        LocalNowDateTimeOffset.DateTime.Should().BeCloseTo(LocalNowDateTime, TimeSpan.FromMilliseconds(50));
         LocalNowDateTime.Kind.Should().Be(DateTimeKind.Local);
 #if NET
         long localTimeTicks = Math.Abs(TimeOnly.FromDateTime(LocalNowDateTime).Ticks - LocalNowTimeOnly.Ticks);
@@ -145,8 +145,8 @@ public partial class UsingIPrimeClock : UnitTestBase
         DateTimeOffset before = DateTimeOffset.UtcNow.AddSeconds(-1);
         DateTimeOffset after = DateTimeOffset.UtcNow.AddSeconds(1);
 
-        clock.UtcNowOffset.Should().BeAfter(before).And.BeBefore(after);
-        clock.LocalNowOffset.Should().BeAfter(before.ToLocalTime().AddSeconds(-2)).And.BeBefore(after.ToLocalTime().AddSeconds(2));
+        clock.UtcNowDateTimeOffset.Should().BeAfter(before).And.BeBefore(after);
+        clock.LocalNowDateTimeOffset.Should().BeAfter(before.ToLocalTime().AddSeconds(-2)).And.BeBefore(after.ToLocalTime().AddSeconds(2));
     }
     //----------------------------------------------------------------------------
 

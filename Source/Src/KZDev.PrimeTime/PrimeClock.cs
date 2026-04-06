@@ -171,22 +171,22 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowOffset => LocalZonedNowInstant.ToDateTimeOffset();
+    public DateTimeOffset LocalNowDateTimeOffset => LocalZonedNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowOffset => UtcNowInstant.ToDateTimeOffset();
+    public DateTimeOffset UtcNowDateTimeOffset => UtcNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+    public DateTime LocalNowDateTime => LocalNowDateTimeOffset.LocalDateTime;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+    public DateTime UtcNowDateTime => UtcNowDateTimeOffset.UtcDateTime;
     //----------------------------------------------------------------------------
 
 #if NET

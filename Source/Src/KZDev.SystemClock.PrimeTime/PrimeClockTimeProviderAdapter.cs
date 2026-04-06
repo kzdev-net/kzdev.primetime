@@ -108,7 +108,7 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public override DateTimeOffset GetUtcNow () => _clock.UtcNowOffset;
+    public override DateTimeOffset GetUtcNow () => _clock.UtcNowDateTimeOffset;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

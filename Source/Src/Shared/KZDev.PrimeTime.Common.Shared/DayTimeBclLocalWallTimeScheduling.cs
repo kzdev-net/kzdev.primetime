@@ -216,7 +216,7 @@ internal static class DayTimeBclLocalWallTimeScheduling
     ///   Computes the delay from <paramref name="scheduleNow"/> until the next local day-time occurrence.
     /// </summary>
     /// <param name="scheduleNow">
-    ///   The clock&apos;s current time as a <see cref="DateTimeOffset"/> (e.g. <see cref="IPrimeClock.LocalNowOffset"/>
+    ///   The clock&apos;s current time as a <see cref="DateTimeOffset"/> (e.g. <see cref="IPrimeClock.LocalNowDateTimeOffset"/>
     ///   for local day-time schedules). The absolute instant is used for comparisons; the offset is not required to be
     ///   UTC (+00:00).
     /// </param>

@@ -11,13 +11,13 @@ namespace KZDev.PrimeTime;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     This interface extends <see cref="System.Threading.ITimer"/> on all target frameworks.
+///     This interface extends <see cref="ITimer"/> on all target frameworks.
 ///     On .NET 8+ the type is in the shared framework; on .NET Standard 2.0 (and .NET Framework
 ///     when using the same compatibility stack) it is supplied by the
 ///     <c>Microsoft.Bcl.TimeProvider</c> package referenced by this library.
 ///   </para>
 /// </remarks>
-public partial interface IClockIntervalTimer : IIntervalTimer, global::System.Threading.ITimer
+public partial interface IClockIntervalTimer : IIntervalTimer, ITimer
 {
     /// <summary>
     ///   Changes the interval of this registration.
@@ -34,7 +34,7 @@ public partial interface IClockIntervalTimer : IIntervalTimer, global::System.Th
     ///   Does not change whether the timer is repeating or one-shot. For a repeating
     ///   timer, <paramref name="interval"/> is used for both the next and subsequent
     ///   intervals. To set the next due time and repeat interval independently, use
-    ///   <see cref="System.Threading.ITimer.Change(System.TimeSpan,System.TimeSpan)"/>.
+    ///   <see cref="ITimer.Change(TimeSpan,TimeSpan)"/>.
     /// </remarks>
     bool Change (TimeSpan interval);
     //----------------------------------------------------------------------------

@@ -135,7 +135,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_LocalActionOverload_FiresAtRequestedLocalTime ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowOffset.DateTime.AddMinutes(10)));
+        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowDateTimeOffset.DateTime.AddMinutes(10)));
         int fired = 0;
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => fired++, CancellationToken.None);
@@ -154,7 +154,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_LocalContextAndTokenOverload_ForwardsStateRegistrationAndToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowOffset.DateTime.AddMinutes(10)));
+        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowDateTimeOffset.DateTime.AddMinutes(10)));
         object state = new();
         object? receivedState = null;
         IClockDayTimeTimer? receivedTimer = null;
@@ -183,7 +183,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterAsyncTimeOfDay_LocalTokenOverload_ForwardsCancellationToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowOffset.DateTime.AddMinutes(10)));
+        LocalTimeOfDay target = new(TimeOnly.FromDateTime(clock.LocalNowDateTimeOffset.DateTime.AddMinutes(10)));
         using CancellationTokenSource cts = new();
         CancellationToken? receivedToken = null;
 
@@ -207,7 +207,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_UtcActionOverload_FiresAtRequestedUtcTime ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowOffset.UtcDateTime.AddMinutes(10)));
+        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowDateTimeOffset.UtcDateTime.AddMinutes(10)));
         int fired = 0;
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => fired++, CancellationToken.None);
@@ -226,7 +226,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_UtcContextAndTokenOverload_ForwardsStateRegistrationAndToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowOffset.UtcDateTime.AddMinutes(10)));
+        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowDateTimeOffset.UtcDateTime.AddMinutes(10)));
         object state = new();
         object? receivedState = null;
         IClockDayTimeTimer? receivedTimer = null;
@@ -255,7 +255,7 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     public void RegisterAsyncTimeOfDay_UtcTokenOverload_ForwardsCancellationToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowOffset.UtcDateTime.AddMinutes(10)));
+        UtcTimeOfDay target = new(TimeOnly.FromDateTime(clock.UtcNowDateTimeOffset.UtcDateTime.AddMinutes(10)));
         using CancellationTokenSource cts = new();
         CancellationToken? receivedToken = null;
 

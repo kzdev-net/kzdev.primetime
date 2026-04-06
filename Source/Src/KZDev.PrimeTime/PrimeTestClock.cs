@@ -47,7 +47,7 @@ public sealed partial class PrimeTestClock
                     return false;
                 TargetTimeOfDay = LocalTimeToTargetTimeOfDay(targetTimeOfDay);
                 if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+                    NextDueUtc = ComputeNextDue(Clock.UtcNowDateTimeOffset);
 
                 return true;
             }
@@ -167,22 +167,22 @@ public sealed partial class PrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowOffset => LocalZonedNowInstant.ToDateTimeOffset();
+    public DateTimeOffset LocalNowDateTimeOffset => LocalZonedNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowOffset => UtcNowInstant.ToDateTimeOffset();
+    public DateTimeOffset UtcNowDateTimeOffset => UtcNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime LocalNowDateTime => LocalNowOffset.LocalDateTime;
+    public DateTime LocalNowDateTime => LocalNowDateTimeOffset.LocalDateTime;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime UtcNowDateTime => UtcNowOffset.UtcDateTime;
+    public DateTime UtcNowDateTime => UtcNowDateTimeOffset.UtcDateTime;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -325,13 +325,13 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> with <see cref="NodaClockTimeChangedEventArgs"/> created from
-    ///   the virtual instant read under the gate lock (expected to correspond to <paramref name="utcNowOffset"/> when
-    ///   callers update virtual time and then raise in sequence).
+    ///   the virtual instant read under the gate lock (expected to correspond to the BCL partial&apos;s
+    ///   <c>utcNowDateTimeOffset</c> argument when callers update virtual time and then raise in sequence).
     /// </summary>
-    /// <param name="utcNowOffset">
+    /// <param name="utcNowDateTimeOffset">
     ///   The virtual UTC time after the change (the BCL partial forwards this value to <see cref="ClockTimeChangedEventArgs"/>).
     /// </param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset)
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset _)
     {
         Instant snapshot;
         lock (_gate)

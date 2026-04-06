@@ -57,12 +57,12 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowOffset => _timeProvider.GetLocalNow();
+    public DateTimeOffset LocalNowDateTimeOffset => _timeProvider.GetLocalNow();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowOffset => _timeProvider.GetUtcNow();
+    public DateTimeOffset UtcNowDateTimeOffset => _timeProvider.GetUtcNow();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

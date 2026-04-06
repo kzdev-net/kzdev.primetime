@@ -287,8 +287,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             _isLocalTimeRepresentation = options?.LocalTimeRepresentation == true;
             _resetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
             Id = Interlocked.Increment(ref _nextTimerId);
-            DateTimeOffset now = clock.UtcNowOffset;
-            RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNowOffset : now;
+            DateTimeOffset now = clock.UtcNowDateTimeOffset;
+            RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNowDateTimeOffset : now;
             NextDueUtc = now + initialCallbackTime;
 
             if (cancellationToken.CanBeCanceled)
@@ -387,7 +387,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                         return -1;
                     if (CallbacksRunning > 0)
                         return 0;
-                    DateTimeOffset now = Clock.UtcNowOffset;
+                    DateTimeOffset now = Clock.UtcNowDateTimeOffset;
                     if (last >= now)
                         return 0;
                     return (long)(now - last).TotalMilliseconds;
@@ -408,7 +408,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                         return -1;
                     if (NextDueUtc is not { } next)
                         return -1;
-                    DateTimeOffset now = Clock.UtcNowOffset;
+                    DateTimeOffset now = Clock.UtcNowDateTimeOffset;
                     if (next <= now)
                         return 0;
                     if (CallbacksRunning > 0 && IsResetAfterCallback)
@@ -495,7 +495,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     State = TimerState.Active;
                 if (!IntervalTimerEnabled)
                     return true;
-                NextDueUtc = Clock.UtcNowOffset + nextInterval;
+                NextDueUtc = Clock.UtcNowDateTimeOffset + nextInterval;
                 return true;
             }
         }
@@ -562,7 +562,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     return false;
                 IntervalTimerEnabled = true;
                 State = TimerState.Active;
-                NextDueUtc = Clock.UtcNowOffset + InitialCallbackTime;
+                NextDueUtc = Clock.UtcNowDateTimeOffset + InitialCallbackTime;
                 return true;
             }
         }
@@ -919,7 +919,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         ///   </para>
         ///   <para>
         ///     For <c>IsLocal == true</c> day-time registrations, this stores the same offset
-        ///     representation as <see cref="PrimeTestClock.LocalNowOffset"/> (that is, the local
+        ///     representation as <see cref="PrimeTestClock.LocalNowDateTimeOffset"/> (that is, the local
         ///     offset that was in effect at the time of the callback). For UTC day-time
         ///     registrations, this is stored with a UTC offset so it aligns with the "now" used
         ///     in <see cref="ElapsedTime"/>.
@@ -1028,8 +1028,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             _skippedTimeBehavior = resolvedOptions.SkippedTimeBehavior;
             _duplicateTimeBehavior = resolvedOptions.DuplicateTimeBehavior;
             Id = Interlocked.Increment(ref _nextTimerId);
-            RegisteredTime = Clock.UtcNowOffset;
-            NextDueUtc = ComputeNextDue(clock.UtcNowOffset);
+            RegisteredTime = Clock.UtcNowDateTimeOffset;
+            NextDueUtc = ComputeNextDue(clock.UtcNowDateTimeOffset);
 
             if (cancellationToken.CanBeCanceled)
             {
@@ -1120,7 +1120,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     {
                         EnabledDayTime = true;
                         State = TimerState.Active;
-                        NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+                        NextDueUtc = ComputeNextDue(Clock.UtcNowDateTimeOffset);
                     }
                     else
                     {
@@ -1144,7 +1144,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         ///   otherwise UTC-offset unchanged—so <see cref="ElapsedTime"/> and <see cref="LastCallbackAt"/> compare like
         ///   with like.
         /// </summary>
-        /// <param name="virtualUtcInstant">The virtual instant (typically <see cref="PrimeTestClock.UtcNowOffset"/>).</param>
+        /// <param name="virtualUtcInstant">The virtual instant (typically <see cref="PrimeTestClock.UtcNowDateTimeOffset"/>).</param>
         /// <returns>
         ///   The same instant expressed in the offset form that matches local versus UTC day-time registration.
         /// </returns>
@@ -1164,7 +1164,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                         return -1;
                     if (CallbacksRunning > 0)
                         return 0;
-                    DateTimeOffset now = GetOffsetRepresentationForTimer(Clock.UtcNowOffset);
+                    DateTimeOffset now = GetOffsetRepresentationForTimer(Clock.UtcNowDateTimeOffset);
                     if (last >= now)
                         return 0;
                     return (long)(now - last).TotalMilliseconds;
@@ -1184,7 +1184,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     if (NextDueUtc is not { } next)
                         return -1;
                     // NextDueUtc is stored as a UTC instant; use virtual UTC now for the same representation.
-                    DateTimeOffset now = Clock.UtcNowOffset;
+                    DateTimeOffset now = Clock.UtcNowDateTimeOffset;
                     if (next <= now)
                         return 0;
                     return (long)(next - now).TotalMilliseconds;
@@ -1244,7 +1244,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             {
 #if SYSTEMCLOCK
                 TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(
-                    Clock.LocalNowOffset,
+                    Clock.LocalNowDateTimeOffset,
                     Clock.LocalScheduleTimeZone,
                     TimeOnly.FromTimeSpan(TargetTimeOfDay),
                     _skippedTimeBehavior,
@@ -1254,7 +1254,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     delay = TimeSpan.FromDays(1);
                 }
 
-                DateTimeOffset scheduleBasis = Clock.LocalNowOffset;
+                DateTimeOffset scheduleBasis = Clock.LocalNowDateTimeOffset;
                 return new DateTimeOffset((scheduleBasis + delay).UtcDateTime, TimeSpan.Zero);
 #else
                 LocalTime targetLocal = LocalTime.FromTicksSinceMidnight(TargetTimeOfDay.Ticks);
@@ -1316,7 +1316,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     return false;
                 TargetTimeOfDay = newTimeOfDay.Value.ToTimeSpan();
                 if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+                    NextDueUtc = ComputeNextDue(Clock.UtcNowDateTimeOffset);
                 return true;
             }
         }
@@ -1332,7 +1332,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     return false;
                 TargetTimeOfDay = newTimeOfDay.Value.ToTimeSpan();
                 if (Enabled)
-                    NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+                    NextDueUtc = ComputeNextDue(Clock.UtcNowDateTimeOffset);
                 return true;
             }
         }
@@ -1382,7 +1382,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     return false;
                 EnabledDayTime = true;
                 State = TimerState.Active;
-                NextDueUtc = ComputeNextDue(Clock.UtcNowOffset);
+                NextDueUtc = ComputeNextDue(Clock.UtcNowDateTimeOffset);
                 return true;
             }
         }
@@ -1641,7 +1641,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the UTC offset for a local wall-clock calendar <see cref="DateTime"/> in the same time zone
-    ///   the clock uses for <see cref="LocalNowOffset"/>.
+    ///   the clock uses for <see cref="LocalNowDateTimeOffset"/>.
     /// </summary>
     /// <param name="localUnspecified">Local date and time with <see cref="DateTime.Kind"/> <see cref="DateTimeKind.Unspecified"/>.</param>
     /// <returns>The offset from UTC at that local wall time.</returns>
@@ -1677,7 +1677,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   Raises <see cref="ClockEvents"/> after the virtual UTC instant changed.
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time to report.</param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset);
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset);
     //----------------------------------------------------------------------------
 
     #region Local time-of-day scheduling
@@ -1694,7 +1694,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   match production.
     /// </remarks>
     /// <param name="localNow">
-    ///   Current time in the local coordinate system (same interpretation as <see cref="LocalNowOffset"/>).
+    ///   Current time in the local coordinate system (same interpretation as <see cref="LocalNowDateTimeOffset"/>).
     /// </param>
     /// <param name="targetTimeOfDay">Time of day since local midnight.</param>
     /// <param name="getLocalWallClockUtcOffset">
@@ -2053,7 +2053,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     #region IPrimeClock Implementation — Now
 
     /// <inheritdoc />
-    public DateTimeOffset LocalNowOffset
+    public DateTimeOffset LocalNowDateTimeOffset
     {
         get
         {
@@ -2063,7 +2063,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
 
     /// <inheritdoc />
-    public DateTimeOffset UtcNowOffset
+    public DateTimeOffset UtcNowDateTimeOffset
     {
         get
         {

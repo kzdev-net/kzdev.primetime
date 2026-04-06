@@ -71,25 +71,25 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestClock"/> default constructor sets a non-default UtcNowOffset.
+    ///   Verifies that <see cref="PrimeTestClock"/> default constructor sets a non-default UtcNowDateTimeOffset.
     /// </summary>
     [Fact]
     public void PrimeTestClock_DefaultConstructor_SetsUtcNow ()
     {
         IPrimeTestClock clock = new PrimeTestClock();
-        clock.UtcNowOffset.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
+        clock.UtcNowDateTimeOffset.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(2));
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestClock"/> with initial time returns that time from UtcNowOffset.
+    ///   Verifies that <see cref="PrimeTestClock"/> with initial time returns that time from UtcNowDateTimeOffset.
     /// </summary>
     [Fact]
     public void PrimeTestClock_WithInitialTime_ReturnsThatTimeFromUtcNow ()
     {
         DateTimeOffset initial = new(2020, 6, 15, 12, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        clock.UtcNowOffset.Should().Be(initial);
+        clock.UtcNowDateTimeOffset.Should().Be(initial);
     }
     //----------------------------------------------------------------------------
 
@@ -98,7 +98,7 @@ public class UsingPrimeTestClock : UnitTestBase
     #region SetTime and Advance
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.SetTime"/> updates UtcNowOffset and related "now" members.
+    ///   Verifies that <see cref="IPrimeTestClock.SetTime"/> updates UtcNowDateTimeOffset and related "now" members.
     /// </summary>
     [Fact]
     public void SetTime_WithUtcTime_UpdatesUtcNowAndRelatedMembers ()
@@ -106,7 +106,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset setTime = new(2025, 1, 10, 14, 30, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock();
         clock.SetTime(setTime);
-        clock.UtcNowOffset.Should().Be(setTime);
+        clock.UtcNowDateTimeOffset.Should().Be(setTime);
         clock.UtcNowDateTime.Should().Be(setTime.UtcDateTime);
     }
     //----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(TimeSpan.FromHours(2));
-        clock.UtcNowOffset.Should().Be(initial + TimeSpan.FromHours(2));
+        clock.UtcNowDateTimeOffset.Should().Be(initial + TimeSpan.FromHours(2));
     }
     //----------------------------------------------------------------------------
 
@@ -133,7 +133,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(TimeSpan.Zero);
-        clock.UtcNowOffset.Should().Be(initial);
+        clock.UtcNowDateTimeOffset.Should().Be(initial);
     }
     //----------------------------------------------------------------------------
 
@@ -150,7 +150,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.RunFor(TimeSpan.FromMinutes(30));
-        clock.UtcNowOffset.Should().Be(initial + TimeSpan.FromMinutes(30));
+        clock.UtcNowDateTimeOffset.Should().Be(initial + TimeSpan.FromMinutes(30));
     }
     //----------------------------------------------------------------------------
 
@@ -209,7 +209,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset setTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock();
         DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowOffset;
+        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
         clock.SetTime(setTime);
         received.Should().NotBeNull();
         received!.Value.Should().Be(setTime);
@@ -225,7 +225,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowOffset;
+        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
         clock.Advance(TimeSpan.FromHours(1));
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + TimeSpan.FromHours(1));
@@ -241,7 +241,7 @@ public class UsingPrimeTestClock : UnitTestBase
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowOffset;
+        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
         clock.RunFor(TimeSpan.FromMinutes(15));
         received.Should().NotBeNull();
         received!.Value.Should().Be(initial + TimeSpan.FromMinutes(15));

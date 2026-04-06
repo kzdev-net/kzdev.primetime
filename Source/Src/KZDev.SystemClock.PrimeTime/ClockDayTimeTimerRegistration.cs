@@ -136,10 +136,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Gets the clock's current time in the schedule basis (UTC vs local calendar day).
     /// </summary>
     /// <returns>
-    ///   <see cref="IPrimeClock.UtcNowOffset"/> for UTC calendar-day scheduling; otherwise <see cref="IPrimeClock.LocalNowOffset"/>.
+    ///   <see cref="IPrimeClock.UtcNowDateTimeOffset"/> for UTC calendar-day scheduling; otherwise <see cref="IPrimeClock.LocalNowDateTimeOffset"/>.
     /// </returns>
     private DateTimeOffset GetScheduleNowOffset () =>
-        _utcTimeOfDaySchedule ? _clock.UtcNowOffset : _clock.LocalNowOffset;
+        _utcTimeOfDaySchedule ? _clock.UtcNowDateTimeOffset : _clock.LocalNowDateTimeOffset;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -147,7 +147,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Persists the clock's current instant as this registration's creation time.
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer () =>
-        _registeredTime = _clock.UtcNowOffset;
+        _registeredTime = _clock.UtcNowDateTimeOffset;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

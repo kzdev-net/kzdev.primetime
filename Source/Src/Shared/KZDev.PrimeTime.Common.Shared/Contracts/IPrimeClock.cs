@@ -21,14 +21,14 @@ public partial interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Gets the current local date and time as a <see cref="DateTimeOffset"/>.
     /// </summary>
-    DateTimeOffset LocalNowOffset { [DebuggerStepThrough] get; }
+    DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date and time as a <see cref="DateTimeOffset"/>.
     /// </summary>
-    DateTimeOffset UtcNowOffset { [DebuggerStepThrough] get; }
+    DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

@@ -92,9 +92,9 @@ public sealed partial class PrimeTestClock
     /// <summary>
     ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> after virtual UTC time changed.
     /// </summary>
-    /// <param name="utcNowOffset">The virtual UTC time after the change.</param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowOffset) =>
-        ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNowOffset));
+    /// <param name="utcNowDateTimeOffset">The virtual UTC time after the change.</param>
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset) =>
+        ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNowDateTimeOffset));
     //----------------------------------------------------------------------------
 
     #region IPrimeClock Implementation — Local schedule zone

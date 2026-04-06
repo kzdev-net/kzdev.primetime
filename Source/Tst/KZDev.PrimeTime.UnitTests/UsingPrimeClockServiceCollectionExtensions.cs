@@ -86,7 +86,9 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
 
         ServiceDescriptor nodaClockDescriptor = services.Single(d => d.ServiceType == typeof(IClock));
         nodaClockDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
-        nodaClockDescriptor.ImplementationInstance.Should().BeSameAs(NodaTime.SystemClock.Instance);
+        object? nodaSingleton = nodaClockDescriptor.ImplementationInstance
+            ?? nodaClockDescriptor.ImplementationFactory?.Invoke(null!);
+        nodaSingleton.Should().BeSameAs(NodaTime.SystemClock.Instance);
 
         ServiceDescriptor primeClockDescriptor = services.Single(d => d.ServiceType == typeof(IPrimeClock));
         primeClockDescriptor.ImplementationType.Should().Be(typeof(PrimeClock));

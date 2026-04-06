@@ -40,7 +40,7 @@ private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTime
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowOffset : _clock.UtcNowOffset;
+private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowDateTimeOffset : _clock.UtcNowDateTimeOffset;
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ private partial long GetElapsedTime ()
                 return -1;
             if (_callbacksRunning > 0)
                 return 0;
-            DateTimeOffset now = _clock.UtcNowOffset;
+            DateTimeOffset now = _clock.UtcNowDateTimeOffset;
             if (last >= now)
                 return 0;
             return (long)(now - last).TotalMilliseconds;
@@ -81,13 +81,13 @@ private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowOffset + delay;
+private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowDateTimeOffset + delay;
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
 private partial void RecordIntervalCallbackStarted ()
     {
-        LastCallbackUtc = _clock.UtcNowOffset;
+        LastCallbackUtc = _clock.UtcNowDateTimeOffset;
         NextCallbackUtc = null;
     }
     //----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
             return -1;
         if (NextCallbackUtc is not { } next)
             return -1;
-        DateTimeOffset now = _clock.UtcNowOffset;
+        DateTimeOffset now = _clock.UtcNowDateTimeOffset;
         if (next <= now)
             return 0;
         if (_callbacksRunning > 0 && IsResetAfterCallback)

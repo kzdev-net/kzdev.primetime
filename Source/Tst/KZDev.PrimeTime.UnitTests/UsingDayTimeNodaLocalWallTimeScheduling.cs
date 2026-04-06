@@ -178,7 +178,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
             DuplicateTimeBehavior.RunLast);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             TestContext.Current.CancellationToken, options);
-        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset, tz,
+        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset, tz,
             LocalTimeToTimeOnly(target), options.SkippedTimeBehavior, options.DuplicateTimeBehavior);
         timer.TimeUntilNextCallback.Should().Be((long)expected.TotalMilliseconds);
     }
@@ -200,7 +200,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
             DuplicateTimeBehavior.RunLast);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             TestContext.Current.CancellationToken, options);
-        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset, tz,
+        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset, tz,
             LocalTimeToTimeOnly(target), options.SkippedTimeBehavior, options.DuplicateTimeBehavior);
         timer.TimeUntilNextCallback.Should().Be((long)expected.TotalMilliseconds);
     }
@@ -221,7 +221,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
             DuplicateTimeBehavior.RunLast);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             TestContext.Current.CancellationToken, options);
-        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset, tz,
+        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset, tz,
             LocalTimeToTimeOnly(target), options.SkippedTimeBehavior, options.DuplicateTimeBehavior);
         timer.TimeUntilNextCallback.Should().Be((long)expected.TotalMilliseconds);
     }
@@ -242,7 +242,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
             DuplicateTimeBehavior.RunFirst);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             TestContext.Current.CancellationToken, options);
-        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset, tz,
+        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset, tz,
             LocalTimeToTimeOnly(target), options.SkippedTimeBehavior, options.DuplicateTimeBehavior);
         timer.TimeUntilNextCallback.Should().Be((long)expected.TotalMilliseconds);
     }
@@ -263,7 +263,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
             DuplicateTimeBehavior.RunLast);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             TestContext.Current.CancellationToken, options);
-        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset, tz,
+        TimeSpan expected = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset, tz,
             LocalTimeToTimeOnly(target), options.SkippedTimeBehavior, options.DuplicateTimeBehavior);
         timer.TimeUntilNextCallback.Should().Be((long)expected.TotalMilliseconds);
     }

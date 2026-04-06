@@ -46,19 +46,19 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     ///     production <see cref="ClockDayTimeTimerRegistration"/> local scheduling).
     ///   </para>
     /// </remarks>
-    /// <param name="clock">The virtual test clock (local "now" is <see cref="IPrimeTestClock.LocalNowOffset"/>).</param>
+    /// <param name="clock">The virtual test clock (local "now" is <see cref="IPrimeTestClock.LocalNowDateTimeOffset"/>).</param>
     /// <param name="targetTimeOfDay">The registered local time of day since local midnight.</param>
     /// <returns>
-    ///   Whole milliseconds from <see cref="DateTimeOffset.ToUniversalTime"/> of <see cref="IPrimeTestClock.LocalNowOffset"/>
+    ///   Whole milliseconds from <see cref="DateTimeOffset.ToUniversalTime"/> of <see cref="IPrimeTestClock.LocalNowDateTimeOffset"/>
     ///   to the next due UTC instant; suitable to compare to <see cref="IClockTimer.TimeUntilNextCallback"/>.
     /// </returns>
     private static long ExpectedMillisecondsUntilNextLocalFire (IPrimeTestClock clock, TimeOnly targetTimeOfDay)
     {
         DayTimeTimerOptions defaults = new();
-        TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowOffset,
+        TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset,
             clock.LocalScheduleTimeZone, targetTimeOfDay, defaults.SkippedTimeBehavior, defaults.DuplicateTimeBehavior);
-        DateTimeOffset nextDueUtc = new DateTimeOffset((clock.LocalNowOffset + delay).UtcDateTime, TimeSpan.Zero);
-        return (long)(nextDueUtc - clock.UtcNowOffset).TotalMilliseconds;
+        DateTimeOffset nextDueUtc = new DateTimeOffset((clock.LocalNowDateTimeOffset + delay).UtcDateTime, TimeSpan.Zero);
+        return (long)(nextDueUtc - clock.UtcNowDateTimeOffset).TotalMilliseconds;
     }
 
     /// <summary>
