@@ -39,13 +39,15 @@ public class UsingCommonTimerContracts : UnitTestBase
     #region IClockTimer contract
 
     /// <summary>
-    ///   Verifies that <see cref="IClockTimer"/> is an interface and extends <see cref="IDisposable"/>.
+    ///   Verifies that <see cref="IClockTimer"/> is an interface and extends <see cref="IDisposable"/>
+    ///   and <see cref="IAsyncDisposable"/>.
     /// </summary>
     [Fact]
     public void IClockTimer_ExistsAndIsInterface ()
     {
         typeof(IClockTimer).IsInterface.Should().BeTrue();
         typeof(IClockTimer).GetInterfaces().Should().Contain(typeof(IDisposable));
+        typeof(IClockTimer).GetInterfaces().Should().Contain(typeof(IAsyncDisposable));
     }
     //----------------------------------------------------------------------------
 
@@ -67,7 +69,8 @@ public class UsingCommonTimerContracts : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IClockTimer"/> declares Cancel, Stop, and Start methods.
+    ///   Verifies that <see cref="IClockTimer"/> declares Cancel, Stop, and Start methods,
+    ///   and that async disposal is reachable through the contract (via <see cref="IAsyncDisposable"/>).
     /// </summary>
     [Fact]
     public void IClockTimer_DeclaresRequiredMethods ()
@@ -76,6 +79,14 @@ public class UsingCommonTimerContracts : UnitTestBase
         timerType.GetMethod("Cancel").Should().NotBeNull();
         timerType.GetMethod("Stop").Should().NotBeNull();
         timerType.GetMethod("Start").Should().NotBeNull();
+        Type? asyncDisposable = timerType.GetInterface(nameof(IAsyncDisposable));
+        asyncDisposable.Should().NotBeNull();
+        asyncDisposable!.GetMethod(
+            nameof(IAsyncDisposable.DisposeAsync),
+            BindingFlags.Public | BindingFlags.Instance,
+            binder: null,
+            types: Type.EmptyTypes,
+            modifiers: null).Should().NotBeNull();
     }
     //----------------------------------------------------------------------------
 

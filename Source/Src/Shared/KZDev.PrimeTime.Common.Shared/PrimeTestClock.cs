@@ -2,6 +2,7 @@
 // This file is part of the PrimeTime project.
 
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -564,6 +565,23 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Clock.RemoveIntervalTimer(this);
         }
         //------------------------------------------------------------------------
+
+        #region IAsyncDisposable Implementation
+
+        //------------------------------------------------------------------------
+        /// <inheritdoc />
+        public ValueTask DisposeAsync ()
+        {
+            Dispose();
+#if NET
+            return ValueTask.CompletedTask;
+#else
+            return new ValueTask();
+#endif
+        }
+        //------------------------------------------------------------------------
+
+        #endregion IAsyncDisposable Implementation
     }
     //============================================================================
 
@@ -1367,6 +1385,23 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             Clock.RemoveDayTimeTimer(this);
         }
         //------------------------------------------------------------------------
+
+        #region IAsyncDisposable Implementation
+
+        //------------------------------------------------------------------------
+        /// <inheritdoc />
+        public ValueTask DisposeAsync ()
+        {
+            Dispose();
+#if NET
+            return ValueTask.CompletedTask;
+#else
+            return new ValueTask();
+#endif
+        }
+        //------------------------------------------------------------------------
+
+#endregion IAsyncDisposable Implementation
     }
     //============================================================================
 
@@ -1469,16 +1504,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
     //============================================================================
 
-    #endregion Nested types — Virtual day-time timer
+#endregion Nested types — Virtual day-time timer
 #endif
 
 #if !SYSTEMCLOCK
-    #region Nested types — Noda virtual interval extensions
+            #region Nested types — Noda virtual interval extensions
 
-    //============================================================================
-    /// <summary>
-    ///   NodaTime <see cref="Duration"/> and <see cref="Instant"/> surface for shared virtual interval timers.
-    /// </summary>
+            //============================================================================
+            /// <summary>
+            ///   NodaTime <see cref="Duration"/> and <see cref="Instant"/> surface for shared virtual interval timers.
+            /// </summary>
     private abstract partial class VirtualIntervalTimerBase
     {
         //------------------------------------------------------------------------

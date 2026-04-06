@@ -2,6 +2,7 @@
 // This file is part of the PrimeTime project.
 
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -682,6 +683,23 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
     }
     //----------------------------------------------------------------------------
+
+    #region IAsyncDisposable Implementation
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public ValueTask DisposeAsync ()
+    {
+        Dispose();
+#if NET
+        return ValueTask.CompletedTask;
+#else
+        return new ValueTask();
+#endif
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion IAsyncDisposable Implementation
 
     #endregion IClockIntervalTimer Implementation
 

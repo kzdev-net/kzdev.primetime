@@ -5,6 +5,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -752,6 +753,23 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
+
+    #region IAsyncDisposable Implementation
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public ValueTask DisposeAsync ()
+    {
+        Dispose();
+#if NET
+        return ValueTask.CompletedTask;
+#else
+        return new ValueTask();
+#endif
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion IAsyncDisposable Implementation
 
     #endregion Interface Implementations
 }

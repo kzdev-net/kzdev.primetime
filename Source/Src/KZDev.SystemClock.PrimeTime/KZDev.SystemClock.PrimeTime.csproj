@@ -19,7 +19,9 @@
 	<Import Project="..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 		<PackageReference Include="Microsoft.Bcl.TimeProvider" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" />
 	</ItemGroup>
 
 	<ItemGroup>
