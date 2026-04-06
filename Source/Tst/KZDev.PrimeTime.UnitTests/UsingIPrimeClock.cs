@@ -115,8 +115,8 @@ private const int SleepTestDurationMilliseconds = 30;
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> with a <see cref="FakeClock"/> at a fixed instant
-    ///   yields consistent "now" values: Instant matches UtcNow.ToInstant(), LocalZonedNow and
-    ///   LocalNow derive from the same instant, and time/date components match the zoned values.
+    ///   yields consistent "now" values: Instant matches UtcNowInstant.ToInstant(), LocalZonedNowInstant and
+    ///   LocalNowInstant derive from the same instant, and time/date components match the zoned values.
     /// </summary>
     [Fact]
     public void PrimeClock_WithFakeClock_NowMembersAreConsistentWithFixedInstant ()
@@ -126,63 +126,64 @@ private const int SleepTestDurationMilliseconds = 30;
         IPrimeClock clock = new PrimeClock(new FakeClock(instant), localZone);
 
         clock.NowInstant.Should().Be(instant);
-        clock.UtcNow.ToInstant().Should().Be(instant);
-        clock.UtcZonedNow.ToInstant().Should().Be(instant);
-        clock.LocalZonedNow.ToInstant().Should().Be(instant);
-        clock.LocalZonedNow.Zone.Should().Be(localZone);
-        clock.LocalNow.Should().Be(clock.LocalZonedNow.LocalDateTime);
-        clock.UtcNowTime.Should().Be(clock.UtcNow.TimeOfDay);
-        clock.UtcNowDate.Should().Be(clock.UtcNow.Date);
-        clock.LocalNowTime.Should().Be(clock.LocalZonedNow.TimeOfDay);
-        clock.LocalNowDate.Should().Be(clock.LocalZonedNow.Date);
+        clock.UtcNowInstant.ToInstant().Should().Be(instant);
+        clock.UtcZonedNowInstant.ToInstant().Should().Be(instant);
+        clock.LocalZonedNowInstant.ToInstant().Should().Be(instant);
+        clock.LocalZonedNowInstant.Zone.Should().Be(localZone);
+        clock.LocalNowInstant.Should().Be(clock.LocalZonedNowInstant.LocalDateTime);
+        clock.UtcNowTime.Should().Be(clock.UtcNowInstant.TimeOfDay);
+        clock.UtcNowDate.Should().Be(clock.UtcNowInstant.Date);
+        clock.LocalNowTime.Should().Be(clock.LocalZonedNowInstant.TimeOfDay);
+        clock.LocalNowDate.Should().Be(clock.LocalZonedNowInstant.Date);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> UTC "now" members are consistent: zone is UTC,
-    ///   UtcZonedNow is in UTC, and UtcNow time/date components match UtcNowTime and UtcNowDate.
+    ///   UtcZonedNowInstant is in UTC, and UtcNowInstant time/date components match UtcNowTime and UtcNowDate.
     ///   Time is asserted within a 2-second tolerance because each property read obtains a fresh
     ///   instant; date must match exactly (same calendar day).
     /// </summary>
     [Fact]
-    public void PrimeClock_UtcNowMembersAreConsistent ()
+    public void PrimeClock_UtcNowInstantMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
-        ZonedDateTime utcNow = clock.UtcNow;
+        ZonedDateTime utcNowInstant = clock.UtcNowInstant;
         LocalTime utcNowTime = clock.UtcNowTime;
         LocalDate utcNowDate = clock.UtcNowDate;
 
-        utcNow.Zone.Should().Be(DateTimeZone.Utc);
-        clock.UtcZonedNow.Zone.Should().Be(DateTimeZone.Utc);
-        long nanoDiff = Math.Abs(utcNow.TimeOfDay.NanosecondOfDay - utcNowTime.NanosecondOfDay);
+        utcNowInstant.Zone.Should().Be(DateTimeZone.Utc);
+        clock.UtcZonedNowInstant.Zone.Should().Be(DateTimeZone.Utc);
+        long nanoDiff = Math.Abs(utcNowInstant.TimeOfDay.NanosecondOfDay - utcNowTime.NanosecondOfDay);
         nanoDiff.Should().BeLessThanOrEqualTo(2_000_000_000L, "time of day should be within 2 seconds across sequential reads");
-        utcNow.Date.Year.Should().Be(utcNowDate.Year);
-        utcNow.Date.Month.Should().Be(utcNowDate.Month);
-        utcNow.Date.Day.Should().Be(utcNowDate.Day);
+        utcNowInstant.Date.Year.Should().Be(utcNowDate.Year);
+        utcNowInstant.Date.Month.Should().Be(utcNowDate.Month);
+        utcNowInstant.Date.Day.Should().Be(utcNowDate.Day);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClock"/> local "now" members are consistent:
-    ///   LocalZonedNow has the system default zone and its LocalDateTime, TimeOfDay, and Date
+    ///   LocalZonedNowInstant has the system default zone and its LocalDateTime, TimeOfDay, and Date
     ///   are internally consistent.
     /// </summary>
     [Fact]
     public void PrimeClock_LocalNowMembersAreConsistent ()
     {
         IPrimeClock clock = new PrimeClock();
-        ZonedDateTime localZonedNow = clock.LocalZonedNow;
+        ZonedDateTime localZonedNowInstant = clock.LocalZonedNowInstant;
 
-        localZonedNow.Zone.Should().Be(DateTimeZoneProviders.Bcl.GetSystemDefault());
-        localZonedNow.LocalDateTime.TimeOfDay.Should().Be(localZonedNow.TimeOfDay);
-        localZonedNow.LocalDateTime.Date.Should().Be(localZonedNow.Date);
+        localZonedNowInstant.Zone.Should().Be(DateTimeZoneProviders.Bcl.GetSystemDefault());
+        localZonedNowInstant.LocalDateTime.TimeOfDay.Should().Be(localZonedNowInstant.TimeOfDay);
+        localZonedNowInstant.LocalDateTime.Date.Should().Be(localZonedNowInstant.Date);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that at a fixed instant, <see cref="PrimeClock"/> with a <see cref="FakeClock"/>
     ///   returns exact time-only and date-only "now" values: UtcNowTime/UtcNowDate, and
-    ///   LocalNowTime/LocalNowDate matching the same instant when using UTC as the local zone.
+    ///   LocalNowTime/LocalNowDate matching the same instant when using UTC as the local zone
+    ///   (via UtcNowInstant/LocalZonedNowInstant).
     /// </summary>
     [Fact]
     public void PrimeClock_WithFakeClock_TimeOnlyAndDateOnlyReturnExactValuesAtFixedInstant ()
@@ -200,7 +201,7 @@ private const int SleepTestDurationMilliseconds = 30;
 
     /// <summary>
     ///   Verifies that advancing a <see cref="FakeClock"/> used by <see cref="PrimeClock"/> updates
-    ///   all "now" values (Instant, UtcNow, LocalZonedNow, time/date components) to the new instant.
+    ///   all "now" values (Instant, UtcNowInstant, LocalZonedNowInstant, time/date components) to the new instant.
     /// </summary>
     [Fact]
     public void PrimeClock_WithFakeClock_AdvanceUpdatesNow ()
@@ -219,10 +220,10 @@ private const int SleepTestDurationMilliseconds = 30;
         fakeClock.Advance(advanceBy);
 
         clock.NowInstant.Should().Be(expectedAfter);
-        clock.UtcNow.ToInstant().Should().Be(expectedAfter);
+        clock.UtcNowInstant.ToInstant().Should().Be(expectedAfter);
         clock.UtcNowDate.Should().Be(new(2025, 3, 7));
         clock.UtcNowTime.Should().Be(new(12, 30, 0));
-        clock.LocalZonedNow.ToInstant().Should().Be(expectedAfter);
+        clock.LocalZonedNowInstant.ToInstant().Should().Be(expectedAfter);
     }
     //----------------------------------------------------------------------------
 

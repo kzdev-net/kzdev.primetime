@@ -131,52 +131,52 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime UtcNow => _clock.GetCurrentInstant().InUtc();
+    public ZonedDateTime UtcNowInstant => _clock.GetCurrentInstant().InUtc();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime LocalZonedNow => _clock.GetCurrentInstant().InZone(_systemDefaultZone);
+    public ZonedDateTime LocalZonedNowInstant => _clock.GetCurrentInstant().InZone(_systemDefaultZone);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime UtcZonedNow => UtcNow;
+    public ZonedDateTime UtcZonedNowInstant => UtcNowInstant;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDateTime LocalNow => LocalZonedNow.LocalDateTime;
+    public LocalDateTime LocalNowInstant => LocalZonedNowInstant.LocalDateTime;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime LocalNowTime => LocalZonedNow.TimeOfDay;
+    public LocalTime LocalNowTime => LocalZonedNowInstant.TimeOfDay;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime UtcNowTime => UtcNow.TimeOfDay;
+    public LocalTime UtcNowTime => UtcNowInstant.TimeOfDay;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate LocalNowDate => LocalZonedNow.Date;
+    public LocalDate LocalNowDate => LocalZonedNowInstant.Date;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate UtcNowDate => UtcNow.Date;
+    public LocalDate UtcNowDate => UtcNowInstant.Date;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowOffset => LocalZonedNow.ToDateTimeOffset();
+    public DateTimeOffset LocalNowOffset => LocalZonedNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowOffset => UtcNow.ToDateTimeOffset();
+    public DateTimeOffset UtcNowOffset => UtcNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

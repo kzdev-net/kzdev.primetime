@@ -84,7 +84,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeTestClock"/> with initial instant and zone returns correct UtcNow and LocalZonedNow.
+    ///   Verifies that <see cref="PrimeTestClock"/> with initial instant and zone returns correct UtcNowInstant and LocalZonedNowInstant.
     /// </summary>
     [Fact]
     public void PrimeTestClock_WithInitialInstantAndZone_ReturnsCorrectZonedNow ()
@@ -93,8 +93,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         DateTimeZone utc = DateTimeZone.Utc;
         IPrimeTestClock clock = new PrimeTestClock(initial, utc);
         clock.NowInstant.Should().Be(initial);
-        clock.UtcNow.ToInstant().Should().Be(initial);
-        clock.LocalZonedNow.Zone.Should().Be(utc);
+        clock.UtcNowInstant.ToInstant().Should().Be(initial);
+        clock.LocalZonedNowInstant.Zone.Should().Be(utc);
     }
     //----------------------------------------------------------------------------
 
@@ -112,7 +112,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         clock.SetInstant(setInstant);
         clock.NowInstant.Should().Be(setInstant);
-        clock.UtcNow.ToInstant().Should().Be(setInstant);
+        clock.UtcNowInstant.ToInstant().Should().Be(setInstant);
     }
     //----------------------------------------------------------------------------
 
@@ -138,8 +138,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2020, 1, 1, 0, 0, 0), DateTimeZone.Utc);
         LocalDateTime local = new LocalDate(2025, 3, 15).At(new LocalTime(9, 30));
         clock.SetLocalTime(local);
-        clock.LocalNow.Should().Be(local);
-        clock.UtcNow.LocalDateTime.Should().Be(local);
+        clock.LocalNowInstant.Should().Be(local);
+        clock.UtcNowInstant.LocalDateTime.Should().Be(local);
     }
     //----------------------------------------------------------------------------
 

@@ -160,7 +160,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
         {
             // UTC schedule: use today's UTC calendar date, attach _targetTimeOfDay, map through UTC.
             // If that instant is still on or before now, use tomorrow's UTC date instead.
-            ZonedDateTime utcZonedNow = _clock.UtcNow;
+            ZonedDateTime utcZonedNow = _clock.UtcNowInstant;
             LocalDate utcCalendarDate = utcZonedNow.Date;
             LocalDateTime scheduleLocalDateTime = utcCalendarDate.At(_targetTimeOfDay);
             ZonedDateTime scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
@@ -175,7 +175,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
         // Local schedule: calendar boundaries and DST follow the clock's local zone; skipped and duplicate
         // wall-time policies match DayTimeSchedulingPolicyTable (shared with the BCL stack).
-        ZonedDateTime localZonedNow = _clock.LocalZonedNow;
+        ZonedDateTime localZonedNow = _clock.LocalZonedNowInstant;
         return DayTimeNodaLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(nowInstant,
             localZonedNow.Zone, _targetTimeOfDay, _skippedTimeBehavior, _duplicateTimeBehavior);
     }

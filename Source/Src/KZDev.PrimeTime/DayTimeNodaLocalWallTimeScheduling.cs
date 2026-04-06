@@ -106,7 +106,7 @@ internal static class DayTimeNodaLocalWallTimeScheduling
     ///   Computes the duration from <paramref name="scheduleNow"/> until the next local day-time occurrence.
     /// </summary>
     /// <param name="scheduleNow">The clock&apos;s current instant.</param>
-    /// <param name="zone">The schedule zone (e.g. <see cref="IPrimeClock.LocalZonedNow"/><c>.Zone</c>).</param>
+    /// <param name="zone">The schedule zone (e.g. <see cref="IPrimeClock.LocalZonedNowInstant"/><c>.Zone</c>).</param>
     /// <param name="targetTimeOfDay">The recurring local time of day.</param>
     /// <param name="skippedTimeBehavior">Policy for invalid local wall times.</param>
     /// <param name="duplicateTimeBehavior">Policy for ambiguous local wall times.</param>

@@ -27,7 +27,7 @@ public partial interface IPrimeClock
     ///   <para>
     ///     The NodaTime-based package does not declare this member; local scheduling there uses the
     ///     NodaTime zone corresponding to the clock's current local zoned time
-    ///     (<c>LocalZonedNow.Zone</c>).
+    ///     (<c>LocalZonedNowInstant.Zone</c>).
     ///   </para>
     /// </remarks>
     TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get; }

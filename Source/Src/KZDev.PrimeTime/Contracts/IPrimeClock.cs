@@ -22,27 +22,27 @@ public partial interface IPrimeClock
     Instant NowInstant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the current local date and time in the system default time zone as a
+    ///   Gets the current local date and time (<see cref="Instant"/>) in the system default time zone as a
     ///   <see cref="LocalDateTime"/> (no time zone information).
     /// </summary>
-    LocalDateTime LocalNow { [DebuggerStepThrough] get; }
+    LocalDateTime LocalNowInstant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the current date and time in UTC as a <see cref="ZonedDateTime"/>.
+    ///   Gets the current date and time (<see cref="Instant"/>) in UTC as a <see cref="ZonedDateTime"/>.
     /// </summary>
-    ZonedDateTime UtcNow { [DebuggerStepThrough] get; }
+    ZonedDateTime UtcNowInstant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the current date and time in the system default time zone as a
+    ///   Gets the current date and time (<see cref="Instant"/>) in the system default time zone as a
     ///   <see cref="ZonedDateTime"/>.
     /// </summary>
-    ZonedDateTime LocalZonedNow { [DebuggerStepThrough] get; }
+    ZonedDateTime LocalZonedNowInstant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Gets the current date and time in UTC as a <see cref="ZonedDateTime"/>.
-    ///   Equivalent to <see cref="UtcNow"/> for symmetry with <see cref="LocalZonedNow"/>.
+    ///   Gets the current date and time (<see cref="Instant"/>) in UTC as a <see cref="ZonedDateTime"/>.
+    ///   Equivalent to <see cref="UtcNowInstant"/> for symmetry with <see cref="LocalZonedNowInstant"/>.
     /// </summary>
-    ZonedDateTime UtcZonedNow { [DebuggerStepThrough] get; }
+    ZonedDateTime UtcZonedNowInstant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Now (instant and zoned date and time)

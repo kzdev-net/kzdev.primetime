@@ -131,7 +131,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_ActionOverload_FiresAtRequestedLocalTime ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        LocalTime target = clock.LocalNow.PlusMinutes(10).TimeOfDay;
+        LocalTime target = clock.LocalNowInstant.PlusMinutes(10).TimeOfDay;
         int fired = 0;
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => fired++, CancellationToken.None);
@@ -150,7 +150,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_ContextAndTokenOverload_ForwardsStateRegistrationAndToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        LocalTime target = clock.LocalNow.PlusMinutes(10).TimeOfDay;
+        LocalTime target = clock.LocalNowInstant.PlusMinutes(10).TimeOfDay;
         object state = new();
         object? receivedState = null;
         IClockDayTimeTimer? receivedTimer = null;
@@ -179,7 +179,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
     public void RegisterAsyncTimeOfDay_TokenOnlyOverload_ForwardsCancellationToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        LocalTime target = clock.LocalNow.PlusMinutes(10).TimeOfDay;
+        LocalTime target = clock.LocalNowInstant.PlusMinutes(10).TimeOfDay;
         using CancellationTokenSource cts = new();
         CancellationToken? receivedToken = null;
         int fired = 0;
@@ -207,7 +207,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
     public void RegisterTimeOfDay_LocalTimeOfDayContextOverload_ForwardsStateAndRegistration ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        LocalDateTime targetLocalTime = clock.LocalNow.PlusMinutes(10);
+        LocalDateTime targetLocalTime = clock.LocalNowInstant.PlusMinutes(10);
         LocalTimeOfDay target = new(new TimeOnly(targetLocalTime.Hour, targetLocalTime.Minute, targetLocalTime.Second));
         object state = new();
         object? receivedState = null;
@@ -232,7 +232,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
     public void RegisterAsyncTimeOfDay_LocalTimeOfDayContextOverload_ForwardsStateRegistrationAndToken ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        LocalDateTime targetLocalTime = clock.LocalNow.PlusMinutes(10);
+        LocalDateTime targetLocalTime = clock.LocalNowInstant.PlusMinutes(10);
         LocalTimeOfDay target = new(new TimeOnly(targetLocalTime.Hour, targetLocalTime.Minute, targetLocalTime.Second));
         object state = new();
         object? receivedState = null;

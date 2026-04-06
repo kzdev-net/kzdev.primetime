@@ -69,7 +69,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTime_CallbackFiresNearTargetTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime targetTime = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime targetTime = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
@@ -96,7 +96,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTime_ReturnsTimerWithCorrectContractProperties ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
@@ -131,7 +131,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_WithContext_CallbackReceivesStateAndRegistration ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
@@ -156,7 +156,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterAsyncTimeOfDay_LocalTime_CallbackFiresNearTargetTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
@@ -188,7 +188,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_ChangeLocalTime_ReschedulesAndFiresAtNewTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime farTarget = (clock.NowInstant + Duration.FromSeconds(10)).InZone(clock.LocalZonedNow.Zone)
+        LocalTime farTarget = (clock.NowInstant + Duration.FromSeconds(10)).InZone(clock.LocalZonedNowInstant.Zone)
             .LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
@@ -198,7 +198,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             firedAt = clock.NowInstant;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        LocalTime newTarget = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime newTarget = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         timer.Change(newTarget).Should().BeTrue();
         Instant afterChange = clock.NowInstant;
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
@@ -216,7 +216,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_ChangeDuration_ReturnsFalse ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
@@ -238,7 +238,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_CancelBeforeFire_StateCancelled ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + Duration.FromSeconds(5)).InZone(clock.LocalZonedNow.Zone)
+        LocalTime target = (clock.NowInstant + Duration.FromSeconds(5)).InZone(clock.LocalZonedNowInstant.Zone)
             .LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
@@ -261,7 +261,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_WithDefaultOptions_RegistrationExposesDefaultBehaviors ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNow.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
