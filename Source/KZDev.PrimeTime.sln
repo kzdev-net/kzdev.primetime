@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 		..\LICENSE = ..\LICENSE
 		..\nuget.config = ..\nuget.config
+		Src\package.cmd = Src\package.cmd
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -71,6 +72,12 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "KZDev.PrimeTime.Common.Testing.Shared", "Src\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.shproj", "{B7C10AEB-3B76-4FF2-A1A8-6D2AF4397CE4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{781D66AD-061E-40C1-BB22-89A27800E33D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{AB49D596-3102-4EFC-A89F-E7103DC6C306}"
+	ProjectSection(SolutionItems) = preProject
+		Src\Package\nuget.icon.png = Src\Package\nuget.icon.png
+		Src\Package\nuget.readme.md = Src\Package\nuget.readme.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
