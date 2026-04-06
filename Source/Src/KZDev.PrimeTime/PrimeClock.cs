@@ -1,7 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
-
-using System;
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using NodaTime;
 using NodaTime.TimeZones;
@@ -193,95 +191,6 @@ internal sealed partial class PrimeClock
 #endif
 
     #endregion IPrimeClock Implementation
-
-    #region IPrimeClock — Delays (Duration)
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    /// <remarks>
-    ///   Durations greater than <see cref="TimeSpan.MaxValue"/> are automatically clamped
-    ///   to <see cref="TimeSpan.MaxValue"/> before the underlying BCL delay call. In that
-    ///   case, <see cref="Thread.Sleep(TimeSpan)"/> blocks for approximately 29,000 years,
-    ///   so passing unreasonably large durations is still undesirable despite the clamping.
-    /// </remarks>
-    public void Sleep (Duration duration)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        Thread.Sleep(timeSpan);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        return Task.Delay(timeSpan);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
-        return Task.Delay(timeSpan, cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeClock — Delays (Duration)
-
-    #region IPrimeClock — Time cancellation (Duration)
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource cancellationTokenSource = new(timeSpan);
-        return new TimeCancellationTokenSource(cancellationTokenSource);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
-        CancellationTokenSource linkedCancellationTokenSource =
-            CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, cancellationToken);
-        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
-        CancellationToken secondCancellationToken)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
-        CancellationTokenSource linkedCancellationTokenSource =
-            CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, firstCancellationToken, secondCancellationToken);
-        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
-        params CancellationToken[] cancellationTokens)
-    {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
-        CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
-        CancellationTokenSource linkedCancellationTokenSource =
-            CancellationTokenSource.CreateLinkedTokenSource([timeLimitedCancellationTokenSource.Token, .. cancellationTokens]);
-        return new TimeCancellationTokenSource(linkedCancellationTokenSource, [timeLimitedCancellationTokenSource]);
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeClock — Time cancellation (Duration)
 
     #region IPrimeClock — Interval timers (RegisterTimer)
 
