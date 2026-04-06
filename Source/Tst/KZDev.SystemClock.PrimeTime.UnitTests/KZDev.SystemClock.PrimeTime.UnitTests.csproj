@@ -32,4 +32,8 @@
         <Using Include="Xunit" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
+        <PackageReference Include="Microsoft.Bcl.TimeProvider" />
+    </ItemGroup>
+
 </Project>

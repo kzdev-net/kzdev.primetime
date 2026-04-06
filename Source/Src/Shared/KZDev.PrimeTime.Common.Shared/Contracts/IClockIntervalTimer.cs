@@ -9,33 +9,16 @@ namespace KZDev.PrimeTime;
 ///   Registration for an interval timer created from a clock's timer registration API;
 ///   supporting change of due time and repeat interval (BCL <see cref="TimeSpan"/> subset).
 /// </summary>
-public partial interface IClockIntervalTimer : IIntervalTimer
+/// <remarks>
+///   <para>
+///     This interface extends <see cref="System.Threading.ITimer"/> on all target frameworks.
+///     On .NET 8+ the type is in the shared framework; on .NET Standard 2.0 (and .NET Framework
+///     when using the same compatibility stack) it is supplied by the
+///     <c>Microsoft.Bcl.TimeProvider</c> package referenced by this library.
+///   </para>
+/// </remarks>
+public partial interface IClockIntervalTimer : IIntervalTimer, global::System.Threading.ITimer
 {
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Changes the next callback time and, for repeating timers, the repeat interval.
-    /// </summary>
-    /// <param name="nextInterval">
-    ///   The time until the next callback.
-    /// </param>
-    /// <param name="repeatInterval">
-    ///   The interval for subsequent callbacks. Use <see cref="Timeout.InfiniteTimeSpan"/>
-    ///   for a one-shot timer (no repeat).
-    /// </param>
-    /// <returns>
-    ///   <c>true</c> if the change was applied; <c>false</c> if the registration was
-    ///   cancelled, disposed, or otherwise invalid.
-    /// </returns>
-    /// <remarks>
-    ///   For a currently non-repeating timer, passing a finite <paramref name="repeatInterval"/>
-    ///   may be disallowed by the implementation.
-    /// </remarks>
-    /// <exception cref="InvalidOperationException">
-    ///   This registration is one-shot (not repeating) and <paramref name="repeatInterval"/> is a
-    ///   finite, positive interval, which would convert it to a repeating timer.
-    /// </exception>
-    bool Change (TimeSpan nextInterval, TimeSpan repeatInterval);
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Changes the interval of this registration.
     /// </summary>
@@ -50,8 +33,8 @@ public partial interface IClockIntervalTimer : IIntervalTimer
     /// <remarks>
     ///   Does not change whether the timer is repeating or one-shot. For a repeating
     ///   timer, <paramref name="interval"/> is used for both the next and subsequent
-    ///   intervals. Use <see cref="Change(TimeSpan, TimeSpan)"/> to set next and repeat
-    ///   intervals separately.
+    ///   intervals. To set the next due time and repeat interval independently, use
+    ///   <see cref="System.Threading.ITimer.Change(System.TimeSpan,System.TimeSpan)"/>.
     /// </remarks>
     bool Change (TimeSpan interval);
     //----------------------------------------------------------------------------

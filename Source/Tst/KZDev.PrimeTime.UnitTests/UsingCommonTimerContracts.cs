@@ -194,6 +194,20 @@ public class UsingCommonTimerContracts : UnitTestBase
 
     #endregion IIntervalTimer contract
 
+    #region IClockIntervalTimer contract
+
+    /// <summary>
+    ///   Verifies that <see cref="IClockIntervalTimer"/> extends <see cref="System.Threading.ITimer"/>.
+    /// </summary>
+    [Fact]
+    public void IClockIntervalTimer_ExtendsITimer ()
+    {
+        typeof(IClockIntervalTimer).GetInterfaces().Should().Contain(typeof(System.Threading.ITimer));
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion IClockIntervalTimer contract
+
     #region TimerState enum
 
     /// <summary>

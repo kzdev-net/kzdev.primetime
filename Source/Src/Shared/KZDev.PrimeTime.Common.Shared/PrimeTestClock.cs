@@ -1,8 +1,7 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -469,17 +468,20 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
-        /// <inheritdoc />
-        public bool Change (TimeSpan interval) =>
-            Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <inheritdoc />
+        /// <summary>
+        ///   Applies a new due time and repeat interval to this registration.
+        /// </summary>
+        /// <param name="nextInterval">Time until the next callback.</param>
+        /// <param name="repeatInterval">
+        ///   Interval for subsequent callbacks, or <see cref="Timeout.InfiniteTimeSpan"/> for one-shot.
+        /// </param>
+        /// <returns>
+        ///   <c>true</c> if the change was stored or applied; <c>false</c> if invalid or cancelled.
+        /// </returns>
         /// <exception cref="InvalidOperationException">
         ///   This registration is one-shot and <paramref name="repeatInterval"/> is a finite positive interval.
         /// </exception>
-        public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
+        private bool ChangeNextAndRepeat (TimeSpan nextInterval, TimeSpan repeatInterval)
         {
             lock (Gate)
             {
@@ -498,6 +500,23 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             }
         }
         //------------------------------------------------------------------------
+
+        //------------------------------------------------------------------------
+        /// <inheritdoc />
+        public bool Change (TimeSpan interval) =>
+            ChangeNextAndRepeat(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
+        //------------------------------------------------------------------------
+
+        #region ITimer Implementation
+
+        //------------------------------------------------------------------------
+        /// <inheritdoc />
+        bool ITimer.Change (TimeSpan dueTime, TimeSpan period) =>
+            ChangeNextAndRepeat(dueTime, period);
+        //------------------------------------------------------------------------
+
+        #endregion ITimer Implementation
+
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
@@ -1401,7 +1420,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         }
         //------------------------------------------------------------------------
 
-#endregion IAsyncDisposable Implementation
+        #endregion IAsyncDisposable Implementation
     }
     //============================================================================
 
@@ -1504,16 +1523,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     }
     //============================================================================
 
-#endregion Nested types — Virtual day-time timer
+    #endregion Nested types — Virtual day-time timer
 #endif
 
 #if !SYSTEMCLOCK
-            #region Nested types — Noda virtual interval extensions
+    #region Nested types — Noda virtual interval extensions
 
-            //============================================================================
-            /// <summary>
-            ///   NodaTime <see cref="Duration"/> and <see cref="Instant"/> surface for shared virtual interval timers.
-            /// </summary>
+    //============================================================================
+    /// <summary>
+    ///   NodaTime <see cref="Duration"/> and <see cref="Instant"/> surface for shared virtual interval timers.
+    /// </summary>
     private abstract partial class VirtualIntervalTimerBase
     {
         //------------------------------------------------------------------------
@@ -1531,7 +1550,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         //------------------------------------------------------------------------
         /// <inheritdoc />
         public bool Change (Duration interval) =>
-            Change(interval.ToTimeSpan(), IsRepeating ? interval.ToTimeSpan() : Timeout.InfiniteTimeSpan);
+            ChangeNextAndRepeat(interval.ToTimeSpan(), IsRepeating ? interval.ToTimeSpan() : Timeout.InfiniteTimeSpan);
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -1539,7 +1558,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         public bool Change (Duration nextInterval, Duration repeatInterval)
         {
             TimeSpan repeatTs = repeatInterval == NoRepeatSentinel ? Timeout.InfiniteTimeSpan : repeatInterval.ToTimeSpan();
-            return Change(nextInterval.ToTimeSpan(), repeatTs);
+            return ChangeNextAndRepeat(nextInterval.ToTimeSpan(), repeatTs);
         }
         //------------------------------------------------------------------------
     }

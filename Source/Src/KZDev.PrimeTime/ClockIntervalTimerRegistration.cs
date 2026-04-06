@@ -150,7 +150,7 @@ private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
     public bool Change (Duration interval)
     {
         Duration repeat = IsRepeating ? interval : NoRepeatSentinel;
-        return Change(NodaDurationBclConversions.ToTimeSpanForTimerInterval(interval),
+        return ChangeNextAndRepeat(NodaDurationBclConversions.ToTimeSpanForTimerInterval(interval),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeat));
     }
     //----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
         TimeSpan repeatTs = repeatInterval == NoRepeatSentinel
             ? Timeout.InfiniteTimeSpan
             : NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval);
-        return Change(nextTs, repeatTs);
+        return ChangeNextAndRepeat(nextTs, repeatTs);
     }
     //----------------------------------------------------------------------------
 

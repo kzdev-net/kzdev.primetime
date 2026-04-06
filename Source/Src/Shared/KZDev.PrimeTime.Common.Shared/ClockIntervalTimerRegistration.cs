@@ -1,8 +1,7 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -589,8 +588,20 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     #region IClockIntervalTimer Implementation
 
     //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool Change (TimeSpan nextInterval, TimeSpan repeatInterval)
+    /// <summary>
+    ///   Applies a new due time and repeat interval to this registration.
+    /// </summary>
+    /// <param name="nextInterval">Time until the next callback.</param>
+    /// <param name="repeatInterval">
+    ///   Interval for subsequent callbacks, or <see cref="Timeout.InfiniteTimeSpan"/> for one-shot.
+    /// </param>
+    /// <returns>
+    ///   <c>true</c> if the change was stored or applied; <c>false</c> if invalid or cancelled.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///   This registration is one-shot and <paramref name="repeatInterval"/> is a finite positive interval.
+    /// </exception>
+    private bool ChangeNextAndRepeat (TimeSpan nextInterval, TimeSpan repeatInterval)
     {
         lock (_gate)
         {
@@ -613,8 +624,19 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Change (TimeSpan interval) =>
-        Change(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
+        ChangeNextAndRepeat(interval, IsRepeating ? interval : Timeout.InfiniteTimeSpan);
     //----------------------------------------------------------------------------
+
+    #region ITimer Implementation
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    bool ITimer.Change (TimeSpan dueTime, TimeSpan period) =>
+        ChangeNextAndRepeat(dueTime, period);
+    //----------------------------------------------------------------------------
+
+    #endregion ITimer Implementation
+
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
