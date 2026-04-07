@@ -473,6 +473,34 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies that <see cref="IClockTimer.CallbacksProcessing"/> returns <c>false</c> once the
+    ///   registration is cancelled, even if an async callback is still in flight.
+    /// </summary>
+    [Fact]
+    public void RegisterAsyncTimer_CallbackRunning_WhenCancelled_CallbacksProcessingReturnsFalse ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        using CancellationTokenSource cts = new();
+        using ManualResetEventSlim callbackStarted = new(false);
+        using SemaphoreSlim allowCallbackToExit = new(0, 1);
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay,
+            async ct =>
+            {
+                callbackStarted.Set();
+                await allowCallbackToExit.WaitAsync(GetAsyncTimerCallbackHoldTimeoutMilliseconds(WaitMargin), ct);
+            },
+            cts.Token);
+
+        callbackStarted.Wait(WaitMargin + ShortDelay, TestContext.Current.CancellationToken).Should().BeTrue();
+        cts.Cancel();
+        SpinWait.SpinUntil(() => timer.IsCancelled, WaitMargin).Should().BeTrue();
+        timer.CallbacksProcessing.Should().BeFalse();
+        timer.State.Should().Be(TimerState.Cancelled);
+        allowCallbackToExit.Release();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that with Unsafe option the timer callback is invoked (execution context is not
     ///   captured/restored). Full isolation from the calling thread's AsyncLocal may depend on the
     ///   BCL timer and thread pool behavior.

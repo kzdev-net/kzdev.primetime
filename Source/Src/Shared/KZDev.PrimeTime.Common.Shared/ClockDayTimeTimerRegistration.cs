@@ -282,7 +282,19 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public bool CallbacksProcessing => _callbacksRunning > 0;
+    public bool CallbacksProcessing
+    {
+        get
+        {
+            lock (_gate)
+            {
+                TimerState state = _state;
+                return state != TimerState.Cancelled &&
+                       state != TimerState.Disposed &&
+                       _callbacksRunning > 0;
+            }
+        }
+    }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

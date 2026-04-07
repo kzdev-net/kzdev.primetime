@@ -356,7 +356,19 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool CallbacksProcessing => CallbacksRunning > 0;
+        public bool CallbacksProcessing
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    TimerState state = State;
+                    return state != TimerState.Cancelled &&
+                           state != TimerState.Disposed &&
+                           CallbacksRunning > 0;
+                }
+            }
+        }
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -1104,7 +1116,19 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool CallbacksProcessing => CallbacksRunning > 0;
+        public bool CallbacksProcessing
+        {
+            get
+            {
+                lock (Gate)
+                {
+                    TimerState state = State;
+                    return state != TimerState.Cancelled &&
+                           state != TimerState.Disposed &&
+                           CallbacksRunning > 0;
+                }
+            }
+        }
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
