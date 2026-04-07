@@ -400,6 +400,8 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(ShortDelay);
         timer.Stop().Should().BeTrue();
         timer.State.Should().Be(TimerState.Disabled);
+        timer.IsActive.Should().BeTrue("disabled timers are still active until cancelled, disposed, or completed");
+        timer.Enabled.Should().BeFalse();
         signal.Wait(ShortDelay.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeFalse();
         timer.Change(ShortDelay).Should().BeTrue();
         timer.Start().Should().BeTrue();

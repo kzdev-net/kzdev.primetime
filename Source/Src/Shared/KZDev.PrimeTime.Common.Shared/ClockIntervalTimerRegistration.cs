@@ -247,10 +247,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         {
             lock (_gate)
             {
-                return _state != TimerState.Cancelled &&
-                       _state != TimerState.Completed &&
-                       _state != TimerState.Disposed &&
-                       _enabled;
+                // Capture local state value
+                TimerState state = _state;
+                return state != TimerState.Cancelled &&
+                       state != TimerState.Completed &&
+                       state != TimerState.Disposed;
             }
         }
     }

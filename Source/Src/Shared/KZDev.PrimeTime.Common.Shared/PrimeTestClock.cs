@@ -341,8 +341,17 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && IntervalTimerEnabled;
+        public bool IsActive
+        {
+            get
+            {
+                // Capture local state value
+                TimerState state = State;
+                return state != TimerState.Cancelled &&
+                       state != TimerState.Completed &&
+                       state != TimerState.Disposed;
+            }
+        }
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -1081,8 +1090,16 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool IsActive =>
-            State != TimerState.Cancelled && State != TimerState.Disposed && EnabledDayTime;
+        public bool IsActive
+        {
+            get
+            {
+                // Capture local state value
+                TimerState state = State;
+                return state != TimerState.Cancelled &&
+                       state != TimerState.Disposed;
+            }
+        }
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------

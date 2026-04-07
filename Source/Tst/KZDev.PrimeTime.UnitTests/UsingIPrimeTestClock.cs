@@ -583,6 +583,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         clock.Advance(Duration.FromHours(2));
         fireCount.Should().Be(1);
         timer.Enabled = false;
+        timer.IsActive.Should().BeTrue("disabled timers are still active until cancelled or disposed");
         clock.Advance(Duration.FromDays(1));
         fireCount.Should().Be(1);
     }

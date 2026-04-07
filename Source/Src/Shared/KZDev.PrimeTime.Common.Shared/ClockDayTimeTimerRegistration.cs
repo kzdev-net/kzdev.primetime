@@ -263,10 +263,16 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public bool IsActive =>
-        _state != TimerState.Cancelled &&
-        _state != TimerState.Disposed &&
-        _enabled;
+    public bool IsActive
+    {
+        get
+        {
+            // Capture local state value
+            TimerState state = _state;
+            return state != TimerState.Cancelled &&
+                   state != TimerState.Disposed;
+        }
+    }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
