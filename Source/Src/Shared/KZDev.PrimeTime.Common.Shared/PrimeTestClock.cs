@@ -1585,7 +1585,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public Instant RegisteredInstant => Instant.FromDateTimeOffset(RegisteredTime);
+        public Instant RegisteredInstant { [DebuggerStepThrough] get => Instant.FromDateTimeOffset(RegisteredTime); }
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -2083,7 +2083,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         get
         {
             lock (_gate)
+            {
                 return _isRunning;
+            }
         }
     }
     //----------------------------------------------------------------------------

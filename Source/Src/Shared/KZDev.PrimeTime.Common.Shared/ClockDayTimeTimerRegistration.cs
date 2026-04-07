@@ -277,7 +277,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public TimerState State => _state;
+    public TimerState State { [DebuggerStepThrough] get => _state; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

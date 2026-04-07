@@ -39,7 +39,7 @@ private partial DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get => _
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial bool IsRepeatingTimer => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel;
+private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

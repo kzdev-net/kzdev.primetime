@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -19,7 +17,7 @@ public interface IPrimeTestTime : IPrimeTime
     /// <remarks>
     ///   When <c>false</c>, virtual time is frozen except for explicit test-time operations on the clock.
     /// </remarks>
-    bool IsRunning { [DebuggerStepThrough] get; }
+    bool IsRunning { get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################

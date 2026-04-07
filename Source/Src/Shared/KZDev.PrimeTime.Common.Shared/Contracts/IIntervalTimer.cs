@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -22,7 +20,7 @@ public interface IIntervalTimer : IClockTimer
     ///   This only applies to repeating time-interval registrations, and is <c>false</c>
     ///   for non-repeating registrations.
     /// </remarks>
-    bool IsResetAfterCallback { [DebuggerStepThrough] get; }
+    bool IsResetAfterCallback { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
@@ -43,7 +41,7 @@ public interface IIntervalTimer : IClockTimer
     ///     time-type agnostic.
     ///   </para>
     /// </remarks>
-    long ElapsedTime { [DebuggerStepThrough] get; }
+    long ElapsedTime { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time remaining until the next callback for this registration.
@@ -66,7 +64,7 @@ public interface IIntervalTimer : IClockTimer
     ///     indicates no next callback or not applicable.
     ///   </para>
     /// </remarks>
-    long TimeUntilNextCallback { [DebuggerStepThrough] get; }
+    long TimeUntilNextCallback { get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################

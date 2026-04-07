@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -19,30 +17,30 @@ public partial interface IPrimeClock
     /// <summary>
     ///   Gets the current instant on the global timeline (UTC).
     /// </summary>
-    Instant NowInstant { [DebuggerStepThrough] get; }
+    Instant NowInstant { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date and time (<see cref="Instant"/>) in the system default time zone as a
     ///   <see cref="LocalDateTime"/> (no time zone information).
     /// </summary>
-    LocalDateTime LocalNowInstant { [DebuggerStepThrough] get; }
+    LocalDateTime LocalNowInstant { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time (<see cref="Instant"/>) in UTC as a <see cref="ZonedDateTime"/>.
     /// </summary>
-    ZonedDateTime UtcNowInstant { [DebuggerStepThrough] get; }
+    ZonedDateTime UtcNowInstant { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time (<see cref="Instant"/>) in the system default time zone as a
     ///   <see cref="ZonedDateTime"/>.
     /// </summary>
-    ZonedDateTime LocalZonedNowInstant { [DebuggerStepThrough] get; }
+    ZonedDateTime LocalZonedNowInstant { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current date and time (<see cref="Instant"/>) in UTC as a <see cref="ZonedDateTime"/>.
     ///   Equivalent to <see cref="UtcNowInstant"/> for symmetry with <see cref="LocalZonedNowInstant"/>.
     /// </summary>
-    ZonedDateTime UtcZonedNowInstant { [DebuggerStepThrough] get; }
+    ZonedDateTime UtcZonedNowInstant { get; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Now (instant and zoned date and time)
@@ -53,22 +51,22 @@ public partial interface IPrimeClock
     /// <summary>
     ///   Gets the current local time of day (no date component) in the system default zone.
     /// </summary>
-    LocalTime LocalNowTime { [DebuggerStepThrough] get; }
+    LocalTime LocalNowTime { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC time of day (no date component).
     /// </summary>
-    LocalTime UtcNowTime { [DebuggerStepThrough] get; }
+    LocalTime UtcNowTime { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date (no time component) in the system default zone.
     /// </summary>
-    LocalDate LocalNowDate { [DebuggerStepThrough] get; }
+    LocalDate LocalNowDate { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date (no time component).
     /// </summary>
-    LocalDate UtcNowDate { [DebuggerStepThrough] get; }
+    LocalDate UtcNowDate { get; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Now (time-only and date-only)

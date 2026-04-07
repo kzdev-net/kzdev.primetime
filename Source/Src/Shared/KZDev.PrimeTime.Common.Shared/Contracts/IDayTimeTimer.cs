@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -16,17 +14,17 @@ public interface IDayTimeTimer : IClockTimer
     /// <summary>
     ///   Gets the concurrent trigger processing setting for this registration.
     /// </summary>
-    ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get; }
+    ConcurrentTriggerProcessing ConcurrentTriggerProcessing { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the skipped time behavior setting for this registration.
     /// </summary>
-    SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get; }
+    SkippedTimeBehavior SkippedTimeBehavior { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the duplicate time behavior setting for this registration.
     /// </summary>
-    DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get; }
+    DuplicateTimeBehavior DuplicateTimeBehavior { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
@@ -48,7 +46,7 @@ public interface IDayTimeTimer : IClockTimer
     ///     it uses the virtual UTC instant directly.
     ///   </para>
     /// </remarks>
-    long ElapsedTime { [DebuggerStepThrough] get; }
+    long ElapsedTime { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time remaining until the next scheduled callback for this registration.
@@ -65,7 +63,7 @@ public interface IDayTimeTimer : IClockTimer
     ///     registrations from the virtual UTC day.
     ///   </para>
     /// </remarks>
-    long TimeUntilNextCallback { [DebuggerStepThrough] get; }
+    long TimeUntilNextCallback { get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################

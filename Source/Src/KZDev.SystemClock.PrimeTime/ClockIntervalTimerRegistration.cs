@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
+using System.Diagnostics;
+
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
@@ -20,23 +22,23 @@ private DateTimeOffset _registeredTime;
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial TimeSpan InitialCallbackTimeSpan { get => _initialCallbackTime; set => _initialCallbackTime = value; }
+private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackTime; [DebuggerStepThrough] set => _initialCallbackTime = value; }
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial TimeSpan RepeatTimeSpanInterval { get => _repeatInterval; set => _repeatInterval = value; }
+private partial TimeSpan RepeatTimeSpanInterval { [DebuggerStepThrough] get => _repeatInterval; [DebuggerStepThrough] set => _repeatInterval = value; }
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial DateTimeOffset? NextCallbackUtc { get => _nextCallbackUtc; set => _nextCallbackUtc = value; }
+private partial DateTimeOffset? NextCallbackUtc { [DebuggerStepThrough] get => _nextCallbackUtc; [DebuggerStepThrough] set => _nextCallbackUtc = value; }
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial DateTimeOffset? LastCallbackUtc { get => _lastCallbackUtc; set => _lastCallbackUtc = value; }
+private partial DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get => _lastCallbackUtc; [DebuggerStepThrough] set => _lastCallbackUtc = value; }
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial bool IsRepeatingTimer => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero;
+private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero; }
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------

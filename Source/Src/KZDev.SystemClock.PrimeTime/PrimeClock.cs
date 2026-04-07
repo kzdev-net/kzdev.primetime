@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
@@ -57,36 +59,36 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowDateTimeOffset => _timeProvider.GetLocalNow();
+    public DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get => _timeProvider.GetLocalNow(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowDateTimeOffset => _timeProvider.GetUtcNow();
+    public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get => _timeProvider.GetUtcNow(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime LocalNowDateTime => _timeProvider.GetLocalNow().LocalDateTime;
+    public DateTime LocalNowDateTime { [DebuggerStepThrough] get => _timeProvider.GetLocalNow().LocalDateTime; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime UtcNowDateTime => _timeProvider.GetUtcNow().UtcDateTime;
+    public DateTime UtcNowDateTime { [DebuggerStepThrough] get => _timeProvider.GetUtcNow().UtcDateTime; }
     //----------------------------------------------------------------------------
 
 #if NET
     /// <inheritdoc />
-    public TimeOnly LocalNowTimeOnly => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+    public TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime); }
 
     /// <inheritdoc />
-    public TimeOnly UtcNowTimeOnly => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+    public TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime); }
 
     /// <inheritdoc />
-    public DateOnly LocalNowDateOnly => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime);
+    public DateOnly LocalNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime); }
 
     /// <inheritdoc />
-    public DateOnly UtcNowDateOnly => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+    public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime); }
 #endif
 
     #endregion IPrimeClock Implementation

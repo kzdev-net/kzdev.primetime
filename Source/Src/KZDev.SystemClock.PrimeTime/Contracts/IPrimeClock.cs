@@ -1,8 +1,6 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
-using System.Diagnostics;
-
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
@@ -30,7 +28,7 @@ public partial interface IPrimeClock
     ///     (<c>LocalZonedNowInstant.Zone</c>).
     ///   </para>
     /// </remarks>
-    TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get; }
+    TimeZoneInfo LocalScheduleTimeZone { get; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Local schedule zone

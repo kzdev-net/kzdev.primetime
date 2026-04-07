@@ -33,7 +33,7 @@ public sealed class NodaClockTimeChangedEventArgs : ClockTimeChangedEventArgs
     /// <summary>
     ///   Gets the current instant (UTC) of the clock after the time change.
     /// </summary>
-    public Instant Instant { get; }
+    public Instant Instant { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################

@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -126,81 +127,81 @@ internal sealed partial class PrimeClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public Instant NowInstant => _clock.GetCurrentInstant();
+    public Instant NowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime UtcNowInstant => _clock.GetCurrentInstant().InUtc();
+    public ZonedDateTime UtcNowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant().InUtc(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime LocalZonedNowInstant => _clock.GetCurrentInstant().InZone(_systemDefaultZone);
+    public ZonedDateTime LocalZonedNowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant().InZone(_systemDefaultZone); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public ZonedDateTime UtcZonedNowInstant => UtcNowInstant;
+    public ZonedDateTime UtcZonedNowInstant { [DebuggerStepThrough] get => UtcNowInstant; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDateTime LocalNowInstant => LocalZonedNowInstant.LocalDateTime;
+    public LocalDateTime LocalNowInstant { [DebuggerStepThrough] get => LocalZonedNowInstant.LocalDateTime; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime LocalNowTime => LocalZonedNowInstant.TimeOfDay;
+    public LocalTime LocalNowTime { [DebuggerStepThrough] get => LocalZonedNowInstant.TimeOfDay; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime UtcNowTime => UtcNowInstant.TimeOfDay;
+    public LocalTime UtcNowTime { [DebuggerStepThrough] get => UtcNowInstant.TimeOfDay; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate LocalNowDate => LocalZonedNowInstant.Date;
+    public LocalDate LocalNowDate { [DebuggerStepThrough] get => LocalZonedNowInstant.Date; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate UtcNowDate => UtcNowInstant.Date;
+    public LocalDate UtcNowDate { [DebuggerStepThrough] get => UtcNowInstant.Date; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowDateTimeOffset => LocalZonedNowInstant.ToDateTimeOffset();
+    public DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get => LocalZonedNowInstant.ToDateTimeOffset(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowDateTimeOffset => UtcNowInstant.ToDateTimeOffset();
+    public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get => UtcNowInstant.ToDateTimeOffset(); }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime LocalNowDateTime => LocalNowDateTimeOffset.LocalDateTime;
+    public DateTime LocalNowDateTime { [DebuggerStepThrough] get => LocalNowDateTimeOffset.LocalDateTime; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime UtcNowDateTime => UtcNowDateTimeOffset.UtcDateTime;
+    public DateTime UtcNowDateTime { [DebuggerStepThrough] get => UtcNowDateTimeOffset.UtcDateTime; }
     //----------------------------------------------------------------------------
 
 #if NET
     /// <inheritdoc />
-    public TimeOnly LocalNowTimeOnly => TimeOnly.FromDateTime(LocalNowDateTime);
+    public TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(LocalNowDateTime); }
 
     /// <inheritdoc />
-    public TimeOnly UtcNowTimeOnly => TimeOnly.FromDateTime(UtcNowDateTime);
+    public TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(UtcNowDateTime); }
 
     /// <inheritdoc />
-    public DateOnly LocalNowDateOnly => DateOnly.FromDateTime(LocalNowDateTime);
+    public DateOnly LocalNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(LocalNowDateTime); }
 
     /// <inheritdoc />
-    public DateOnly UtcNowDateOnly => DateOnly.FromDateTime(UtcNowDateTime);
+    public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(UtcNowDateTime); }
 #endif
 
     #endregion IPrimeClock Implementation

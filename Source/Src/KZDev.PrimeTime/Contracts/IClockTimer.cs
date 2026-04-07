@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -11,7 +9,7 @@ public partial interface IClockTimer
     /// <summary>
     ///   Gets the instant (UTC) at which this timer was registered (NodaTime stack).
     /// </summary>
-    Instant RegisteredInstant { [DebuggerStepThrough] get; }
+    Instant RegisteredInstant { get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################

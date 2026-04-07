@@ -287,12 +287,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <summary>
     ///   Gets whether this registration schedules using local calendar days.
     /// </summary>
-    private partial bool IsLocalDayTimeSchedule => !_utcTimeOfDaySchedule;
+    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
 
     /// <summary>
     ///   Gets whether this registration schedules using UTC calendar days.
     /// </summary>
-    private partial bool IsUtcDayTimeSchedule => _utcTimeOfDaySchedule;
+    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
 
     /// <summary>
     ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.

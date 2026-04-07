@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -17,17 +15,17 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     /// <summary>
     ///   A unique identifier for this timer registration instance.
     /// </summary>
-    int Id { [DebuggerStepThrough] get; }
+    int Id { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the time (UTC or local per registration options) at which this timer was registered.
     /// </summary>
-    DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
+    DateTimeOffset RegisteredTime { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Indicates whether the timer has been cancelled.
     /// </summary>
-    bool IsCancelled { [DebuggerStepThrough] get; }
+    bool IsCancelled { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a time-of-day clock registration or a time-interval
@@ -37,12 +35,12 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     ///   <c>true</c> if this is a time-of-day clock registration, <c>false</c> if this is a
     ///   time interval clock registration.
     /// </value>
-    bool IsTimeOfDay { [DebuggerStepThrough] get; }
+    bool IsTimeOfDay { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this is a repeating timer registration or not.
     /// </summary>
-    bool IsRepeating { [DebuggerStepThrough] get; }
+    bool IsRepeating { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether the properties on this registration are based on local time
@@ -50,7 +48,7 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     ///   to use local time instead using the <see cref="TimerOptions.LocalTimeRepresentation"/>
     ///   timer option during registration.
     /// </summary>
-    bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
+    bool IsLocalTimeRepresentation { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether this timer registration is currently active. This will
@@ -59,12 +57,12 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     ///   Otherwise, this will return <c>true</c>, even if <see cref="State"/> is
     ///   <see cref="TimerState.Disabled"/>.
     /// </summary>
-    bool IsActive { [DebuggerStepThrough] get; }
+    bool IsActive { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the current state of this timer registration.
     /// </summary>
-    TimerState State { [DebuggerStepThrough] get; }
+    TimerState State { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns whether there are currently callbacks being processed for this timer registration.
@@ -73,7 +71,7 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     ///   This will always return <c>false</c> if the timer registration is cancelled or disposed,
     ///   even if there are callbacks currently being processed.
     /// </remarks>
-    bool CallbacksProcessing { [DebuggerStepThrough] get; }
+    bool CallbacksProcessing { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets or sets the enabled state of this timer registration. When this is set to
@@ -93,7 +91,7 @@ public partial interface IClockTimer : IDisposable, IAsyncDisposable
     ///     in which case the timer will be restarted.
     ///   </para>
     /// </remarks>
-    bool Enabled { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+    bool Enabled { get; set; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Cancels this timer registration. When this is called, the <see cref="State"/>

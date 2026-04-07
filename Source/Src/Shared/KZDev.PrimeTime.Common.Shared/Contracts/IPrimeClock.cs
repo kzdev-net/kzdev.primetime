@@ -1,8 +1,6 @@
 // Copyright (c) Kevin Zehrer. All rights reserved.
 // This file is part of the PrimeTime project.
 
-using System.Diagnostics;
-
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -21,28 +19,28 @@ public partial interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Gets the current local date and time as a <see cref="DateTimeOffset"/>.
     /// </summary>
-    DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get; }
+    DateTimeOffset LocalNowDateTimeOffset { get; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date and time as a <see cref="DateTimeOffset"/>.
     /// </summary>
-    DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get; }
+    DateTimeOffset UtcNowDateTimeOffset { get; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date and time as a <see cref="DateTime"/>.
     /// </summary>
-    DateTime LocalNowDateTime { [DebuggerStepThrough] get; }
+    DateTime LocalNowDateTime { get; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date and time as a <see cref="DateTime"/>.
     /// </summary>
-    DateTime UtcNowDateTime { [DebuggerStepThrough] get; }
+    DateTime UtcNowDateTime { get; }
     //----------------------------------------------------------------------------
 
 #if NET
@@ -50,22 +48,22 @@ public partial interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Gets the current local time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
-    TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get; }
+    TimeOnly LocalNowTimeOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
-    TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get; }
+    TimeOnly UtcNowTimeOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date as <see cref="DateOnly"/>.
     /// </summary>
-    DateOnly LocalNowDateOnly { [DebuggerStepThrough] get; }
+    DateOnly LocalNowDateOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date as <see cref="DateOnly"/>.
     /// </summary>
-    DateOnly UtcNowDateOnly { [DebuggerStepThrough] get; }
+    DateOnly UtcNowDateOnly { get; }
     //----------------------------------------------------------------------------
 #endif
 

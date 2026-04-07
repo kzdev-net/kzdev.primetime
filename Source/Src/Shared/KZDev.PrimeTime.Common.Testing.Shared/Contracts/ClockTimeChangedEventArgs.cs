@@ -34,7 +34,7 @@ public class ClockTimeChangedEventArgs : EventArgs
     /// <summary>
     ///   Gets the current UTC time of the clock after the time change.
     /// </summary>
-    public DateTimeOffset UtcNowDateTimeOffset { get; }
+    public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 }
 //################################################################################
