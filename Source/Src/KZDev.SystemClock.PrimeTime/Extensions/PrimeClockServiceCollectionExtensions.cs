@@ -15,7 +15,8 @@ public static class PrimeClockServiceCollectionExtensions
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Adds the default <see cref="IPrimeClock"/> implementation
-    ///   (<see cref="PrimeClock"/>) as a singleton in the service collection.
+    ///   (<see cref="PrimeClock"/>) as a singleton in the service collection, and registers
+    ///   <see cref="IPrimeTime"/> to resolve the same instance as <see cref="IPrimeClock"/>.
     /// </summary>
     /// <param name="services">
     ///   The <see cref="IServiceCollection"/> to add the service to.
@@ -32,6 +33,7 @@ public static class PrimeClockServiceCollectionExtensions
             throw new ArgumentNullException(nameof(services));
         services.TryAddSingleton<TimeProvider>(_ => TimeProvider.System);
         services.TryAddSingleton<IPrimeClock, PrimeClock>();
+        services.TryAddSingleton<IPrimeTime>(sp => sp.GetRequiredService<IPrimeClock>());
         return services;
     }
     //--------------------------------------------------------------------------------

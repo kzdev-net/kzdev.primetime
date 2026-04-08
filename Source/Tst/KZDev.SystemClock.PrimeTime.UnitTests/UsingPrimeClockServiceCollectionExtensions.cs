@@ -62,14 +62,17 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         clock.Should().NotBeNull().And.BeOfType<PrimeClock>();
         IPrimeClock second = provider.GetRequiredService<IPrimeClock>();
         second.Should().BeSameAs(clock);
+        IPrimeTime primeTime = provider.GetRequiredService<IPrimeTime>();
+        primeTime.Should().BeSameAs(clock);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Verifies that <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/>
     ///   returns the same service collection instance for fluent chaining and adds singleton
-    ///   descriptors for <see cref="TimeProvider"/> (<see cref="TimeProvider.System"/>) and
-    ///   <see cref="IPrimeClock"/> implemented by <see cref="PrimeClock"/>.
+    ///   descriptors for <see cref="TimeProvider"/> (<see cref="TimeProvider.System"/>),
+    ///   <see cref="IPrimeClock"/> implemented by <see cref="PrimeClock"/>, and
+    ///   <see cref="IPrimeTime"/> forwarding to the same <see cref="IPrimeClock"/> instance.
     /// </summary>
     [Fact]
     public void AddPrimeClock_ReturnsSameServiceCollectionAndRegistersSingletonDescriptors ()
@@ -79,7 +82,7 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         IServiceCollection returned = services.AddPrimeClock();
 
         returned.Should().BeSameAs(services);
-        services.Should().HaveCount(2);
+        services.Should().HaveCount(3);
 
         ServiceDescriptor timeProviderDescriptor = services.Single(d => d.ServiceType == typeof(TimeProvider));
         timeProviderDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
@@ -90,6 +93,15 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
         ServiceDescriptor primeClockDescriptor = services.Single(d => d.ServiceType == typeof(IPrimeClock));
         primeClockDescriptor.ImplementationType.Should().Be(typeof(PrimeClock));
         primeClockDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
+
+        ServiceDescriptor primeTimeDescriptor = services.Single(d => d.ServiceType == typeof(IPrimeTime));
+        primeTimeDescriptor.Lifetime.Should().Be(ServiceLifetime.Singleton);
+        primeTimeDescriptor.ImplementationFactory.Should().NotBeNull();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IPrimeClock registeredPrimeClock = provider.GetRequiredService<IPrimeClock>();
+        object? factoryResult = primeTimeDescriptor.ImplementationFactory!.Invoke(provider);
+        IPrimeTime forwardedPrimeTime = (IPrimeTime)factoryResult!;
+        forwardedPrimeTime.Should().BeSameAs(registeredPrimeClock);
     }
     //----------------------------------------------------------------------------
 }
