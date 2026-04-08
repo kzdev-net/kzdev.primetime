@@ -341,11 +341,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     }
     //----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool Change (Duration interval) => false;
-    //----------------------------------------------------------------------------
-
     #endregion IClockDayTimeTimer Implementation
 
     #endregion Interface Implementations

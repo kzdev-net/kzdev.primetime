@@ -19,13 +19,5 @@ public partial interface IClockDayTimeTimer
     /// </returns>
     bool Change (LocalTime targetTimeOfDay);
     //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Interval-style <see cref="Duration"/> change is not applicable for time-of-day
-    ///   registrations; implementations return <c>false</c>.
-    /// </summary>
-    /// <param name="interval">Ignored.</param>
-    /// <returns>Always <c>false</c> for day-time registrations.</returns>
-    bool Change (Duration interval);
-    //----------------------------------------------------------------------------
 }
 //################################################################################

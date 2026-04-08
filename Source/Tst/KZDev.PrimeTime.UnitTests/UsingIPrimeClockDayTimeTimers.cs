@@ -208,24 +208,6 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
-    /// <summary>
-    ///   Verifies that <see cref="IClockDayTimeTimer.Change(Duration)"/> on a
-    ///   time-of-day registration returns false (not applicable).
-    /// </summary>
-    [Fact]
-    public void RegisterTimeOfDay_ChangeDuration_ReturnsFalse ()
-    {
-        IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
-        ManualResetEventSlim signal = new(false);
-
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
-            cancellationToken: TestContext.Current.CancellationToken);
-        timer.Change(Duration.FromSeconds(1)).Should().BeFalse();
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-    }
-    //----------------------------------------------------------------------------
-
     #endregion Change(LocalTime)
 
     #region Cancel and options

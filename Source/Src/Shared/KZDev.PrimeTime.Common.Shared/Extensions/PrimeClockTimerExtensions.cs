@@ -13,6 +13,13 @@ namespace KZDev.PrimeTime;
 ///   time-of-day timers. These provide convenient overloads for common timer registration patterns, 
 ///   such as repeating timers and callbacks that do not require context or cancellation tokens. 
 /// </summary>
+/// <remarks>
+///   <para>
+///     Time-of-day extension overloads that take <c>LocalTimeOfDay</c> or <c>UtcTimeOfDay</c> are emitted
+///     only under the SDK <c>NET</c> symbol (see remarks on <see cref="IPrimeClock"/>). They are not
+///     available when targeting .NET Standard 2.0 or .NET Framework, even if online API reference lists them.
+///   </para>
+/// </remarks>
 public static class PrimeClockTimerExtensions
 {
     #region IPrimeClock — Interval timers (RegisterTimer)

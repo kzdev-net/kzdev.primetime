@@ -11,6 +11,15 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Extends <see cref="IPrimeTime"/> with BCL-based projection members for current time.
 /// </summary>
+/// <remarks>
+///   <para>
+///     Members that use <c>System.TimeOnly</c>, <c>System.DateOnly</c>, or day-time registration
+///     with the <c>LocalTimeOfDay</c> / <c>UtcTimeOfDay</c> wrappers are compiled only when the
+///     SDK <c>NET</c> symbol is defined (effectively .NET 6+). They are omitted from the reference
+///     assembly for .NET Standard 2.0 and .NET Framework. API documentation produced from a newer
+///     target may still list those members.
+///   </para>
+/// </remarks>
 public partial interface IPrimeClock : IPrimeTime
 {
     #region IPrimeClock - Now (BCL)

@@ -13,8 +13,14 @@ namespace KZDev.PrimeTime;
 ///   with semantic meaning for use in day-time timers and scheduling.
 /// </summary>
 /// <remarks>
-///   This type distinguishes local time-of-day from <see cref="UtcTimeOfDay"/> so that
-///   day-time timer registration APIs can require the correct interpretation without ambiguity.
+///   <para>
+///     This type distinguishes local time-of-day from <see cref="UtcTimeOfDay"/> so that
+///     day-time timer registration APIs can require the correct interpretation without ambiguity.
+///   </para>
+///   <para>
+///     This type is not included when the library targets .NET Standard 2.0 or .NET Framework; it
+///     requires <see cref="TimeOnly"/>.
+///   </para>
 /// </remarks>
 public readonly struct LocalTimeOfDay : IEquatable<LocalTimeOfDay>
 {
