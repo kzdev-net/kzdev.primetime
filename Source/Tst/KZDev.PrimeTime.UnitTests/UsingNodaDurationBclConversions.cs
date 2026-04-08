@@ -66,6 +66,18 @@ public sealed class UsingNodaDurationBclConversions
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForCancellationToken"/> maps zero and negative
+    ///   values to <see cref="TimeSpan.Zero"/>.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForCancellationToken_WhenNonPositive_ReturnsZero ()
+    {
+        NodaDurationBclConversions.ToTimeSpanForCancellationToken(Duration.Zero).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversions.ToTimeSpanForCancellationToken(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> clamps positive
     ///   durations above <see cref="TimeSpan.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
     /// </summary>
@@ -74,6 +86,17 @@ public sealed class UsingNodaDurationBclConversions
     {
         NodaDurationBclConversions.ToTimeSpanForTimerInterval(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(
             TimeSpan.MaxValue);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> clamps
+    ///   <see cref="Duration.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForTimerInterval_WhenDurationMaxValue_ReturnsTimeSpanMaxValue ()
+    {
+        NodaDurationBclConversions.ToTimeSpanForTimerInterval(Duration.MaxValue).Should().Be(TimeSpan.MaxValue);
     }
     //----------------------------------------------------------------------------
 

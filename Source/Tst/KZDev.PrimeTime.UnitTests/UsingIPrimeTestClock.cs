@@ -144,6 +144,24 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.SetLocalTime"/> uses lenient zone resolution for ambiguous local
+    ///   wall-clock values.
+    /// </summary>
+    [Fact]
+    public void SetLocalTime_WithAmbiguousLocalDateTime_UsesLenientZoneResolution ()
+    {
+        DateTimeZone zone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0), zone);
+        LocalDateTime ambiguous = new(2025, 11, 2, 1, 30, 0);
+
+        clock.SetLocalTime(ambiguous);
+
+        clock.NowInstant.Should().Be(ambiguous.InZoneLeniently(zone).ToInstant());
+        clock.LocalNowInstant.Should().Be(ambiguous);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Advance"/> adds duration to virtual time.
     /// </summary>
     [Fact]
@@ -180,6 +198,21 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Advance(Duration.FromHours(-1));
         clock.NowInstant.Should().Be(initial);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with <see cref="Duration.MaxValue"/> throws
+    ///   <see cref="OverflowException"/> when the resulting instant exceeds Noda instant bounds.
+    /// </summary>
+    [Fact]
+    public void Advance_WithDurationMaxValue_ThrowsOverflowException ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+
+        Action act = () => clock.Advance(Duration.MaxValue);
+        act.Should().Throw<OverflowException>();
     }
     //----------------------------------------------------------------------------
 

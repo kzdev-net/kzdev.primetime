@@ -525,6 +525,98 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies that callbacks from two independent timers can run concurrently on real time.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_TwoIndependentTimers_CanRunCallbacksConcurrently ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        using ManualResetEventSlim firstEntered = new(false);
+        using ManualResetEventSlim secondEntered = new(false);
+        using ManualResetEventSlim overlapObserved = new(false);
+        using SemaphoreSlim allowExit = new(0, 2);
+        int inFlight = 0;
+        int maxInFlight = 0;
+
+        ValueTask Callback (ManualResetEventSlim enteredSignal, CancellationToken ct)
+        {
+            enteredSignal.Set();
+            int current = Interlocked.Increment(ref inFlight);
+            if (current > maxInFlight)
+            {
+                Interlocked.Exchange(ref maxInFlight, current);
+            }
+
+            if (current > 1)
+            {
+                overlapObserved.Set();
+            }
+
+            return RunAsync();
+            async ValueTask RunAsync ()
+            {
+                try
+                {
+                    await allowExit.WaitAsync(GetAsyncTimerCallbackHoldTimeoutMilliseconds(Duration.FromSeconds(2).ToTimeSpan()), ct);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref inFlight);
+                }
+            }
+        }
+
+        using IClockIntervalTimer timer1 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
+            ct => Callback(firstEntered, ct),
+            TestContext.Current.CancellationToken);
+        using IClockIntervalTimer timer2 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
+            ct => Callback(secondEntered, ct),
+            TestContext.Current.CancellationToken);
+
+        TimeSpan waitTimeout = (WaitMargin + Duration.FromMilliseconds(200)).ToTimeSpan();
+        firstEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+            .Should().BeTrue();
+        secondEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+            .Should().BeTrue();
+        overlapObserved.Wait(Duration.FromSeconds(1).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        maxInFlight.Should().BeGreaterThan(1);
+
+        allowExit.Release(2);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that disposing a timer while an async callback is active does not throw and transitions the timer
+    ///   out of active processing state.
+    /// </summary>
+    [Fact]
+    public void RegisterAsyncTimer_CallbackRunning_WhenDisposed_StopsActiveProcessing ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        using CancellationTokenSource cts = new();
+        using ManualResetEventSlim callbackStarted = new(false);
+        using SemaphoreSlim allowExit = new(0, 1);
+        IClockIntervalTimer timer = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
+            async ct =>
+            {
+                callbackStarted.Set();
+                await allowExit.WaitAsync(GetAsyncTimerCallbackHoldTimeoutMilliseconds(WaitMargin.ToTimeSpan()), ct);
+            },
+            cts.Token);
+        using (timer)
+        {
+            callbackStarted.Wait((WaitMargin + ShortDelay).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+
+            Action act = () => timer.Dispose();
+            act.Should().NotThrow();
+            SpinWait.SpinUntil(() => !timer.CallbacksProcessing, WaitMargin.ToTimeSpan()).Should().BeTrue();
+            timer.State.Should().Be(TimerState.Disposed);
+            allowExit.Release();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that with Unsafe option the timer callback is invoked (execution context is not
     ///   captured/restored).
     /// </summary>
@@ -571,6 +663,19 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.ElapsedTime.Should().BeGreaterThanOrEqualTo(0);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that registering with <see cref="Duration.MaxValue"/> can overflow scheduling math and throws
+    ///   <see cref="OverflowException"/>.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_OneShotDurationMaxValue_ThrowsOverflowException ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        Action act = () => clock.RegisterTimer(Duration.MaxValue, () => { }, TestContext.Current.CancellationToken);
+        act.Should().Throw<OverflowException>();
     }
     //----------------------------------------------------------------------------
 

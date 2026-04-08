@@ -146,6 +146,26 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
     }
 
     /// <summary>
+    ///   Verifies that ambiguous fall-back handling preserves expected ordering:
+    ///   <see cref="DuplicateTimeBehavior.RunFirst"/> resolves to an earlier instant than
+    ///   <see cref="DuplicateTimeBehavior.RunLast"/>.
+    /// </summary>
+    [Fact]
+    public void TryGetLocalDayTimeFireInstantForDate_FallBack_RunFirstIsEarlierThanRunLast ()
+    {
+        DateTimeZone zone = BclDateTimeZone.FromTimeZoneInfo(CreateUsEasternStyleZone());
+        LocalDate date = new(2025, 11, 2);
+        LocalTime target = new(1, 30, 0);
+
+        DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(date, target, zone,
+            SkippedTimeBehavior.RunAfter, DuplicateTimeBehavior.RunFirst, out Instant first).Should().BeTrue();
+        DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(date, target, zone,
+            SkippedTimeBehavior.RunAfter, DuplicateTimeBehavior.RunLast, out Instant last).Should().BeTrue();
+
+        first.Should().BeLessThan(last);
+    }
+
+    /// <summary>
     ///   Creates <see cref="DayTimeTimerOptions"/> with <see cref="ConcurrentTriggerProcessing.RunConcurrently"/>
     ///   and the given skipped/duplicate policies.
     /// </summary>
