@@ -530,16 +530,30 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <param name="isRepeating">Whether this is a repeating registration.</param>
     private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating)
     {
-        ValueTask vt = run();
-        if (vt.IsCompletedSuccessfully)
+        ValueTask runResultTask;
+        try
+        {
+            runResultTask = run();
+        }
+        catch
         {
             OnAsyncCallbackCompleted(resetAfter, isRepeating);
             return;
         }
-        vt.AsTask().ContinueWith((_, state) =>
+
+        if (runResultTask.IsCompletedSuccessfully)
+        {
+            OnAsyncCallbackCompleted(resetAfter, isRepeating);
+            return;
+        }
+        runResultTask.AsTask().ContinueWith((task, state) =>
             {
                 (ClockIntervalTimerRegistration reg, bool ra, bool rep) =
                     ((ClockIntervalTimerRegistration, bool, bool))state!;
+                if (task.IsFaulted)
+                {
+                    _ = task.Exception;
+                }
                 reg.OnAsyncCallbackCompleted(ra, rep);
             },
             (this, resetAfter, isRepeating),
