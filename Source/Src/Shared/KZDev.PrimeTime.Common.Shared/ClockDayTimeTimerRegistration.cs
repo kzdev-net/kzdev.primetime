@@ -603,7 +603,17 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <param name="run">Async callback invocation.</param>
     private void RunAsyncAndScheduleAfter (Func<ValueTask> run)
     {
-        ValueTask callbackValueTask = run();
+        ValueTask callbackValueTask;
+        try
+        {
+            callbackValueTask = run();
+        }
+        catch
+        {
+            ScheduleNextFromAsync();
+            return;
+        }
+
         if (callbackValueTask.IsCompletedSuccessfully)
         {
             ScheduleNextFromAsync();
@@ -611,6 +621,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
         callbackValueTask.AsTask().ContinueWith((completedTask, registrationState) =>
             {
+                if (completedTask.IsFaulted)
+                {
+                    _ = completedTask.Exception;
+                }
                 ((ClockDayTimeTimerRegistration)registrationState!).ScheduleNextFromAsync();
             },
             this,
