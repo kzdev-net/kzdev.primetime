@@ -1,10 +1,11 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 #if NET || !SYSTEMCLOCK
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
@@ -506,27 +507,24 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             if (_disposed || _cancelRequested || _state == TimerState.Cancelled || !_enabled)
                 return;
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
-        }
 
-        if (ConcurrentTriggerProcessing == ConcurrentTriggerProcessing.Skip && _callbacksRunning > 0)
-        {
-            ScheduleNext();
-            return;
-        }
-
-        if (ConcurrentTriggerProcessing == ConcurrentTriggerProcessing.RunSequentially && _callbacksRunning > 0)
-        {
-            lock (_gate)
+            if (ConcurrentTriggerProcessing == ConcurrentTriggerProcessing.Skip && _callbacksRunning > 0)
             {
-                _pendingRunSequential = true;
+                ScheduleNext();
+                return;
             }
-            ScheduleNextAfterShortDelay();
-            return;
-        }
 
-        RecordDayTimeCallbackTickStarted();
-        lock (_gate)
-        {
+            if (ConcurrentTriggerProcessing == ConcurrentTriggerProcessing.RunSequentially && _callbacksRunning > 0)
+            {
+                lock (_gate)
+                {
+                    _pendingRunSequential = true;
+                }
+                ScheduleNextAfterShortDelay();
+                return;
+            }
+
+            RecordDayTimeCallbackTickStarted();
             _state = TimerState.RepeatProcessingCallback;
             _callbacksRunning++;
         }
@@ -547,19 +545,22 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 }
             }
         }
-        if (!callbackIsAsynchronous)
+
+        if (callbackIsAsynchronous)
         {
-            bool shouldRetryAfterSequentialCallback;
-            lock (_gate)
-            {
-                shouldRetryAfterSequentialCallback = _pendingRunSequential;
-                _pendingRunSequential = false;
-            }
-            if (shouldRetryAfterSequentialCallback)
-                ScheduleNextAfterShortDelay();
-            else
-                ScheduleNext();
+            return;
         }
+
+        bool shouldRetryAfterSequentialCallback;
+        lock (_gate)
+        {
+            shouldRetryAfterSequentialCallback = _pendingRunSequential;
+            _pendingRunSequential = false;
+        }
+        if (shouldRetryAfterSequentialCallback)
+            ScheduleNextAfterShortDelay();
+        else
+            ScheduleNext();
     }
     //----------------------------------------------------------------------------
 

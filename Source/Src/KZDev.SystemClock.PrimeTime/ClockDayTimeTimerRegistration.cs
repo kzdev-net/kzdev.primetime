@@ -1,7 +1,11 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
 #if NET
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 
 namespace KZDev.SystemClock.PrimeTime;
 
@@ -245,14 +249,17 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
-        if (_lastCallbackStartedOffset is not { } lastCallbackStartOffset)
-            return -1;
-        if (_callbacksRunning > 0)
-            return 0;
-        DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
-        if (lastCallbackStartOffset >= scheduleNowOffset)
-            return 0;
-        return (long)(scheduleNowOffset - lastCallbackStartOffset).TotalMilliseconds;
+        lock (_gate)
+        {
+            if (_lastCallbackStartedOffset is not { } lastCallbackStartOffset)
+                return -1;
+            if (_callbacksRunning > 0)
+                return 0;
+            DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
+            if (lastCallbackStartOffset >= scheduleNowOffset)
+                return 0;
+            return (long)(scheduleNowOffset - lastCallbackStartOffset).TotalMilliseconds;
+        }
     }
     //----------------------------------------------------------------------------
 
