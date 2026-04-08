@@ -346,8 +346,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public long TimeUntilNextCallback
     {
@@ -360,35 +358,25 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Captures <see cref="RegisteredTime"/> for this day-time registration (partial).
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer ();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns registered time in the registration basis (partial).
     /// </summary>
     private partial DateTimeOffset GetRegisteredTimeOffset ();
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Whether properties use local representation (partial).
     /// </summary>
     private partial bool GetIsLocalTimeRepresentation ();
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes delay until the next scheduled fire (partial).
     /// </summary>
     private partial TimeSpan GetDelayUntilNextForTimer ();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Records the next fire from a wall-clock delay (partial).
@@ -396,42 +384,30 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <param name="delay">Delay until the next tick.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-fire marker and records the callback start for elapsed-time queries (partial).
     /// </summary>
     private partial void RecordDayTimeCallbackTickStarted ();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Elapsed milliseconds since last callback while <see cref="_gate"/> is held (partial).
     /// </summary>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Milliseconds until next callback while <see cref="_gate"/> is held (partial).
     /// </summary>
     private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts <paramref name="delay"/> to BCL timer milliseconds when valid (partial).
     /// </summary>
     private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Retry delay when running sequential day-time triggers (partial).
     /// </summary>
     private partial int GetRunSequentiallyRetryMilliseconds ();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Cancels the registration and disarms the BCL timer.

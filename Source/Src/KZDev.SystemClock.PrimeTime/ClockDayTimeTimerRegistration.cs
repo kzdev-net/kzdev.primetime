@@ -67,20 +67,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     private ClockDayTimeTimerRegistration (IPrimeClock clock,
-        bool utcTimeOfDaySchedule,
-        TimeOnly targetTimeOfDay,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        DayTimeTimerOptions? options,
+        bool utcTimeOfDaySchedule, TimeOnly targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
     {
         _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
         _targetTimeOfDay = targetTimeOfDay;
         FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance for a local-time day-time timer.
@@ -96,17 +90,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTimeOfDay localTimeOfDay,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        DayTimeTimerOptions? options,
+        LocalTimeOfDay localTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
         : this(clock, false, localTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
     {
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance for a UTC day-time timer.
@@ -122,11 +111,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        UtcTimeOfDay utcTimeOfDay,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        DayTimeTimerOptions? options,
+        UtcTimeOfDay utcTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
         : this(clock, true, utcTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
     {
@@ -145,15 +131,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private DateTimeOffset GetScheduleNowOffset () =>
         _utcTimeOfDaySchedule ? _clock.UtcNowDateTimeOffset : _clock.LocalNowDateTimeOffset;
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Persists the clock's current instant as this registration's creation time.
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer () =>
         _registeredTime = _clock.UtcNowDateTimeOffset;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
@@ -161,15 +143,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The offset used when the registration was created.</returns>
     private partial DateTimeOffset GetRegisteredTimeOffset () => _registeredTime;
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets whether the schedule uses local time-of-day semantics.
     /// </summary>
     /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
     private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes the delay from now until the next time-of-day occurrence.
@@ -218,16 +196,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return delayUntilNextFire;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Records when the next callback is expected from the given delay.
     /// </summary>
     /// <param name="delay">Delay from now until the next fire.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
         _nextCallbackScheduledOffset = GetScheduleNowOffset() + delay;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-callback schedule and records the start of the current tick.
@@ -237,8 +211,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _nextCallbackScheduledOffset = null;
         _lastCallbackStartedOffset = GetScheduleNowOffset();
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets elapsed milliseconds since the last callback while holding the registration gate.
@@ -262,8 +234,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets remaining milliseconds until the next scheduled callback while holding the registration gate.
     /// </summary>
@@ -280,8 +250,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return (long)(pendingNextFireOffset - scheduleNowOffset).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a delay into a nonnegative timer duration in milliseconds.
     /// </summary>
@@ -296,8 +264,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         milliseconds = (int)totalMillisecondsClamped;
         return true;
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the retry delay in milliseconds when sequential callback execution is required.
