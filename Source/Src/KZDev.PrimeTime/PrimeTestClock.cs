@@ -332,7 +332,7 @@ public sealed partial class PrimeTestClock
     /// <param name="utcNowDateTimeOffset">
     ///   The virtual UTC time after the change (the BCL partial forwards this value to <see cref="ClockTimeChangedEventArgs"/>).
     /// </param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset _)
+    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset)
     {
         Instant snapshot;
         lock (_gate)

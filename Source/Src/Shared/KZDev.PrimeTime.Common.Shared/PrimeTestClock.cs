@@ -1717,7 +1717,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// <summary>
     ///   Raises <see cref="ClockEvents"/> after the virtual UTC instant changed.
     /// </summary>
-    /// <param name="utcNowOffset">The new virtual UTC time to report.</param>
+    /// <param name="utcNowDateTimeOffset">The new virtual UTC time to report.</param>
     private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset);
     //----------------------------------------------------------------------------
 
