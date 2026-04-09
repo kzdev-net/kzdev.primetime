@@ -54,7 +54,7 @@ public enum TimerState
     /// <remarks>
     ///   <para>
     ///     For interval timers, this applies when the timer is non-repeating or repeating with
-    ///     <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> set to <c>true</c>.
+    ///     <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/> set to <c>false</c> (the default).
     ///   </para>
     ///   <para>
     ///     For time-of-day timers, this applies when at least one callback is running for a
@@ -63,21 +63,18 @@ public enum TimerState
     /// </remarks>
     ProcessingCallback,
     /// <summary>
-    ///   The timer is in a repeat cycle where the interval resets before the callback runs.
-    ///   Interval timers only.
+    ///   The timer is between repeat ticks (no callback running). Interval timers only.
     /// </summary>
     /// <remarks>
     ///   No callback is running in this state.
     /// </remarks>
     RepeatCycle,
     /// <summary>
-    ///   A callback is running and the repeat interval resets before the callback (interval
-    ///   timers only).
+    ///   A callback is running and the countdown to the next tick was started before this callback
+    ///   began (repeating interval timers with <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/>
+    ///   set to <c>true</c>), so another tick may occur before the current callback completes and
+    ///   callbacks may run concurrently.
     /// </summary>
-    /// <remarks>
-    ///   Applies to repeating interval timers with
-    ///   <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> set to <c>false</c>.
-    /// </remarks>
     RepeatProcessingCallback
     //----------------------------------------------------------------------------
 }

@@ -244,11 +244,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public bool IsResetAfterCallback => false;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
     public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get => GetIsLocalTimeRepresentation(); }
     //----------------------------------------------------------------------------
 

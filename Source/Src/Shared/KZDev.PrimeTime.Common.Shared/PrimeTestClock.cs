@@ -139,9 +139,9 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         private readonly bool _isLocalTimeRepresentation;
 
         /// <summary>
-        ///   When <c>true</c>, repeat interval is measured from callback completion.
+        ///   When <c>true</c>, the next tick&apos;s countdown starts when the tick fires, before the callback completes.
         /// </summary>
-        private readonly bool _resetAfterCallback;
+        private readonly bool _resetBeforeCallback;
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -285,7 +285,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
             CallbackState = callbackState;
             CancellationToken = cancellationToken;
             _isLocalTimeRepresentation = options?.LocalTimeRepresentation == true;
-            _resetAfterCallback = options?.ResetIntervalAfterCallback ?? false;
+            _resetBeforeCallback = options?.ResetIntervalBeforeCallback ?? false;
             Id = Interlocked.Increment(ref _nextTimerId);
             DateTimeOffset now = clock.UtcNowDateTimeOffset;
             RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNowDateTimeOffset : now;
@@ -326,7 +326,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool IsResetAfterCallback => _resetAfterCallback && IsRepeating;
+        public bool IsResetBeforeCallback => _resetBeforeCallback && IsRepeating;
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------
@@ -432,8 +432,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     DateTimeOffset now = Clock.UtcNowDateTimeOffset;
                     if (next <= now)
                         return 0;
-                    if (CallbacksRunning > 0 && IsResetAfterCallback)
-                        return (long)RepeatInterval.TotalMilliseconds;
                     return (long)(next - now).TotalMilliseconds;
                 }
             }
@@ -660,7 +658,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <inheritdoc />
         public override void RunDueCallback (DateTimeOffset now)
         {
-            bool resetAfter;
+            bool resetBefore;
             bool isRepeating;
             DateTimeOffset firedAt;
 
@@ -671,17 +669,20 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                 if (NextDueUtc is not { } next || next > now)
                     return;
                 firedAt = next;
-                NextDueUtc = null;
-                LastCallbackUtc = firedAt;
                 isRepeating = IsRepeating;
-                resetAfter = IsResetAfterCallback;
-                State = isRepeating && !resetAfter ? TimerState.RepeatProcessingCallback : TimerState.ProcessingCallback;
+                resetBefore = IsResetBeforeCallback;
+                if (isRepeating && resetBefore)
+                    NextDueUtc = now + RepeatInterval;
+                else
+                    NextDueUtc = null;
+                LastCallbackUtc = now;
+                State = isRepeating && resetBefore ? TimerState.RepeatProcessingCallback : TimerState.ProcessingCallback;
                 CallbacksRunning++;
             }
 
             try
             {
-                RunCallback(resetAfter, isRepeating, firedAt);
+                RunCallback(resetBefore, isRepeating);
             }
             finally
             {
@@ -695,13 +696,14 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   Invokes the registered callback synchronously or schedules async completion.
         /// </summary>
-        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="resetBefore">
+        ///   When <c>true</c>, the next due time was set when this tick started; do not reschedule on completion.
+        /// </param>
         /// <param name="isRepeating">Whether this is a repeating timer.</param>
-        /// <param name="now">Virtual instant at which the callback was due.</param>
         /// <exception cref="InvalidOperationException">
         ///   <see cref="VirtualIntervalTimerBase.CallbackKind"/> is not supported.
         /// </exception>
-        private void RunCallback (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        private void RunCallback (bool resetBefore, bool isRepeating)
         {
             void InvokeSync (Action run)
             {
@@ -722,22 +724,20 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                     break;
                 case IntervalTimerCallbackKind.SimpleAsync:
                     RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)Callback)(CancellationToken),
-                        resetAfter,
-                        isRepeating,
-                        now);
+                        resetBefore,
+                        isRepeating);
                     return;
                 case IntervalTimerCallbackKind.ContextAsync:
                     RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)Callback)(new ClockTimerCallbackContext(this, CallbackState),
                             CancellationToken),
-                        resetAfter,
-                        isRepeating,
-                        now);
+                        resetBefore,
+                        isRepeating);
                     return;
                 default:
                     throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
             }
 
-            OnSyncCallbackCompleted(resetAfter, isRepeating, now);
+            OnSyncCallbackCompleted(resetBefore, isRepeating);
         }
         //------------------------------------------------------------------------
 
@@ -746,25 +746,36 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
         /// </summary>
         /// <param name="run">The async callback invocation.</param>
-        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="resetBefore">
+        ///   When <c>true</c>, the next due time was set when this tick started; do not reschedule on completion.
+        /// </param>
         /// <param name="isRepeating">Whether this is a repeating timer.</param>
-        /// <param name="now">Virtual instant at which the callback was due.</param>
-        private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating, DateTimeOffset now)
+        private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetBefore, bool isRepeating)
         {
-            ValueTask vt = run();
+            ValueTask vt;
+            try
+            {
+                vt = run();
+            }
+            catch
+            {
+                OnAsyncCallbackCompleted(resetBefore, isRepeating);
+                return;
+            }
+
             if (vt.IsCompletedSuccessfully)
             {
-                OnAsyncCallbackCompleted(resetAfter, isRepeating, now);
+                OnAsyncCallbackCompleted(resetBefore, isRepeating);
                 return;
             }
 
             vt.AsTask().ContinueWith((_, state) =>
                 {
-                    (VirtualIntervalTimer reg, bool ra, bool rep, DateTimeOffset n) =
-                        ((VirtualIntervalTimer, bool, bool, DateTimeOffset))state!;
-                    reg.OnAsyncCallbackCompleted(ra, rep, n);
+                    (VirtualIntervalTimer reg, bool rb, bool rep) =
+                        ((VirtualIntervalTimer, bool, bool))state!;
+                    reg.OnAsyncCallbackCompleted(rb, rep);
                 },
-                (this, resetAfter, isRepeating, now),
+                (this, resetBefore, isRepeating),
                 CancellationToken.None,
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
@@ -775,10 +786,11 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
         /// </summary>
-        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="resetBefore">
+        ///   When <c>true</c>, the next due time was already set when this tick started.
+        /// </param>
         /// <param name="isRepeating">Whether this is a repeating timer.</param>
-        /// <param name="now">Virtual instant when the callback ran.</param>
-        private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        private void OnSyncCallbackCompleted (bool resetBefore, bool isRepeating)
         {
             lock (Gate)
             {
@@ -791,7 +803,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                 }
 
                 State = TimerState.RepeatCycle;
-                NextDueUtc = now + RepeatInterval;
+                if (!resetBefore)
+                    NextDueUtc = Clock.UtcNowDateTimeOffset + RepeatInterval;
             }
         }
         //------------------------------------------------------------------------
@@ -800,10 +813,11 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.
         /// </summary>
-        /// <param name="resetAfter">Whether the repeat interval resets after callback completion.</param>
+        /// <param name="resetBefore">
+        ///   When <c>true</c>, the next due time was already set when this tick started.
+        /// </param>
         /// <param name="isRepeating">Whether this is a repeating timer.</param>
-        /// <param name="now">Virtual instant when the callback ran.</param>
-        private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating, DateTimeOffset now)
+        private void OnAsyncCallbackCompleted (bool resetBefore, bool isRepeating)
         {
             lock (Gate)
             {
@@ -816,7 +830,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
                 }
 
                 State = TimerState.RepeatCycle;
-                NextDueUtc = now + RepeatInterval;
+                if (!resetBefore)
+                    NextDueUtc = Clock.UtcNowDateTimeOffset + RepeatInterval;
             }
         }
         //------------------------------------------------------------------------
@@ -1082,7 +1097,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool IsResetAfterCallback => false;
+        public bool IsResetBeforeCallback => false;
         //------------------------------------------------------------------------
 
         //------------------------------------------------------------------------

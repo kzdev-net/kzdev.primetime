@@ -160,7 +160,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
     /// </param>
     /// <param name="options">
-    ///   Timer options (reset-after-callback, execution context, local time). May be
+    ///   Timer options (reset-before-callback, execution context, local time). May be
     ///   <c>null</c> for defaults.
     /// </param>
     /// <param name="cancellationToken">
@@ -185,7 +185,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         InitialCallbackTimeSpan = initialCallbackTime;
         RepeatTimeSpanInterval = repeatInterval;
         IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
-        IsResetAfterCallback = opts.ResetIntervalAfterCallback;
+        IsResetBeforeCallback = opts.ResetIntervalBeforeCallback;
         IsLocalTimeRepresentation = opts.LocalTimeRepresentation;
         _captureContext = opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
         _cancellationToken = cancellationToken;
@@ -223,7 +223,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     public bool IsTimeOfDay => false;
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public bool IsResetAfterCallback { [DebuggerStepThrough] get; }
+    public bool IsResetBeforeCallback { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get; }
@@ -369,9 +369,13 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Marks the start of a timer callback: records "last callback" and clears the next-callback marker.
+    ///   Marks the start of a timer callback: records &quot;last callback&quot; and, when
+    ///   <paramref name="resetIntervalBeforeCallback"/> is <c>false</c>, clears the next-callback marker.
     /// </summary>
-    private partial void RecordIntervalCallbackStarted ();
+    /// <param name="resetIntervalBeforeCallback">
+    ///   When <c>true</c>, the next callback instant was already scheduled and is left unchanged.
+    /// </param>
+    private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -430,10 +434,19 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _timer!.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        RecordIntervalCallbackStarted();
         bool isRepeating = IsRepeating;
-        bool resetAfter = IsResetAfterCallback;
-        TimerState stateDuringCallback = isRepeating && !resetAfter
+        bool resetBefore = IsResetBeforeCallback;
+        RecordIntervalCallbackStarted(resetBefore);
+        if (isRepeating && resetBefore)
+        {
+            lock (_gate)
+            {
+                if (_disposed || _cancelRequested || State == TimerState.Cancelled || !_enabled)
+                    return;
+                ScheduleNext(RepeatTimeSpanInterval);
+            }
+        }
+        TimerState stateDuringCallback = isRepeating && resetBefore
             ? TimerState.RepeatProcessingCallback
             : TimerState.ProcessingCallback;
         lock (_gate)
@@ -444,7 +457,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
         try
         {
-            RunCallback(stateDuringCallback, resetAfter, isRepeating);
+            RunCallback(stateDuringCallback, resetBefore, isRepeating);
         }
         finally
         {
@@ -461,12 +474,14 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     ///   Dispatches the user callback synchronously or starts async completion handling.
     /// </summary>
     /// <param name="stateDuringCallback">Timer state set for the duration of the callback.</param>
-    /// <param name="resetAfter">Whether repeat interval resets after completion.</param>
+    /// <param name="resetBefore">
+    ///   When <c>true</c>, the next tick was scheduled at the start of this tick; do not reschedule on completion.
+    /// </param>
     /// <param name="isRepeating">Whether this is a repeating registration.</param>
     /// <exception cref="InvalidOperationException">
     ///   <see cref="_callbackKind"/> is not supported.
     /// </exception>
-    private void RunCallback (TimerState stateDuringCallback, bool resetAfter, bool isRepeating)
+    private void RunCallback (TimerState stateDuringCallback, bool resetBefore, bool isRepeating)
     {
         void InvokeSync (Action run)
         {
@@ -504,20 +519,20 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 break;
             case IntervalTimerCallbackKind.SimpleAsync:
                 RunAsyncAndScheduleAfter(() => ((Func<CancellationToken, ValueTask>)_callback)(_cancellationToken),
-                    resetAfter,
+                    resetBefore,
                     isRepeating);
                 return;
             case IntervalTimerCallbackKind.ContextAsync:
                 RunAsyncAndScheduleAfter(() => ((Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)_callback)(new ClockTimerCallbackContext(this, _callbackState),
                     _cancellationToken),
-                    resetAfter,
+                    resetBefore,
                     isRepeating);
                 return;
             default:
                 throw new InvalidOperationException($"Unsupported callback kind: {_callbackKind}");
         }
 
-        OnSyncCallbackCompleted(resetAfter, isRepeating);
+        OnSyncCallbackCompleted(resetBefore, isRepeating);
     }
     //----------------------------------------------------------------------------
 
@@ -526,9 +541,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
     /// <param name="run">Async callback invocation.</param>
-    /// <param name="resetAfter">Whether repeat interval resets after completion.</param>
+    /// <param name="resetBefore">
+    ///   When <c>true</c>, the next tick was scheduled at the start of this tick; do not reschedule on completion.
+    /// </param>
     /// <param name="isRepeating">Whether this is a repeating registration.</param>
-    private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetAfter, bool isRepeating)
+    private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetBefore, bool isRepeating)
     {
         ValueTask runResultTask;
         try
@@ -537,26 +554,26 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         }
         catch
         {
-            OnAsyncCallbackCompleted(resetAfter, isRepeating);
+            OnAsyncCallbackCompleted(resetBefore, isRepeating);
             return;
         }
 
         if (runResultTask.IsCompletedSuccessfully)
         {
-            OnAsyncCallbackCompleted(resetAfter, isRepeating);
+            OnAsyncCallbackCompleted(resetBefore, isRepeating);
             return;
         }
         runResultTask.AsTask().ContinueWith((task, state) =>
             {
-                (ClockIntervalTimerRegistration reg, bool ra, bool rep) =
+                (ClockIntervalTimerRegistration reg, bool rb, bool rep) =
                     ((ClockIntervalTimerRegistration, bool, bool))state!;
                 if (task.IsFaulted)
                 {
                     _ = task.Exception;
                 }
-                reg.OnAsyncCallbackCompleted(ra, rep);
+                reg.OnAsyncCallbackCompleted(rb, rep);
             },
-            (this, resetAfter, isRepeating),
+            (this, resetBefore, isRepeating),
             CancellationToken.None,
             TaskContinuationOptions.None,
             TaskScheduler.Default);
@@ -567,9 +584,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <summary>
     ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
     /// </summary>
-    /// <param name="resetAfter">Unused; reserved for symmetry with async path.</param>
+    /// <param name="resetBefore">
+    ///   When <c>true</c>, the next tick was already scheduled when this tick started.
+    /// </param>
     /// <param name="isRepeating">Whether this registration repeats.</param>
-    private void OnSyncCallbackCompleted (bool resetAfter, bool isRepeating)
+    private void OnSyncCallbackCompleted (bool resetBefore, bool isRepeating)
     {
         lock (_gate)
         {
@@ -581,8 +600,8 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return;
             }
             State = TimerState.RepeatCycle;
-            TimeSpan next = RepeatTimeSpanInterval;
-            ScheduleNext(next);
+            if (!resetBefore)
+                ScheduleNext(RepeatTimeSpanInterval);
         }
     }
     //----------------------------------------------------------------------------
@@ -591,9 +610,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <summary>
     ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.
     /// </summary>
-    /// <param name="resetAfter">Unused; reserved for symmetry with sync path.</param>
+    /// <param name="resetBefore">
+    ///   When <c>true</c>, the next tick was already scheduled when this tick started.
+    /// </param>
     /// <param name="isRepeating">Whether this registration repeats.</param>
-    private void OnAsyncCallbackCompleted (bool resetAfter, bool isRepeating)
+    private void OnAsyncCallbackCompleted (bool resetBefore, bool isRepeating)
     {
         lock (_gate)
         {
@@ -605,7 +626,8 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
                 return;
             }
             State = TimerState.RepeatCycle;
-            ScheduleNext(RepeatTimeSpanInterval);
+            if (!resetBefore)
+                ScheduleNext(RepeatTimeSpanInterval);
         }
     }
     //----------------------------------------------------------------------------

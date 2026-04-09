@@ -156,13 +156,13 @@ public class UsingCommonTimerContracts : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IIntervalTimer"/> declares IsResetAfterCallback, ElapsedTime, and TimeUntilNextCallback.
+    ///   Verifies that <see cref="IIntervalTimer"/> declares IsResetBeforeCallback, ElapsedTime, and TimeUntilNextCallback.
     /// </summary>
     [Fact]
     public void IIntervalTimer_DeclaresRequiredProperties ()
     {
         Type intervalType = typeof(IIntervalTimer);
-        intervalType.GetProperty("IsResetAfterCallback").Should().NotBeNull();
+        intervalType.GetProperty("IsResetBeforeCallback").Should().NotBeNull();
         intervalType.GetProperty("ElapsedTime").Should().NotBeNull();
         intervalType.GetProperty("TimeUntilNextCallback").Should().NotBeNull();
     }
@@ -332,25 +332,25 @@ public class UsingCommonTimerContracts : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that default <see cref="IntervalTimerOptions"/> has ResetIntervalAfterCallback false and CallbackExecutionContext Capture.
+    ///   Verifies that default <see cref="IntervalTimerOptions"/> has ResetIntervalBeforeCallback false and CallbackExecutionContext Capture.
     /// </summary>
     [Fact]
     public void IntervalTimerOptions_CanBeConstructedWithDefaults ()
     {
         IntervalTimerOptions options = new();
-        options.ResetIntervalAfterCallback.Should().BeFalse();
+        options.ResetIntervalBeforeCallback.Should().BeFalse();
         options.CallbackExecutionContext.Should().Be(TimerCallbackExecutionContext.Capture);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IntervalTimerOptions"/> can be constructed with ResetIntervalAfterCallback set to true.
+    ///   Verifies that <see cref="IntervalTimerOptions"/> can be constructed with ResetIntervalBeforeCallback set to true.
     /// </summary>
     [Fact]
-    public void IntervalTimerOptions_CanBeConstructedWithResetIntervalAfterCallback ()
+    public void IntervalTimerOptions_CanBeConstructedWithResetIntervalBeforeCallback ()
     {
-        IntervalTimerOptions options = new() { ResetIntervalAfterCallback = true };
-        options.ResetIntervalAfterCallback.Should().BeTrue();
+        IntervalTimerOptions options = new() { ResetIntervalBeforeCallback = true };
+        options.ResetIntervalBeforeCallback.Should().BeTrue();
     }
     //----------------------------------------------------------------------------
 

@@ -234,16 +234,16 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         count.Should().BeGreaterThan(1);
         (firstCallbackTime - start).Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         (secondCallbackTime - firstCallbackTime).Should().BeGreaterThanOrEqualTo(RepeatInterval.Minus(TimingTolerance));
-        timer.State.Should().BeOneOf(TimerState.RepeatCycle, TimerState.RepeatProcessingCallback);
+        timer.State.Should().BeOneOf(TimerState.RepeatCycle, TimerState.ProcessingCallback);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a repeating timer with <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/>
-    ///   invokes callbacks with spacing close to the repeat interval (reset-after-callback semantics).
+    ///   Verifies that a repeating timer with default <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/>
+    ///   (<c>false</c>) invokes callbacks with spacing close to the repeat interval (countdown starts after each callback completes).
     /// </summary>
     [Fact]
-    public void RegisterTimer_RepeatingResetAfterCallback_CallbackCalledWithCorrectSpacing ()
+    public void RegisterTimer_Repeating_CountdownAfterCallback_CallbackCalledWithCorrectSpacing ()
     {
         IPrimeClock clock = new PrimeClock();
         int count = 0;
@@ -256,8 +256,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             count++;
             if (count >= 2)
                 signal.Set();
-        }, TestContext.Current.CancellationToken,
-            timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true });
+        }, TestContext.Current.CancellationToken);
         signal.Wait((WaitMargin + ShortDelay + RepeatInterval + WaitMargin).ToTimeSpan(),
             TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(1);
@@ -463,12 +462,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a repeating async timer with
-    ///   <see cref="IntervalTimerOptions.ResetIntervalAfterCallback"/> schedules the next tick
+    ///   Verifies that a repeating async timer with default
+    ///   <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/> (<c>false</c>) schedules the next tick
     ///   only after the async callback completes (not from callback start).
     /// </summary>
     [Fact]
-    public void RegisterAsyncTimer_RepeatingResetAfterCallback_NextTickAfterAsyncCallbackCompletes ()
+    public void RegisterAsyncTimer_Repeating_CountdownAfterCallback_NextTickAfterAsyncCallbackCompletes ()
     {
         IPrimeClock clock = new PrimeClock();
         Duration asyncWork = Duration.FromMilliseconds(80);
@@ -484,8 +483,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 if (callbackStarts.Count >= 2)
                     signal.Set();
             },
-            TestContext.Current.CancellationToken,
-            timerOptions: new IntervalTimerOptions { ResetIntervalAfterCallback = true });
+            TestContext.Current.CancellationToken);
         signal.Wait((ShortDelay + asyncWork + RepeatInterval + WaitMargin).ToTimeSpan(),
             TestContext.Current.CancellationToken).Should().BeTrue();
         callbackStarts.Count.Should().BeGreaterThan(1);

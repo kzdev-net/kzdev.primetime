@@ -490,7 +490,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         clock.Advance(Duration.FromSeconds(1));
         fireCount.Should().Be(2);
         clock.Advance(Duration.FromSeconds(2));
-        fireCount.Should().Be(4);
+        fireCount.Should().Be(3,
+            "with countdown-after-callback (default), the next tick is scheduled from the virtual instant when the callback completes, so one Advance cannot fire twice at the same coarse time");
     }
     //----------------------------------------------------------------------------
 

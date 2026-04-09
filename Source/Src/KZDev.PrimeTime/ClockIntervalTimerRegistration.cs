@@ -118,10 +118,11 @@ private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
     //----------------------------------------------------------------------------
 
         //----------------------------------------------------------------------------
-private partial void RecordIntervalCallbackStarted ()
+private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback)
     {
         _lastCallbackInstant = _clock.NowInstant;
-        _nextCallbackInstant = null;
+        if (!resetIntervalBeforeCallback)
+            _nextCallbackInstant = null;
     }
     //----------------------------------------------------------------------------
 
@@ -135,8 +136,6 @@ private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
         Instant now = _clock.NowInstant;
         if (next <= now)
             return 0;
-        if (_callbacksRunning > 0 && IsResetAfterCallback)
-            return (long)_repeatInterval.TotalMilliseconds;
         return (long)(next - now).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------

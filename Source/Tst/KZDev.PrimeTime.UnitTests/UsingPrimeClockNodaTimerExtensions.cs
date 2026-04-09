@@ -125,8 +125,9 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
             state,
             repeat: true);
 
-        clock.Advance(Duration.FromMinutes(10));
-
+        clock.Advance(Duration.FromMinutes(5));
+        fired.Should().Be(1);
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(2);
         receivedState.Should().BeSameAs(state);
         receivedRegistration.Should().BeSameAs(timer);
@@ -153,8 +154,9 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
             state: null,
             repeat: true);
 
-        clock.Advance(Duration.FromMinutes(10));
-
+        clock.Advance(Duration.FromMinutes(5));
+        fired.Should().Be(1);
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(2);
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cts.Token);

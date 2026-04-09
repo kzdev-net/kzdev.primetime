@@ -409,7 +409,8 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromSeconds(1));
         fireCount.Should().Be(2);
         clock.Advance(TimeSpan.FromSeconds(2));
-        fireCount.Should().Be(4);
+        fireCount.Should().Be(3,
+            "with ResetIntervalBeforeCallback = false (the default), the interval is reset after the callback completes, so the next tick is scheduled from that virtual instant and one Advance cannot fire twice at the same coarse time");
     }
     //----------------------------------------------------------------------------
 

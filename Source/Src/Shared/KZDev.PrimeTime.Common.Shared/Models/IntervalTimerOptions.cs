@@ -15,16 +15,29 @@ public record IntervalTimerOptions : TimerOptions
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Sets when the repeating interval is started relative to each callback.
+    ///   For a repeating registration, when <c>false</c> (the default), the next interval is not armed
+    ///   until the current callback completes. When set to <c>true</c>, the next interval is armed before
+    ///   the user callback runs, allowing the next tick to fire while the current callback may still be
+    ///   running.
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     If this option is <c>false</c>, the interval is reset before the callback is initiated.
-    ///     Many callbacks may run concurrently depending on the interval and callback duration.
+    ///     When this option is <c>false</c> (the default), the next tick is not armed until the current
+    ///     callback finishes, so timer-driven callbacks for the same registration never overlap and a slow
+    ///     callback delays every following tick. For a synchronous callback, that is when the delegate has
+    ///     returned; for an asynchronous callback, when the returned task has completed (including awaited
+    ///     work). Only then does the repeat interval count down toward the next fire.
     ///   </para>
     ///   <para>
-    ///     If this option is <c>true</c>, the interval is reset after the callback completes
-    ///     (whether it returns normally or throws).
+    ///     When this option is <c>true</c>, the underlying timer is armed for the next repeat interval
+    ///     before the user callback runs. If a callback runs longer than the repeat interval, another tick
+    ///     can fire and start another callback while the previous one is still executing.
+    ///   </para>
+    ///   <para>
+    ///     When this option is <c>false</c>, a repeating registration reports
+    ///     <see cref="TimerState.ProcessingCallback"/> while a callback is executing. When
+    ///     <c>true</c>, it reports <see cref="TimerState.RepeatProcessingCallback"/> during the callback
+    ///     instead.
     ///   </para>
     ///   <para>
     ///     This applies only to repeating interval timer registrations and is ignored for
@@ -32,9 +45,9 @@ public record IntervalTimerOptions : TimerOptions
     ///   </para>
     /// </remarks>
 #if NET
-    public bool ResetIntervalAfterCallback { get; init; }
+    public bool ResetIntervalBeforeCallback { get; init; }
 #else
-    public bool ResetIntervalAfterCallback { get; set; }
+    public bool ResetIntervalBeforeCallback { get; set; }
     //----------------------------------------------------------------------------
 #endif
 }

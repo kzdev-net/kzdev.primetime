@@ -12,15 +12,14 @@ public interface IIntervalTimer : IClockTimer
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Returns whether this repeating registration was set up to restart the timer
-    ///   interval after each callback completes, or restart the timer interval before
-    ///   the callback is initiated (default).
+    ///   Returns whether this repeating registration starts the countdown to the next tick before
+    ///   the current callback completes (<see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/>).
     /// </summary>
     /// <remarks>
     ///   This only applies to repeating time-interval registrations, and is <c>false</c>
     ///   for non-repeating registrations.
     /// </remarks>
-    bool IsResetAfterCallback { get; }
+    bool IsResetBeforeCallback { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the time elapsed since the last callback for this registration.
@@ -52,11 +51,11 @@ public interface IIntervalTimer : IClockTimer
     ///     signaled at least once, this will return -1.
     ///   </para>
     ///   <para>
-    ///     For a repeating interval timer where
-    ///     <see cref="IsResetAfterCallback">IsResetAfterCallback</see>
-    ///     is <c>true</c>, and with a current <see cref="IClockTimer.State">State</see> of
-    ///     <see cref="TimerState.ProcessingCallback"/>, this will return the time until
-    ///     the next callback after the current callback completes.
+    ///     For a repeating interval timer where <see cref="IsResetBeforeCallback"/> is <c>false</c>,
+    ///     the next due instant is not scheduled until the callback completes; while a callback is
+    ///     running, this property therefore returns -1. When <see cref="IsResetBeforeCallback"/> is
+    ///     <c>true</c>, the next tick is scheduled when the current tick fires, so a value may be
+    ///     available while a callback is still executing.
     ///   </para>
     ///   <para>
     ///     Implementations in <c>KZDev.SystemClock.PrimeTime</c> may expose this as <see cref="TimeSpan"/>;

@@ -37,7 +37,7 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+    /// <param name="timerOptions">Optional timer options (e.g. reset-before-callback, execution context).</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
     public static IClockIntervalTimer RegisterTimer (this IPrimeClock clock,
         TimeSpan callbackTime,
@@ -65,7 +65,7 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+    /// <param name="timerOptions">Optional timer options (e.g. reset-before-callback, execution context).</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
     public static IClockIntervalTimer RegisterTimer (this IPrimeClock clock,
         TimeSpan callbackTime,
@@ -96,7 +96,7 @@ public static class PrimeClockTimerExtensions
     ///   no external cancellation is required.
     /// </param>
     /// <param name="repeat">If <c>true</c>, repeat using <paramref name="callbackTime"/> as the interval.</param>
-    /// <param name="timerOptions">Optional timer options (e.g. reset-after-callback, execution context).</param>
+    /// <param name="timerOptions">Optional timer options (e.g. reset-before-callback, execution context).</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
     public static IClockIntervalTimer RegisterTimer (this IPrimeClock clock,
         TimeSpan callbackTime,
