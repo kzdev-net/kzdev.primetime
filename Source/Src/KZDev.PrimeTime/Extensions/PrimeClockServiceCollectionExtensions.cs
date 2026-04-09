@@ -17,8 +17,9 @@ public static class PrimeClockServiceCollectionExtensions
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Adds the default <see cref="IPrimeClock"/> implementation
-    ///   (<see cref="PrimeClock"/>) as a singleton in the service collection, and registers
-    ///   <see cref="IPrimeTime"/> to resolve the same instance as <see cref="IPrimeClock"/>.
+    ///   (<see cref="PrimeClock"/>) as a singleton in the service collection, registers
+    ///   <see cref="IPrimeTime"/> to resolve the same instance as <see cref="IPrimeClock"/>, and
+    ///   registers <see cref="IClock"/> as <see cref="SystemClock.Instance"/> for NodaTime consumers.
     /// </summary>
     /// <param name="services">
     ///   The <see cref="IServiceCollection"/> to add the service to.
