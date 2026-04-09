@@ -134,10 +134,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _utcTimeOfDaySchedule ? _clock.UtcNowDateTimeOffset : _clock.LocalNowDateTimeOffset;
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Persists the clock's current instant as this registration's creation time.
+    ///   Persists the clock's current instant as this registration's creation time, using the
+    ///   same UTC vs local calendar-day basis as scheduling (<see cref="GetScheduleNowOffset"/>).
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer () =>
-        _registeredTime = _clock.UtcNowDateTimeOffset;
+        _registeredTime = GetScheduleNowOffset();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
