@@ -19,7 +19,7 @@ internal static class DayTimeNodaLocalWallTimeScheduling
     ///   instant.
     /// </summary>
     /// <remarks>
-    ///   Kept aligned with <see cref="DayTimeBclLocalWallTimeScheduling"/> so both stacks cap work identically in
+    ///   Kept aligned with <c>DayTimeBclLocalWallTimeScheduling</c> so both stacks cap work identically in
     ///   pathological cases.
     /// </remarks>
     private const int MaxDaySearchWindow = 800;

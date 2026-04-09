@@ -15,8 +15,7 @@
 		<PackageReadmeFile>docs\README.md</PackageReadmeFile>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageDescription>Time utilities for .NET projects.</PackageDescription>
-		<PackageReleaseNotes>Initial Release (version 1.0.0).</PackageReleaseNotes>
+		<PackageDescription>$(Description)</PackageDescription>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<RepositoryUrl>https://github.com/kzdev-net/kzdev.primetime</RepositoryUrl>
 	</PropertyGroup>

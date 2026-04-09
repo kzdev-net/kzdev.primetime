@@ -43,7 +43,7 @@ public partial interface IPrimeTestClock
     /// <summary>
     ///   Advances the clock's virtual time by the specified duration, processing all
     ///   due delays, time cancellations, and timer callbacks. Equivalent to
-    ///   <see cref="Advance"/> for a single step of the given duration.
+    ///   <see cref="Advance(NodaTime.Duration)"/> for a single step of the given duration.
     /// </summary>
     /// <param name="duration">
     ///   The amount of virtual time to advance.

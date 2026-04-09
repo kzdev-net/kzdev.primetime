@@ -15,6 +15,7 @@
         <Copyright>Copyright © 2026 Kevin Zehrer. All rights reserved.</Copyright>
         <Product>KZDev PrimeTime</Product>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <PackageReleaseNotes>Version $(Version). Pre-release package; see the repository for changes and release history.</PackageReleaseNotes>
     </PropertyGroup>
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>

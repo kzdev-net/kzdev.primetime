@@ -11,8 +11,8 @@ namespace KZDev.PrimeTime;
 ///   components depending on <see cref="TimeProvider"/> (e.g. <see cref="TimeProvider.GetUtcNow"/>,
 ///   <see cref="TimeProvider.CreateTimer"/>) use the PrimeTime NodaTime clock. When the clock
 ///   is a test clock (<see cref="IPrimeTestClock"/>), time and timers are driven by
-///   <see cref="IPrimeTestClock.SetInstant"/>, <see cref="IPrimeTestClock.Advance"/>,
-///   and <see cref="IPrimeTestClock.RunFor"/> for deterministic tests.
+///   <see cref="IPrimeTestClock.SetInstant"/>, <see cref="IPrimeTestClock.Advance(NodaTime.Duration)"/>,
+///   and <see cref="IPrimeTestClock.RunFor(NodaTime.Duration)"/> for deterministic tests.
 /// </summary>
 internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {

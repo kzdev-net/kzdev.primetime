@@ -54,7 +54,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   Clock used for scheduling and reading "now".
     /// </summary>
-    private IPrimeClock _clock;
+    private readonly IPrimeClock _clock;
 
     /// <summary>
     ///   When <c>true</c>, callbacks capture execution context.
@@ -69,7 +69,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   User callback delegate.
     /// </summary>
-    private Delegate _callback;
+    private readonly Delegate _callback;
 
     /// <summary>
     ///   Optional state for context callbacks.
@@ -173,9 +173,13 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     /// <summary>
     ///   Completes initialization shared by stack-specific constructors.
     /// </summary>
-    /// <param name="clock">The clock used for scheduling and time queries.</param>
+    /// <remarks>
+    ///   <para>
+    ///     Stack-specific constructors assign and validate <see cref="_clock"/> and <see cref="_callback"/> before calling
+    ///     this method; this method does not take a clock or callback parameter and does not perform those assignments.
+    ///   </para>
+    /// </remarks>
     /// <param name="callbackKind">The kind of callback delegate to invoke.</param>
-    /// <param name="callback">The delegate invoked when the timer fires.</param>
     /// <param name="callbackState">
     ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
     /// </param>
@@ -183,20 +187,13 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     ///   Day-time timer options, or <c>null</c> to use default option values.
     /// </param>
     /// <param name="cancellationToken">Token that cancels the registration.</param>
-    /// <exception cref="ArgumentNullException">
-    ///   <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
-    /// </exception>
     private void FinishConstruction (
-        IPrimeClock clock,
         IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
         object? callbackState,
         DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
     {
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _callbackKind = callbackKind;
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         _callbackState = callbackState;
 
         DayTimeTimerOptions resolvedOptions = options ?? new DayTimeTimerOptions();

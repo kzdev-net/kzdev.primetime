@@ -26,7 +26,7 @@ public static partial class PrimeClockTimeProviderExtensions
     /// <returns>
     ///   A <see cref="TimeProvider"/> backed by <paramref name="clock"/>. When
     ///   <paramref name="clock"/> is a test clock, advancing virtual time with
-    ///   <see cref="IPrimeTestClock.Advance(TimeSpan)"/> or <see cref="IPrimeTestClock.RunFor(TimeSpan)"/>
+    ///   <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> or <see cref="IPrimeTestClock.RunFor(System.TimeSpan)"/>
     ///   drives the returned provider's time and timers deterministically.
     /// </returns>
     /// <exception cref="ArgumentNullException">

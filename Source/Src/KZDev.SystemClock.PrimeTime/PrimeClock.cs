@@ -18,7 +18,8 @@ internal sealed partial class PrimeClock
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   The <see cref="TimeProvider"/> used for current UTC and local time (<see cref="GetUtcNow"/> and related APIs).
+    ///   The <see cref="TimeProvider"/> that backs <see cref="IPrimeClock.UtcNowDateTimeOffset"/>,
+    ///   <see cref="IPrimeClock.LocalNowDateTimeOffset"/>, and related &quot;now&quot; members on <see cref="PrimeClock"/>.
     /// </summary>
     private readonly TimeProvider _timeProvider;
     //----------------------------------------------------------------------------

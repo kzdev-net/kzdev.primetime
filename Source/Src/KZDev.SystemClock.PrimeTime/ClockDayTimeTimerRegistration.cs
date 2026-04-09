@@ -73,7 +73,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
         _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
         _targetTimeOfDay = targetTimeOfDay;
-        FinishConstruction(clock, callbackKind, callback, callbackState, options, cancellationToken);
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
     }
     //----------------------------------------------------------------------------
     /// <summary>

@@ -24,7 +24,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     //============================================================================
     /// <summary>
     ///   A virtual-time delay that completes a <see cref="TaskCompletionSource{TResult}"/> when
-    ///   <see cref="PrimeTestClock.Advance"/> reaches <see cref="DueUtc"/>.
+    ///   <see cref="PrimeTestClock.Advance(System.TimeSpan)"/> reaches <see cref="DueUtc"/>.
     /// </summary>
     private sealed class PendingDelay
     {
@@ -463,7 +463,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   Runs the callback when this registration is due at <paramref name="now"/>.
         /// </summary>
-        /// <param name="now">Virtual UTC instant passed from <see cref="PrimeTestClock.Advance"/>.</param>
+        /// <param name="now">Virtual UTC instant passed from <see cref="PrimeTestClock.Advance(System.TimeSpan)"/>.</param>
         public abstract void RunDueCallback (DateTimeOffset now);
         //------------------------------------------------------------------------
 
@@ -1274,7 +1274,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   Runs the day-time callback when due at <paramref name="now"/>.
         /// </summary>
-        /// <param name="now">Virtual UTC instant from <see cref="PrimeTestClock.Advance"/>.</param>
+        /// <param name="now">Virtual UTC instant from <see cref="PrimeTestClock.Advance(System.TimeSpan)"/>.</param>
         public abstract void RunDueCallback (DateTimeOffset now);
         //------------------------------------------------------------------------
 
@@ -1282,16 +1282,17 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
         /// <summary>
         ///   Computes the next UTC instant when <see cref="TargetTimeOfDay"/> should fire on or after the clock&apos;s
         ///   current instant, using the same local wall-time policies as production
-        ///   (<see cref="DayTimeBclLocalWallTimeScheduling"/> and the NodaTime scheduling helper in the superset assembly).
+        ///   (<c>DayTimeBclLocalWallTimeScheduling</c> on the System Clock stack and <c>DayTimeNodaLocalWallTimeScheduling</c> in the
+        ///   superset assembly).
         /// </summary>
         /// <param name="now">Current virtual UTC instant (used for UTC day-time; local scheduling uses the clock&apos;s local &quot;now&quot;).</param>
         /// <returns>The next scheduled fire instant in UTC, or <c>null</c> if not applicable.</returns>
         /// <remarks>
         ///   <para>
-        ///     For <see cref="IsLocal"/> on the System Clock stack, the schedule zone is
-        ///     <see cref="IPrimeClock.LocalScheduleTimeZone"/> (see <see cref="PrimeTestClock.LocalScheduleTimeZone"/>),
-        ///     which is not injectable on <see cref="PrimeTestClock"/>; deterministic DST edge tests should use the Noda
-        ///     <see cref="PrimeTestClock"/> constructor that accepts a <c>NodaTime.DateTimeZone</c>.
+        ///     For <see cref="IsLocal"/> on the System Clock stack, the schedule zone is <c>IPrimeClock.LocalScheduleTimeZone</c>
+        ///     (exposed on the System Clock build of <see cref="PrimeTestClock"/>), which is not injectable on
+        ///     <see cref="PrimeTestClock"/>; deterministic DST edge tests should use the Noda <see cref="PrimeTestClock"/>
+        ///     constructor that accepts a <c>NodaTime.DateTimeZone</c>.
         ///   </para>
         /// </remarks>
         protected DateTimeOffset? ComputeNextDue (DateTimeOffset now)
@@ -1642,7 +1643,7 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 #endif
 
     /// <summary>
-    ///   Whether <see cref="Start"/> is driving automatic <see cref="Advance"/> on a background thread.
+    ///   Whether <see cref="Start(System.TimeSpan?)"/> is driving automatic <see cref="Advance(System.TimeSpan)"/> on a background thread.
     /// </summary>
     private bool _isRunning;
 
@@ -1745,8 +1746,8 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   the scheduled local wall-clock instant (including across daylight saving time transitions).
     /// </summary>
     /// <remarks>
-    ///   Virtual local day-time timers use <see cref="DayTimeBclLocalWallTimeScheduling"/> (System Clock) or
-    ///   DayTimeNodaLocalWallTimeScheduling (superset assembly) instead of this method so skipped/duplicate policies
+    ///   Virtual local day-time timers use <c>DayTimeBclLocalWallTimeScheduling</c> (System Clock) or
+    ///   <c>DayTimeNodaLocalWallTimeScheduling</c> (superset assembly) instead of this method so skipped/duplicate policies
     ///   match production.
     /// </remarks>
     /// <param name="localNow">

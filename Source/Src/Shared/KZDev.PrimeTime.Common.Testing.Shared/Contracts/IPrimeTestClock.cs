@@ -37,7 +37,7 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     /// <summary>
     ///   Advances the clock's virtual time by the specified duration, processing all
     ///   due delays, time cancellations, and timer callbacks. Equivalent to
-    ///   <see cref="Advance"/> for a single step of the given duration.
+    ///   <see cref="Advance(System.TimeSpan)"/> for a single step of the given duration.
     /// </summary>
     /// <param name="duration">
     ///   The amount of virtual time to advance.
@@ -66,8 +66,8 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Occurs when the clock's current time has changed (e.g. after
-    ///   <see cref="SetTime"/>, <see cref="Advance"/>, <see cref="RunFor"/>, or
-    ///   automatic advancement from <see cref="Start"/>).
+    ///   <see cref="SetTime"/>, <see cref="Advance(System.TimeSpan)"/>, <see cref="RunFor(System.TimeSpan)"/>, or
+    ///   automatic advancement from <see cref="Start(System.TimeSpan?)"/>).
     /// </summary>
     event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
     //----------------------------------------------------------------------------
