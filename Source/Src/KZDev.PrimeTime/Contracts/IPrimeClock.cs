@@ -162,6 +162,31 @@ public partial interface IPrimeClock
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
+
+    #region IPrimeClock — Local schedule zone
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the time zone used to resolve the local calendar date and local wall-clock time for
+    ///   local day-time timer registration and for <see cref="LocalZonedNowInstant"/>.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     When the underlying zone is a <see cref="NodaTime.TimeZones.BclDateTimeZone"/>, this is the
+    ///     wrapped <see cref="TimeZoneInfo"/> (for example the zone passed to
+    ///     <see cref="NodaTime.TimeZones.BclDateTimeZone.FromTimeZoneInfo"/> on a test clock).
+    ///     Otherwise (for example a pure TZDB zone with no single BCL equivalent), implementations
+    ///     fall back to <see cref="TimeZoneInfo.Local"/>.
+    ///   </para>
+    ///   <para>
+    ///     Matches <see cref="TimeProvider.LocalTimeZone"/> when the clock is exposed through
+    ///     <see cref="PrimeClockTimeProviderAdapter"/>.
+    ///   </para>
+    /// </remarks>
+    TimeZoneInfo LocalScheduleTimeZone { get; }
+    //----------------------------------------------------------------------------
+
+    #endregion IPrimeClock — Local schedule zone
 }
 //################################################################################
 

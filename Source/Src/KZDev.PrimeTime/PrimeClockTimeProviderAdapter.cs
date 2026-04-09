@@ -113,7 +113,7 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Local;
+    public override TimeZoneInfo LocalTimeZone => _clock.LocalScheduleTimeZone;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

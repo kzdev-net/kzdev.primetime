@@ -204,6 +204,12 @@ internal sealed partial class PrimeClock
     public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(UtcNowDateTime); }
 #endif
 
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get =>
+        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_systemDefaultZone); }
+    //----------------------------------------------------------------------------
+
     #endregion IPrimeClock Implementation
 
     #region IPrimeClock — Interval timers (RegisterTimer)

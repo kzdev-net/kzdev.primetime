@@ -23,9 +23,10 @@ public partial interface IPrimeClock
     ///     <see cref="TimeZoneInfo"/> for deterministic DST coverage.
     ///   </para>
     ///   <para>
-    ///     The NodaTime-based package does not declare this member; local scheduling there uses the
-    ///     NodaTime zone corresponding to the clock's current local zoned time
-    ///     (<c>LocalZonedNowInstant.Zone</c>).
+    ///     The NodaTime-based package (<c>KZDev.PrimeTime</c>) exposes the same member: when the
+    ///     clock's local Noda <c>DateTimeZone</c> wraps BCL data (a <c>BclDateTimeZone</c>), this is
+    ///     that wrapped <see cref="TimeZoneInfo"/>; when it does not, implementations fall back to
+    ///     <see cref="TimeZoneInfo.Local"/> so a concrete <see cref="TimeZoneInfo"/> is always returned.
     ///   </para>
     /// </remarks>
     TimeZoneInfo LocalScheduleTimeZone { get; }

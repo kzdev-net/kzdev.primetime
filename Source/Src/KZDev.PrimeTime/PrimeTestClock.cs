@@ -227,6 +227,16 @@ public sealed partial class PrimeTestClock
 
     #endregion IPrimeClock Implementation — Now (Noda)
 
+    #region IPrimeClock Implementation — Local schedule zone
+
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get =>
+        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_zone); }
+    //----------------------------------------------------------------------------
+
+    #endregion IPrimeClock Implementation — Local schedule zone
+
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Resolves the system default time zone for local projections, using the BCL provider or
