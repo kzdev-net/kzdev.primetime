@@ -1,38 +1,56 @@
-# KZDev.PrimeTime
+# KZDev PrimeTime
 
-This repository ships two related NuGet libraries for time, clocks, and scheduling in .NET. Pick **one** package per application; they are **mutually exclusive** (do not reference both).
+PrimeTime is a **.NET** library family for **injectable clocks**, **deterministic test time**, and **timer** registration—including **interval** timers and, on modern frameworks, **local time-of-day** schedules with explicit **daylight-saving** behavior.
 
-**KZDev.PrimeTime** is the **superset** package: it includes everything in the subset plus NodaTime-specific APIs on the same abstractions (for example, extra overloads on `IPrimeClock`). **KZDev.SystemClock.PrimeTime** is a **strict BCL subset**: shared service names and the common contract surface match the superset where they overlap, without a NodaTime dependency.
+This repository builds **two NuGet packages**. They share one **design**; they differ by **namespace**, **dependencies**, and **API surface**. **Use only one package per application.**
 
 ## Packages
 
-- **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** — Contracts and timer abstractions plus **NodaTime-backed** clocks and timers. Use `IPrimeClock`, `PrimeClock`, and related types in the **`KZDev.PrimeTime`** namespace. NodaTime support ships in this package only (there is no separate `KZDev.PrimeTime.NodaTime` package).
+| Package | Namespace | Stack | NuGet |
+|---------|-----------|--------|--------|
+| **KZDev.PrimeTime** | `KZDev.PrimeTime` | **NodaTime superset** — `Instant`, `Duration`, `LocalTime`, zoned “now”, NodaTime timer overloads on `IPrimeClock`. | [![NuGet](https://img.shields.io/nuget/v/KZDev.PrimeTime.svg)](https://www.nuget.org/packages/KZDev.PrimeTime) |
+| **KZDev.SystemClock.PrimeTime** | `KZDev.SystemClock.PrimeTime` | **BCL subset** — `TimeProvider`, `DateTimeOffset` / `TimeSpan`, no NodaTime. | [![NuGet](https://img.shields.io/nuget/v/KZDev.SystemClock.PrimeTime.svg)](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime) |
 
-- **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** — The same service names (`IPrimeClock`, `PrimeClock`, `IPrimeTestClock`, `PrimeTestClock`) with **BCL / `TimeProvider` only**, in the **`KZDev.SystemClock.PrimeTime`** namespace. Use this when you want the shared model without NodaTime.
+**Do not reference both packages** in the same app.
 
-## Using the library
+### Quick install
 
-Install the package that matches your stack. Register services with the DI extension methods for that package (for example, `AddPrimeClock` on `IServiceCollection`). The published API documentation describes both deliverables.
+```bash
+# NodaTime superset
+dotnet add package KZDev.PrimeTime
 
-## Features
+# BCL / TimeProvider only
+dotnet add package KZDev.SystemClock.PrimeTime
+```
 
-### Day-time timers and daylight saving time
+### Target frameworks
 
-Local time-of-day timers resolve the next fire using the clock’s time zone and the `SkippedTimeBehavior` and `DuplicateTimeBehavior` values on `DayTimeTimerOptions`.
+Both libraries target **`net10.0`**, **`net8.0`**, and **`netstandard2.0`** (with BCL polyfills on `netstandard2.0` where required).
+
+### Dependency injection (same entry point name, different assembly)
+
+Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
+
+- **KZDev.PrimeTime** registers **`NodaTime.IClock`** (default `SystemClock.Instance`), then **`IPrimeClock`** → **`PrimeClock`**, and **`IPrimeTime`** → the same instance.
+- **KZDev.SystemClock.PrimeTime** registers **`TimeProvider`** (default `TimeProvider.System`), then **`IPrimeClock`** → **`PrimeClock`**, and **`IPrimeTime`** → the same instance.
 
 ## Documentation
 
-Full documentation for the libraries is available on the [PrimeTime Documentation](https://kzdev-net.github.io/kzdev.primetime/) page.
+- **Hosted docs (DocFX):** [kzdev-net.github.io/kzdev.primetime](https://kzdev-net.github.io/kzdev.primetime/)
+- **Articles in repo:** [Source/Docs/articles](Source/Docs/articles/) — start with [Choosing a package](Source/Docs/articles/choosing-a-package.md), then the guide for [SystemClock](Source/Docs/articles/systemclock-package.md) or [PrimeTime superset](Source/Docs/articles/primetime-superset.md).
 
-## Future Features
+## Features (high level)
 
-The roadmap plan for this package is to add several additional helpful performance focused utilities as time allows.
+- **`IPrimeClock` / `PrimeClock`** — production clock; timer registration and “now” projections (exact members depend on package and TFM).
+- **`IPrimeTestClock` / `PrimeTestClock`** — virtual time for tests (`Advance`, `RunFor`, …).
+- **Day-time timers** — `SkippedTimeBehavior` and `DuplicateTimeBehavior` on `DayTimeTimerOptions` for local wall-clock scheduling near DST transitions (see docs).
+- **`ToTimeProvider`** — adapt an `IPrimeClock` to `TimeProvider` for interoperability.
 
-## Contribution Guidelines
+## Repository and license
 
-At this time, I am not accepting external pull requests. However, any feedback or suggestions are welcome and can be provided through the following channels:
+- **Source:** [github.com/kzdev-net/kzdev.primetime](https://github.com/kzdev-net/kzdev.primetime)
+- **License:** [MIT](LICENSE)
 
-- **Feature Requests:** Please use GitHub Discussions to discuss new features or enhancements before opening a feature request. This will help ensure that your request is in line with the project's goals and vision.
-- **Bug Reports:** If you encounter any issues, feel free to open an issue so it can be addressed promptly.
+## Contributing
 
-I appreciate your understanding and look forward to collaborating with you through discussions and issue tracking.
+At this time, external pull requests are not accepted. Feedback and bug reports are welcome via GitHub **Discussions** and **Issues**; see the hosted overview for the maintainer’s preferred channels.

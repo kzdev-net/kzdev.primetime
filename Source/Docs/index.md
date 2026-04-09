@@ -4,20 +4,23 @@ _layout: landing
 
 # PrimeTime
 
-**KZDev.PrimeTime** (superset) and **KZDev.SystemClock.PrimeTime** (strict BCL subset) provide time and scheduling utilities for .NET. The subset reuses the same core type names and matching contract signatures for the shared surface; the superset adds NodaTime overloads on the same interfaces.
+**KZDev.PrimeTime** and **KZDev.SystemClock.PrimeTime** provide **clocks**, **timers**, and **virtual time** for .NET. Pick **one** package per application—they are **mutually exclusive**.
 
-See the [API Reference](xref:PrimeTime) and [Reference](Reference/CronNotes.md) for details.
+- **KZDev.PrimeTime** — **NodaTime superset** (`KZDev.PrimeTime`): NodaTime **`Instant`**, **`Duration`**, **`LocalTime`**, zoned “now” properties, and matching timer overloads on **`IPrimeClock`**. Ships with a **NodaTime** dependency (there is no separate NodaTime-only package).
 
-## Packages
-
-Choose **one** of the following per app; the two packages are **not** meant to be used together:
-
-- **KZDev.PrimeTime** — Core contracts and abstractions, clocks and timers backed by NodaTime (`KZDev.PrimeTime` namespace). There is no separate NodaTime-only package; NodaTime is part of this deliverable.
-
-- **KZDev.SystemClock.PrimeTime** — BCL / `TimeProvider` clocks and timers only, with the same type names in the **`KZDev.SystemClock.PrimeTime`** namespace.
+- **KZDev.SystemClock.PrimeTime** — **BCL / `TimeProvider` subset** (`KZDev.SystemClock.PrimeTime`): overlapping contracts and the same service type **names**, without NodaTime.
 
 ## Documentation
 
+- [Overview](articles/overview.md)
+- [Choosing a package](articles/choosing-a-package.md)
+- [Timers, DST, and testing](articles/concepts-timers-and-testing.md)
+- [KZDev.SystemClock.PrimeTime guide](articles/systemclock-package.md)
+- [KZDev.PrimeTime guide](articles/primetime-superset.md)
 - [Cron and scheduling notes](Reference/CronNotes.md)
 - [API Reference](xref:PrimeTime)
-- [Overview](articles/overview.md)
+
+## NuGet
+
+- [KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)
+- [KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)

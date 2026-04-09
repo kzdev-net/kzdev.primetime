@@ -36,7 +36,7 @@
 	<Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />
 	<Import Project="..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 	<ItemGroup>
-		<None Include="..\Package\nuget.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
+		<None Include="..\Package\KZDev.SystemClock.PrimeTime.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
 		<None Include="..\Package\nuget.icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

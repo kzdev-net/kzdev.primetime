@@ -76,7 +76,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{AB49D596-3102-4EFC-A89F-E7103DC6C306}"
 	ProjectSection(SolutionItems) = preProject
 		Src\Package\nuget.icon.png = Src\Package\nuget.icon.png
-		Src\Package\nuget.readme.md = Src\Package\nuget.readme.md
+		Src\Package\KZDev.PrimeTime.readme.md = Src\Package\KZDev.PrimeTime.readme.md
+		Src\Package\KZDev.SystemClock.PrimeTime.readme.md = Src\Package\KZDev.SystemClock.PrimeTime.readme.md
 	EndProjectSection
 EndProject
 Global

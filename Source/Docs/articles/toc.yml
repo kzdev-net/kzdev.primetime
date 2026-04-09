@@ -1,2 +1,10 @@
 - name: Overview
   href: overview.md
+- name: Choosing a package
+  href: choosing-a-package.md
+- name: Timers, DST, and testing
+  href: concepts-timers-and-testing.md
+- name: KZDev.SystemClock.PrimeTime guide
+  href: systemclock-package.md
+- name: KZDev.PrimeTime guide
+  href: primetime-superset.md

@@ -39,7 +39,7 @@
 		<PackageReference Include="System.Threading.Tasks.Extensions" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\Package\nuget.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
+		<None Include="..\Package\KZDev.PrimeTime.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
 		<None Include="..\Package\nuget.icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
 	</ItemGroup>
 	<ItemGroup>
