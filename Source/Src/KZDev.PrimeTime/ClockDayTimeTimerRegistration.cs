@@ -297,18 +297,20 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
 
     /// <summary>
-    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
+    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
     /// </summary>
     /// <param name="newTimeOfDay">New time of day.</param>
     private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = new LocalTime(newTimeOfDay.Hour, newTimeOfDay.Minute, newTimeOfDay.Second, newTimeOfDay.Millisecond);
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
 
     /// <summary>
-    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
+    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
     /// </summary>
     /// <param name="newTimeOfDay">New time of day.</param>
     private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = new LocalTime(newTimeOfDay.Hour, newTimeOfDay.Minute, newTimeOfDay.Second, newTimeOfDay.Millisecond);
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
 #endif
 
     #region Interface Implementations
