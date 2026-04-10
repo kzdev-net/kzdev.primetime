@@ -1,5 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -34,7 +34,7 @@ public partial interface IPrimeTime
     ///   an infinite timeout, or too large to express in milliseconds).
     /// </exception>
     /// <seealso cref="Thread.Sleep(TimeSpan)"/>
-    void Sleep(TimeSpan sleepTime);
+    void Sleep (TimeSpan sleepTime);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Suspends the current thread for the specified number of milliseconds.
@@ -50,7 +50,7 @@ public partial interface IPrimeTime
     ///   <see cref="Timeout.Infinite"/>.
     /// </exception>
     /// <seealso cref="Thread.Sleep(int)"/>
-    void Sleep(int sleepMilliseconds);
+    void Sleep (int sleepMilliseconds);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified time interval.
@@ -63,7 +63,7 @@ public partial interface IPrimeTime
     ///   <paramref name="delayTime"/> is not a valid delay (for example, negative and not an
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
-    Task DelayAsync(TimeSpan delayTime);
+    Task DelayAsync (TimeSpan delayTime);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified number of milliseconds.
@@ -74,7 +74,7 @@ public partial interface IPrimeTime
     /// <exception cref="ArgumentOutOfRangeException">
     ///   <paramref name="millisecondsDelay"/> is less than -1.
     /// </exception>
-    Task DelayAsync(int millisecondsDelay);
+    Task DelayAsync (int millisecondsDelay);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified time interval.
@@ -93,7 +93,7 @@ public partial interface IPrimeTime
     /// <exception cref="OperationCanceledException">
     ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
-    Task DelayAsync(TimeSpan delayTime, CancellationToken cancellationToken);
+    Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Creates a task that completes after a specified number of milliseconds.
@@ -110,7 +110,7 @@ public partial interface IPrimeTime
     /// <exception cref="OperationCanceledException">
     ///   The operation was canceled via <paramref name="cancellationToken"/>.
     /// </exception>
-    Task DelayAsync(int millisecondsDelay, CancellationToken cancellationToken);
+    Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTime — Delays (TimeSpan)
@@ -132,7 +132,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
-    TimeCancellationTokenSource GetTimeCancellationToken(TimeSpan cancelTime);
+    TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token expires after the specified time. The
@@ -147,7 +147,7 @@ public partial interface IPrimeTime
     /// <exception cref="ArgumentOutOfRangeException">
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
-    TimeCancellationTokenSource GetTimeCancellationToken(int cancelMilliseconds);
+    TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
@@ -170,7 +170,7 @@ public partial interface IPrimeTime
     /// <exception cref="ArgumentOutOfRangeException">
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds,
+    TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         CancellationToken token1, CancellationToken token2);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -195,7 +195,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime,
+    TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
         CancellationToken token1, CancellationToken token2);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -217,7 +217,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime, CancellationToken cancellationToken);
+    TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when either the specified
@@ -237,7 +237,7 @@ public partial interface IPrimeTime
     /// <exception cref="ArgumentOutOfRangeException">
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds, CancellationToken cancellationToken);
+    TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns a disposable wrapper whose token is cancelled when the specified time
@@ -261,7 +261,7 @@ public partial interface IPrimeTime
     ///   <paramref name="cancelTime"/> is not a valid delay (for example, negative and not an
     ///   infinite timeout, or too large to express in milliseconds).
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(TimeSpan cancelTime,
+    TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
         params CancellationToken[] cancellationTokens);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -285,7 +285,7 @@ public partial interface IPrimeTime
     /// <exception cref="ArgumentOutOfRangeException">
     ///   <paramref name="cancelMilliseconds"/> is less than -1.
     /// </exception>
-    TimeCancellationTokenSource LinkTimeCancellationToken(int cancelMilliseconds,
+    TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
         params CancellationToken[] cancellationTokens);
     //----------------------------------------------------------------------------
 

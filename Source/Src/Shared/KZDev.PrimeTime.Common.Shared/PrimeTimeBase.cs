@@ -43,34 +43,22 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime)
-    {
-        return Task.Delay(delayTime);
-    }
+    public Task DelayAsync (TimeSpan delayTime) => Task.Delay(delayTime);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay)
-    {
-        return Task.Delay(millisecondsDelay);
-    }
+    public Task DelayAsync (int millisecondsDelay) => Task.Delay(millisecondsDelay);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken)
-    {
-        return Task.Delay(delayTime, cancellationToken);
-    }
+    public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) => Task.Delay(delayTime, cancellationToken);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken)
-    {
-        return Task.Delay(millisecondsDelay, cancellationToken);
-    }
+    public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) => Task.Delay(millisecondsDelay, cancellationToken);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

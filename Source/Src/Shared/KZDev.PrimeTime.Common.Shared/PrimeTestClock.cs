@@ -17,113 +17,8 @@ namespace KZDev.PrimeTime;
 ///   cancellation entries, and virtual interval/day-time timers. Stack-specific instant
 ///   storage and local-time mapping live in partials.
 /// </summary>
-public sealed partial class PrimeTestClock : IPrimeTestClock
+public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 {
-    #region Nested types — Pending delay and time expiry
-
-    //============================================================================
-    /// <summary>
-    ///   A virtual-time delay that completes a <see cref="TaskCompletionSource{TResult}"/> when
-    ///   <see cref="PrimeTestClock.Advance(System.TimeSpan)"/> reaches <see cref="DueUtc"/>.
-    /// </summary>
-    private sealed class PendingDelay
-    {
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Initializes a new instance of the <see cref="PendingDelay"/> class.
-        /// </summary>
-        /// <param name="dueUtc">Virtual UTC instant when the delay completes.</param>
-        /// <param name="taskCompletionSource">Completion source signaled when due.</param>
-        public PendingDelay (DateTimeOffset dueUtc, TaskCompletionSource<bool> taskCompletionSource)
-        {
-            DueUtc = dueUtc;
-            TaskCompletionSource = taskCompletionSource;
-        }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Gets the virtual UTC instant when this delay completes.
-        /// </summary>
-        public DateTimeOffset DueUtc { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Gets the task completion source completed when the delay elapses.
-        /// </summary>
-        public TaskCompletionSource<bool> TaskCompletionSource { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Completes the delay successfully if not already completed.
-        /// </summary>
-        public void Complete ()
-        {
-            TaskCompletionSource.TrySetResult(true);
-        }
-        //------------------------------------------------------------------------
-    }
-    //============================================================================
-
-    //============================================================================
-    /// <summary>
-    ///   A time-based cancellation entry that cancels its wrapper when virtual UTC reaches
-    ///   <see cref="ExpireUtc"/>.
-    /// </summary>
-    private sealed class TimeExpiryEntry
-    {
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Cancellation wrapper whose token is cancelled when virtual time reaches <see cref="ExpireUtc"/>.
-        /// </summary>
-        private readonly TimeCancellationTokenSource _wrapper;
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Initializes a new instance of the <see cref="TimeExpiryEntry"/> class.
-        /// </summary>
-        /// <param name="expireUtc">Virtual UTC instant when cancellation is requested.</param>
-        /// <param name="wrapper">Wrapper whose token should be cancelled at expiry.</param>
-        /// <param name="timeCts">Unused; reserved for future use.</param>
-        public TimeExpiryEntry (DateTimeOffset expireUtc, TimeCancellationTokenSource wrapper,
-            CancellationTokenSource? timeCts = null)
-        {
-            ExpireUtc = expireUtc;
-            _wrapper = wrapper;
-        }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Gets the virtual UTC instant when cancellation is requested.
-        /// </summary>
-        public DateTimeOffset ExpireUtc { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Requests cancellation on the wrapper, ignoring <see cref="ObjectDisposedException"/> if already disposed.
-        /// </summary>
-        public void Cancel ()
-        {
-            try
-            {
-                _wrapper.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Caller may have disposed already.
-            }
-        }
-        //------------------------------------------------------------------------
-    }
-    //============================================================================
-
-    #endregion Nested types — Pending delay and time expiry
-
     #region Nested types — Virtual interval timer
 
     //============================================================================
@@ -1630,23 +1525,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// </summary>
     private static int _nextTimerId;
 
-#if NET10_OR_GREATER
-    /// <summary>
-    ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
-    /// </summary>
-    private readonly Lock _gate = new();
-#else
-    /// <summary>
-    ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
-    /// </summary>
-    private readonly object _gate = new();
-#endif
-
-    /// <summary>
-    ///   Whether <see cref="Start(System.TimeSpan?)"/> is driving automatic <see cref="Advance(System.TimeSpan)"/> on a background thread.
-    /// </summary>
-    private bool _isRunning;
-
     /// <summary>
     ///   Background thread used when <see cref="_isRunning"/> is <c>true</c>.
     /// </summary>
@@ -1656,16 +1534,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     ///   Virtual time advanced per real second when running automatically.
     /// </summary>
     private TimeSpan _runRate = TimeSpan.FromSeconds(1);
-
-    /// <summary>
-    ///   Pending Sleep and DelayAsync completions ordered by due instant.
-    /// </summary>
-    private readonly List<PendingDelay> _pendingDelays = [];
-
-    /// <summary>
-    ///   Active time-based cancellation entries ordered by expiry instant.
-    /// </summary>
-    private readonly List<TimeExpiryEntry> _timeExpiryEntries = [];
 
     /// <summary>
     ///   Active virtual interval timer registrations.
@@ -1711,14 +1579,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Reads the virtual UTC instant while <see cref="_gate"/> is held.
-    /// </summary>
-    /// <returns>The current virtual UTC time.</returns>
-    private partial DateTimeOffset ReadVirtualUtcNowLocked ();
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -2090,24 +1950,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     #endregion IPrimeTestClock Implementation
 
-    #region IPrimeTestTime Implementation
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsRunning
-    {
-        get
-        {
-            lock (_gate)
-            {
-                return _isRunning;
-            }
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeTestTime Implementation
-
 #if SYSTEMCLOCK
     #region IPrimeClock Implementation — Now
 
@@ -2195,224 +2037,6 @@ public sealed partial class PrimeTestClock : IPrimeTestClock
 
     #endregion IPrimeClock Implementation — Now
 #endif
-
-    #region IPrimeTime Implementation — Delays
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public void Sleep (TimeSpan sleepTime)
-    {
-        if (sleepTime <= TimeSpan.Zero)
-            return;
-
-        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        lock (_gate)
-        {
-            DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + sleepTime;
-            _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
-        }
-
-        taskCompletionSource.Task.GetAwaiter().GetResult();
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public void Sleep (int sleepMilliseconds)
-    {
-        Sleep(TimeSpan.FromMilliseconds(sleepMilliseconds));
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime)
-    {
-        return DelayAsync(delayTime, CancellationToken.None);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay)
-    {
-        return DelayAsync(millisecondsDelay, CancellationToken.None);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken)
-    {
-        if (delayTime <= TimeSpan.Zero)
-            return Task.CompletedTask;
-
-        TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        lock (_gate)
-        {
-            DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + delayTime;
-            _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
-        }
-
-        if (cancellationToken.CanBeCanceled)
-        {
-            CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
-            {
-                lock (_gate)
-                {
-                    if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
-                        taskCompletionSource.TrySetCanceled(cancellationToken);
-                }
-            });
-
-            _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
-                cancellationRegistration,
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default);
-        }
-
-        return taskCompletionSource.Task;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken)
-    {
-        return DelayAsync(TimeSpan.FromMilliseconds(millisecondsDelay), cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeTime Implementation — Delays
-
-    #region IPrimeTime Implementation — Time cancellation
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
-    {
-        CancellationTokenSource cts = new();
-        TimeCancellationTokenSource wrapper = new(cts);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper));
-        }
-
-        return wrapper;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
-    {
-        return GetTimeCancellationToken(TimeSpan.FromMilliseconds(cancelMilliseconds));
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
-        CancellationToken token1,
-        CancellationToken token2)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + TimeSpan.FromMilliseconds(cancelMilliseconds);
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
-        CancellationToken token1,
-        CancellationToken token2)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
-    {
-        return LinkTimeCancellationToken(TimeSpan.FromMilliseconds(cancelMilliseconds), cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime,
-        params CancellationToken[] cancellationTokens)
-    {
-        CancellationTokenSource timeCts = new();
-        CancellationToken[] all = new CancellationToken[cancellationTokens.Length + 1];
-        all[0] = timeCts.Token;
-        Array.Copy(cancellationTokens, 0, all, 1, cancellationTokens.Length);
-        CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(all);
-        TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
-
-        lock (_gate)
-        {
-            DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
-            _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
-        }
-
-        return wrapper;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,
-        params CancellationToken[] cancellationTokens)
-    {
-        return LinkTimeCancellationToken(TimeSpan.FromMilliseconds(cancelMilliseconds), cancellationTokens);
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeTime Implementation — Time cancellation
 
     #region IPrimeClock Implementation — Interval timers
 

@@ -1,18 +1,14 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
 /// <summary>
 ///   BCL virtual-time storage and event args for <see cref="PrimeTestClock"/>.
 /// </summary>
-public sealed partial class PrimeTestClock
+public sealed partial class PrimeTestClock : PrimeTestTimeBase
 {
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   The current virtual UTC time; read and updated under the shared gate lock in the main partial.
-    /// </summary>
-    private DateTimeOffset _utcNow;
-    //----------------------------------------------------------------------------
-
     #region Constructors/Finalizers
 
     //----------------------------------------------------------------------------
@@ -21,7 +17,6 @@ public sealed partial class PrimeTestClock
     /// </summary>
     public PrimeTestClock ()
     {
-        _utcNow = DateTimeOffset.UtcNow;
     }
     //----------------------------------------------------------------------------
 
@@ -30,9 +25,8 @@ public sealed partial class PrimeTestClock
     ///   Initializes a new instance with the specified initial virtual UTC time.
     /// </summary>
     /// <param name="initialUtcTime">The initial virtual UTC time.</param>
-    public PrimeTestClock (DateTimeOffset initialUtcTime)
+    public PrimeTestClock (DateTimeOffset initialUtcTime) : base(initialUtcTime)
     {
-        _utcNow = initialUtcTime;
     }
     //----------------------------------------------------------------------------
 
@@ -68,16 +62,6 @@ public sealed partial class PrimeTestClock
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) => _utcNow = utcNowOffset;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Reads the virtual UTC time. The caller must hold the shared gate lock.
-    /// </summary>
-    /// <returns>
-    ///   The current virtual UTC time.
-    /// </returns>
-    private partial DateTimeOffset ReadVirtualUtcNowLocked () => _utcNow;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

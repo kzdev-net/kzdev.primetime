@@ -12,7 +12,7 @@ namespace KZDev.PrimeTime;
 ///   NodaTime virtual instant storage, zone mapping, and Noda-specific surface for
 ///   <see cref="PrimeTestClock"/>.
 /// </summary>
-public sealed partial class PrimeTestClock
+public sealed partial class PrimeTestClock : PrimeTestTimeBase
 {
     #region Nested types
 
@@ -68,18 +68,6 @@ public sealed partial class PrimeTestClock
 
     #endregion Nested types
 
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   The time zone used for local zoned date and time in virtual time.
-    /// </summary>
-    private readonly DateTimeZone _zone;
-
-    /// <summary>
-    ///   The current virtual instant on the UTC timeline; read and updated under the shared gate lock.
-    /// </summary>
-    private Instant _now;
-    //----------------------------------------------------------------------------
-
     #region Constructors/Finalizers
 
     //----------------------------------------------------------------------------
@@ -88,8 +76,6 @@ public sealed partial class PrimeTestClock
     /// </summary>
     public PrimeTestClock ()
     {
-        _now = SystemClock.Instance.GetCurrentInstant();
-        _zone = GetSystemDefaultTimeZone();
     }
     //----------------------------------------------------------------------------
 
@@ -98,10 +84,8 @@ public sealed partial class PrimeTestClock
     ///   Initializes a new instance with the specified initial instant and system default zone.
     /// </summary>
     /// <param name="initialInstant">The initial virtual instant.</param>
-    public PrimeTestClock (Instant initialInstant)
+    public PrimeTestClock (Instant initialInstant) : base (initialInstant)
     {
-        _now = initialInstant;
-        _zone = GetSystemDefaultTimeZone();
     }
     //----------------------------------------------------------------------------
 
@@ -114,10 +98,8 @@ public sealed partial class PrimeTestClock
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="zone"/> is <c>null</c>.
     /// </exception>
-    public PrimeTestClock (Instant initialInstant, DateTimeZone zone)
+    public PrimeTestClock (Instant initialInstant, DateTimeZone zone) : base (initialInstant, zone)
     {
-        _now = initialInstant;
-        _zone = zone ?? throw new ArgumentNullException(nameof(zone));
     }
     //----------------------------------------------------------------------------
 
@@ -239,30 +221,6 @@ public sealed partial class PrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Resolves the system default time zone for local projections, using the BCL provider or
-    ///   <see cref="BclDateTimeZone.ForSystemDefault"/> when the provider has no mapping.
-    /// </summary>
-    /// <returns>
-    ///   A <see cref="DateTimeZone"/> representing the system default local zone.
-    /// </returns>
-    /// <exception cref="InvalidOperationException">
-    ///   The system does not provide a time zone (can be thrown by the fallback).
-    /// </exception>
-    private static DateTimeZone GetSystemDefaultTimeZone ()
-    {
-        try
-        {
-            return DateTimeZoneProviders.Bcl.GetSystemDefault();
-        }
-        catch (DateTimeZoneNotFoundException)
-        {
-            return BclDateTimeZone.ForSystemDefault();
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Converts <see cref="LocalTime"/> to a time-of-day <see cref="TimeSpan"/> since midnight.
     /// </summary>
     /// <param name="t">The local time of day.</param>
@@ -311,17 +269,6 @@ public sealed partial class PrimeTestClock
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
         _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Reads the virtual instant as a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
-    /// </summary>
-    /// <returns>
-    ///   The current virtual time with zero offset (UTC).
-    /// </returns>
-    private partial DateTimeOffset ReadVirtualUtcNowLocked () =>
-        new DateTimeOffset(_now.ToDateTimeUtc(), TimeSpan.Zero);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -400,58 +347,6 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock Implementation — Noda
-
-    #region IPrimeTime / IPrimeClock — Delays (Duration)
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public void Sleep (Duration duration) =>
-        Sleep(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration) =>
-        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Task DelayAsync (Duration duration, CancellationToken cancellationToken) =>
-        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration), cancellationToken);
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeTime / IPrimeClock — Delays (Duration)
-
-    #region IPrimeTime / IPrimeClock — Time cancellation (Duration)
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter) =>
-        GetTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter));
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
-        CancellationToken secondCancellationToken) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), firstCancellationToken, secondCancellationToken);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
-        params CancellationToken[] cancellationTokens) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
-    //----------------------------------------------------------------------------
-
-    #endregion IPrimeTime / IPrimeClock — Time cancellation (Duration)
 
     #region IPrimeClock Implementation — Interval timers (Duration)
 
