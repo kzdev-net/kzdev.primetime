@@ -1,0 +1,69 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Package" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/Docs/" />
+  <Folder Name="/Package/">
+    <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
+    <File Path="Src/Package/KZDev.SystemClock.PrimeTime.readme.md" />
+    <File Path="Src/Package/nuget.icon.png" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="../.gitignore" />
+    <File Path="../LICENSE" />
+    <File Path="../nuget.config" />
+    <File Path="../README.md" />
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="Src/package.cmd" />
+  </Folder>
+  <Folder Name="/Source/">
+    <File Path="Src/Directory.Build.props" />
+    <File Path="Src/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Source/Dev/">
+    <File Path="Dev/Directory.Build.props" />
+    <File Path="Dev/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Source/Perf/">
+    <File Path="Perf/Directory.Build.props" />
+    <File Path="Perf/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Source/Production/">
+    <Project Path="Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj" />
+    <Project Path="Src/KZDev.SystemClock.PrimeTime/KZDev.SystemClock.PrimeTime.csproj" />
+  </Folder>
+  <Folder Name="/Source/Shared/" />
+  <Folder Name="/Source/Shared/Common/">
+    <Project Path="Src/Shared/KZDev.PrimeTime.Common.Shared/KZDev.PrimeTime.Common.Shared.shproj" />
+    <Project Path="Src/Shared/KZDev.PrimeTime.Common.Testing.Shared/KZDev.PrimeTime.Common.Testing.Shared.shproj" />
+  </Folder>
+  <Folder Name="/Source/Testing/" />
+  <Folder Name="/Tests/">
+    <File Path="Tst/Directory.Build.props" />
+    <File Path="Tst/Directory.Packages.props" />
+    <Project Path="Tst/KZDev.PrimeTime.Tst.TestBase/KZDev.PrimeTime.Tst.TestBase.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+    <Project Path="Tst/KZDev.PrimeTime.Tst.TestPrep/KZDev.PrimeTime.Tst.TestPrep.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+    <Project Path="Tst/KZDev.PrimeTime.Tst.UnitTestBase/KZDev.PrimeTime.Tst.UnitTestBase.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tests/FrameworkTests/" />
+  <Folder Name="/Tests/Shared/" />
+  <Folder Name="/Tests/StandardTests/">
+    <Project Path="Tst/KZDev.PrimeTime.UnitTests/KZDev.PrimeTime.UnitTests.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+    <Project Path="Tst/KZDev.SystemClock.PrimeTime.UnitTests/KZDev.SystemClock.PrimeTime.UnitTests.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+  </Folder>
+</Solution>
