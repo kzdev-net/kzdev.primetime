@@ -24,7 +24,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Src\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
+        <ProjectReference Include="..\..\Src\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
         <ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
+        <ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime.Testing\KZDev.SystemClock.PrimeTime.Testing.csproj" />
         <ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
     </ItemGroup>
 

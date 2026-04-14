@@ -12,5 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\ClockTimeChangedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\KZDev.PrimeTime.Common.Shared\PrimeTestClock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\KZDev.PrimeTime.Common.Shared\PrimeTestTimeBase.cs" />
   </ItemGroup>
 </Project>

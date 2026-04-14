@@ -10,9 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ClockDayTimeTimerRegistration.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)PrimeTestTimeBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTimeBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClockIntervalTimerRegistration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClockTimerCallbackContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeClock.cs" />
