@@ -1,7 +1,8 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -13,8 +14,8 @@ namespace KZDev.PrimeTime;
 /// </summary>
 internal sealed partial class ClockIntervalTimerRegistration
 {
-        //----------------------------------------------------------------------------
-private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
+    //----------------------------------------------------------------------------
+    private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
 
     private Duration _initialCallbackDuration;
     private Duration _repeatInterval;
@@ -22,24 +23,24 @@ private static readonly Duration NoRepeatSentinel = Duration.FromTimeSpan(Timeou
     private Instant? _lastCallbackInstant;
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackDuration.ToTimeSpan(); [DebuggerStepThrough] set => _initialCallbackDuration = Duration.FromTimeSpan(value); }
+    //----------------------------------------------------------------------------
+    private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackDuration.ToTimeSpan(); [DebuggerStepThrough] set => _initialCallbackDuration = Duration.FromTimeSpan(value); }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial TimeSpan RepeatTimeSpanInterval { [DebuggerStepThrough] get => _repeatInterval.ToTimeSpan(); [DebuggerStepThrough] set => _repeatInterval = Duration.FromTimeSpan(value); }
+    //----------------------------------------------------------------------------
+    private partial TimeSpan RepeatTimeSpanInterval { [DebuggerStepThrough] get => _repeatInterval.ToTimeSpan(); [DebuggerStepThrough] set => _repeatInterval = Duration.FromTimeSpan(value); }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial DateTimeOffset? NextCallbackUtc { [DebuggerStepThrough] get => _nextCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _nextCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
+    //----------------------------------------------------------------------------
+    private partial DateTimeOffset? NextCallbackUtc { [DebuggerStepThrough] get => _nextCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _nextCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get => _lastCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _lastCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
+    //----------------------------------------------------------------------------
+    private partial DateTimeOffset? LastCallbackUtc { [DebuggerStepThrough] get => _lastCallbackInstant?.ToDateTimeOffset(); [DebuggerStepThrough] set => _lastCallbackInstant = value.HasValue ? Instant.FromDateTimeOffset(value.Value) : null; }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel; }
+    //----------------------------------------------------------------------------
+    private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInterval > Duration.Zero && _repeatInterval != NoRepeatSentinel; }
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -47,8 +48,8 @@ private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInte
     public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private static int DurationToTimerMilliseconds (Duration duration)
+    //----------------------------------------------------------------------------
+    private static int DurationToTimerMilliseconds (Duration duration)
     {
         if (duration <= Duration.Zero)
             return Timeout.Infinite;
@@ -67,16 +68,17 @@ private static int DurationToTimerMilliseconds (Duration duration)
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
+    //----------------------------------------------------------------------------
+    private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
+    //----------------------------------------------------------------------------
+    private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial long GetElapsedTime ()
+
+    //----------------------------------------------------------------------------
+    private partial long GetElapsedTime ()
     {
         lock (_gate)
         {
@@ -92,8 +94,8 @@ private partial long GetElapsedTime ()
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
+    //----------------------------------------------------------------------------
+    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
     {
         Duration d = Duration.FromTimeSpan(delay);
         if (d <= Duration.Zero || d == NoRepeatSentinel)
@@ -112,13 +114,13 @@ private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
-        _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
+    //----------------------------------------------------------------------------
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
+            _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback)
+    //----------------------------------------------------------------------------
+    private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback)
     {
         _lastCallbackInstant = _clock.NowInstant;
         if (!resetIntervalBeforeCallback)
@@ -126,8 +128,8 @@ private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCall
     }
     //----------------------------------------------------------------------------
 
-        //----------------------------------------------------------------------------
-private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
+    //----------------------------------------------------------------------------
+    private partial long GetTimeUntilNextCallbackMillisecondsWhileLocked ()
     {
         if (!IsRepeating && _lastCallbackInstant.HasValue)
             return -1;

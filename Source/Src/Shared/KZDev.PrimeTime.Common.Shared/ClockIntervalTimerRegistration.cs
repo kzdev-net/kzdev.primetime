@@ -169,14 +169,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="clock"/> or <paramref name="callback"/> is <c>null</c>.
     /// </exception>
-    internal ClockIntervalTimerRegistration (IPrimeClock clock,
-        TimeSpan initialCallbackTime,
-        TimeSpan repeatInterval,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        IntervalTimerOptions? options,
-        CancellationToken cancellationToken)
+    internal ClockIntervalTimerRegistration (IPrimeClock clock, TimeSpan initialCallbackTime,
+        TimeSpan repeatInterval, IntervalTimerCallbackKind callbackKind, Delegate callback,
+        object? callbackState, IntervalTimerOptions? options, CancellationToken cancellationToken)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _callbackKind = callbackKind;
@@ -194,7 +189,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
 
         if (cancellationToken.CanBeCanceled)
         {
-            _cancelRegistration = cancellationToken.Register(OnCancelRequested);
+            _cancelRegistration = cancellationToken.Register(static @this => ((ClockIntervalTimerRegistration)@this!).OnCancelRequested(), this);
             if (cancellationToken.IsCancellationRequested)
             {
                 _cancelRequested = true;
@@ -741,6 +736,7 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <inheritdoc />
     public void Dispose ()
     {
+        Timer? timerToDispose = null;
         lock (_gate)
         {
             if (_disposed)
@@ -748,10 +744,11 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
             _disposed = true;
             State = TimerState.Disposed;
             _enabled = false;
-            _cancelRegistration.Dispose();
-            _timer?.Dispose();
+            timerToDispose = _timer;
             _timer = null;
         }
+        timerToDispose?.Dispose();
+        _cancelRegistration.Dispose();
     }
     //----------------------------------------------------------------------------
 
