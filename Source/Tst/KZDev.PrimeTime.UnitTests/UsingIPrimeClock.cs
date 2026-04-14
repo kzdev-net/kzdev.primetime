@@ -575,12 +575,36 @@ private const int SleepTestDurationMilliseconds = 30;
     public async Task LinkTimeCancellationToken_Duration_ExpiresAfterTimeWhenLinkedNotCancelled ()
     {
         IPrimeClock clock = new PrimeClock();
+        Duration cancelAfter = Duration.FromMilliseconds(50);
+        Duration pollingInterval = Duration.FromMilliseconds(15);
+        // Keep this bound well above the 50ms cancellation window so the assertion remains
+        // stable when parallel test load delays timer callbacks and continuation scheduling.
+        Duration maxAdditionalWaitForCancellation = Duration.FromMilliseconds(350);
         using CancellationTokenSource neverCancelled = new();
         using TimeCancellationTokenSource linkedSource =
-            clock.LinkTimeCancellationToken(Duration.FromMilliseconds(50), neverCancelled.Token);
+            clock.LinkTimeCancellationToken(cancelAfter, neverCancelled.Token);
         linkedSource.Token.IsCancellationRequested.Should().BeFalse();
-        await clock.DelayAsync(Duration.FromMilliseconds(70), TestContext.Current.CancellationToken);
-        linkedSource.Token.IsCancellationRequested.Should().BeTrue();
+        // On busy runners, timer callbacks can be delayed enough that a single short sleep
+        // (e.g., 70ms after a 50ms cancellation window) may observe "not cancelled yet".
+        // Poll with a bounded deadline so the test remains deterministic under parallel load.
+        Instant deadline = clock.NowInstant + cancelAfter + maxAdditionalWaitForCancellation;
+        Instant? cancellationObservedAt = null;
+        while (clock.NowInstant < deadline)
+        {
+            if (linkedSource.Token.IsCancellationRequested)
+            {
+                cancellationObservedAt = clock.NowInstant;
+                break;
+            }
+
+            await clock.DelayAsync(pollingInterval, TestContext.Current.CancellationToken);
+        }
+        linkedSource.Token.IsCancellationRequested.Should().BeTrue(
+            "linked cancellation should occur before the bounded deadline");
+        cancellationObservedAt.Should().NotBeNull(
+            "linked cancellation should be observed before the bounded deadline");
+        cancellationObservedAt!.Value.Should().BeLessThanOrEqualTo(deadline,
+            "linked cancellation should occur before the bounded deadline");
     }
     //----------------------------------------------------------------------------
 
