@@ -8,9 +8,8 @@ namespace KZDev.SystemClock.PrimeTime;
 ///   Adapts an <see cref="IPrimeClock"/> to <see cref="TimeProvider"/> so that
 ///   components depending on <see cref="TimeProvider"/> (e.g. <see cref="TimeProvider.GetUtcNow"/>,
 ///   <see cref="TimeProvider.CreateTimer"/>) use the PrimeTime clock. When the clock is a
-///   test clock (<see cref="IPrimeTestClock"/>), time and timers are driven by
-///   <see cref="IPrimeTestClock.SetTime"/>, <see cref="IPrimeTestClock.Advance"/>,
-///   and <see cref="IPrimeTestClock.RunFor"/> for deterministic tests.
+///   test clock from the KZDev.SystemClock.PrimeTime.Testing package, time and timers are
+///   driven by virtual-time operations (SetTime, Advance, and RunFor) for deterministic tests.
 /// </summary>
 internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
