@@ -5,6 +5,7 @@
 		<AssemblyName>KZDev.SystemClock.PrimeTime.Testing</AssemblyName>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<Description>Virtual-time test clock and contracts for KZDev.SystemClock.PrimeTime (BCL subset).</Description>
 		<DefineConstants>$(DefineConstants);SYSTEMCLOCK</DefineConstants>
 	</PropertyGroup>
@@ -40,7 +41,7 @@
 		<ProjectReference Include="..\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\Package\KZDev.SystemClock.PrimeTime.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
+		<None Include="..\Package\KZDev.SystemClock.PrimeTime.Testing.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
 		<None Include="..\Package\nuget.icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
 	</ItemGroup>
 	<ItemGroup>

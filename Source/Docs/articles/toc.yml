@@ -4,6 +4,8 @@
   href: choosing-a-package.md
 - name: Timers, DST, and testing
   href: concepts-timers-and-testing.md
+- name: Testing packages
+  href: testing-packages.md
 - name: KZDev.SystemClock.PrimeTime guide
   href: systemclock-package.md
 - name: KZDev.PrimeTime guide

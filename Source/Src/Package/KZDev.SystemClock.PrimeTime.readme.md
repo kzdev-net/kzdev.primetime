@@ -1,6 +1,6 @@
 # KZDev.SystemClock.PrimeTime
 
-**KZDev.SystemClock.PrimeTime** is the **strict BCL subset** of PrimeTime: the same **conceptual** model (`IPrimeClock`, `PrimeClock`, `IPrimeTestClock`, `PrimeTestClock`, timer registrations, and options types) using **`TimeProvider`** and **`DateTimeOffset`** / **`TimeSpan`** only—**without** a NodaTime dependency.
+**KZDev.SystemClock.PrimeTime** is the **strict BCL subset** of PrimeTime: the same production clock model (`IPrimeClock`, `PrimeClock`, timer registrations, and options types) using **`TimeProvider`** and **`DateTimeOffset`** / **`TimeSpan`** only—**without** a NodaTime dependency.
 
 Use the namespace **`KZDev.SystemClock.PrimeTime`**.
 
@@ -39,6 +39,10 @@ Default registration:
 - **`IPrimeClock`** → **`PrimeClock`** singleton, backed by **`TimeProvider.System`** unless you register **`TimeProvider`** first.
 - **`IPrimeTime`** → same instance as **`IPrimeClock`**.
 
+## Testing package
+
+Testing APIs are provided by **`KZDev.SystemClock.PrimeTime.Testing`**. Add that package when you need virtual-time test types such as `IPrimeTestClock` and `PrimeTestClock`.
+
 ## SystemClock-specific surface
 
 The BCL package adds **`IPrimeClock.LocalScheduleTimeZone`** for local calendar **time-of-day** scheduling (when available on your target framework). The NodaTime superset does not declare that member; there, local scheduling follows the zoned NodaTime view (`LocalZonedNowInstant.Zone`).
@@ -52,3 +56,4 @@ The BCL package adds **`IPrimeClock.LocalScheduleTimeZone`** for local calendar 
 ## See also
 
 - [KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime) — NodaTime superset, namespace `KZDev.PrimeTime`.
+- [KZDev.SystemClock.PrimeTime.Testing](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime.Testing) — testing/virtual-time APIs for `KZDev.SystemClock.PrimeTime`.

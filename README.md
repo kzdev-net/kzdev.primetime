@@ -42,7 +42,7 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 ## Features (high level)
 
 - **`IPrimeClock` / `PrimeClock`** — production clock; timer registration and “now” projections (exact members depend on package and TFM).
-- **`IPrimeTestClock` / `PrimeTestClock`** — virtual time for tests (`Advance`, `RunFor`, …).
+- **Testing packages** — virtual time for tests (`IPrimeTestClock` / `PrimeTestClock`) is provided by `KZDev.PrimeTime.Testing` or `KZDev.SystemClock.PrimeTime.Testing`.
 - **Day-time timers** — `SkippedTimeBehavior` and `DuplicateTimeBehavior` on `DayTimeTimerOptions` for local wall-clock scheduling near DST transitions (see docs).
 - **`ToTimeProvider`** — adapt an `IPrimeClock` to `TimeProvider` for interoperability.
 

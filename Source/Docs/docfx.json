@@ -23,6 +23,28 @@
                     "files": [
                         "KZDev.SystemClock.PrimeTime.dll"
                     ]
+                },
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime.Testing/release_net8.0",
+                    "dest": "api",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net8.0"
+                    },
+                    "files": [
+                        "KZDev.PrimeTime.Testing.dll"
+                    ]
+                },
+                {
+                    "src": "../../artifacts/bin/KZDev.SystemClock.PrimeTime.Testing/release_net8.0",
+                    "dest": "api",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net8.0"
+                    },
+                    "files": [
+                        "KZDev.SystemClock.PrimeTime.Testing.dll"
+                    ]
                 }
             ],
             "dest": "api",
