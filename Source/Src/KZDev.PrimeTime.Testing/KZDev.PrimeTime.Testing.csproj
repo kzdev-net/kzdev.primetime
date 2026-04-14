@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>KZDev.PrimeTime</RootNamespace>
+		<AssemblyName>KZDev.PrimeTime.Testing</AssemblyName>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<Description>Virtual-time test clock and contracts for KZDev.PrimeTime (NodaTime).</Description>
+	</PropertyGroup>
+	<PropertyGroup Label="Package">
+		<Title>KZDev PrimeTime Testing</Title>
+		<PackageId>KZDev.PrimeTime.Testing</PackageId>
+		<PackageTags>KZDev,Utilities,Time,Timer,Testing</PackageTags>
+		<PackageReadmeFile>docs\README.md</PackageReadmeFile>
+		<PackageIcon>images\icon.png</PackageIcon>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageDescription>$(Description)</PackageDescription>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<RepositoryUrl>https://github.com/kzdev-net/kzdev.primetime</RepositoryUrl>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(IsPacking)' == 'true'">
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<IsPackable>true</IsPackable>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(IsPacking)' != 'true'">
+		<DefineConstants>$(DefineConstants);NOT_PACKAGING</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="NodaTime" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+		<PackageReference Include="Microsoft.Bcl.TimeProvider" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\Package\KZDev.PrimeTime.readme.md" Pack="true" Visible="false" PackagePath="docs\README.md" />
+		<None Include="..\Package\nuget.icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
+	</ItemGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="KZDev.PrimeTime.UnitTests" />
+	</ItemGroup>
+	<Import Project="..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
+
+</Project>
