@@ -678,18 +678,53 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration)"/> returns <c>false</c>
-    ///   after the timer registration has been disposed.
+    ///   Verifies that <see cref="IClockIntervalTimer.Change(Duration)"/> throws
+    ///   <see cref="ObjectDisposedException"/> after the timer registration has been disposed.
     /// </summary>
     [Fact]
-    public void RegisterTimer_AfterDispose_ChangeReturnsFalse ()
+    public void RegisterTimer_AfterDispose_Change_ThrowsObjectDisposedException ()
     {
         IPrimeClock clock = new PrimeClock();
         IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
             () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Dispose();
-        timer.Change(Duration.FromMilliseconds(50)).Should().BeFalse();
+        Action act = () => timer.Change(Duration.FromMilliseconds(50));
+        act.Should().Throw<ObjectDisposedException>();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IRegisteredTimer.Start"/> throws
+    ///   <see cref="ObjectDisposedException"/> after the timer registration has been disposed.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_AfterDispose_Start_ThrowsObjectDisposedException ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
+            () => { },
+            cancellationToken: TestContext.Current.CancellationToken);
+        timer.Dispose();
+        Action act = () => timer.Start();
+        act.Should().Throw<ObjectDisposedException>();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that setting <see cref="IRegisteredTimer.Enabled"/> throws
+    ///   <see cref="ObjectDisposedException"/> after the timer registration has been disposed.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_AfterDispose_SetEnabled_ThrowsObjectDisposedException ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
+            () => { },
+            cancellationToken: TestContext.Current.CancellationToken);
+        timer.Dispose();
+        Action act = () => timer.Enabled = true;
+        act.Should().Throw<ObjectDisposedException>();
     }
     //----------------------------------------------------------------------------
 

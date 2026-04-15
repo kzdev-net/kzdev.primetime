@@ -529,7 +529,9 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     {
         lock (_gate)
         {
-            if (_disposed || State == TimerState.Cancelled)
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+            if (State == TimerState.Cancelled)
                 return false;
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
                 throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
@@ -690,7 +692,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
         {
             lock (_gate)
             {
-                if (_disposed || _state == TimerState.Cancelled)
+                if (_disposed)
+                    throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+
+                if (_state == TimerState.Cancelled)
                     return;
                 if (value)
                     Start();
@@ -703,7 +708,6 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     /// <inheritdoc />
     public long ElapsedTime
     {
-        [DebuggerStepThrough]
         get
         {
             return GetElapsedTime();
@@ -771,7 +775,10 @@ internal sealed partial class ClockIntervalTimerRegistration : IClockIntervalTim
     {
         lock (_gate)
         {
-            if (_disposed || State == TimerState.Cancelled)
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+
+            if (State == TimerState.Cancelled)
                 return false;
             if (State != TimerState.Completed && State != TimerState.Disabled)
                 return false;
