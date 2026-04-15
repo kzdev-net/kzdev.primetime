@@ -57,6 +57,11 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     private readonly IPrimeClock _clock;
 
     /// <summary>
+    ///   User callback delegate.
+    /// </summary>
+    private readonly Delegate _callback;
+
+    /// <summary>
     ///   When <c>true</c>, callbacks capture execution context.
     /// </summary>
     private bool _captureContext;
@@ -65,11 +70,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
     ///   Shape of the user callback delegate.
     /// </summary>
     private IntervalTimerCallbackKind _callbackKind;
-
-    /// <summary>
-    ///   User callback delegate.
-    /// </summary>
-    private readonly Delegate _callback;
 
     /// <summary>
     ///   Optional state for context callbacks.

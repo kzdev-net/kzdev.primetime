@@ -95,26 +95,6 @@ internal sealed partial class ClockIntervalTimerRegistration
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    private partial bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
-    {
-        Duration d = Duration.FromTimeSpan(delay);
-        if (d <= Duration.Zero || d == NoRepeatSentinel)
-        {
-            milliseconds = 0;
-            return false;
-        }
-        int ms = DurationToTimerMilliseconds(d);
-        if (ms <= 0)
-        {
-            milliseconds = 0;
-            return false;
-        }
-        milliseconds = ms;
-        return true;
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
             _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
     //----------------------------------------------------------------------------
