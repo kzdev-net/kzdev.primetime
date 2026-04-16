@@ -264,6 +264,69 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that when <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/> is <c>true</c>,
+    ///   the next repeat interval is armed before the current callback completes, allowing overlapping
+    ///   callbacks and reporting <see cref="TimerState.RepeatProcessingCallback"/> during execution.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_Repeating_WithResetIntervalBeforeCallbackTrue_AllowsOverlapAndReportsRepeatProcessingCallback ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using ManualResetEventSlim firstCallbackStarted = new(false);
+        using ManualResetEventSlim overlapObserved = new(false);
+        using ManualResetEventSlim releaseCallbacks = new(false);
+        using ManualResetEventSlim callbacksCompleted = new(false);
+        int callbacksStarted = 0;
+        int callbacksCompletedCount = 0;
+        int callbacksRunning = 0;
+        TimerState[] observedStates = new TimerState[2];
+
+        IClockIntervalTimer? timer = null;
+        timer = clock.RegisterTimer(ShortDelay,
+            RepeatInterval,
+            _ =>
+            {
+                int callbackIndex = Interlocked.Increment(ref callbacksStarted) - 1;
+                int runningCount = Interlocked.Increment(ref callbacksRunning);
+                if (callbackIndex < observedStates.Length)
+                    observedStates[callbackIndex] = timer!.State;
+                if (callbackIndex == 0)
+                    firstCallbackStarted.Set();
+                if (runningCount > 1)
+                    overlapObserved.Set();
+
+                try
+                {
+                    releaseCallbacks.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
+                        TestContext.Current.CancellationToken).Should().BeTrue();
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref callbacksRunning);
+                    if (Interlocked.Increment(ref callbacksCompletedCount) >= 2)
+                        callbacksCompleted.Set();
+                }
+            },
+            TestContext.Current.CancellationToken,
+            timerOptions: timerOptions);
+        using (timer)
+        {
+            firstCallbackStarted.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            overlapObserved.Wait((RepeatInterval + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            timer.State.Should().Be(TimerState.RepeatProcessingCallback);
+            observedStates[0].Should().Be(TimerState.RepeatProcessingCallback);
+            observedStates[1].Should().Be(TimerState.RepeatProcessingCallback);
+            timer.CallbacksProcessing.Should().BeTrue();
+
+            releaseCallbacks.Set();
+            callbacksCompleted.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
+                TestContext.Current.CancellationToken).Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
     #endregion Repeating and reset behavior
 
     #region Change
@@ -439,6 +502,68 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
+    ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
+    ///   <see cref="IntervalTimerCallbackKind.SimpleAction"/> and completes after invoking the callback.
+    /// </summary>
+    [Fact]
+    public void ClockIntervalTimerRegistration_WithSimpleActionCallback_InvokesCallbackAndCompletes ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        using ManualResetEventSlim callbackInvoked = new(false);
+        using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
+            ShortDelay.ToTimeSpan(),
+            Timeout.InfiniteTimeSpan,
+            IntervalTimerCallbackKind.SimpleAction,
+            () => callbackInvoked.Set(),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+
+        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        clock.Sleep(CallbackSettle);
+        timer.State.Should().Be(TimerState.Completed);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
+    ///   <see cref="IntervalTimerCallbackKind.ContextActionWithToken"/> and passes both callback
+    ///   state and registration cancellation token to the callback.
+    /// </summary>
+    [Fact]
+    public void ClockIntervalTimerRegistration_WithContextActionWithTokenCallback_PassesStateAndCancellationToken ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        object state = new();
+        using CancellationTokenSource cancellationTokenSource = new();
+        using ManualResetEventSlim callbackInvoked = new(false);
+        object? receivedState = null;
+        CancellationToken? receivedToken = null;
+
+        using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
+            ShortDelay.ToTimeSpan(),
+            Timeout.InfiniteTimeSpan,
+            IntervalTimerCallbackKind.ContextActionWithToken,
+            (Action<ClockTimerCallbackContext, CancellationToken>)((ClockTimerCallbackContext callbackContext, CancellationToken cancellationToken) =>
+            {
+                receivedState = callbackContext.CallbackState;
+                receivedToken = cancellationToken;
+                callbackInvoked.Set();
+            }),
+            state,
+            null,
+            cancellationTokenSource.Token);
+
+        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        receivedState.Should().BeSameAs(state);
+        receivedToken.Should().NotBeNull();
+        receivedToken!.Value.Should().Be(cancellationTokenSource.Token);
+        clock.Sleep(CallbackSettle);
+        timer.State.Should().Be(TimerState.Completed);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
     ///   Verifies that a one-shot async timer with state passes the state to the callback
     ///   via <see cref="ClockTimerCallbackContext"/> (and receives a cancellation token).
     /// </summary>
@@ -458,6 +583,36 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         }, TestContext.Current.CancellationToken, state);
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
+    ///   <see cref="IntervalTimerCallbackKind.SimpleAsync"/> and completes after the async callback
+    ///   returns a completed <see cref="ValueTask"/>.
+    /// </summary>
+    [Fact]
+    public void ClockIntervalTimerRegistration_WithSimpleAsyncCallback_InvokesCallbackAndCompletes ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        using ManualResetEventSlim callbackInvoked = new(false);
+
+        using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
+            ShortDelay.ToTimeSpan(),
+            Timeout.InfiniteTimeSpan,
+            IntervalTimerCallbackKind.SimpleAsync,
+            (Func<CancellationToken, ValueTask>)(_ =>
+            {
+                callbackInvoked.Set();
+                return default;
+            }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+
+        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        clock.Sleep(CallbackSettle);
+        timer.State.Should().Be(TimerState.Completed);
     }
     //----------------------------------------------------------------------------
 
