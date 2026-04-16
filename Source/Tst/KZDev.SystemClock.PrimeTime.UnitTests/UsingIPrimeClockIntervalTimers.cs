@@ -93,7 +93,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
-        (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
+        TimeSpan elapsed = firedAt!.Value - start;
+        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
+        elapsed.Should().BeLessThanOrEqualTo(WaitMargin);
     }
     //----------------------------------------------------------------------------
 

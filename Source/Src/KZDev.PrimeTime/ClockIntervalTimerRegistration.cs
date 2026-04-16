@@ -49,26 +49,6 @@ internal sealed partial class ClockIntervalTimerRegistration
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    private static int DurationToTimerMilliseconds (Duration duration)
-    {
-        if (duration <= Duration.Zero)
-            return Timeout.Infinite;
-        try
-        {
-            TimeSpan ts = duration.ToTimeSpan();
-            long msLong = (long)Math.Min(ts.TotalMilliseconds, int.MaxValue);
-            if (msLong <= 0)
-                return Timeout.Infinite;
-            return (int)msLong;
-        }
-        catch (OverflowException)
-        {
-            return int.MaxValue;
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
     //----------------------------------------------------------------------------
 

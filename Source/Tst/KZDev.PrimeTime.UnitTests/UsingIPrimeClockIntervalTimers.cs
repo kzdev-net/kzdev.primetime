@@ -540,9 +540,16 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         {
             enteredSignal.Set();
             int current = Interlocked.Increment(ref inFlight);
-            if (current > maxInFlight)
+            int recordedMaxInFlight = Volatile.Read(ref maxInFlight);
+            while (current > recordedMaxInFlight)
             {
-                Interlocked.Exchange(ref maxInFlight, current);
+                int observedMaxInFlight = Interlocked.CompareExchange(ref maxInFlight, current, recordedMaxInFlight);
+                if (observedMaxInFlight == recordedMaxInFlight)
+                {
+                    break;
+                }
+
+                recordedMaxInFlight = observedMaxInFlight;
             }
 
             if (current > 1)

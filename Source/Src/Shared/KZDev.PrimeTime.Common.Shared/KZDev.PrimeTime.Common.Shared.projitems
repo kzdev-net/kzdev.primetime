@@ -12,9 +12,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)ClockDayTimeTimerRegistration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTimeBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClockIntervalTimerRegistration.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ClockTimerCallbackContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ClockTimerCallbackContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeClock.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)TimeCancellationTokenSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\TimeCancellationTokenSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockDayTimeTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockIntervalTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IClockTimer.cs" />
