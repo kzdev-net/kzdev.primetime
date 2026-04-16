@@ -312,6 +312,67 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that when overlapping callbacks are enabled by
+    ///   <see cref="IntervalTimerOptions.ResetIntervalBeforeCallback"/> being <c>true</c>, completing one
+    ///   callback while another is still running transitions the registration to
+    ///   <see cref="TimerState.ProcessingCallback"/> until the final overlapping callback completes.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_Repeating_WithResetIntervalBeforeCallbackTrue_WhenOneOverlapCompletes_StateBecomesProcessingCallback ()
+    {
+        IPrimeClock clock = new PrimeClock();
+        IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using ManualResetEventSlim firstCallbackStarted = new(false);
+        using ManualResetEventSlim secondCallbackStarted = new(false);
+        using ManualResetEventSlim firstCallbackMayExit = new(false);
+        using ManualResetEventSlim secondCallbackMayExit = new(false);
+        using ManualResetEventSlim firstCallbackCompleted = new(false);
+        int callbacksStarted = 0;
+
+        IClockIntervalTimer? timer = null;
+        timer = clock.RegisterTimer(ShortDelay,
+            RepeatInterval,
+            _ =>
+            {
+                int callbackIndex = Interlocked.Increment(ref callbacksStarted);
+                if (callbackIndex == 1)
+                {
+                    firstCallbackStarted.Set();
+                    firstCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
+                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    firstCallbackCompleted.Set();
+                    return;
+                }
+
+                if (callbackIndex == 2)
+                {
+                    secondCallbackStarted.Set();
+                    secondCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
+                        TestContext.Current.CancellationToken).Should().BeTrue();
+                }
+            },
+            TestContext.Current.CancellationToken,
+            timerOptions: timerOptions);
+        using (timer)
+        {
+            firstCallbackStarted.Wait(ShortDelay + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            secondCallbackStarted.Wait(RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+
+            firstCallbackMayExit.Set();
+
+            firstCallbackCompleted.Wait(WaitMargin + RepeatInterval, TestContext.Current.CancellationToken).Should().BeTrue();
+            SpinWait.SpinUntil(() => timer.State == TimerState.ProcessingCallback,
+                WaitMargin).Should().BeTrue();
+            timer.CallbacksProcessing.Should().BeTrue();
+
+            secondCallbackMayExit.Set();
+            SpinWait.SpinUntil(() => timer.State == TimerState.RepeatCycle,
+                WaitMargin).Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
     #endregion Repeating and reset behavior
 
     #region Change
