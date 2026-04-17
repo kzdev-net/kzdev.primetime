@@ -9,13 +9,11 @@ using System.Threading;
 
 namespace KZDev.SystemClock.PrimeTime;
 
-//################################################################################
 /// <summary>
 ///   BCL time-basis partial for <see cref="ClockDayTimeTimerRegistration"/>.
 /// </summary>
 internal sealed partial class ClockDayTimeTimerRegistration
 {
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Delay applied between scheduling attempts when concurrent callbacks are disallowed and a tick is still running.
     /// </summary>
@@ -45,85 +43,29 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Start of the most recent callback, if any.
     /// </summary>
     private DateTimeOffset? _lastCallbackStartedOffset;
-    //----------------------------------------------------------------------------
 
-    #region Constructors/Finalizers
-
-    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Initializes a new instance for the specified schedule basis and time of day.
+    ///   Gets whether this registration schedules using local calendar days.
     /// </summary>
-    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="utcTimeOfDaySchedule">
-    ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
-    /// </param>
-    /// <param name="targetTimeOfDay">Wall-clock time of day for recurring fires.</param>
-    /// <param name="callbackKind">Shape of the user callback.</param>
-    /// <param name="callback">User callback delegate.</param>
-    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
-    /// <param name="options">Optional timer behavior options.</param>
-    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
-#if NET
-    [SetsRequiredMembers]
-#endif
-    private ClockDayTimeTimerRegistration (IPrimeClock clock,
-        bool utcTimeOfDaySchedule, TimeOnly targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
-        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
-        _targetTimeOfDay = targetTimeOfDay;
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Initializes a new instance for a local-time day-time timer.
-    /// </summary>
-    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="localTimeOfDay">Local time of day for recurring fires.</param>
-    /// <param name="callbackKind">Shape of the user callback.</param>
-    /// <param name="callback">User callback delegate.</param>
-    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
-    /// <param name="options">Optional timer behavior options.</param>
-    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
-#if NET
-    [SetsRequiredMembers]
-#endif
-    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTimeOfDay localTimeOfDay, IntervalTimerCallbackKind callbackKind,
-        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-        : this(clock, false, localTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
-    {
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Initializes a new instance for a UTC day-time timer.
-    /// </summary>
-    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="utcTimeOfDay">UTC time of day for recurring fires.</param>
-    /// <param name="callbackKind">Shape of the user callback.</param>
-    /// <param name="callback">User callback delegate.</param>
-    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
-    /// <param name="options">Optional timer behavior options.</param>
-    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
-#if NET
-    [SetsRequiredMembers]
-#endif
-    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        UtcTimeOfDay utcTimeOfDay, IntervalTimerCallbackKind callbackKind,
-        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-        : this(clock, true, utcTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
-    {
-    }
-    //----------------------------------------------------------------------------
+    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
 
-    #endregion Constructors/Finalizers
+    /// <summary>
+    ///   Gets whether this registration schedules using UTC calendar days.
+    /// </summary>
+    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
 
-    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
+    /// </summary>
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
+
+    /// <summary>
+    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
+    /// </summary>
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
+
     /// <summary>
     ///   Gets the clock's current time in the schedule basis (UTC vs local calendar day).
     /// </summary>
@@ -132,26 +74,26 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private DateTimeOffset GetScheduleNowOffset () =>
         _utcTimeOfDaySchedule ? _clock.UtcNowDateTimeOffset : _clock.LocalNowDateTimeOffset;
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Persists the clock's current instant as this registration's creation time, using the
     ///   same UTC vs local calendar-day basis as scheduling (<see cref="GetScheduleNowOffset"/>).
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer () =>
         _registeredTime = GetScheduleNowOffset();
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
     /// </summary>
     /// <returns>The offset used when the registration was created.</returns>
     private partial DateTimeOffset GetRegisteredTimeOffset () => _registeredTime;
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Gets whether the schedule uses local time-of-day semantics.
     /// </summary>
     /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
     private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Computes the delay from now until the next time-of-day occurrence.
     /// </summary>
@@ -198,14 +140,14 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
         return delayUntilNextFire;
     }
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Records when the next callback is expected from the given delay.
     /// </summary>
     /// <param name="delay">Delay from now until the next fire.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
         _nextCallbackScheduledOffset = GetScheduleNowOffset() + delay;
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Clears the next-callback schedule and records the start of the current tick.
     /// </summary>
@@ -214,7 +156,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _nextCallbackScheduledOffset = null;
         _lastCallbackStartedOffset = GetScheduleNowOffset();
     }
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Gets elapsed milliseconds since the last callback while holding the registration gate.
     /// </summary>
@@ -236,7 +178,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return (long)(scheduleNowOffset - lastCallbackStartOffset).TotalMilliseconds;
         }
     }
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Gets remaining milliseconds until the next scheduled callback while holding the registration gate.
     /// </summary>
@@ -252,7 +194,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return 0;
         return (long)(pendingNextFireOffset - scheduleNowOffset).TotalMilliseconds;
     }
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Converts a delay into a nonnegative timer duration in milliseconds.
     /// </summary>
@@ -267,7 +209,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
         milliseconds = (int)totalMillisecondsClamped;
         return true;
     }
-    //----------------------------------------------------------------------------
+
     /// <summary>
     ///   Gets the retry delay in milliseconds when sequential callback execution is required.
     /// </summary>
@@ -279,29 +221,77 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return 1;
         return retryMilliseconds;
     }
-    //----------------------------------------------------------------------------
+
+    #region Constructors/Finalizers
 
     /// <summary>
-    ///   Gets whether this registration schedules using local calendar days.
+    ///   Initializes a new instance for the specified schedule basis and time of day.
     /// </summary>
-    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
-
+    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
+    /// <param name="utcTimeOfDaySchedule">
+    ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
+    /// </param>
+    /// <param name="targetTimeOfDay">Wall-clock time of day for recurring fires.</param>
+    /// <param name="callbackKind">Shape of the user callback.</param>
+    /// <param name="callback">User callback delegate.</param>
+    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
+    /// <param name="options">Optional timer behavior options.</param>
+    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+#if NET
+    [SetsRequiredMembers]
+#endif
+    private ClockDayTimeTimerRegistration (IPrimeClock clock,
+        bool utcTimeOfDaySchedule, TimeOnly targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+    {
+        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
+        _targetTimeOfDay = targetTimeOfDay;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
+    }
     /// <summary>
-    ///   Gets whether this registration schedules using UTC calendar days.
+    ///   Initializes a new instance for a local-time day-time timer.
     /// </summary>
-    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
-
+    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
+    /// <param name="localTimeOfDay">Local time of day for recurring fires.</param>
+    /// <param name="callbackKind">Shape of the user callback.</param>
+    /// <param name="callback">User callback delegate.</param>
+    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
+    /// <param name="options">Optional timer behavior options.</param>
+    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+#if NET
+    [SetsRequiredMembers]
+#endif
+    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
+        LocalTimeOfDay localTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+        : this(clock, false, localTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
+    {
+    }
     /// <summary>
-    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
+    ///   Initializes a new instance for a UTC day-time timer.
     /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
+    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
+    /// <param name="utcTimeOfDay">UTC time of day for recurring fires.</param>
+    /// <param name="callbackKind">Shape of the user callback.</param>
+    /// <param name="callback">User callback delegate.</param>
+    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
+    /// <param name="options">Optional timer behavior options.</param>
+    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+#if NET
+    [SetsRequiredMembers]
+#endif
+    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
+        UtcTimeOfDay utcTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+        : this(clock, true, utcTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
+    {
+    }
 
-    /// <summary>
-    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change.
-    /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
+    #endregion Constructors/Finalizers
 }
-//################################################################################
 #endif

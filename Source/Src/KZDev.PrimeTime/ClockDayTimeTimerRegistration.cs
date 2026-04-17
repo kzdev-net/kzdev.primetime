@@ -41,43 +41,33 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private Instant? _lastCallbackInstant;
     //----------------------------------------------------------------------------
 
-    #region Constructors/Finalizers
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Initializes a new instance for the specified schedule basis and Noda <see cref="LocalTime"/> of day.
-    /// </summary>
-    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
-    /// <param name="utcTimeOfDaySchedule">
-    ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
-    /// </param>
-    /// <param name="targetTimeOfDay">Wall-clock time of day for recurring fires.</param>
-    /// <param name="callbackKind">Shape of the user callback.</param>
-    /// <param name="callback">User callback delegate.</param>
-    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
-    /// <param name="options">Optional timer behavior options.</param>
-    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
 #if NET
-    [SetsRequiredMembers]
-#endif
-    internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        bool utcTimeOfDaySchedule,
-        LocalTime targetTimeOfDay,
-        IntervalTimerCallbackKind callbackKind,
-        Delegate callback,
-        object? callbackState,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
-        _targetTimeOfDay = targetTimeOfDay;
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
-    }
-    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets whether this registration schedules using local calendar days.
+    /// </summary>
+    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
 
-    #endregion Constructors/Finalizers
+    /// <summary>
+    ///   Gets whether this registration schedules using UTC calendar days.
+    /// </summary>
+    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
+
+    /// <summary>
+    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
+    /// </summary>
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+
+    /// <summary>
+    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
+    /// </summary>
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+#endif
 
     //----------------------------------------------------------------------------
     /// <summary>
@@ -105,14 +95,10 @@ internal sealed partial class ClockDayTimeTimerRegistration
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Persists the clock's current instant as this registration's creation time.
     /// </summary>
     private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
@@ -120,15 +106,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>The offset corresponding to <see cref="RegisteredInstant"/>.</returns>
     private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets whether the schedule uses local time-of-day semantics.
     /// </summary>
     /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
     private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts the delay until the next fire to a <see cref="TimeSpan"/>, clamping overflow.
@@ -146,8 +128,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return TimeSpan.FromDays(1);
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes the duration from now until the next time-of-day occurrence.
@@ -182,15 +162,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
             localZonedNow.Zone, _targetTimeOfDay, _skippedTimeBehavior, _duplicateTimeBehavior);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes the delay from now until the next time-of-day occurrence for the underlying timer.
     /// </summary>
     /// <returns>The delay as a <see cref="TimeSpan"/>.</returns>
     private partial TimeSpan GetDelayUntilNextForTimer () => GetDelayUntilNextAsTimeSpan();
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Records when the next callback is expected from the given delay.
@@ -198,8 +174,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="delay">Delay from now until the next fire.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
         _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-callback schedule and records the start of the current tick.
@@ -209,8 +183,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         _nextCallbackInstant = null;
         _lastCallbackInstant = _clock.NowInstant;
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets elapsed milliseconds since the last callback while holding the registration gate.
@@ -231,8 +203,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return (long)(nowInstant - lastCallbackStartInstant).TotalMilliseconds;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets remaining milliseconds until the next scheduled callback while holding the registration gate.
     /// </summary>
@@ -248,8 +218,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return 0;
         return (long)(nextCallbackInstant - nowInstant).TotalMilliseconds;
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a delay into a timer duration in milliseconds when representable.
@@ -270,8 +238,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return true;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the retry delay in milliseconds when sequential callback execution is required.
     /// </summary>
@@ -285,33 +251,39 @@ internal sealed partial class ClockDayTimeTimerRegistration
     }
     //----------------------------------------------------------------------------
 
+    #region Constructors/Finalizers
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Initializes a new instance for the specified schedule basis and Noda <see cref="LocalTime"/> of day.
+    /// </summary>
+    /// <param name="clock">Clock used for scheduling and reading the current time.</param>
+    /// <param name="utcTimeOfDaySchedule">
+    ///   <c>true</c> for UTC calendar-day scheduling; <c>false</c> for local zone days.
+    /// </param>
+    /// <param name="targetTimeOfDay">Wall-clock time of day for recurring fires.</param>
+    /// <param name="callbackKind">Shape of the user callback.</param>
+    /// <param name="callback">User callback delegate.</param>
+    /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
+    /// <param name="options">Optional timer behavior options.</param>
+    /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
 #if NET
-    /// <summary>
-    ///   Gets whether this registration schedules using local calendar days.
-    /// </summary>
-    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
-
-    /// <summary>
-    ///   Gets whether this registration schedules using UTC calendar days.
-    /// </summary>
-    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
-
-    /// <summary>
-    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
-    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
-    /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
-
-    /// <summary>
-    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
-    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
-    /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+    [SetsRequiredMembers]
 #endif
+    internal ClockDayTimeTimerRegistration (IPrimeClock clock, bool utcTimeOfDaySchedule,
+        LocalTime targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        Delegate callback, object? callbackState, DayTimeTimerOptions? options,
+        CancellationToken cancellationToken)
+    {
+        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
+        _targetTimeOfDay = targetTimeOfDay;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Constructors/Finalizers
 
     #region Interface Implementations
 

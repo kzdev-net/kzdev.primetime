@@ -167,188 +167,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
 #endif
 
-    #region Constructors/Finalizers
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Completes initialization shared by stack-specific constructors.
-    /// </summary>
-    /// <remarks>
-    ///   <para>
-    ///     Stack-specific constructors assign and validate <see cref="_clock"/> and <see cref="_callback"/> before calling
-    ///     this method; this method does not take a clock or callback parameter and does not perform those assignments.
-    ///   </para>
-    /// </remarks>
-    /// <param name="callbackKind">The kind of callback delegate to invoke.</param>
-    /// <param name="callbackState">
-    ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
-    /// </param>
-    /// <param name="options">
-    ///   Day-time timer options, or <c>null</c> to use default option values.
-    /// </param>
-    /// <param name="cancellationToken">Token that cancels the registration.</param>
-    private void FinishConstruction (
-        IntervalTimerCallbackKind callbackKind,
-        object? callbackState,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
-    {
-        _callbackKind = callbackKind;
-        _callbackState = callbackState;
-
-        DayTimeTimerOptions resolvedOptions = options ?? new DayTimeTimerOptions();
-        _concurrentTriggerProcessing = resolvedOptions.ConcurrentTriggerProcessing;
-        _skippedTimeBehavior = resolvedOptions.SkippedTimeBehavior;
-        _duplicateTimeBehavior = resolvedOptions.DuplicateTimeBehavior;
-        _captureContext = resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
-        _cancellationToken = cancellationToken;
-
-        _registrationIdentifier = Interlocked.Increment(ref _nextRegistrationIdentifier);
-        CaptureRegisteredTimeForDayTimer();
-
-        if (cancellationToken.CanBeCanceled)
-        {
-            _cancelRegistration = cancellationToken.Register(OnCancelRequested);
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _cancelRequested = true;
-                _state = TimerState.Cancelled;
-                return;
-            }
-        }
-
-        _state = TimerState.Active;
-        ScheduleNext();
-    }
-    //----------------------------------------------------------------------------
-
-    #endregion Constructors/Finalizers
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public int Id { [DebuggerStepThrough] get => _registrationIdentifier; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get => GetRegisteredTimeOffset(); }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsTimeOfDay => true;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get => GetIsLocalTimeRepresentation(); }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsRepeating => true;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsCancelled => _state == TimerState.Cancelled;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool IsActive
-    {
-        get
-        {
-            // Capture local state value
-            TimerState state = _state;
-            return state != TimerState.Cancelled &&
-                   state != TimerState.Disposed;
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public TimerState State { [DebuggerStepThrough] get => _state; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool CallbacksProcessing
-    {
-        get
-        {
-            lock (_gate)
-            {
-                TimerState state = _state;
-                return state != TimerState.Cancelled &&
-                       state != TimerState.Disposed &&
-                       _callbacksRunning > 0;
-            }
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get => _concurrentTriggerProcessing; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get => _skippedTimeBehavior; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get => _duplicateTimeBehavior; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public bool Enabled
-    {
-        get => _enabled && !IsCancelled && _state != TimerState.Disposed;
-        set
-        {
-            lock (_gate)
-            {
-                if (_disposed || _state == TimerState.Cancelled)
-                    return;
-                if (value)
-                    Start();
-                else
-                    Stop();
-            }
-        }
-    }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public long ElapsedTime
-    {
-        get
-        {
-            lock (_gate)
-            {
-                return GetDayTimeElapsedMillisecondsWhileLocked();
-            }
-        }
-    }
-    //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public long TimeUntilNextCallback
-    {
-        get
-        {
-            lock (_gate)
-            {
-                return GetDayTimeTimeUntilNextMillisecondsWhileLocked();
-            }
-        }
-    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Captures <see cref="RegisteredTime"/> for this day-time registration (partial).
@@ -417,8 +235,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes and arms the next day-time callback.
     /// </summary>
@@ -441,8 +257,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Re-arms the timer after a short delay for sequential trigger retry.
     /// </summary>
@@ -461,8 +275,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 _timer.Change(retryMilliseconds, Timeout.Infinite);
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   BCL timer callback for the next day-time fire.
@@ -531,8 +343,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             ScheduleNext();
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Invokes the user callback synchronously or starts async completion handling.
     /// </summary>
@@ -587,8 +397,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
@@ -625,8 +433,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             TaskScheduler.Default);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Decrements in-flight count after async work and schedules the next fire.
     /// </summary>
@@ -644,6 +450,54 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
                 return;
             }
         }
+        ScheduleNext();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Completes initialization shared by stack-specific constructors.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Stack-specific constructors assign and validate <see cref="_clock"/> and <see cref="_callback"/> before calling
+    ///     this method; this method does not take a clock or callback parameter and does not perform those assignments.
+    ///   </para>
+    /// </remarks>
+    /// <param name="callbackKind">The kind of callback delegate to invoke.</param>
+    /// <param name="callbackState">
+    ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
+    /// </param>
+    /// <param name="options">
+    ///   Day-time timer options, or <c>null</c> to use default option values.
+    /// </param>
+    /// <param name="cancellationToken">Token that cancels the registration.</param>
+    private void FinishConstruction (IntervalTimerCallbackKind callbackKind,
+        object? callbackState, DayTimeTimerOptions? options, CancellationToken cancellationToken)
+    {
+        _callbackKind = callbackKind;
+        _callbackState = callbackState;
+
+        DayTimeTimerOptions resolvedOptions = options ?? new DayTimeTimerOptions();
+        _concurrentTriggerProcessing = resolvedOptions.ConcurrentTriggerProcessing;
+        _skippedTimeBehavior = resolvedOptions.SkippedTimeBehavior;
+        _duplicateTimeBehavior = resolvedOptions.DuplicateTimeBehavior;
+        _captureContext = resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe;
+        _cancellationToken = cancellationToken;
+
+        _registrationIdentifier = Interlocked.Increment(ref _nextRegistrationIdentifier);
+        CaptureRegisteredTimeForDayTimer();
+
+        if (cancellationToken.CanBeCanceled)
+        {
+            _cancelRegistration = cancellationToken.Register(static @this => ((ClockDayTimeTimerRegistration)@this!).OnCancelRequested(), this);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _cancelRequested = true;
+                _state = TimerState.Cancelled;
+                return;
+            }
+        }
+
+        _state = TimerState.Active;
         ScheduleNext();
     }
     //----------------------------------------------------------------------------
@@ -689,6 +543,105 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    public ConcurrentTriggerProcessing ConcurrentTriggerProcessing { [DebuggerStepThrough] get => _concurrentTriggerProcessing; }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public SkippedTimeBehavior SkippedTimeBehavior { [DebuggerStepThrough] get => _skippedTimeBehavior; }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public DuplicateTimeBehavior DuplicateTimeBehavior { [DebuggerStepThrough] get => _duplicateTimeBehavior; }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public long ElapsedTime
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return GetDayTimeElapsedMillisecondsWhileLocked();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public long TimeUntilNextCallback
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return GetDayTimeTimeUntilNextMillisecondsWhileLocked();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public int Id { [DebuggerStepThrough] get => _registrationIdentifier; }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get => GetRegisteredTimeOffset(); }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool IsCancelled => _state == TimerState.Cancelled;
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool IsTimeOfDay => true;
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool IsRepeating => true;
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool IsLocalTimeRepresentation { [DebuggerStepThrough] get => GetIsLocalTimeRepresentation(); }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool IsActive
+    {
+        get
+        {
+            // Capture local state value
+            TimerState state = _state;
+            return state != TimerState.Cancelled &&
+                   state != TimerState.Disposed;
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public TimerState State { [DebuggerStepThrough] get => _state; }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool CallbacksProcessing
+    {
+        get
+        {
+            lock (_gate)
+            {
+                TimerState state = _state;
+                return state != TimerState.Cancelled &&
+                       state != TimerState.Disposed &&
+                       _callbacksRunning > 0;
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool Enabled
+    {
+        get => _enabled && !IsCancelled && _state != TimerState.Disposed;
+        set
+        {
+            lock (_gate)
+            {
+                if (_disposed || _state == TimerState.Cancelled)
+                    return;
+                if (value)
+                    Start();
+                else
+                    Stop();
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
     public void Cancel ()
     {
         lock (_gate)
@@ -701,8 +654,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             _timer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
@@ -717,8 +668,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             return true;
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Start ()
@@ -735,8 +684,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : IClockDayTimeTimer
             return true;
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Dispose ()
