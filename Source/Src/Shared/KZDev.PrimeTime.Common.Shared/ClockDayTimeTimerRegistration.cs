@@ -9,8 +9,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Observability;
+
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Observability;
+
 namespace KZDev.PrimeTime;
 #endif
 
@@ -309,6 +313,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
                 return;
 
             default:
+                PrimeTimeEventSource.Log.ClockTimerUnsupportedCallbackKind((int)CallbackKind, "DayTime");
                 throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
         }
     }

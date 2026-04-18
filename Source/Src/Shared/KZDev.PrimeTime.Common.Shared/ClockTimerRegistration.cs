@@ -6,8 +6,12 @@ using System.Diagnostics;
 using Timer = System.Threading.Timer;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Observability;
+
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Observability;
+
 namespace KZDev.PrimeTime;
 #endif
 
@@ -377,7 +381,10 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
             lock (Gate)
             {
                 if (Disposed)
+                {
+                    PrimeTimeEventSource.Log.ClockTimerUseAfterDispose(nameof(Enabled));
                     throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+                }
 
                 if (State == TimerState.Cancelled)
                     return;

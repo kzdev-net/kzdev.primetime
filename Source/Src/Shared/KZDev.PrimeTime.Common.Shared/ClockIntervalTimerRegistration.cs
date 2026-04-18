@@ -4,8 +4,12 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Observability;
+
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Observability;
+
 namespace KZDev.PrimeTime;
 #endif
 
@@ -191,6 +195,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
                 return;
 
             default:
+                PrimeTimeEventSource.Log.ClockTimerUnsupportedCallbackKind((int)CallbackKind, "Interval");
                 throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
         }
 
@@ -330,11 +335,17 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         lock (Gate)
         {
             if (Disposed)
+            {
+                PrimeTimeEventSource.Log.ClockTimerUseAfterDispose(nameof(ChangeNextAndRepeat));
                 throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+            }
             if (State == TimerState.Cancelled)
                 return false;
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
+            {
+                PrimeTimeEventSource.Log.IntervalTimerInvalidRepeatTransition();
                 throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
+            }
             InitialCallbackTimeSpan = nextInterval;
             RepeatTimeSpanInterval = repeatInterval;
             if (State == TimerState.Completed)
@@ -414,7 +425,10 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         lock (Gate)
         {
             if (Disposed)
+            {
+                PrimeTimeEventSource.Log.ClockTimerUseAfterDispose(nameof(Start));
                 throw new ObjectDisposedException(nameof(IClockIntervalTimer));
+            }
 
             if (State == TimerState.Cancelled)
                 return false;

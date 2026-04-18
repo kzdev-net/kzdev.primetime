@@ -4,8 +4,12 @@
 #if NET
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Observability;
+
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Observability;
+
 namespace KZDev.PrimeTime;
 #endif
 
@@ -113,6 +117,9 @@ internal static class DayTimeBclLocalWallTimeScheduling
             }
         }
 
+        PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
+            PrimeTimeEventSource.FaultCode_ExpectedInvalidWindowMissing,
+            $"{calendarDate:O} {missingInvalidWindowMessageSuffix}");
         throw new InvalidOperationException(
             $"Expected an invalid local time window on the calendar date for {missingInvalidWindowMessageSuffix}.");
     }
@@ -140,6 +147,9 @@ internal static class DayTimeBclLocalWallTimeScheduling
 
         if (probe >= dayEnd || zone.IsInvalidTime(probe))
         {
+            PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
+                PrimeTimeEventSource.FaultCode_RunAfterResolutionFailed,
+                calendarDate.ToString("O"));
             throw new InvalidOperationException("Could not resolve RunAfter instant after a spring-forward gap.");
         }
 
@@ -167,6 +177,9 @@ internal static class DayTimeBclLocalWallTimeScheduling
 
         if (probe < midnight || zone.IsInvalidTime(probe))
         {
+            PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
+                PrimeTimeEventSource.FaultCode_RunBeforeResolutionFailed,
+                calendarDate.ToString("O"));
             throw new InvalidOperationException("Could not resolve RunBefore instant before a spring-forward gap.");
         }
 
@@ -251,6 +264,8 @@ internal static class DayTimeBclLocalWallTimeScheduling
             }
         }
 
+        PrimeTimeEventSource.Log.DayTimeSchedulingFireInstantNotFound(zone.Id, targetTimeOfDay.ToString("O"),
+            MaxDaySearchWindow);
         throw new InvalidOperationException($"Unable to find a valid local day-time fire instant within {MaxDaySearchWindow} calendar days " +
             $"for time zone '{zone.Id}' and target time of day '{targetTimeOfDay}'.");
     }
