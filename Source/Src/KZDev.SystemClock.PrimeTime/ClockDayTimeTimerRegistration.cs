@@ -20,19 +20,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private static readonly TimeSpan RunSequentiallyRetryDelay = TimeSpan.FromMilliseconds(30);
 
     /// <summary>
-    ///   Indicates whether the configured time of day is interpreted in UTC or local zone per day.
-    /// </summary>
-    private readonly bool _utcTimeOfDaySchedule;
-
-    /// <summary>
     ///   Wall-clock time of day used to compute the next fire.
     /// </summary>
     private TimeOnly _targetTimeOfDay;
-
-    /// <summary>
-    ///   Offset-based instant recorded when this registration was created.
-    /// </summary>
-    private DateTimeOffset _registeredTime;
 
     /// <summary>
     ///   Scheduled start of the next callback, if one is pending.
@@ -44,15 +34,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     private DateTimeOffset? _lastCallbackStartedOffset;
 
-    /// <summary>
-    ///   Gets whether this registration schedules using local calendar days.
-    /// </summary>
-    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
-
-    /// <summary>
-    ///   Gets whether this registration schedules using UTC calendar days.
-    /// </summary>
-    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
 
     /// <summary>
     ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
@@ -67,34 +48,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) => _targetTimeOfDay = newTimeOfDay;
 
     /// <summary>
-    ///   Gets the clock's current time in the schedule basis (UTC vs local calendar day).
-    /// </summary>
-    /// <returns>
-    ///   <see cref="IPrimeClock.UtcNowDateTimeOffset"/> for UTC calendar-day scheduling; otherwise <see cref="IPrimeClock.LocalNowDateTimeOffset"/>.
-    /// </returns>
-    private DateTimeOffset GetScheduleNowOffset () =>
-        _utcTimeOfDaySchedule ? _clock.UtcNowDateTimeOffset : _clock.LocalNowDateTimeOffset;
-
-    /// <summary>
-    ///   Persists the clock's current instant as this registration's creation time, using the
-    ///   same UTC vs local calendar-day basis as scheduling (<see cref="GetScheduleNowOffset"/>).
-    /// </summary>
-    private partial void CaptureRegisteredTimeForDayTimer () =>
-        _registeredTime = GetScheduleNowOffset();
-
-    /// <summary>
-    ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
-    /// </summary>
-    /// <returns>The offset used when the registration was created.</returns>
-    private partial DateTimeOffset GetRegisteredTimeOffset () => _registeredTime;
-
-    /// <summary>
-    ///   Gets whether the schedule uses local time-of-day semantics.
-    /// </summary>
-    /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
-    private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
-
-    /// <summary>
     ///   Computes the delay from now until the next time-of-day occurrence.
     /// </summary>
     /// <returns>The nonnegative delay until the next fire, or one day if the computed delay is nonpositive.</returns>
@@ -104,7 +57,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
         // basis (UTC vs local) is the anchor for turning that into a delay until the next fire.
         DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
         TimeSpan delayUntilNextFire;
-        if (_utcTimeOfDaySchedule)
+        if (UtcTimeOfDaySchedule)
         {
             // UTC calendar day: interpret _targetTimeOfDay on today's UTC date, then roll forward
             // one UTC day if that instant is not strictly after the current instant.
@@ -127,8 +80,8 @@ internal sealed partial class ClockDayTimeTimerRegistration
             // wall-time policies; the shared helper encapsulates that next-occurrence math.
             delayUntilNextFire =
                 DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(scheduleNowOffset,
-                _clock.LocalScheduleTimeZone, _targetTimeOfDay, _skippedTimeBehavior,
-                _duplicateTimeBehavior);
+                Clock.LocalScheduleTimeZone, _targetTimeOfDay, SkippedTimeBehavior,
+                DuplicateTimeBehavior);
         }
 
         // Timer APIs expect a positive due time; clamp a zero or negative residual to one day so we
@@ -166,11 +119,11 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </returns>
     private partial long GetDayTimeElapsedMillisecondsWhileLocked ()
     {
-        lock (_gate)
+        lock (Gate)
         {
             if (_lastCallbackStartedOffset is not { } lastCallbackStartOffset)
                 return -1;
-            if (_callbacksRunning > 0)
+            if (CallbacksRunning > 0)
                 return 0;
             DateTimeOffset scheduleNowOffset = GetScheduleNowOffset();
             if (lastCallbackStartOffset >= scheduleNowOffset)
@@ -241,15 +194,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     private ClockDayTimeTimerRegistration (IPrimeClock clock,
-        bool utcTimeOfDaySchedule, TimeOnly targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        bool utcTimeOfDaySchedule, TimeOnly targetTimeOfDay, TimerCallbackKind callbackKind,
         Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
     {
-        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
         _targetTimeOfDay = targetTimeOfDay;
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
+        FinishConstruction(clock, utcTimeOfDaySchedule, callbackKind, callback, callbackState, options, cancellationToken);
     }
     /// <summary>
     ///   Initializes a new instance for a local-time day-time timer.
@@ -265,7 +215,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        LocalTimeOfDay localTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        LocalTimeOfDay localTimeOfDay, TimerCallbackKind callbackKind,
         Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
         : this(clock, false, localTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)
@@ -285,7 +235,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock,
-        UtcTimeOfDay utcTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        UtcTimeOfDay utcTimeOfDay, TimerCallbackKind callbackKind,
         Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
         : this(clock, true, utcTimeOfDay.Value, callbackKind, callback, callbackState, options, cancellationToken)

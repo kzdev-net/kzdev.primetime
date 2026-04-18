@@ -393,7 +393,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAction, callback, state,
+        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), TimerCallbackKind.ContextAction, callback, state,
             timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
 
@@ -404,7 +404,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), IntervalTimerCallbackKind.ContextAsync, callback, state,
+        RegisterTimeOfDayLocal(LocalTimeToTargetTimeOfDay(timeOfDay), TimerCallbackKind.ContextAsync, callback, state,
             timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
 

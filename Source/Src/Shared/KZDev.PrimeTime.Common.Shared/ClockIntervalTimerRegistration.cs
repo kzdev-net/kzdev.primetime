@@ -195,86 +195,6 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         }
 
         OnCallbackCompleted(resetBefore, isRepeating);
-
-        // Local helper method to invoke a simple synchronous callback with optional execution context flow
-        void InvokeSync (Action run)
-        {
-            if (!ExecutionContext.IsFlowSuppressed())
-            {
-                if (CaptureContext)
-                {
-                    ExecutionContext? executionContext = ExecutionContext.Capture();
-                    if (executionContext is not null)
-                    {
-                        ExecutionContext.Run(executionContext, static action => ((Action)action!)(), run);
-                        return;
-                    }
-                }
-                else
-                {
-                    using (ExecutionContext.SuppressFlow())
-                    {
-                        run();
-                    }
-                    return;
-                }
-            }
-            run();
-        }
-
-        // Local helper method to invoke a context-aware synchronous callback with optional execution context flow
-        void InvokeCallbackSync (Action<ClockTimerCallbackContext> run, ClockTimerCallbackContext callbackContext)
-        {
-            if (!ExecutionContext.IsFlowSuppressed())
-            {
-                if (CaptureContext)
-                {
-                    ExecutionContext? executionContext = ExecutionContext.Capture();
-                    if (executionContext is not null)
-                    {
-                        // We accept the closure allocation here to avoid a tuple allocation from passing multiple parameters via state
-                        ExecutionContext.Run(executionContext, _ => run(callbackContext), null);
-                        return;
-                    }
-                }
-                else
-                {
-                    using (ExecutionContext.SuppressFlow())
-                    {
-                        run(callbackContext);
-                    }
-                    return;
-                }
-            }
-            run(callbackContext);
-        }
-
-        // Local helper method to invoke a context-aware synchronous callback with cancellation token and optional execution context flow
-        void InvokeCallbackCancelSync (Action<ClockTimerCallbackContext, CancellationToken> run, ClockTimerCallbackContext callbackContext)
-        {
-            if (!ExecutionContext.IsFlowSuppressed())
-            {
-                if (CaptureContext)
-                {
-                    ExecutionContext? executionContext = ExecutionContext.Capture();
-                    if (executionContext is not null)
-                    {
-                        // We accept the closure allocation here to avoid a tuple allocation from passing multiple parameters via state
-                        ExecutionContext.Run(executionContext, _ => run(callbackContext, CancellationToken), null);
-                        return;
-                    }
-                }
-                else
-                {
-                    using (ExecutionContext.SuppressFlow())
-                    {
-                        run(callbackContext, CancellationToken);
-                    }
-                    return;
-                }
-            }
-            run(callbackContext, CancellationToken);
-        }
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -434,7 +354,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
     ///   Initializes a new instance of the <see cref="ClockIntervalTimerRegistration"/> class.
     /// </summary>
     /// <param name="clock">
-    ///   The BCL clock used for scheduling and time.
+    ///   The clock instance used for scheduling and time.
     /// </param>
     /// <param name="initialCallbackTime">
     ///   Delay until the first callback.
@@ -468,10 +388,10 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
     {
         InitialCallbackTimeSpan = initialCallbackTime;
         RepeatTimeSpanInterval = repeatInterval;
-        IntervalTimerOptions opts = options ?? new IntervalTimerOptions();
-        IsResetBeforeCallback = opts.ResetIntervalBeforeCallback;
+        IntervalTimerOptions resolvedOptions = options ?? new IntervalTimerOptions();
+        IsResetBeforeCallback = resolvedOptions.ResetIntervalBeforeCallback;
 
-        FinishConstruction (clock, opts.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe, !opts.LocalTimeRepresentation, 
+        FinishConstruction (clock, resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe, !resolvedOptions.LocalTimeRepresentation, 
             callbackKind, callback, callbackState, cancellationToken);
         ScheduleNext(initialCallbackTime);
     }

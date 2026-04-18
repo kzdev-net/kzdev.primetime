@@ -13,11 +13,6 @@ internal sealed partial class ClockIntervalTimerRegistration
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Instant captured for <see cref="RegisteredTime"/> (local or UTC per representation).
-    /// </summary>
-    private DateTimeOffset _registeredTime;
-
-    /// <summary>
     ///   Initial due-time basis backing <see cref="InitialCallbackTimeSpan"/>.
     /// </summary>
     private TimeSpan _initialCallbackTime;
@@ -63,19 +58,6 @@ internal sealed partial class ClockIntervalTimerRegistration
     private partial bool IsRepeatingTimer { [DebuggerStepThrough] get => _repeatInterval != Timeout.InfiniteTimeSpan && _repeatInterval > TimeSpan.Zero; }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Captures <see cref="RegisteredTime"/> from the clock per local/UTC option (partial).
-    /// </summary>
-    private partial void CaptureRegisteredTime () => _registeredTime = IsLocalTimeRepresentation ? _clock.LocalNowDateTimeOffset : _clock.UtcNowDateTimeOffset;
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Returns <see cref="RegisteredTime"/> in the registration time basis (partial).
-    /// </summary>
-    /// <returns>
-    ///   The registered instant in the configured time representation (local or UTC per <see cref="IsLocalTimeRepresentation"/>).
-    /// </returns>
-    private partial DateTimeOffset GetRegisteredTime () => _registeredTime;
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Computes elapsed milliseconds since last callback per contract (partial).
     /// </summary>
     /// <returns>
@@ -89,7 +71,7 @@ internal sealed partial class ClockIntervalTimerRegistration
                 return -1;
             if (CallbacksRunning > 0)
                 return 0;
-            DateTimeOffset now = _clock.UtcNowDateTimeOffset;
+            DateTimeOffset now = Clock.UtcNowDateTimeOffset;
             if (last >= now)
                 return 0;
             return (long)(now - last).TotalMilliseconds;
@@ -102,7 +84,7 @@ internal sealed partial class ClockIntervalTimerRegistration
     /// <param name="delay">
     ///   Delay until the next scheduled callback.
     /// </param>
-    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = _clock.UtcNowDateTimeOffset + delay;
+    private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) => NextCallbackUtc = Clock.UtcNowDateTimeOffset + delay;
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Marks the start of a timer callback: records &quot;last callback&quot; and, when
@@ -113,7 +95,7 @@ internal sealed partial class ClockIntervalTimerRegistration
     /// </param>
     private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback)
     {
-        LastCallbackUtc = _clock.UtcNowDateTimeOffset;
+        LastCallbackUtc = Clock.UtcNowDateTimeOffset;
         if (!resetIntervalBeforeCallback)
             NextCallbackUtc = null;
     }
@@ -130,7 +112,7 @@ internal sealed partial class ClockIntervalTimerRegistration
             return -1;
         if (NextCallbackUtc is not { } next)
             return -1;
-        DateTimeOffset now = _clock.UtcNowDateTimeOffset;
+        DateTimeOffset now = Clock.UtcNowDateTimeOffset;
         if (next <= now)
             return 0;
         return (long)(next - now).TotalMilliseconds;

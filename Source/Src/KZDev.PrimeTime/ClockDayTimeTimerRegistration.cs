@@ -21,11 +21,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
 
     /// <summary>
-    ///   Indicates whether the configured time of day is interpreted in UTC or local zone per day.
-    /// </summary>
-    private readonly bool _utcTimeOfDaySchedule;
-
-    /// <summary>
     ///   Wall-clock time of day used to compute the next fire.
     /// </summary>
     private LocalTime _targetTimeOfDay;
@@ -39,36 +34,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Start of the most recent callback, if any.
     /// </summary>
     private Instant? _lastCallbackInstant;
-    //----------------------------------------------------------------------------
-
-#if NET
-    /// <summary>
-    ///   Gets whether this registration schedules using local calendar days.
-    /// </summary>
-    private partial bool IsLocalDayTimeSchedule { [DebuggerStepThrough] get => !_utcTimeOfDaySchedule; }
-
-    /// <summary>
-    ///   Gets whether this registration schedules using UTC calendar days.
-    /// </summary>
-    private partial bool IsUtcDayTimeSchedule { [DebuggerStepThrough] get => _utcTimeOfDaySchedule; }
-
-    /// <summary>
-    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
-    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
-    /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
-
-    /// <summary>
-    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
-    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
-    /// </summary>
-    /// <param name="newTimeOfDay">New time of day.</param>
-    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
-#endif
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a Noda <see cref="Duration"/> to a BCL timer millisecond value, clamping overflow.
@@ -95,22 +60,25 @@ internal sealed partial class ClockDayTimeTimerRegistration
         }
     }
     //----------------------------------------------------------------------------
+
+#if NET
     /// <summary>
-    ///   Persists the clock's current instant as this registration's creation time.
+    ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
     /// </summary>
-    private partial void CaptureRegisteredTimeForDayTimer () => RegisteredInstant = _clock.NowInstant;
-    //----------------------------------------------------------------------------
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+
     /// <summary>
-    ///   Gets the captured creation time as a <see cref="DateTimeOffset"/>.
+    ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
+    ///   precision of <see cref="TimeOnly"/> (100-nanosecond tick resolution).
     /// </summary>
-    /// <returns>The offset corresponding to <see cref="RegisteredInstant"/>.</returns>
-    private partial DateTimeOffset GetRegisteredTimeOffset () => RegisteredInstant.ToDateTimeOffset();
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Gets whether the schedule uses local time-of-day semantics.
-    /// </summary>
-    /// <returns><c>true</c> when local calendar days apply; otherwise, <c>false</c>.</returns>
-    private partial bool GetIsLocalTimeRepresentation () => !_utcTimeOfDaySchedule;
+    /// <param name="newTimeOfDay">New time of day.</param>
+    private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
+        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+#endif
+
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts the delay until the next fire to a <see cref="TimeSpan"/>, clamping overflow.
@@ -137,12 +105,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
         // _targetTimeOfDay picks which wall-clock time fires each day; the clock's current instant is
         // subtracted from the next matching zoned occurrence to produce a duration for the timer.
-        Instant nowInstant = _clock.NowInstant;
-        if (_utcTimeOfDaySchedule)
+        Instant nowInstant = Clock.NowInstant;
+        if (UtcTimeOfDaySchedule)
         {
             // UTC schedule: use today's UTC calendar date, attach _targetTimeOfDay, map through UTC.
             // If that instant is still on or before now, use tomorrow's UTC date instead.
-            ZonedDateTime utcZonedNow = _clock.UtcNowInstant;
+            ZonedDateTime utcZonedNow = Clock.UtcNowInstant;
             LocalDate utcCalendarDate = utcZonedNow.Date;
             LocalDateTime scheduleLocalDateTime = utcCalendarDate.At(_targetTimeOfDay);
             ZonedDateTime scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
@@ -157,9 +125,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
         // Local schedule: calendar boundaries and DST follow the clock's local zone; skipped and duplicate
         // wall-time policies match DayTimeSchedulingPolicyTable (shared with the BCL stack).
-        ZonedDateTime localZonedNow = _clock.LocalZonedNowInstant;
+        ZonedDateTime localZonedNow = Clock.LocalZonedNowInstant;
         return DayTimeNodaLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(nowInstant,
-            localZonedNow.Zone, _targetTimeOfDay, _skippedTimeBehavior, _duplicateTimeBehavior);
+            localZonedNow.Zone, _targetTimeOfDay, SkippedTimeBehavior, DuplicateTimeBehavior);
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -173,7 +141,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     /// <param name="delay">Delay from now until the next fire.</param>
     private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay) =>
-        _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
+        _nextCallbackInstant = Clock.NowInstant + Duration.FromTimeSpan(delay);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-callback schedule and records the start of the current tick.
@@ -181,7 +149,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private partial void RecordDayTimeCallbackTickStarted ()
     {
         _nextCallbackInstant = null;
-        _lastCallbackInstant = _clock.NowInstant;
+        _lastCallbackInstant = Clock.NowInstant;
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -195,9 +163,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
         if (_lastCallbackInstant is not { } lastCallbackStartInstant)
             return -1;
-        if (_callbacksRunning > 0)
+        if (CallbacksRunning > 0)
             return 0;
-        Instant nowInstant = _clock.NowInstant;
+        Instant nowInstant = Clock.NowInstant;
         if (lastCallbackStartInstant >= nowInstant)
             return 0;
         return (long)(nowInstant - lastCallbackStartInstant).TotalMilliseconds;
@@ -213,7 +181,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     {
         if (_nextCallbackInstant is not { } nextCallbackInstant)
             return -1;
-        Instant nowInstant = _clock.NowInstant;
+        Instant nowInstant = Clock.NowInstant;
         if (nextCallbackInstant <= nowInstant)
             return 0;
         return (long)(nextCallbackInstant - nowInstant).TotalMilliseconds;
@@ -271,15 +239,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     [SetsRequiredMembers]
 #endif
     internal ClockDayTimeTimerRegistration (IPrimeClock clock, bool utcTimeOfDaySchedule,
-        LocalTime targetTimeOfDay, IntervalTimerCallbackKind callbackKind,
+        LocalTime targetTimeOfDay, TimerCallbackKind callbackKind,
         Delegate callback, object? callbackState, DayTimeTimerOptions? options,
         CancellationToken cancellationToken)
     {
-        _utcTimeOfDaySchedule = utcTimeOfDaySchedule;
         _targetTimeOfDay = targetTimeOfDay;
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        FinishConstruction(callbackKind, callbackState, options, cancellationToken);
+        FinishConstruction(clock, utcTimeOfDaySchedule, callbackKind, callback, callbackState, options, cancellationToken);
     }
     //----------------------------------------------------------------------------
 
@@ -304,12 +269,12 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <inheritdoc />
     public bool Change (LocalTime targetTimeOfDay)
     {
-        lock (_gate)
+        lock (Gate)
         {
-            if (_disposed || _state == TimerState.Cancelled)
+            if (Disposed || State == TimerState.Cancelled)
                 return false;
             _targetTimeOfDay = targetTimeOfDay;
-            if (!_enabled)
+            if (!InternalEnabled)
                 return true;
             ScheduleNext();
             return true;

@@ -101,6 +101,15 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
     /// </summary>
     internal int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
 
+    /// <summary>
+    /// Helper property to determine whether the callback is asynchronous based on the <see cref="ClockTimerRegistration.CallbackKind"/>,
+    /// </summary>
+    internal bool IsAsyncCallback
+    {
+        [DebuggerStepThrough]
+        get => CallbackKind == TimerCallbackKind.SimpleAsync || CallbackKind == TimerCallbackKind.ContextAsync;
+    }
+
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Captures <see cref="RegisteredTime"/> from the clock per local/UTC option (partial).
@@ -126,6 +135,113 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
             State = TimerState.Cancelled;
             InternalEnabled = false;
         }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///  Invokes the given callback action, capturing or suppressing execution context flow per registration options.
+    /// </summary>
+    /// <remarks>If execution context flow is not suppressed and context capture is enabled, the callback is
+    /// executed within the captured execution context. Otherwise, the callback is invoked directly or with flow
+    /// suppression as needed. This method is intended for internal use where precise control over execution context and
+    /// cancellation is required.</remarks>
+    /// <param name="run">The callback action to invoke.</param>
+    internal void InvokeSync (Action run)
+    {
+        if (!ExecutionContext.IsFlowSuppressed())
+        {
+            if (CaptureContext)
+            {
+                ExecutionContext? executionContext = ExecutionContext.Capture();
+                if (executionContext is not null)
+                {
+                    ExecutionContext.Run(executionContext, static action => ((Action)action!)(), run);
+                    return;
+                }
+            }
+            else
+            {
+                using (ExecutionContext.SuppressFlow())
+                {
+                    run();
+                }
+                return;
+            }
+        }
+        run();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Invokes the given callback action with the provided callback context, capturing or suppressing execution context flow per registration options.
+    /// </summary>
+    /// <remarks>If execution context flow is not suppressed and context capture is enabled, the callback is
+    /// executed within the captured execution context. Otherwise, the callback is invoked directly or with flow
+    /// suppression as needed. This method is intended for internal use where precise control over execution context and
+    /// cancellation is required.</remarks>
+    /// <param name="run">
+    ///  The callback action to invoke. The callback context is passed as a parameter to this action, and the caller is expected to use it when invoking the user callback delegate.
+    /// </param>
+    /// <param name="callbackContext">The context to pass to the callback action.</param>
+    internal void InvokeCallbackSync (Action<ClockTimerCallbackContext> run, ClockTimerCallbackContext callbackContext)
+    {
+        if (!ExecutionContext.IsFlowSuppressed())
+        {
+            if (CaptureContext)
+            {
+                ExecutionContext? executionContext = ExecutionContext.Capture();
+                if (executionContext is not null)
+                {
+                    // We accept the closure allocation here to avoid a tuple allocation from passing multiple parameters via state
+                    ExecutionContext.Run(executionContext, _ => run(callbackContext), null);
+                    return;
+                }
+            }
+            else
+            {
+                using (ExecutionContext.SuppressFlow())
+                {
+                    run(callbackContext);
+                }
+                return;
+            }
+        }
+        run(callbackContext);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    /// Invokes the specified callback action synchronously, providing a cancellation token and managing execution
+    /// context flow as appropriate.
+    /// </summary>
+    /// <remarks>If execution context flow is not suppressed and context capture is enabled, the callback is
+    /// executed within the captured execution context. Otherwise, the callback is invoked directly or with flow
+    /// suppression as needed. This method is intended for internal use where precise control over execution context and
+    /// cancellation is required.</remarks>
+    /// <param name="run">The callback action to invoke. Receives the callback context and a cancellation token as parameters. Cannot be
+    /// null.</param>
+    /// <param name="callbackContext">The context information to pass to the callback action. Cannot be null.</param>
+    internal void InvokeCallbackCancelSync (Action<ClockTimerCallbackContext, CancellationToken> run, ClockTimerCallbackContext callbackContext)
+    {
+        if (!ExecutionContext.IsFlowSuppressed())
+        {
+            if (CaptureContext)
+            {
+                ExecutionContext? executionContext = ExecutionContext.Capture();
+                if (executionContext is not null)
+                {
+                    // We accept the closure allocation here to avoid a tuple allocation from passing multiple parameters via state
+                    ExecutionContext.Run(executionContext, _ => run(callbackContext, CancellationToken), null);
+                    return;
+                }
+            }
+            else
+            {
+                using (ExecutionContext.SuppressFlow())
+                {
+                    run(callbackContext, CancellationToken);
+                }
+                return;
+            }
+        }
+        run(callbackContext, CancellationToken);
     }
     //----------------------------------------------------------------------------
     /// <summary>

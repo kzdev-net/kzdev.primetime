@@ -14,15 +14,6 @@ internal abstract partial class ClockTimerRegistration
     private DateTimeOffset _registeredTime;
 
     /// <summary>
-    ///   Gets the clock's current time in the schedule basis (UTC vs local calendar day).
-    /// </summary>
-    /// <returns>
-    ///   <see cref="IPrimeClock.UtcNowDateTimeOffset"/> for UTC calendar-day scheduling; otherwise <see cref="IPrimeClock.LocalNowDateTimeOffset"/>.
-    /// </returns>
-    private DateTimeOffset GetScheduleNowOffset () =>
-        UtcTimeOfDaySchedule ? Clock.UtcNowDateTimeOffset : Clock.LocalNowDateTimeOffset;
-
-    /// <summary>
     ///   Persists the clock's current instant as this registration's creation time, using the
     ///   same UTC vs local calendar-day basis as scheduling (<see cref="GetScheduleNowOffset"/>).
     /// </summary>
@@ -33,4 +24,13 @@ internal abstract partial class ClockTimerRegistration
     /// </summary>
     /// <returns>The offset used when the registration was created.</returns>
     private partial DateTimeOffset GetRegisteredTimeOffset () => _registeredTime;
+
+    /// <summary>
+    ///   Gets the clock's current time in the schedule basis (UTC vs local calendar day).
+    /// </summary>
+    /// <returns>
+    ///   <see cref="IPrimeClock.UtcNowDateTimeOffset"/> for UTC calendar-day scheduling; otherwise <see cref="IPrimeClock.LocalNowDateTimeOffset"/>.
+    /// </returns>
+    internal DateTimeOffset GetScheduleNowOffset () =>
+        UtcTimeOfDaySchedule ? Clock.UtcNowDateTimeOffset : Clock.LocalNowDateTimeOffset;
 }
