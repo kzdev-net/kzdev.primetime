@@ -33,6 +33,10 @@ public enum ConcurrentTriggerProcessing
     ///   fires while a callback is running, the new trigger is queued and runs after the current
     ///   callback completes.
     /// </summary>
+    /// <remarks>
+    ///   Only one callback is queued at a time; if a trigger fires while a callback is running and 
+    ///   there is already a callback queued, the new trigger is skipped (no callback for that time of day).
+    /// </remarks>
     RunSequentially
     //----------------------------------------------------------------------------
 }

@@ -543,7 +543,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
-    ///   <see cref="IntervalTimerCallbackKind.SimpleAction"/> and completes after invoking the callback.
+    ///   <see cref="TimerCallbackKind.SimpleAction"/> and completes after invoking the callback.
     /// </summary>
     [Fact]
     public void ClockIntervalTimerRegistration_WithSimpleActionCallback_InvokesCallbackAndCompletes ()
@@ -553,7 +553,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
             ShortDelay,
             Timeout.InfiniteTimeSpan,
-            IntervalTimerCallbackKind.SimpleAction,
+            TimerCallbackKind.SimpleAction,
             (Action)(() => callbackInvoked.Set()),
             null,
             null,
@@ -567,7 +567,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
-    ///   <see cref="IntervalTimerCallbackKind.ContextActionWithToken"/> and passes both callback
+    ///   <see cref="TimerCallbackKind.ContextActionWithToken"/> and passes both callback
     ///   state and registration cancellation token to the callback.
     /// </summary>
     [Fact]
@@ -583,7 +583,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
             ShortDelay,
             Timeout.InfiniteTimeSpan,
-            IntervalTimerCallbackKind.ContextActionWithToken,
+            TimerCallbackKind.ContextActionWithToken,
             (Action<ClockTimerCallbackContext, CancellationToken>)((ClockTimerCallbackContext callbackContext, CancellationToken cancellationToken) =>
             {
                 receivedState = callbackContext.CallbackState;
@@ -628,7 +628,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="ClockIntervalTimerRegistration"/> supports
-    ///   <see cref="IntervalTimerCallbackKind.SimpleAsync"/> and completes after the async callback
+    ///   <see cref="TimerCallbackKind.SimpleAsync"/> and completes after the async callback
     ///   returns a completed <see cref="ValueTask"/>.
     /// </summary>
     [Fact]
@@ -640,7 +640,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using IClockIntervalTimer timer = new ClockIntervalTimerRegistration(clock,
             ShortDelay,
             Timeout.InfiniteTimeSpan,
-            IntervalTimerCallbackKind.SimpleAsync,
+            TimerCallbackKind.SimpleAsync,
             (Func<CancellationToken, ValueTask>)(_ =>
             {
                 callbackInvoked.Set();

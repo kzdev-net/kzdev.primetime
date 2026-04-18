@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Internal callback type for interval and day-time timer invocations.
 /// </summary>
-internal enum IntervalTimerCallbackKind
+internal enum TimerCallbackKind
 {
     //----------------------------------------------------------------------------
     /// <summary>

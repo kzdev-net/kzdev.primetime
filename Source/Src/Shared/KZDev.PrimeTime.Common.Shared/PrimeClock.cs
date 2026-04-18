@@ -36,7 +36,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
-            IntervalTimerCallbackKind.ContextAction,
+            TimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -54,7 +54,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         new ClockIntervalTimerRegistration(this,
             callbackTime,
             repeatInterval,
-            IntervalTimerCallbackKind.ContextAsync,
+            TimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -74,7 +74,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         DayTimeTimerOptions? timerOptions = null) =>
         new ClockDayTimeTimerRegistration(this,
             timeOfDay,
-            IntervalTimerCallbackKind.ContextAction,
+            TimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -88,7 +88,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         DayTimeTimerOptions? timerOptions = null) =>
         new ClockDayTimeTimerRegistration(this,
             timeOfDay,
-            IntervalTimerCallbackKind.ContextAsync,
+            TimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,
@@ -102,7 +102,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         DayTimeTimerOptions? timerOptions = null) =>
         new ClockDayTimeTimerRegistration(this,
             timeOfDay,
-            IntervalTimerCallbackKind.ContextAction,
+            TimerCallbackKind.ContextAction,
             callback,
             state,
             timerOptions,
@@ -116,7 +116,7 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
         DayTimeTimerOptions? timerOptions = null) =>
         new ClockDayTimeTimerRegistration(this,
             timeOfDay,
-            IntervalTimerCallbackKind.ContextAsync,
+            TimerCallbackKind.ContextAsync,
             callback,
             state,
             timerOptions,

@@ -83,11 +83,11 @@ internal sealed partial class ClockIntervalTimerRegistration
     /// </returns>
     private partial long GetElapsedTime ()
     {
-        lock (_gate)
+        lock (Gate)
         {
             if (_lastCallbackUtc is not { } last)
                 return -1;
-            if (_callbacksRunning > 0)
+            if (CallbacksRunning > 0)
                 return 0;
             DateTimeOffset now = _clock.UtcNowDateTimeOffset;
             if (last >= now)
@@ -119,7 +119,7 @@ internal sealed partial class ClockIntervalTimerRegistration
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="_gate"/> is held.
+    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="Gate"/> is held.
     /// </summary>
     /// <returns>
     ///   Milliseconds until the next callback, <c>0</c> when due or overdue, or <c>-1</c> when not applicable or not scheduled.

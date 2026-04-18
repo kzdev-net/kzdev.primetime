@@ -44,29 +44,15 @@ internal sealed partial class ClockIntervalTimerRegistration
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    /// <inheritdoc />
-    public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    private partial void CaptureRegisteredTime () => RegisteredInstant = _clock.NowInstant;
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    private partial DateTimeOffset GetRegisteredTime () => RegisteredInstant.ToDateTimeOffset();
-    //----------------------------------------------------------------------------
-
-
-    //----------------------------------------------------------------------------
     private partial long GetElapsedTime ()
     {
-        lock (_gate)
+        lock (Gate)
         {
             if (_lastCallbackInstant is not { } last)
                 return -1;
-            if (_callbacksRunning > 0)
+            if (CallbacksRunning > 0)
                 return 0;
-            Instant now = _clock.NowInstant;
+            Instant now = Clock.NowInstant;
             if (last >= now)
                 return 0;
             return (long)(now - last).TotalMilliseconds;
@@ -76,13 +62,13 @@ internal sealed partial class ClockIntervalTimerRegistration
 
     //----------------------------------------------------------------------------
     private partial void SetNextCallbackScheduledForDelay (TimeSpan delay) =>
-            _nextCallbackInstant = _clock.NowInstant + Duration.FromTimeSpan(delay);
+            _nextCallbackInstant = Clock.NowInstant + Duration.FromTimeSpan(delay);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     private partial void RecordIntervalCallbackStarted (bool resetIntervalBeforeCallback)
     {
-        _lastCallbackInstant = _clock.NowInstant;
+        _lastCallbackInstant = Clock.NowInstant;
         if (!resetIntervalBeforeCallback)
             _nextCallbackInstant = null;
     }
@@ -95,7 +81,7 @@ internal sealed partial class ClockIntervalTimerRegistration
             return -1;
         if (_nextCallbackInstant is not { } next)
             return -1;
-        Instant now = _clock.NowInstant;
+        Instant now = Clock.NowInstant;
         if (next <= now)
             return 0;
         return (long)(next - now).TotalMilliseconds;
