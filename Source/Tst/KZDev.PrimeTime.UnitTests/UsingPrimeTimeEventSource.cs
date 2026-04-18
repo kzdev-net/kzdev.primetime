@@ -1,12 +1,17 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
+using System.Threading;
+using System.Threading.Tasks;
 
 using AwesomeAssertions;
 using KZDev.PrimeTime.Observability;
 using KZDev.PrimeTime.Tests;
+
+using Xunit;
 
 namespace KZDev.PrimeTime.UnitTests;
 
@@ -15,7 +20,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="PrimeTimeEventSource"/> ETW emission on critical paths.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed class UsingPrimeTimeEventSource : UnitTestBase
+public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
 {
     #region Nested types
 
@@ -25,7 +30,12 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
     /// </summary>
     private sealed class PrimeTimeTestEventListener : EventListener
     {
+        private const int EventId_ClockTimerUseAfterDispose = 3;
+        private const int EventId_ClockTimerCallbackException = 6;
+
         private readonly string _providerName;
+
+        private readonly string? _clockTimerCallbackExceptionTimerCategory;
 
         /// <summary>
         ///   Number of <c>ClockTimerUseAfterDispose</c> events observed.
@@ -33,12 +43,32 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
         public int ClockTimerUseAfterDisposeCount;
 
         /// <summary>
+        ///   Number of <c>ClockTimerCallbackException</c> ETW events observed (event id 6).
+        /// </summary>
+        public int ClockTimerCallbackExceptionCount;
+
+        /// <summary>
         ///   Initializes a new instance of the <see cref="PrimeTimeTestEventListener"/> class.
         /// </summary>
         /// <param name="providerName">The ETW provider name to enable (for example, <c>KZDev.PrimeTime</c>).</param>
-        public PrimeTimeTestEventListener (string providerName)
+        /// <param name="clockTimerCallbackExceptionTimerCategory">
+        ///   When not <c>null</c>, only <see cref="PrimeTimeEventSource.ClockTimerCallbackException"/> events whose
+        ///   first payload argument matches this value (for example, <c>Interval</c> or <c>DayTime</c>) increment
+        ///   <see cref="ClockTimerCallbackExceptionCount"/>. Filtering avoids cross-test interference when the same
+        ///   event id is emitted while tests run in parallel.
+        /// </param>
+        public PrimeTimeTestEventListener (string providerName,
+            string? clockTimerCallbackExceptionTimerCategory = null)
         {
             _providerName = providerName;
+            _clockTimerCallbackExceptionTimerCategory = clockTimerCallbackExceptionTimerCategory;
+            foreach (EventSource existing in EventSource.GetSources())
+            {
+                if (existing.Name == _providerName)
+                {
+                    EnableEvents(existing, EventLevel.LogAlways, (EventKeywords)(-1));
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -53,9 +83,32 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
         /// <inheritdoc />
         protected override void OnEventWritten (EventWrittenEventArgs eventData)
         {
-            if (eventData.EventName == "ClockTimerUseAfterDispose")
+            if (!string.Equals(eventData.EventSource.Name, _providerName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (eventData.EventId == EventId_ClockTimerUseAfterDispose)
             {
                 Interlocked.Increment(ref ClockTimerUseAfterDisposeCount);
+            }
+            else if (eventData.EventId == EventId_ClockTimerCallbackException)
+            {
+                if (_clockTimerCallbackExceptionTimerCategory is not null)
+                {
+                    if (eventData.Payload is null || eventData.Payload.Count < 1)
+                    {
+                        return;
+                    }
+
+                    if (eventData.Payload[0] is not string category ||
+                        !string.Equals(category, _clockTimerCallbackExceptionTimerCategory, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+                }
+
+                Interlocked.Increment(ref ClockTimerCallbackExceptionCount);
             }
         }
     }
@@ -98,6 +151,68 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
         Action act = () => registration.Enabled = false;
         act.Should().ThrowExactly<ObjectDisposedException>();
         listener.ClockTimerUseAfterDisposeCount.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that an interval timer callback that throws emits the ETW fault event.
+    /// </summary>
+    [Fact]
+    public void ClockTimerCallbackException_DirectCall_IsObservedByListener ()
+    {
+        using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval");
+        PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", new InvalidOperationException("probe"));
+        listener.ClockTimerCallbackExceptionCount.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that an interval timer callback that throws emits the ETW fault event.
+    /// </summary>
+    [Fact]
+    public void IntervalTimer_CallbackThrows_RecordsClockTimerCallbackExceptionEvent ()
+    {
+        using ManualResetEventSlim callbackEntered = new(false);
+        using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval");
+        IPrimeClock clock = new PrimeClock();
+        using (IClockIntervalTimer registration = clock.RegisterTimer(
+                   TimeSpan.FromMilliseconds(1),
+                   Timeout.InfiniteTimeSpan,
+                   _ =>
+                   {
+                       callbackEntered.Set();
+                       throw new InvalidOperationException("test");
+                   },
+                   TestContext.Current.CancellationToken))
+        {
+            callbackEntered.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken).Should().BeTrue();
+            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, TimeSpan.FromSeconds(3)).Should().BeTrue();
+            listener.ClockTimerCallbackExceptionCount.Should().Be(1);
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that an interval timer async callback that faults after yielding emits the ETW fault event
+    ///   (thread-pool continuation path).
+    /// </summary>
+    [Fact]
+    public void IntervalTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent ()
+    {
+        using ManualResetEventSlim callbackEntered = new(false);
+        using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval");
+        IPrimeClock clock = new PrimeClock();
+        using (IClockIntervalTimer registration = clock.RegisterAsyncTimer(
+                   TimeSpan.FromMilliseconds(1),
+                   async cancellationToken =>
+                   {
+                       callbackEntered.Set();
+                       await Task.Yield();
+                       throw new InvalidOperationException("test");
+                   },
+                   TestContext.Current.CancellationToken))
+        {
+            callbackEntered.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken).Should().BeTrue();
+            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, TimeSpan.FromSeconds(10)).Should().BeTrue();
+            listener.ClockTimerCallbackExceptionCount.Should().Be(1);
+        }
     }
     //----------------------------------------------------------------------------
 

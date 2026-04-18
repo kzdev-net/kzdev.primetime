@@ -101,6 +101,11 @@ internal sealed class PrimeTimeEventSource : EventSource
         ///   Callback dispatch path does not support the registered callback kind.
         /// </summary>
         public const EventOpcode UnsupportedCallbackKind = (EventOpcode)15;
+
+        /// <summary>
+        ///   User timer callback threw an exception on a thread-pool thread.
+        /// </summary>
+        public const EventOpcode CallbackUnhandledException = (EventOpcode)16;
     }
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     /// <summary>
@@ -114,6 +119,7 @@ internal sealed class PrimeTimeEventSource : EventSource
     private const int EventId_ClockTimerUseAfterDispose = 3;
     private const int EventId_IntervalTimerInvalidRepeatTransition = 4;
     private const int EventId_ClockTimerUnsupportedCallbackKind = 5;
+    private const int EventId_ClockTimerCallbackException = 6;
 
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -225,6 +231,44 @@ internal sealed class PrimeTimeEventSource : EventSource
         {
             WriteEvent(EventId_ClockTimerUnsupportedCallbackKind, callbackKind, timerCategory);
         }
+    }
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Raised when a user timer callback throws on a thread-pool thread and the registration swallows
+    ///   the exception to keep timer state consistent.
+    /// </summary>
+    /// <param name="timerCategory"><c>DayTime</c> or <c>Interval</c>.</param>
+    /// <param name="exceptionTypeName">Full name of the exception type.</param>
+    /// <param name="exceptionDetail">Exception details (typically the full string from System.Exception.ToString).</param>
+    [Event(EventId_ClockTimerCallbackException,
+        Keywords = Keywords.Timer,
+        Task = Tasks.ClockTimer,
+        Opcode = Opcodes.CallbackUnhandledException,
+        Level = EventLevel.Error)]
+    private void ClockTimerCallbackException (string timerCategory, string exceptionTypeName, string exceptionDetail)
+    {
+        if (IsEnabled(EventLevel.Error, Keywords.Timer))
+        {
+            WriteEvent(EventId_ClockTimerCallbackException, timerCategory, exceptionTypeName, exceptionDetail);
+        }
+    }
+    //--------------------------------------------------------------------------------
+    /// <summary>
+    ///   Records a timer callback exception via
+    ///   <see cref="ClockTimerCallbackException(string, string, string)"/>.
+    /// </summary>
+    /// <param name="timerCategory"><c>DayTime</c> or <c>Interval</c>.</param>
+    /// <param name="exception">The exception to record.</param>
+    [NonEvent]
+    public void ClockTimerCallbackException (string timerCategory, Exception exception)
+    {
+        if (exception is null || string.IsNullOrEmpty(timerCategory))
+        {
+            return;
+        }
+
+        string exceptionTypeName = exception.GetType().FullName ?? exception.GetType().Name;
+        ClockTimerCallbackException(timerCategory, exceptionTypeName, exception.ToString());
     }
     //--------------------------------------------------------------------------------
 }

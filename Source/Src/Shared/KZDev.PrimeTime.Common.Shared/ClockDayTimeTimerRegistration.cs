@@ -76,43 +76,43 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <summary>
     ///   Computes delay until the next scheduled fire (partial).
     /// </summary>
-    private partial TimeSpan GetDelayUntilNextForTimer ();
+    private partial TimeSpan GetDelayUntilNextForTimer();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Records the next fire from a wall-clock delay (partial).
     /// </summary>
     /// <param name="delay">Delay until the next tick.</param>
-    private partial void SetNextCallbackScheduledFromDelay (TimeSpan delay);
+    private partial void SetNextCallbackScheduledFromDelay(TimeSpan delay);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Clears the next-fire marker and records the callback start for elapsed-time queries (partial).
     /// </summary>
-    private partial void RecordDayTimeCallbackTickStarted ();
+    private partial void RecordDayTimeCallbackTickStarted();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Elapsed milliseconds since last callback while <see cref="Gate"/> is held (partial).
     /// </summary>
-    private partial long GetDayTimeElapsedMillisecondsWhileLocked ();
+    private partial long GetDayTimeElapsedMillisecondsWhileLocked();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Milliseconds until next callback while <see cref="Gate"/> is held (partial).
     /// </summary>
-    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked ();
+    private partial long GetDayTimeTimeUntilNextMillisecondsWhileLocked();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts <paramref name="delay"/> to BCL timer milliseconds when valid (partial).
     /// </summary>
-    private partial bool TryGetTimerMillisecondsFromDelay (TimeSpan delay, out int milliseconds);
+    private partial bool TryGetTimerMillisecondsFromDelay(TimeSpan delay, out int milliseconds);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Retry delay when running sequential day-time triggers (partial).
     /// </summary>
-    private partial int GetRunSequentiallyRetryMilliseconds ();
+    private partial int GetRunSequentiallyRetryMilliseconds();
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes and arms the next day-time callback.
     /// </summary>
-    private void ScheduleNext ()
+    private void ScheduleNext()
     {
         lock (Gate)
         {
@@ -134,7 +134,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <summary>
     ///   Re-arms the timer after a short delay for sequential trigger retry.
     /// </summary>
-    private void ScheduleNextAfterShortDelay ()
+    private void ScheduleNextAfterShortDelay()
     {
         lock (Gate)
         {
@@ -158,7 +158,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     ///   handling is done in this method or an async continuation. This is determined by the
     ///   <see cref="ClockTimerRegistration.CallbackKind"/> property.
     /// </param>
-    private void ProcessCallback (bool callbackIsAsynchronous)
+    private void ProcessCallback(bool callbackIsAsynchronous)
     {
         bool shouldRetryAfterSequentialCallback;
 
@@ -179,6 +179,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
             try
             {
                 RunCallback();
+            }
+            catch (Exception ex)
+            {
+                PrimeTimeEventSource.Log.ClockTimerCallbackException("DayTime", ex);
             }
             finally
             {
@@ -207,7 +211,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <summary>
     ///   BCL timer callback for the next day-time fire.
     /// </summary>
-    private void OnTimerTick (object? _)
+    private void OnTimerTick(object? _)
     {
         bool callbackIsAsynchronous = IsAsyncCallback;
         bool shouldRetryAfterSequentialCallback = false;
@@ -243,6 +247,10 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
         {
             RunCallback();
         }
+        catch (Exception ex)
+        {
+            PrimeTimeEventSource.Log.ClockTimerCallbackException("DayTime", ex);
+        }
         finally
         {
             lock (Gate)
@@ -275,7 +283,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <exception cref="InvalidOperationException">
     ///   <see cref="ClockTimerRegistration.CallbackKind"/> is not supported.
     /// </exception>
-    private void RunCallback ()
+    private void RunCallback()
     {
         switch (CallbackKind)
         {
@@ -300,7 +308,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <summary>
     ///  Invokes the user callback asynchronously and sets up continuation for completion handling.
     /// </summary>
-    private void RunAsyncCallback ()
+    private void RunAsyncCallback()
     {
         switch (CallbackKind)
         {
@@ -321,7 +329,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     /// <summary>
     ///  Handles completion of the async callback, including cleanup and scheduling of sequential retries.
     /// </summary>
-    private void OnAsyncComplete ()
+    private void OnAsyncComplete()
     {
         lock (Gate)
         {
@@ -341,13 +349,16 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
             _pendingRunSequential = false;
         }
         Task.Run(() => RunAsyncCallback())
-            .ContinueWith(static task =>
+            .ContinueWith(static (task, state) =>
                 {
-                    if (task.IsFaulted)
+                    ClockDayTimeTimerRegistration registration = (ClockDayTimeTimerRegistration)state!;
+                    if (task is { IsFaulted: true, Exception: not null })
                     {
-                        _ = task.Exception;
+                        PrimeTimeEventSource.Log.ClockTimerCallbackException("DayTime", task.Exception);
                     }
+                    registration.OnAsyncComplete();
                 },
+                this,
                 CancellationToken.None,
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
@@ -357,7 +368,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
     /// <param name="run">Async callback invocation.</param>
-    private void RunAsync (Func<CancellationToken, ValueTask> run)
+    private void RunAsync(Func<CancellationToken, ValueTask> run)
     {
         while (true)
         {
@@ -389,9 +400,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
             runResultTask.AsTask().ContinueWith(static (task, state) =>
                 {
                     ClockDayTimeTimerRegistration registration = (ClockDayTimeTimerRegistration)state!;
-                    if (task.IsFaulted)
+                    if (task is { IsFaulted: true, Exception: not null })
                     {
-                        _ = task.Exception;
+                        PrimeTimeEventSource.Log.ClockTimerCallbackException("DayTime", task.Exception);
                     }
                     registration.OnAsyncComplete();
                 },
@@ -408,7 +419,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
     /// </summary>
     /// <param name="run">Async callback invocation.</param>
-    private void RunAsync (Func<ClockTimerCallbackContext, CancellationToken, ValueTask> run)
+    private void RunAsync(Func<ClockTimerCallbackContext, CancellationToken, ValueTask> run)
     {
         while (true)
         {
@@ -440,9 +451,9 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
             runResultTask.AsTask().ContinueWith(static (task, state) =>
                 {
                     ClockDayTimeTimerRegistration registration = (ClockDayTimeTimerRegistration)state!;
-                    if (task.IsFaulted)
+                    if (task is { IsFaulted: true, Exception: not null })
                     {
-                        _ = task.Exception;
+                        PrimeTimeEventSource.Log.ClockTimerCallbackException("DayTime", task.Exception);
                     }
                     registration.OnAsyncComplete();
                 },
@@ -473,7 +484,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     ///   Day-time timer options, or <c>null</c> to use default option values.
     /// </param>
     /// <param name="cancellationToken">Token that cancels the registration.</param>
-    private void FinishConstruction (IPrimeClock clock, bool utcTimeOfDaySchedule, 
+    private void FinishConstruction(IPrimeClock clock, bool utcTimeOfDaySchedule,
         TimerCallbackKind callbackKind, Delegate callback,
         object? callbackState, DayTimeTimerOptions? options, CancellationToken cancellationToken)
     {
@@ -569,7 +580,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     public override bool IsRepeating => true;
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public override bool Start ()
+    public override bool Start()
     {
         lock (Gate)
         {

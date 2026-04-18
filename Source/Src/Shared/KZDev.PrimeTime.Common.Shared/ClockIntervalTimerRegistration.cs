@@ -151,6 +151,10 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         {
             RunCallback(resetBefore, isRepeating);
         }
+        catch (Exception ex)
+        {
+            PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", ex);
+        }
         finally
         {
             lock (Gate)
@@ -217,8 +221,9 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         {
             runResultTask = run(CancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
+            PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", ex);
             OnCallbackCompleted(resetBefore, isRepeating);
             return;
         }
@@ -232,9 +237,9 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
             {
                 (ClockIntervalTimerRegistration @this, bool resetBefore, bool isRepeating) =
                     (Tuple<ClockIntervalTimerRegistration, bool, bool>)state!;
-                if (task.IsFaulted)
+                if (task is { IsFaulted: true, Exception: not null })
                 {
-                    _ = task.Exception;
+                    PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", task.Exception);
                 }
                 @this.OnCallbackCompleted(resetBefore, isRepeating);
             },
@@ -257,8 +262,9 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         {
             runResultTask = run(new ClockTimerCallbackContext(this, CallbackState), CancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
+            PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", ex);
             OnCallbackCompleted(resetBefore, isRepeating);
             return;
         }
@@ -272,9 +278,9 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
             {
                 (ClockIntervalTimerRegistration @this, bool resetBefore, bool isRepeating) =
                     (Tuple<ClockIntervalTimerRegistration, bool, bool>)state!;
-                if (task.IsFaulted)
+                if (task is { IsFaulted: true, Exception: not null })
                 {
-                    _ = task.Exception;
+                    PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", task.Exception);
                 }
                 @this.OnCallbackCompleted(resetBefore, isRepeating);
             },
@@ -402,7 +408,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         IntervalTimerOptions resolvedOptions = options ?? new IntervalTimerOptions();
         IsResetBeforeCallback = resolvedOptions.ResetIntervalBeforeCallback;
 
-        FinishConstruction (clock, resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe, !resolvedOptions.LocalTimeRepresentation, 
+        FinishConstruction(clock, resolvedOptions.CallbackExecutionContext != TimerCallbackExecutionContext.Unsafe, !resolvedOptions.LocalTimeRepresentation,
             callbackKind, callback, callbackState, cancellationToken);
         ScheduleNext(initialCallbackTime);
     }
