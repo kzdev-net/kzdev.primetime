@@ -6,6 +6,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
@@ -320,6 +321,5 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
     #endregion Cancel and options
 }
-
 #endif
 

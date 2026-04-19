@@ -125,7 +125,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
         {
             if (ShouldSkipTimerWorkWhileLocked())
             {
-                Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                 return;
             }
             RecordIntervalCallbackStarted(resetBefore);
@@ -136,7 +136,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
             }
             else
             {
-                Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                Timer?.Change(Timeout.Infinite, Timeout.Infinite);
             }
 
             TimerState stateDuringCallback = isRepeating && resetBefore

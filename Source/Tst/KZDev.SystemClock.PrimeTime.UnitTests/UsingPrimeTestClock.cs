@@ -188,20 +188,12 @@ public class UsingPrimeTestClock : UnitTestBase
     [Fact]
     public void Start_ThenStop_SetsIsRunningAndStopReturnsTrue ()
     {
-        try
-        {
-            IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
-            clock.Start(TimeSpan.FromSeconds(1));
-            clock.IsRunning.Should().BeTrue();
-            bool stopped = clock.Stop();
-            stopped.Should().BeTrue();
-            clock.IsRunning.Should().BeFalse();
-        }
-        catch (Exception error)
-        {
-            TestWriteLine($"Unexpected exception: {error}");
-            throw;
-        }
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        clock.Start(TimeSpan.FromSeconds(1));
+        clock.IsRunning.Should().BeTrue();
+        bool stopped = clock.Stop();
+        stopped.Should().BeTrue();
+        clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
 

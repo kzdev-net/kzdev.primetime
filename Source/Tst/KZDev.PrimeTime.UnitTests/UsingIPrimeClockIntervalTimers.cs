@@ -1,13 +1,12 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
-//
-// Unit tests for IPrimeClock interval timers. Uses real time; use PrimeTestClock for fully
-// deterministic interval timer tests.
 
 using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Tests;
+
 using NodaTime;
 
 namespace KZDev.PrimeTime.UnitTests;

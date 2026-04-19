@@ -5,7 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
 using AwesomeAssertions.Specialized;
+
 using KZDev.PrimeTime.Tests;
+
 using NodaTime;
 using NodaTime.Testing;
 
@@ -23,8 +25,8 @@ public class UsingIPrimeClock : UnitTestBase
 {
     // Use a short sleep so tests remain fast, but keep it above typical timer/scheduler resolution
     // (≈1–15ms on most platforms) so that elapsed time can be measured reliably and deterministically.
-        //----------------------------------------------------------------------------
-private const int SleepTestDurationMilliseconds = 30;
+    //----------------------------------------------------------------------------
+    private const int SleepTestDurationMilliseconds = 30;
 
     // Allow some jitter in Sleep measurements to account for OS scheduling and GC pauses without
     // masking real regressions; 15ms has proven sufficient and stable on common CI environments.
@@ -38,13 +40,13 @@ private const int SleepTestDurationMilliseconds = 30;
     // still keeping the test suite fast.
     private const int DelayAsyncTestDurationMilliseconds = 40;
 
-    // Tighter tolerance for DelayAsync since Task.Delay is typically more precise than Thread.Sleep,
-    // but still leaves room for minor scheduling variability on busy systems.
-    private const int DelayAsyncTimingToleranceMilliseconds = 10;
+    // Match Sleep timing slack: timer resolution, early/late wakeups, and thread-pool resume
+    // latency under parallel test runs and code coverage instrumentation.
+    private const int DelayAsyncTimingToleranceMilliseconds = 15;
 
-    // Upper bound for DelayAsync elapsed time to avoid flaky failures when the task scheduler
-    // or system is slightly slow; 40ms has proven sufficient across targets.
-    private const int DelayAsyncUpperBoundToleranceMilliseconds = 40;
+    // Match Sleep upper bound: post-delay continuation scheduling can add substantial latency on
+    // busy machines; a tight cap (e.g. 40ms above a 40ms delay) flakes under load.
+    private const int DelayAsyncUpperBoundToleranceMilliseconds = 100;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers

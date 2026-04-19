@@ -170,7 +170,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
             {
                 if (ShouldSkipTimerWorkWhileLocked())
                 {
-                    Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                    Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                     return;
                 }
                 State = TimerState.ProcessingCallback;
@@ -225,7 +225,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
         {
             if (ShouldSkipTimerWorkWhileLocked())
             {
-                Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                 return;
             }
             RecordDayTimeCallbackTickStarted();
@@ -349,7 +349,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
         {
             if (ShouldSkipTimerWorkWhileLocked())
             {
-                Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                 CallbacksRunning--;
                 return;
             }
@@ -398,7 +398,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
                 {
                     if (ShouldSkipTimerWorkWhileLocked())
                     {
-                        Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                        Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                         CallbacksRunning--;
                         return;
                     }
@@ -453,7 +453,7 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
                 {
                     if (ShouldSkipTimerWorkWhileLocked())
                     {
-                        Timer!.Change(Timeout.Infinite, Timeout.Infinite);
+                        Timer?.Change(Timeout.Infinite, Timeout.Infinite);
                         CallbacksRunning--;
                         return;
                     }

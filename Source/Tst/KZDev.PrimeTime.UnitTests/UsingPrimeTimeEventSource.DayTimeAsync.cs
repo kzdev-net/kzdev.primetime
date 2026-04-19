@@ -1,12 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-using System.Threading;
-using System.Threading.Tasks;
-
 using AwesomeAssertions;
-using KZDev.PrimeTime.Observability;
-using KZDev.PrimeTime.Tests;
 
 using NodaTime;
 
@@ -26,8 +21,11 @@ public sealed partial class UsingPrimeTimeEventSource
     [Fact]
     public void DayTimeTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent ()
     {
+        const string exceptionMarker =
+            "DayTimeTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent PrimeTime";
         using ManualResetEventSlim callbackEntered = new(false);
-        using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "DayTime");
+        using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "DayTime",
+            clockTimerCallbackExceptionDetailContains: exceptionMarker);
         IPrimeClock clock = new PrimeClock();
         LocalTime targetTime = clock.LocalNowTime.PlusSeconds(10);
         using (IClockDayTimeTimer registration = clock.RegisterAsyncTimeOfDay(targetTime,
@@ -35,7 +33,7 @@ public sealed partial class UsingPrimeTimeEventSource
                    {
                        callbackEntered.Set();
                        await Task.Yield();
-                       throw new InvalidOperationException("async day-time fault");
+                       throw new InvalidOperationException(exceptionMarker);
                    },
                    TestContext.Current.CancellationToken))
         {

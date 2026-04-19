@@ -80,6 +80,49 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     }
 
     /// <summary>
+    ///   Verifies that the context-only convenience overload forwards callback state and registration.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_ContextOverload_ForwardsStateAndRegistration ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        object state = new();
+        object? receivedState = null;
+        IClockIntervalTimer? receivedTimer = null;
+
+        using IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromMinutes(5), context =>
+        {
+            receivedState = context.CallbackState;
+            receivedTimer = (IClockIntervalTimer)context.Registration;
+        }, CancellationToken.None, state);
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        receivedState.Should().BeSameAs(state);
+        receivedTimer.Should().BeSameAs(timer);
+        timer.IsRepeating.Should().BeFalse();
+    }
+
+    /// <summary>
+    ///   Verifies that the context-only convenience overload with <c>repeat: true</c> maps to a repeating interval.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_ContextOverloadRepeatTrue_FiresOnEachInterval ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        int fired = 0;
+
+        using IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromMinutes(5), _ => fired++,
+            CancellationToken.None, repeat: true);
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        fired.Should().Be(2);
+        timer.IsRepeating.Should().BeTrue();
+    }
+
+    /// <summary>
     ///   Verifies that the token-only async overload forwards the registration token and repeats.
     /// </summary>
     [Fact]
@@ -107,6 +150,58 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
     }
 
     /// <summary>
+    ///   Verifies that the async overload with context and cancellation token forwards state, registration, and token.
+    /// </summary>
+    [Fact]
+    public void RegisterAsyncTimer_ContextAndTokenOverload_ForwardsStateRegistrationAndToken ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        object state = new();
+        object? receivedState = null;
+        IClockIntervalTimer? receivedTimer = null;
+        using CancellationTokenSource cts = new();
+        CancellationToken? receivedToken = null;
+
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(TimeSpan.FromMinutes(5), (context, ct) =>
+        {
+            receivedState = context.CallbackState;
+            receivedTimer = (IClockIntervalTimer)context.Registration;
+            receivedToken = ct;
+            return default;
+        }, cts.Token, state);
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        receivedState.Should().BeSameAs(state);
+        receivedTimer.Should().BeSameAs(timer);
+        receivedToken.Should().NotBeNull();
+        receivedToken!.Value.Should().Be(cts.Token);
+    }
+
+    /// <summary>
+    ///   Verifies that the async overload with context and token repeats when <c>repeat: true</c>.
+    /// </summary>
+    [Fact]
+    public void RegisterAsyncTimer_ContextAndTokenOverloadRepeatTrue_Repeats ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using CancellationTokenSource cts = new();
+        int fired = 0;
+
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(TimeSpan.FromMinutes(5), (_, _) =>
+        {
+            fired++;
+            return default;
+        }, cts.Token, repeat: true);
+
+        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(TimeSpan.FromMinutes(5));
+
+        fired.Should().Be(2);
+        timer.IsRepeating.Should().BeTrue();
+    }
+
+    /// <summary>
     ///   Verifies that the explicit-repeat convenience overload preserves distinct initial and repeat intervals.
     /// </summary>
     [Fact]
@@ -124,6 +219,83 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
         fired.Should().Be(1);
         clock.Advance(TimeSpan.FromMinutes(1));
         fired.Should().Be(2);
+        timer.IsRepeating.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that the explicit initial and repeat interval overload with context and token forwards state and token.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_ExplicitRepeatIntervalContextAndTokenOverload_ForwardsStateAndToken ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        object state = new();
+        object? receivedState = null;
+        using CancellationTokenSource cts = new();
+        CancellationToken? receivedToken = null;
+        int fired = 0;
+
+        using IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(3),
+            (context, ct) =>
+            {
+                receivedState = context.CallbackState;
+                receivedToken = ct;
+                fired++;
+            }, cts.Token, state);
+
+        clock.Advance(TimeSpan.FromMinutes(2));
+        fired.Should().Be(1);
+        receivedState.Should().BeSameAs(state);
+        receivedToken.Should().NotBeNull();
+        receivedToken!.Value.Should().Be(cts.Token);
+
+        clock.Advance(TimeSpan.FromMinutes(2));
+        fired.Should().Be(1);
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+        fired.Should().Be(2);
+        timer.IsRepeating.Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that the explicit initial and repeat interval async token-only overload forwards the token and honors both intervals.
+    /// </summary>
+    [Fact]
+    public void RegisterAsyncTimer_ExplicitRepeatIntervalTokenOnlyOverload_ForwardsTokenAndUsesIntervals ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using CancellationTokenSource cts = new();
+        CancellationToken? firstToken = null;
+        CancellationToken? secondToken = null;
+        int fired = 0;
+
+        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(3), ct =>
+        {
+            fired++;
+            if (fired == 1)
+            {
+                firstToken = ct;
+            }
+            else
+            {
+                secondToken = ct;
+            }
+
+            return default;
+        }, cts.Token);
+
+        clock.Advance(TimeSpan.FromMinutes(2));
+        fired.Should().Be(1);
+        firstToken.Should().NotBeNull();
+        firstToken!.Value.Should().Be(cts.Token);
+
+        clock.Advance(TimeSpan.FromMinutes(2));
+        fired.Should().Be(1);
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+        fired.Should().Be(2);
+        secondToken.Should().NotBeNull();
+        secondToken!.Value.Should().Be(cts.Token);
         timer.IsRepeating.Should().BeTrue();
     }
 

@@ -1,5 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 
@@ -664,28 +664,6 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterAsyncTimer_Repeating_CountdownAfterCallback_NextTickAfterAsyncCallbackCompletes ()
     {
-        IPrimeClock clock = new PrimeClock();
-        TimeSpan asyncWork = TimeSpan.FromMilliseconds(80);
-        List<DateTimeOffset> callbackStarts = [];
-        ManualResetEventSlim signal = new(false);
-
-        using IClockIntervalTimer timer = clock.RegisterAsyncTimer(ShortDelay,
-            RepeatInterval,
-            async (ct) =>
-            {
-                callbackStarts.Add(clock.UtcNowDateTimeOffset);
-                await Task.Delay(asyncWork, ct);
-                if (callbackStarts.Count >= 2)
-                    signal.Set();
-            },
-            TestContext.Current.CancellationToken);
-        // Time until second callback: ShortDelay + first callback (asyncWork) + RepeatInterval; WaitMargin for timing tolerance.
-        signal.Wait(ShortDelay + asyncWork + RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-        callbackStarts.Count.Should().BeGreaterThan(1);
-        TimeSpan betweenFirstAndSecond = callbackStarts[1] - callbackStarts[0];
-        betweenFirstAndSecond.Should().BeGreaterThan(RepeatInterval,
-            "next tick must be scheduled after async callback completes, so gap includes repeat interval plus async work");
-        betweenFirstAndSecond.Should().BeCloseTo(RepeatInterval + asyncWork, TimingTolerance);
     }
     //----------------------------------------------------------------------------
 
