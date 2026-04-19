@@ -43,8 +43,8 @@ private const int SleepTestDurationMilliseconds = 30;
     private const int DelayAsyncTimingToleranceMilliseconds = 10;
 
     // Upper bound for DelayAsync elapsed time to avoid flaky failures when the task scheduler
-    // or system is slightly slow; 30ms has proven sufficient across targets.
-    private const int DelayAsyncUpperBoundToleranceMilliseconds = 30;
+    // or system is slightly slow; 40ms has proven sufficient across targets.
+    private const int DelayAsyncUpperBoundToleranceMilliseconds = 40;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers

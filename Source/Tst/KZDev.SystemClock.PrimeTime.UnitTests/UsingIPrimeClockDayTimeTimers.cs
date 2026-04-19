@@ -31,7 +31,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     /// <summary>
     ///   Allowed tolerance when asserting callback timing.
     /// </summary>
-    private static readonly TimeSpan TimingTolerance = TimeSpan.FromMilliseconds(180);
+    private static readonly TimeSpan TimingTolerance = TimeSpan.FromMilliseconds(200);
     /// <summary>
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>

@@ -22,6 +22,13 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 [ExcludeFromCodeCoverage]
 public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
 {
+    /// <summary>
+    ///   Upper bound for waiting on <see cref="System.Threading.Timer"/> / thread-pool timer paths in these tests.
+    ///   Parallel test execution with code coverage instrumentation can starve or delay the thread pool enough
+    ///   that short timeouts (for example 10 seconds) fail even though behavior is correct.
+    /// </summary>
+    private static readonly TimeSpan ThreadPoolTimerTestWaitTimeout = TimeSpan.FromSeconds(120);
+
     #region Nested types
 
     //----------------------------------------------------------------------------
@@ -36,6 +43,8 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
         private readonly string _providerName;
 
         private readonly string? _clockTimerCallbackExceptionTimerCategory;
+
+        private readonly string? _clockTimerUseAfterDisposeOperation;
 
         /// <summary>
         ///   Number of <see cref="PrimeTimeEventSource.ClockTimerUseAfterDispose"/> events observed.
@@ -57,11 +66,19 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
         ///   <see cref="ClockTimerCallbackExceptionCount"/>. Filtering avoids cross-test interference when the same
         ///   event id is emitted while tests run in parallel.
         /// </param>
+        /// <param name="clockTimerUseAfterDisposeOperation">
+        ///   When not <c>null</c>, only <see cref="PrimeTimeEventSource.ClockTimerUseAfterDispose"/> events whose
+        ///   first payload argument (the logical operation name) matches this value increment
+        ///   <see cref="ClockTimerUseAfterDisposeCount"/>. Filtering avoids cross-test interference when parallel
+        ///   tests emit use-after-dispose for different operations (for example, <c>Start</c> versus <c>Enabled</c>).
+        /// </param>
         public PrimeTimeTestEventListener (string providerName,
-            string? clockTimerCallbackExceptionTimerCategory = null)
+            string? clockTimerCallbackExceptionTimerCategory = null,
+            string? clockTimerUseAfterDisposeOperation = null)
         {
             _providerName = providerName;
             _clockTimerCallbackExceptionTimerCategory = clockTimerCallbackExceptionTimerCategory;
+            _clockTimerUseAfterDisposeOperation = clockTimerUseAfterDisposeOperation;
             foreach (EventSource existing in EventSource.GetSources())
             {
                 if (existing.Name == _providerName)
@@ -90,6 +107,20 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
 
             if (eventData.EventId == EventId_ClockTimerUseAfterDispose)
             {
+                if (_clockTimerUseAfterDisposeOperation is not null)
+                {
+                    if (eventData.Payload is null || eventData.Payload.Count < 1)
+                    {
+                        return;
+                    }
+
+                    if (eventData.Payload[0] is not string operation ||
+                        !string.Equals(operation, _clockTimerUseAfterDisposeOperation, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+                }
+
                 Interlocked.Increment(ref ClockTimerUseAfterDisposeCount);
             }
             else if (eventData.EventId == EventId_ClockTimerCallbackException)
@@ -140,7 +171,8 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     [Fact]
     public void DisposedIntervalTimer_SetEnabled_RecordsClockTimerUseAfterDisposeEvent ()
     {
-        using PrimeTimeTestEventListener listener = new("KZDev.SystemClock.PrimeTime");
+        using PrimeTimeTestEventListener listener = new("KZDev.SystemClock.PrimeTime",
+            clockTimerUseAfterDisposeOperation: nameof(IClockTimer.Enabled));
         IPrimeClock clock = new PrimeClock();
         IClockIntervalTimer registration = clock.RegisterTimer(
             TimeSpan.FromHours(1),
@@ -183,8 +215,8 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                    },
                    TestContext.Current.CancellationToken))
         {
-            callbackEntered.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken).Should().BeTrue();
-            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, TimeSpan.FromSeconds(3)).Should().BeTrue();
+            callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
             listener.ClockTimerCallbackExceptionCount.Should().Be(1);
         }
     }
@@ -209,8 +241,8 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                    },
                    TestContext.Current.CancellationToken))
         {
-            callbackEntered.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken).Should().BeTrue();
-            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, TimeSpan.FromSeconds(10)).Should().BeTrue();
+            callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
             listener.ClockTimerCallbackExceptionCount.Should().Be(1);
         }
     }
