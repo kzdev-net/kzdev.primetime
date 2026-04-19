@@ -42,6 +42,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <returns>
     ///   <see cref="Timeout.Infinite"/> when the duration is nonpositive or not representable as a finite timer; otherwise a clamped millisecond count.
     /// </returns>
+    /// <remarks>
+    ///   <see cref="OverflowException"/> from <see cref="Duration.ToTimeSpan"/> is caught and mapped to <see cref="int.MaxValue"/> as a finite timer clamp.
+    /// </remarks>
     private static int DurationToTimerMilliseconds (Duration duration)
     {
         if (duration <= Duration.Zero)
@@ -84,6 +87,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     ///   Converts the delay until the next fire to a <see cref="TimeSpan"/>, clamping overflow.
     /// </summary>
     /// <returns>The delay as a <see cref="TimeSpan"/>, or one day when conversion overflows.</returns>
+    /// <remarks>
+    ///   <see cref="OverflowException"/> from <see cref="Duration.ToTimeSpan"/> is caught; the method returns a <see cref="TimeSpan"/> of one day instead of throwing.
+    /// </remarks>
     private TimeSpan GetDelayUntilNextAsTimeSpan ()
     {
         Duration delayDuration = GetDelayUntilNextDuration();
@@ -235,6 +241,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
     /// <param name="options">Optional timer behavior options.</param>
     /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+    /// <exception cref="OutOfMemoryException">
+    ///   Thrown when the shared finish step cannot allocate the underlying <see cref="Timer"/> for the first schedule.
+    /// </exception>
 #if NET
     [SetsRequiredMembers]
 #endif

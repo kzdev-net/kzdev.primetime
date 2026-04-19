@@ -190,6 +190,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
     /// <param name="options">Optional timer behavior options.</param>
     /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+    /// <exception cref="OutOfMemoryException">
+    ///   Thrown when the shared finish step cannot allocate the underlying <see cref="Timer"/> for the first schedule.
+    /// </exception>
 #if NET
     [SetsRequiredMembers]
 #endif
@@ -211,6 +214,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
     /// <param name="options">Optional timer behavior options.</param>
     /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+    /// <remarks>
+    ///   Forwards to the primary constructor with local (non-UTC) calendar-day scheduling.
+    /// </remarks>
 #if NET
     [SetsRequiredMembers]
 #endif
@@ -231,6 +237,9 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// <param name="callbackState">Optional state forwarded to context callbacks.</param>
     /// <param name="options">Optional timer behavior options.</param>
     /// <param name="cancellationToken">Token that cancels scheduling and callbacks.</param>
+    /// <remarks>
+    ///   Forwards to the primary constructor with UTC calendar-day scheduling.
+    /// </remarks>
 #if NET
     [SetsRequiredMembers]
 #endif
