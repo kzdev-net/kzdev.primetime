@@ -53,8 +53,6 @@ internal static class DayTimeNodaLocalWallTimeScheduling
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Attempts to resolve the scheduled fire instant for one local calendar day and target time of day.
     /// </summary>
@@ -99,8 +97,6 @@ internal static class DayTimeNodaLocalWallTimeScheduling
                 throw new InvalidOperationException($"Unexpected ZoneLocalMapping.Count: {mapping.Count}.");
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes the duration from <paramref name="scheduleNow"/> until the next local day-time occurrence.

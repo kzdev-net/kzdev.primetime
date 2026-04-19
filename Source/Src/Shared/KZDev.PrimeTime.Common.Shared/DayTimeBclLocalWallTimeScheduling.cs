@@ -60,8 +60,6 @@ internal static class DayTimeBclLocalWallTimeScheduling
         return first.UtcDateTime <= second.UtcDateTime ? second : first;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Resolves an invalid local wall time on a calendar date per <see cref="SkippedTimeBehavior"/>.
     /// </summary>
@@ -88,8 +86,6 @@ internal static class DayTimeBclLocalWallTimeScheduling
                 throw new ArgumentOutOfRangeException(nameof(skippedTimeBehavior));
         }
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Finds the first minute offset from local midnight on <paramref name="calendarDate"/> whose wall time is
@@ -124,8 +120,6 @@ internal static class DayTimeBclLocalWallTimeScheduling
             $"Expected an invalid local time window on the calendar date for {missingInvalidWindowMessageSuffix}.");
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Finds the first valid local wall time after a spring-forward gap on <paramref name="calendarDate"/>,
     ///   then converts it to UTC. Uses wall-clock inspection because <see cref="TimeZoneInfo.ConvertTimeFromUtc"/>
@@ -157,8 +151,6 @@ internal static class DayTimeBclLocalWallTimeScheduling
         return new DateTimeOffset(probe, offset);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Finds the last valid local wall instant before the spring-forward gap on <paramref name="calendarDate"/>.
     /// </summary>
@@ -186,8 +178,6 @@ internal static class DayTimeBclLocalWallTimeScheduling
         TimeSpan offset = zone.GetUtcOffset(probe);
         return new DateTimeOffset(probe, offset);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Attempts to resolve the scheduled fire instant for one local calendar day and target time of day.
