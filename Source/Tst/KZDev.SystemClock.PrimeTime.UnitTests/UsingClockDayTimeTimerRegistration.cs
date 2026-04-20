@@ -11,6 +11,8 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
 
+using Microsoft.Extensions.Time.Testing;
+
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 //################################################################################
@@ -46,20 +48,25 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
     #endregion Constructors/Finalizers
 
     /// <summary>
-    ///   Resolves the private <see cref="ClockDayTimeTimerRegistration"/> BCL timer entry point for tests
-    ///   that must simulate an overlapping tick while a callback is still in flight.
+    ///   Regression: when a UTC day-time tick runs slightly before today's nominal <see cref="TimeOnly"/>
+    ///   instant, the next reschedule must advance to the next UTC calendar day instead of arming a
+    ///   short follow-up for the same slot (which caused duplicate callbacks under load).
     /// </summary>
-    /// <returns>The non-public <c>OnTimerTick</c> method.</returns>
-    private static MethodInfo GetOnTimerTickMethod ()
+    [Fact]
+    public void ClockDayTimeTimerRegistration_UtcEarlyTimerTick_ReschedulesNextDayNotSameSlot ()
     {
-        MethodInfo? method = typeof(ClockDayTimeTimerRegistration).GetMethod("OnTimerTick",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        if (method is null)
-        {
-            throw new InvalidOperationException("ClockDayTimeTimerRegistration.OnTimerTick was not found.");
-        }
-
-        return method;
+        DateTimeOffset startUtc = new(2025, 6, 15, 12, 0, 0, 490, TimeSpan.Zero);
+        TimeOnly target = new(12, 0, 0, 640);
+        FakeTimeProvider fake = new(startUtc);
+        IPrimeClock clock = new PrimeClock(fake);
+        using ManualResetEventSlim entered = new(false);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
+            TimerCallbackKind.SimpleAction, () => entered.Set(), null, null, TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        entered.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        registration.TimeUntilNextCallback.Should().BeGreaterThan((long)TimeSpan.FromHours(20).TotalMilliseconds);
     }
 
     /// <summary>
@@ -147,7 +154,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
             TimerCallbackKind.SimpleAction, userCallback, null, options, TestContext.Current.CancellationToken);
         enteredFirstCallback.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-        MethodInfo onTimerTick = GetOnTimerTickMethod();
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
         onTimerTick.Invoke(registration, new object?[] { null });
         releaseFirstCallback.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, WaitMargin).Should().BeTrue();
@@ -185,7 +193,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
             TimerCallbackKind.SimpleAsync, run, null, options, TestContext.Current.CancellationToken);
         innerStarted.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-        MethodInfo onTimerTick = GetOnTimerTickMethod();
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
         onTimerTick.Invoke(registration, new object?[] { null });
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, WaitMargin).Should().BeTrue();
@@ -222,7 +231,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
             TimerCallbackKind.ContextAsync, callback, null, options, TestContext.Current.CancellationToken);
         enteredAsyncBody.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-        MethodInfo onTimerTick = GetOnTimerTickMethod();
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
         onTimerTick.Invoke(registration, new object?[] { null });
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, WaitMargin).Should().BeTrue();

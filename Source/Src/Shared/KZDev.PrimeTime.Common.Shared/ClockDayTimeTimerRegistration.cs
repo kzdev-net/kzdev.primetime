@@ -132,25 +132,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Re-arms the timer after a short delay for sequential trigger retry.
-    /// </summary>
-    private void ScheduleNextAfterShortDelay()
-    {
-        lock (Gate)
-        {
-            if (ShouldSkipTimerWorkWhileLocked())
-                return;
-            int retryMilliseconds = GetRunSequentiallyRetryMilliseconds();
-            if (retryMilliseconds <= 0)
-                retryMilliseconds = 1;
-            if (Timer is null)
-                Timer = new Timer(OnTimerTick, null, retryMilliseconds, Timeout.Infinite);
-            else
-                Timer.Change(retryMilliseconds, Timeout.Infinite);
-        }
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Dispatches the user callback for a synchronous tick path, optionally repeating when sequential triggers are pending.
     /// </summary>
     /// <param name="callbackIsAsynchronous">

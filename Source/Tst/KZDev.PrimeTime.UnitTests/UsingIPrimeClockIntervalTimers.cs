@@ -950,6 +950,31 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    #region Regression (repeat spacing after first virtual tick)
+
+    /// <summary>
+    ///   Regression (virtual clock): after the first interval callback, <see cref="IClockIntervalTimer.TimeUntilNextCallback"/>
+    ///   must reflect the configured repeat interval so repeat spacing cannot silently regress.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_Repeating_AfterFirstVirtualTick_TimeUntilNextReflectsRepeat ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 6, 15, 10, 0, 0));
+        TimeSpan repeat = TimeSpan.FromHours(2);
+        using IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromHours(24), repeat, () => { },
+            CancellationToken.None);
+        clock.Advance(Duration.FromHours(24));
+        long msUntilNext = timer.TimeUntilNextCallback;
+        // Align with the SystemClock repeat-spacing regression (±5 minutes around the configured repeat):
+        // the virtual path arms the next due instant as clock-now + repeat, so the value should stay
+        // near the full repeat interval rather than tolerating an arbitrary ±1 hour window.
+        long minExpected = (long)TimeSpan.FromHours(2).Subtract(TimeSpan.FromMinutes(5)).TotalMilliseconds;
+        long maxExpected = (long)TimeSpan.FromHours(2).Add(TimeSpan.FromMinutes(5)).TotalMilliseconds;
+        msUntilNext.Should().BeInRange(minExpected, maxExpected);
+    }
+
+    #endregion Regression (repeat spacing after first virtual tick)
+
     #endregion Properties
 }
 //################################################################################

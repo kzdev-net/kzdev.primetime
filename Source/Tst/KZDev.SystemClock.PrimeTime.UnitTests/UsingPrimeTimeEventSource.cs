@@ -196,6 +196,11 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     /// <summary>
     ///   Verifies that assigning <see cref="IClockTimer.Enabled"/> after dispose emits the ETW event.
     /// </summary>
+    /// <remarks>
+    ///   <see cref="EventListener"/> observes the provider process-wide; parallel tests can emit the same
+    ///   filtered operation name. Assert on the delta across this test&apos;s disposed <c>Enabled</c> assignment,
+    ///   not the absolute count.
+    /// </remarks>
     [Fact]
     public void DisposedIntervalTimer_SetEnabled_RecordsClockTimerUseAfterDisposeEvent ()
     {
@@ -208,9 +213,11 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
             static _ => { },
             CancellationToken.None);
         registration.Dispose();
+        int useAfterDisposeBefore = Volatile.Read(ref listener.ClockTimerUseAfterDisposeCount);
         Action act = () => registration.Enabled = false;
         act.Should().ThrowExactly<ObjectDisposedException>();
-        listener.ClockTimerUseAfterDisposeCount.Should().Be(1);
+        int useAfterDisposeAfter = Volatile.Read(ref listener.ClockTimerUseAfterDisposeCount);
+        (useAfterDisposeAfter - useAfterDisposeBefore).Should().Be(1);
     }
     //----------------------------------------------------------------------------
     /// <summary>

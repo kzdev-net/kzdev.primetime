@@ -20,6 +20,16 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private static readonly TimeSpan RunSequentiallyRetryDelay = TimeSpan.FromMilliseconds(30);
 
     /// <summary>
+    ///   Upper bound on how long after the last callback start an early UTC rescheduling is still considered the same engine pass.
+    /// </summary>
+    private const int MaxCallbackWindowMilliseconds = 50;
+
+    /// <summary>
+    ///   Upper bound on the nominal delay until the next fire that is still treated as a small early tick on the same UTC calendar day.
+    /// </summary>
+    private const int MaxEarlyTickDelayMilliseconds = 250;
+
+    /// <summary>
     ///   Wall-clock time of day used to compute the next fire.
     /// </summary>
     private TimeOnly _targetTimeOfDay;
@@ -34,6 +44,36 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     private DateTimeOffset? _lastCallbackStartedOffset;
 
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Detects a UTC day-time reschedule that should skip ahead one calendar day: the underlying timer can
+    ///   deliver a tick slightly before today's nominal time-of-day while a callback from the same engine pass
+    ///   has just started, so the naive delay to &quot;today's&quot; occurrence is a small positive interval and would
+    ///   otherwise re-arm the same UTC date.
+    /// </summary>
+    /// <param name="scheduleNowOffset">Current clock offset in the scheduling basis.</param>
+    /// <param name="nextFireDateTimeOffset">Next fire offset computed on today's UTC calendar date.</param>
+    /// <param name="delayUntilNextFire"><paramref name="nextFireDateTimeOffset"/> minus <paramref name="scheduleNowOffset"/>.</param>
+    /// <returns>
+    ///   <c>true</c> when the caller should roll the schedule to the next UTC calendar day; otherwise <c>false</c>.
+    /// </returns>
+    private bool IsEarlyTickOnSameDay (DateTimeOffset scheduleNowOffset, DateTimeOffset nextFireDateTimeOffset,
+        TimeSpan delayUntilNextFire)
+    {
+        if (_lastCallbackStartedOffset is not { } lastStartedUtcTick)
+            return false;
+        if (scheduleNowOffset < lastStartedUtcTick)
+            return false;
+        TimeSpan sinceLastStart = scheduleNowOffset - lastStartedUtcTick;
+        if (sinceLastStart >= TimeSpan.FromMilliseconds(MaxCallbackWindowMilliseconds))
+            return false;
+        if (scheduleNowOffset >= nextFireDateTimeOffset)
+            return false;
+        if (delayUntilNextFire >= TimeSpan.FromMilliseconds(MaxEarlyTickDelayMilliseconds))
+            return false;
+        return true;
+    }
+    //----------------------------------------------------------------------------
 
     /// <summary>
     ///   Applies a local <see cref="TimeOnly"/> schedule after a dynamic change.
@@ -73,6 +113,18 @@ internal sealed partial class ClockDayTimeTimerRegistration
             // scheduleNowOffset yields the correct elapsed time to the next fire.
             DateTimeOffset nextFireDateTimeOffset = new(nextOccurrenceDateTime, TimeSpan.Zero);
             delayUntilNextFire = nextFireDateTimeOffset - scheduleNowOffset;
+
+            // A BCL timer tick can run slightly before today's nominal UTC time-of-day. In that case
+            // "today's occurrence" is still strictly in the future, so the naive delay is a small
+            // positive interval and would re-arm the same calendar slot. When this rescheduling runs in
+            // the same engine pass as RecordDayTimeCallbackTickStarted (last-start set, clock read
+            // within a narrow window), advance to the next UTC calendar day instead.
+            if (IsEarlyTickOnSameDay(scheduleNowOffset, nextFireDateTimeOffset, delayUntilNextFire))
+            {
+                DateTimeOffset nextDayFireOffset =
+                    new DateTimeOffset(scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay), TimeSpan.Zero);
+                delayUntilNextFire = nextDayFireOffset - scheduleNowOffset;
+            }
         }
         else
         {

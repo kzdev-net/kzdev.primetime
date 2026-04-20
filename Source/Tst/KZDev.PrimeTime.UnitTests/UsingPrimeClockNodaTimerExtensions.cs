@@ -2,6 +2,10 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+#if NET
+using System.Reflection;
+using System.Threading;
+#endif
 
 using AwesomeAssertions;
 
@@ -389,6 +393,25 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
         receivedTimer.Should().BeSameAs(timer);
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cts.Token);
+    }
+
+    /// <summary>
+    ///   Regression (Noda stack): UTC day-time early tick must not arm a short same-slot follow-up.
+    /// </summary>
+    [Fact]
+    public void ClockDayTimeTimerRegistration_UtcEarlyTick_NodaStack_ReschedulesNextDay ()
+    {
+        Instant start = Instant.FromUtc(2025, 6, 15, 12, 0, 0) + Duration.FromMilliseconds(490);
+        IPrimeTestClock clock = new PrimeTestClock(start, DateTimeZone.Utc);
+        using ManualResetEventSlim entered = new(false);
+        LocalTime target = new(12, 0, 0, 640);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, true, target,
+            TimerCallbackKind.SimpleAction, (Action)(() => entered.Set()), null, null, CancellationToken.None);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).Should().BeTrue();
+        registration.TimeUntilNextCallback.Should().BeGreaterThan((long)TimeSpan.FromHours(20).TotalMilliseconds);
     }
 #endif
 }

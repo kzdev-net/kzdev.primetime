@@ -21,6 +21,16 @@ internal sealed partial class ClockDayTimeTimerRegistration
     private static readonly Duration RunSequentiallyRetryDelay = Duration.FromMilliseconds(30);
 
     /// <summary>
+    ///   Upper bound on how long after the last callback start an early UTC rescheduling is still considered the same engine pass.
+    /// </summary>
+    private const int MaxCallbackWindowMilliseconds = 50;
+
+    /// <summary>
+    ///   Upper bound on the nominal delay until the next fire that is still treated as a small early tick on the same UTC calendar day.
+    /// </summary>
+    private const int MaxEarlyTickDelayMilliseconds = 250;
+
+    /// <summary>
     ///   Wall-clock time of day used to compute the next fire.
     /// </summary>
     private LocalTime _targetTimeOfDay;
@@ -61,6 +71,38 @@ internal sealed partial class ClockDayTimeTimerRegistration
         {
             return int.MaxValue;
         }
+    }
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Detects a UTC day-time reschedule that should skip ahead one calendar day: the underlying timer can
+    ///   deliver a tick slightly before today's nominal time-of-day while a callback from the same engine pass
+    ///   has just started, so the naive delay to &quot;today's&quot; occurrence is a small positive interval and would
+    ///   otherwise re-arm the same UTC date.
+    /// </summary>
+    /// <param name="nowInstant">Current clock instant.</param>
+    /// <param name="nextInstant">Next fire instant computed on today's UTC calendar date.</param>
+    /// <param name="naiveDelay"><paramref name="nextInstant"/> minus <paramref name="nowInstant"/>.</param>
+    /// <returns>
+    ///   <c>true</c> when the caller should roll the schedule to the next UTC calendar day; otherwise <c>false</c>.
+    /// </returns>
+    private bool IsEarlyTickOnSameDay (Instant nowInstant, Instant nextInstant, Duration naiveDelay)
+    {
+        if (_lastCallbackInstant is not { } lastStartedUtcTick)
+            return false;
+        if (nowInstant < lastStartedUtcTick)
+            return false;
+        Duration sinceLastStart = nowInstant - lastStartedUtcTick;
+        if (sinceLastStart >= Duration.FromMilliseconds(MaxCallbackWindowMilliseconds))
+            return false;
+        if (nowInstant >= nextInstant)
+            return false;
+        if (naiveDelay <= Duration.Zero)
+            return false;
+        if (naiveDelay >= Duration.FromMilliseconds(MaxEarlyTickDelayMilliseconds))
+            return false;
+        return true;
     }
     //----------------------------------------------------------------------------
 
@@ -126,7 +168,16 @@ internal sealed partial class ClockDayTimeTimerRegistration
                 scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
             }
 
-            return scheduleZonedDateTime.ToInstant() - nowInstant;
+            Instant nextInstant = scheduleZonedDateTime.ToInstant();
+            Duration naiveDelay = nextInstant - nowInstant;
+            if (IsEarlyTickOnSameDay(nowInstant, nextInstant, naiveDelay))
+            {
+                scheduleLocalDateTime = utcCalendarDate.PlusDays(1).At(_targetTimeOfDay);
+                scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
+                return scheduleZonedDateTime.ToInstant() - nowInstant;
+            }
+
+            return naiveDelay;
         }
 
         // Local schedule: calendar boundaries and DST follow the clock's local zone; skipped and duplicate

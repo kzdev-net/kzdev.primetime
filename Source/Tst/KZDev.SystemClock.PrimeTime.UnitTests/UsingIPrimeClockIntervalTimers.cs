@@ -3,9 +3,17 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if NET
+using System.Reflection;
+#endif
+
 using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
+
+#if NET
+using Microsoft.Extensions.Time.Testing;
+#endif
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
@@ -794,6 +802,39 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     #endregion Properties
+
+#if NET
+    #region Regression (repeat spacing after first tick)
+
+    /// <summary>
+    ///   Regression: after the first synchronous interval tick, <see cref="IClockIntervalTimer.TimeUntilNextCallback"/>
+    ///   must reflect the full repeat interval (not a spurious sub-interval), so the same class of
+    ///   scheduling bug as UTC day-time early ticks cannot silently regress here.
+    /// </summary>
+    [Fact]
+    public void RegisterTimer_Repeating_AfterFirstCallback_TimeUntilNextReflectsFullRepeat ()
+    {
+        DateTimeOffset startUtc = new(2025, 6, 15, 10, 0, 0, 0, TimeSpan.Zero);
+        FakeTimeProvider fake = new(startUtc);
+        IPrimeClock clock = new PrimeClock(fake);
+        using ManualResetEventSlim entered = new(false);
+        TimeSpan repeat = TimeSpan.FromHours(1);
+        using IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromHours(24), repeat, () => entered.Set(),
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetIntervalOnTimerTickMethod(
+            typeof(ClockIntervalTimerRegistration));
+        onTimerTick.Invoke(timer, new object?[] { null });
+        entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).Should().BeTrue();
+        long msUntilNext = timer.TimeUntilNextCallback;
+        // Allow ±5 minutes around the 1-hour repeat interval to absorb test callback execution time,
+        // thread scheduling delays, and timer/time-provider precision when reading the next due time.
+        long minExpected = (long)TimeSpan.FromMinutes(55).TotalMilliseconds;
+        long maxExpected = (long)(TimeSpan.FromHours(1) + TimeSpan.FromMinutes(5)).TotalMilliseconds;
+        msUntilNext.Should().BeInRange(minExpected, maxExpected);
+    }
+
+    #endregion Regression (repeat spacing after first tick)
+#endif
 }
 //################################################################################
 
