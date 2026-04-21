@@ -166,6 +166,64 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
     }
 
     /// <summary>
+    ///   Verifies that a spring-forward gap wall time with <see cref="SkippedTimeBehavior.Skip"/> yields no fire
+    ///   instant for that calendar date (covers gap resolution returning <c>false</c>).
+    /// </summary>
+    [Fact]
+    public void TryGetLocalDayTimeFireInstantForDate_SpringGap_Skip_ReturnsFalse ()
+    {
+        DateTimeZone zone = BclDateTimeZone.FromTimeZoneInfo(CreateUsEasternStyleZone());
+        LocalDate date = new(2025, 3, 9);
+        LocalTime target = new(2, 30, 0);
+        bool resolved = DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(date, target, zone,
+            SkippedTimeBehavior.Skip, DuplicateTimeBehavior.RunLast, out Instant _);
+        resolved.Should().BeFalse();
+    }
+
+    /// <summary>
+    ///   Verifies that an out-of-range <see cref="DuplicateTimeBehavior"/> value throws
+    ///   <see cref="ArgumentOutOfRangeException"/> for an ambiguous fall-back mapping.
+    /// </summary>
+    [Fact]
+    public void TryGetLocalDayTimeFireInstantForDate_FallBack_InvalidDuplicateBehavior_ThrowsArgumentOutOfRange ()
+    {
+        DateTimeZone zone = BclDateTimeZone.FromTimeZoneInfo(CreateUsEasternStyleZone());
+        LocalDate date = new(2025, 11, 2);
+        LocalTime target = new(1, 30, 0);
+        DuplicateTimeBehavior invalid = (DuplicateTimeBehavior)int.MaxValue;
+        Action act = () => DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(date, target, zone,
+            SkippedTimeBehavior.RunAfter, invalid, out Instant _);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("duplicateTimeBehavior");
+    }
+
+    /// <summary>
+    ///   Verifies that an out-of-range <see cref="SkippedTimeBehavior"/> value throws
+    ///   <see cref="ArgumentOutOfRangeException"/> when resolving a spring-forward gap mapping.
+    /// </summary>
+    [Fact]
+    public void TryGetLocalDayTimeFireInstantForDate_SpringGap_InvalidSkippedBehavior_ThrowsArgumentOutOfRange ()
+    {
+        DateTimeZone zone = BclDateTimeZone.FromTimeZoneInfo(CreateUsEasternStyleZone());
+        LocalDate date = new(2025, 3, 9);
+        LocalTime target = new(2, 30, 0);
+        SkippedTimeBehavior invalid = (SkippedTimeBehavior)int.MaxValue;
+        Action act = () => DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(date, target, zone,
+            invalid, DuplicateTimeBehavior.RunLast, out Instant _);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("skippedTimeBehavior");
+    }
+
+    /// <summary>
+    ///   Verifies that a null <see cref="DateTimeZone"/> throws <see cref="ArgumentNullException"/>.
+    /// </summary>
+    [Fact]
+    public void TryGetLocalDayTimeFireInstantForDate_NullZone_ThrowsArgumentNull ()
+    {
+        Action act = () => DayTimeNodaLocalWallTimeScheduling.TryGetLocalDayTimeFireInstantForDate(new LocalDate(2025, 1, 1),
+            LocalTime.Midnight, null!, SkippedTimeBehavior.RunAfter, DuplicateTimeBehavior.RunLast, out Instant _);
+        act.Should().Throw<ArgumentNullException>().WithParameterName("zone");
+    }
+
+    /// <summary>
     ///   Creates <see cref="DayTimeTimerOptions"/> with <see cref="ConcurrentTriggerProcessing.RunConcurrently"/>
     ///   and the given skipped/duplicate policies.
     /// </summary>
