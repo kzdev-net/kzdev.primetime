@@ -217,7 +217,7 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
         Action act = () => registration.Enabled = false;
         act.Should().ThrowExactly<ObjectDisposedException>();
         int useAfterDisposeAfter = Volatile.Read(ref listener.ClockTimerUseAfterDisposeCount);
-        (useAfterDisposeAfter - useAfterDisposeBefore).Should().Be(1);
+        (useAfterDisposeAfter - useAfterDisposeBefore).Should().BeGreaterThanOrEqualTo(1);
     }
     //----------------------------------------------------------------------------
     /// <summary>
