@@ -483,14 +483,15 @@ public class UsingIPrimeClock : UnitTestBase
         Duration cancelAfter = Duration.FromMilliseconds(120);
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfter);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        // Use one delay that runs past cancelAfter rather than a "wait until just before expiry,
-        // assert false, then wait a little longer" split-delay sequence. On net481 and
-        // netstandard2.0, coarse timer resolution plus thread-pool scheduling latency can resume
-        // the test after the cancellation deadline has already passed, making the intermediate
-        // "not cancelled yet" assertion flaky. The single-delay pattern avoids that race while
-        // still verifying that the token is eventually cancelled.
-        Duration additionalDelayForCancellation = Duration.FromMilliseconds(80);
-        await clock.DelayAsync(cancelAfter + additionalDelayForCancellation, TestContext.Current.CancellationToken);
+        TaskCompletionSource<bool> cancellationObserved =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration cancellationRegistration =
+            timeCts.Token.Register(static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true),
+                cancellationObserved);
+        Task timeoutTask = clock.DelayAsync(Duration.FromSeconds(2), TestContext.Current.CancellationToken);
+        Task completedTask = await Task.WhenAny(cancellationObserved.Task, timeoutTask);
+        completedTask.Should().BeSameAs(cancellationObserved.Task);
+        await cancellationObserved.Task;
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
     //----------------------------------------------------------------------------

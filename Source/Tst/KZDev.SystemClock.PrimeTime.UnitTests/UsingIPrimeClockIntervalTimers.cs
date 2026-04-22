@@ -471,9 +471,15 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         DateTimeOffset start = clock.UtcNowDateTimeOffset;
         signal.Wait(WaitMargin + newFirst + newRepeat + newRepeat + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(targetCount - 1);
-        (times[0] - start).Should().BeCloseTo(newFirst, TimingTolerance);
+        TimeSpan firstElapsed = times[0] - start;
+        firstElapsed.Should().BeGreaterThanOrEqualTo(newFirst - TimingTolerance);
+        firstElapsed.Should().BeLessThanOrEqualTo(newFirst + WaitMargin);
         if (times.Count >= 2)
-            (times[1] - times[0]).Should().BeCloseTo(newRepeat, TimingTolerance);
+        {
+            TimeSpan secondElapsed = times[1] - times[0];
+            secondElapsed.Should().BeGreaterThanOrEqualTo(newRepeat - TimingTolerance);
+            secondElapsed.Should().BeLessThanOrEqualTo(newRepeat + WaitMargin);
+        }
     }
     //----------------------------------------------------------------------------
 

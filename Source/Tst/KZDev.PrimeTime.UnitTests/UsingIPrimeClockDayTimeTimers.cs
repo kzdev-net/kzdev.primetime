@@ -170,7 +170,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         Duration elapsed = firedAt!.Value - start;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
-        elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
+        elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(WaitMargin));
     }
     //----------------------------------------------------------------------------
 

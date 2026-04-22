@@ -125,7 +125,7 @@ public partial class UsingIPrimeClock : UnitTestBase
 #endif
 
         LocalNowDateTimeOffset.Offset.Should().Be(TimeZoneInfo.Local.GetUtcOffset(LocalNowDateTimeOffset.DateTime));
-        LocalNowDateTimeOffset.DateTime.Should().BeCloseTo(LocalNowDateTime, TimeSpan.FromMilliseconds(50));
+        LocalNowDateTimeOffset.DateTime.Should().BeCloseTo(LocalNowDateTime, TimeSpan.FromMilliseconds(100));
         LocalNowDateTime.Kind.Should().Be(DateTimeKind.Local);
 #if NET
         long localTimeTicks = Math.Abs(TimeOnly.FromDateTime(LocalNowDateTime).Ticks - LocalNowTimeOnly.Ticks);

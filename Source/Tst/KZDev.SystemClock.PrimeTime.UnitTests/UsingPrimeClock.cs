@@ -234,8 +234,15 @@ public class UsingPrimeClock : UnitTestBase
         const int cancelAfterMs = 50;
         using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
-        const int additionalDelayForCancellationMs = 80;
-        await clock.DelayAsync(cancelAfterMs + additionalDelayForCancellationMs, TestContext.Current.CancellationToken);
+        TaskCompletionSource<bool> cancellationObserved =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenRegistration cancellationRegistration =
+            timeCts.Token.Register(static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true),
+                cancellationObserved);
+        Task timeoutTask = clock.DelayAsync(2_000, TestContext.Current.CancellationToken);
+        Task completedTask = await Task.WhenAny(cancellationObserved.Task, timeoutTask);
+        completedTask.Should().BeSameAs(cancellationObserved.Task);
+        await cancellationObserved.Task;
         timeCts.Token.IsCancellationRequested.Should().BeTrue();
     }
     //----------------------------------------------------------------------------

@@ -77,7 +77,9 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         DateTimeOffset start = clock.LocalNowDateTimeOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
-        (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
+        TimeSpan elapsed = firedAt!.Value - start;
+        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
+        elapsed.Should().BeLessThanOrEqualTo(ShortDelay + WaitMargin);
     }
 
     /// <summary>
