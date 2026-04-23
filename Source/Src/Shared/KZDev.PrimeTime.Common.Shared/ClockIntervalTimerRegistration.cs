@@ -45,8 +45,6 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
     /// </summary>
     private partial bool IsRepeatingTimer { get; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Computes elapsed milliseconds since last callback per contract (partial).
     /// </summary>

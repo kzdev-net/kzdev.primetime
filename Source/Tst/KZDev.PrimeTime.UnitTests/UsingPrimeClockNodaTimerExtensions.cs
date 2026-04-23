@@ -409,7 +409,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
             TimerCallbackKind.SimpleAction, (Action)(() => entered.Set()), null, null, CancellationToken.None);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).Should().BeTrue();
         registration.TimeUntilNextCallback.Should().BeGreaterThan((long)TimeSpan.FromHours(20).TotalMilliseconds);
     }

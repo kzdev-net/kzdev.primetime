@@ -829,7 +829,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             TestContext.Current.CancellationToken);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetIntervalOnTimerTickMethod(
             typeof(ClockIntervalTimerRegistration));
-        onTimerTick.Invoke(timer, new object?[] { null });
+        onTimerTick.Invoke(timer, [null]);
         entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).Should().BeTrue();
         long msUntilNext = timer.TimeUntilNextCallback;
         // Allow ±5 minutes around the 1-hour repeat interval to absorb test callback execution time,

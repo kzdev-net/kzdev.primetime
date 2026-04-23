@@ -1,5 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
@@ -30,21 +30,15 @@ public partial interface IPrimeClock : IPrimeTime
     /// </summary>
     DateTimeOffset LocalNowDateTimeOffset { get; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date and time as a <see cref="DateTimeOffset"/>.
     /// </summary>
     DateTimeOffset UtcNowDateTimeOffset { get; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date and time as a <see cref="DateTime"/>.
     /// </summary>
     DateTime LocalNowDateTime { get; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date and time as a <see cref="DateTime"/>.

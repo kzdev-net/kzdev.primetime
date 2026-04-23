@@ -1,9 +1,9 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+
 using NodaTime;
-using NodaTime.TimeZones;
 
 namespace KZDev.PrimeTime;
 
@@ -84,7 +84,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     ///   Initializes a new instance with the specified initial instant and system default zone.
     /// </summary>
     /// <param name="initialInstant">The initial virtual instant.</param>
-    public PrimeTestClock (Instant initialInstant) : base (initialInstant)
+    public PrimeTestClock (Instant initialInstant) : base(initialInstant)
     {
     }
     //----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="zone"/> is <c>null</c>.
     /// </exception>
-    public PrimeTestClock (Instant initialInstant, DateTimeZone zone) : base (initialInstant, zone)
+    public PrimeTestClock (Instant initialInstant, DateTimeZone zone) : base(initialInstant, zone)
     {
     }
     //----------------------------------------------------------------------------
@@ -213,8 +213,12 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get =>
-        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_zone); }
+    public TimeZoneInfo LocalScheduleTimeZone
+    {
+        [DebuggerStepThrough]
+        get =>
+        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_zone);
+    }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation — Local schedule zone

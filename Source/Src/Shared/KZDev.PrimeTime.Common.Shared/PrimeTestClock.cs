@@ -1654,7 +1654,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         {
             Thread.Sleep(1000);
             TimeSpan toAdvance;
-            lock (_gate)
+            lock (Gate)
             {
                 if (!_isRunning)
                     return;
@@ -1673,7 +1673,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <param name="timer">The registration to remove.</param>
     private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
     {
-        lock (_gate)
+        lock (Gate)
             _intervalTimers.Remove(timer);
     }
     //----------------------------------------------------------------------------
@@ -1686,7 +1686,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <param name="timer">The registration to remove.</param>
     private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
     {
-        lock (_gate)
+        lock (Gate)
             _dayTimeTimers.Remove(timer);
     }
     //----------------------------------------------------------------------------
@@ -1717,7 +1717,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             state,
             options,
             cancellationToken);
-        lock (_gate)
+        lock (Gate)
             _dayTimeTimers.Add(t);
         return t;
     }
@@ -1749,7 +1749,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             state,
             options,
             cancellationToken);
-        lock (_gate)
+        lock (Gate)
             _dayTimeTimers.Add(t);
         return t;
     }
@@ -1767,7 +1767,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <inheritdoc />
     public void SetTime (DateTimeOffset utcTime)
     {
-        lock (_gate)
+        lock (Gate)
         {
             SetVirtualUtcNowLocked(utcTime);
         }
@@ -1791,7 +1791,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         List<VirtualDayTimeTimerBase>? dayTimeDue = null;
 #endif
 
-        lock (_gate)
+        lock (Gate)
         {
             AddVirtualTimeLocked(duration);
             newNow = ReadVirtualUtcNowLocked();
@@ -1865,7 +1865,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 t.RunDueCallback(newNow);
 
             intervalDue = null;
-            lock (_gate)
+            lock (Gate)
             {
                 foreach (VirtualIntervalTimerBase t in _intervalTimers)
                 {
@@ -1885,7 +1885,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 t.RunDueCallback(newNow);
 
             dayTimeDue = null;
-            lock (_gate)
+            lock (Gate)
             {
                 foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
                 {
@@ -1915,7 +1915,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <inheritdoc />
     public void Start (TimeSpan? rate = null)
     {
-        lock (_gate)
+        lock (Gate)
         {
             if (_isRunning)
                 return;
@@ -1935,7 +1935,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <inheritdoc />
     public bool Stop ()
     {
-        lock (_gate)
+        lock (Gate)
         {
             if (!_isRunning)
                 return false;
@@ -2057,7 +2057,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             state,
             timerOptions,
             cancellationToken);
-        lock (_gate)
+        lock (Gate)
             _intervalTimers.Add(intervalTimer);
         return intervalTimer;
     }
@@ -2080,7 +2080,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             state,
             timerOptions,
             cancellationToken);
-        lock (_gate)
+        lock (Gate)
             _intervalTimers.Add(intervalTimer);
         return intervalTimer;
     }

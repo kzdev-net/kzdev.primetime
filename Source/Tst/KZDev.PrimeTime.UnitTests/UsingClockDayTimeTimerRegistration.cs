@@ -3,8 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
@@ -72,7 +70,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         observedInsideCallback.Should().Be(0L);
     }
 
@@ -93,7 +91,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         fake.Advance(Duration.FromMilliseconds(150));
         registration.ElapsedTime.Should().BeGreaterThanOrEqualTo(100L).And.BeLessThanOrEqualTo(300L);
     }
@@ -223,7 +221,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             TestContext.Current.CancellationToken);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         long msUntilNext = registration.TimeUntilNextCallback;
         long minOneDayLessSkew = (long)Duration.FromHours(23).TotalMilliseconds;
         long maxOneDayPlusSkew = (long)Duration.FromHours(25).TotalMilliseconds;
@@ -275,7 +273,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         observedInsideCallback.Should().Be(0L);
     }
 
@@ -300,7 +298,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         fake.Advance(Duration.FromMilliseconds(150));
         registration.ElapsedTime.Should().BeGreaterThanOrEqualTo(100L).And.BeLessThanOrEqualTo(300L);
     }
@@ -391,7 +389,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         done.Wait(ThreadSyncWaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cts.Token);
@@ -441,9 +439,9 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, [null]));
         enteredFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         releaseFirstCallback.Set();
         firstCallbackExited.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
@@ -490,9 +488,9 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, [null]));
         enteredFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         releaseFirstCallback.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
@@ -539,9 +537,9 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, [null]));
         innerStarted.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
@@ -589,9 +587,9 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         fake.Advance(Duration.FromHours(8));
-        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, [null]));
         enteredAsyncBody.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();

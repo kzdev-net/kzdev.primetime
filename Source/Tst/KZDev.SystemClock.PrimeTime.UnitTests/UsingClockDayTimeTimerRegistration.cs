@@ -64,7 +64,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             TimerCallbackKind.SimpleAction, () => entered.Set(), null, null, TestContext.Current.CancellationToken);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         entered.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         registration.TimeUntilNextCallback.Should().BeGreaterThan((long)TimeSpan.FromHours(20).TotalMilliseconds);
     }
@@ -156,7 +156,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         enteredFirstCallback.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         releaseFirstCallback.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, WaitMargin).Should().BeTrue();
     }
@@ -195,7 +195,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         innerStarted.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, WaitMargin).Should().BeTrue();
     }
@@ -233,7 +233,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         enteredAsyncBody.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
-        onTimerTick.Invoke(registration, new object?[] { null });
+        onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, WaitMargin).Should().BeTrue();
     }

@@ -1,5 +1,5 @@
-// Copyright (c) Kevin Zehrer. All rights reserved.
-// This file is part of the PrimeTime project.
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -55,7 +55,8 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         HashSet<string>? excludeAccessorMethodNames = excludeSubsetPropertyAccessorNames == null
             ? null
-            : new HashSet<string>(excludeSubsetPropertyAccessorNames.Select(static n => "get_" + n));
+            :
+            [.. excludeSubsetPropertyAccessorNames.Select(static n => "get_" + n)];
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
         MethodInfo[] subsetMethods = subsetInterface.GetMethods(flags);
         foreach (MethodInfo subsetMethod in subsetMethods)
@@ -88,7 +89,8 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     {
         HashSet<string>? exclude = excludeSubsetPropertyNames == null
             ? null
-            : new HashSet<string>(excludeSubsetPropertyNames);
+            :
+            [.. excludeSubsetPropertyNames];
         const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
         foreach (PropertyInfo subsetProp in subsetInterface.GetProperties(flags))
         {
