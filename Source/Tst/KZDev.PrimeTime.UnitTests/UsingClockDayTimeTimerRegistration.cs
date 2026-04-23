@@ -1,8 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-#if NET
-
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -18,7 +16,10 @@ namespace KZDev.PrimeTime.UnitTests;
 /// <summary>
 ///   Unit tests for Noda <see cref="ClockDayTimeTimerRegistration"/> behavior exposed through
 ///   <see cref="IClockDayTimeTimer"/> (elapsed / time-until-next metrics and dynamic
-///   <see cref="IClockDayTimeTimer.Change(LocalTime)"/>).
+///   <see cref="IClockDayTimeTimer.Change(LocalTime)"/>), including UTC calendar-day scheduling
+///   constructed without <see cref="System.TimeOnly"/> APIs so the same scenarios run when the
+///   library is consumed from <c>netstandard2.0</c> (for example under the unit test
+///   <c>net481</c> target).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public class UsingClockDayTimeTimerRegistration : UnitTestBase
@@ -169,6 +170,231 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         bool changed = registration.Change(new LocalTime(19, 0, 0));
         changed.Should().BeFalse();
     }
-}
 
+    /// <summary>
+    ///   Verifies UTC calendar-day scheduling moves to the next UTC day when the current instant is already past
+    ///   today's nominal fire (delay math in the UTC branch of the registration).
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_AfterTodaysTarget_TimeUntilNext_TargetsTomorrowsOccurrence ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 14, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(12, 0, 0);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        Instant nextExpected = Instant.FromUtc(2025, 6, 16, 12, 0, 0);
+        Duration expectedDelay = nextExpected - utcNow;
+        long expectedMs = (long)expectedDelay.TotalMilliseconds;
+        registration.TimeUntilNextCallback.Should()
+            .BeInRange(expectedMs - VirtualClockTimerAssertionToleranceMilliseconds,
+                expectedMs + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+    /// <summary>
+    ///   Verifies a UTC day-time registration that receives a timer tick slightly before today's nominal fire, while
+    ///   the callback start is recorded in the same engine pass, rolls the next schedule to the next UTC calendar day
+    ///   instead of re-arming the same date with a tiny delay.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_EarlyTickSameEnginePass_TimeUntilNext_SkipsToNextUtcDay ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 11, 59, 59) + Duration.FromMilliseconds(900);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(12, 0, 0);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        long msUntilNext = registration.TimeUntilNextCallback;
+        long minOneDayLessSkew = (long)Duration.FromHours(23).TotalMilliseconds;
+        long maxOneDayPlusSkew = (long)Duration.FromHours(25).TotalMilliseconds;
+        msUntilNext.Should().BeInRange(minOneDayLessSkew, maxOneDayPlusSkew);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IDayTimeTimer.ElapsedTime"/> is <c>-1</c> before any callback for a UTC-scheduled
+    ///   registration created without <see cref="System.TimeOnly"/> surface APIs.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_BeforeFirstFire_ElapsedTime_IsNegativeOne ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        IPrimeClock clock = new PrimeClock(new FakeClock(utcNow), DateTimeZone.Utc);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            new LocalTime(18, 0, 0),
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        registration.ElapsedTime.Should().Be(-1L);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IDayTimeTimer.ElapsedTime"/> is <c>0</c> inside a synchronous UTC-scheduled callback tick.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_InsideSyncCallback_ElapsedTime_IsZero ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        long observedInsideCallback = -2;
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            new LocalTime(18, 0, 0),
+            TimerCallbackKind.ContextAction,
+            (Action<ClockTimerCallbackContext>)(context =>
+            {
+                IClockDayTimeTimer dayTimer = (IClockDayTimeTimer)context.Registration;
+                observedInsideCallback = dayTimer.ElapsedTime;
+            }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        observedInsideCallback.Should().Be(0L);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IDayTimeTimer.ElapsedTime"/> increases after a UTC-scheduled tick when the virtual clock
+    ///   advances.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_AfterCallbackAndClockAdvance_ElapsedTime_IsPositive ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            new LocalTime(18, 0, 0),
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        fake.Advance(Duration.FromMilliseconds(150));
+        registration.ElapsedTime.Should().BeGreaterThanOrEqualTo(100L).And.BeLessThanOrEqualTo(300L);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IDayTimeTimer.TimeUntilNextCallback"/> becomes <c>0</c> when the stored next-fire instant
+    ///   is no longer strictly after <c>now</c> for a UTC-scheduled registration.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_NextFireInstantInPast_TimeUntilNext_IsZero ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            new LocalTime(14, 0, 0),
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        registration.TimeUntilNextCallback.Should().BeGreaterThan(0L);
+        fake.Advance(Duration.FromHours(6));
+        registration.TimeUntilNextCallback.Should().Be(0L);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IClockDayTimeTimer.Change(LocalTime)"/> on a UTC calendar-day registration reschedules from
+    ///   tomorrow's prior target to a later wall time that still falls on the current UTC calendar day.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_Change_LocalTimeWhileEnabled_TimeUntilNextReflectsNewTarget ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 12, 30, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            new LocalTime(12, 0, 0),
+            TimerCallbackKind.SimpleAction,
+            (Action)(static () => { }),
+            null,
+            null,
+            TestContext.Current.CancellationToken);
+        long beforeChange = registration.TimeUntilNextCallback;
+        beforeChange.Should().BeGreaterThan((long)Duration.FromHours(20).TotalMilliseconds);
+        bool changed = registration.Change(new LocalTime(13, 0, 0));
+        changed.Should().BeTrue();
+        long afterChange = registration.TimeUntilNextCallback;
+        long expectedThirtyMinutesMs = (long)Duration.FromMinutes(30).TotalMilliseconds;
+        afterChange.Should()
+            .BeInRange(expectedThirtyMinutesMs - VirtualClockTimerAssertionToleranceMilliseconds,
+                expectedThirtyMinutesMs + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+#if NET
+    /// <summary>
+    ///   Verifies <see cref="IClockDayTimeTimer.Change(LocalTimeOfDay)"/> on a local registration applies the
+    ///   <see cref="TimeOnly"/> tick resolution path and reschedules to a later fire.
+    /// </summary>
+    [Fact]
+    public void Change_LocalTimeOfDayNetSurfaceWhileEnabled_TimeUntilNextReflectsNewTarget ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        IPrimeClock clock = new PrimeClock(new FakeClock(utcNow), DateTimeZone.Utc);
+        LocalTimeOfDay initialTarget = new(new TimeOnly(18, 0, 0));
+        using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(initialTarget,
+            static _ => { },
+            TestContext.Current.CancellationToken);
+        long beforeChange = registration.TimeUntilNextCallback;
+        LocalTimeOfDay newTarget = new(new TimeOnly(20, 0, 0));
+        bool changed = registration.Change(newTarget);
+        changed.Should().BeTrue();
+        long afterChange = registration.TimeUntilNextCallback;
+        afterChange.Should().BeGreaterThan(beforeChange);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="IClockDayTimeTimer.Change(UtcTimeOfDay)"/> on a UTC registration applies the
+    ///   <see cref="TimeOnly"/> tick resolution path and reschedules to a later fire.
+    /// </summary>
+    [Fact]
+    public void Change_UtcTimeOfDayNetSurfaceWhileEnabled_TimeUntilNextReflectsNewTarget ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        IPrimeClock clock = new PrimeClock(new FakeClock(utcNow), DateTimeZone.Utc);
+        UtcTimeOfDay initialTarget = new(new TimeOnly(18, 0, 0));
+        using IClockDayTimeTimer registration = clock.RegisterTimeOfDay(initialTarget,
+            static _ => { },
+            TestContext.Current.CancellationToken);
+        long beforeChange = registration.TimeUntilNextCallback;
+        UtcTimeOfDay newTarget = new(new TimeOnly(20, 0, 0));
+        bool changed = registration.Change(newTarget);
+        changed.Should().BeTrue();
+        long afterChange = registration.TimeUntilNextCallback;
+        afterChange.Should().BeGreaterThan(beforeChange);
+    }
 #endif
+}

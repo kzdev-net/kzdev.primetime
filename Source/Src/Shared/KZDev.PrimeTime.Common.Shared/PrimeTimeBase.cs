@@ -32,35 +32,23 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         Thread.Sleep(sleepTime);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Sleep (int sleepMilliseconds)
     {
         Thread.Sleep(sleepMilliseconds);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (TimeSpan delayTime) => Task.Delay(delayTime);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (int millisecondsDelay) => Task.Delay(millisecondsDelay);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (TimeSpan delayTime, CancellationToken cancellationToken) => Task.Delay(delayTime, cancellationToken);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (int millisecondsDelay, CancellationToken cancellationToken) => Task.Delay(millisecondsDelay, cancellationToken);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (TimeSpan cancelTime)
@@ -69,16 +57,12 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         return new TimeCancellationTokenSource(cts);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (int cancelMilliseconds)
     {
         CancellationTokenSource cts = new(cancelMilliseconds);
         return new TimeCancellationTokenSource(cts);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken token1,
@@ -89,8 +73,6 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken token1,
         CancellationToken token2)
@@ -100,8 +82,6 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, CancellationToken cancellationToken)
     {
@@ -110,8 +90,6 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds, CancellationToken cancellationToken)
     {
@@ -119,8 +97,6 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (TimeSpan cancelTime, params CancellationToken[] cancellationTokens)
@@ -132,8 +108,6 @@ internal abstract partial class PrimeTimeBase : IPrimeTime
         CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(all);
         return new TimeCancellationTokenSource(linkedCts, [timeCts]);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (int cancelMilliseconds,

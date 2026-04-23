@@ -215,18 +215,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
         return true;
     }
 
-    /// <summary>
-    ///   Gets the retry delay in milliseconds when sequential callback execution is required.
-    /// </summary>
-    /// <returns>A positive millisecond count suitable for the underlying timer.</returns>
-    private partial int GetRunSequentiallyRetryMilliseconds ()
-    {
-        int retryMilliseconds = (int)Math.Min(RunSequentiallyRetryDelay.TotalMilliseconds, int.MaxValue);
-        if (retryMilliseconds <= 0)
-            return 1;
-        return retryMilliseconds;
-    }
-
     #region Constructors/Finalizers
 
     /// <summary>

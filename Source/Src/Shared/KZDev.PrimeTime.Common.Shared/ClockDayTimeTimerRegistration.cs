@@ -105,11 +105,6 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     private partial bool TryGetTimerMillisecondsFromDelay(TimeSpan delay, out int milliseconds);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Retry delay when running sequential day-time triggers (partial).
-    /// </summary>
-    private partial int GetRunSequentiallyRetryMilliseconds();
-    //----------------------------------------------------------------------------
-    /// <summary>
     ///   Computes and arms the next day-time callback.
     /// </summary>
     private void ScheduleNext()

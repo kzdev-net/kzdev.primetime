@@ -42,8 +42,6 @@ internal sealed partial class PrimeClock : PrimeTimeBase, IPrimeClock
             timerOptions,
             cancellationToken);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
