@@ -3,6 +3,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
@@ -15,9 +17,10 @@ namespace KZDev.PrimeTime.UnitTests;
 
 /// <summary>
 ///   Unit tests for Noda <see cref="ClockDayTimeTimerRegistration"/> behavior exposed through
-///   <see cref="IClockDayTimeTimer"/> (elapsed / time-until-next metrics and dynamic
-///   <see cref="IClockDayTimeTimer.Change(LocalTime)"/>), including UTC calendar-day scheduling
-///   constructed without <see cref="System.TimeOnly"/> APIs so the same scenarios run when the
+///   <see cref="IClockDayTimeTimer"/> (elapsed / time-until-next metrics, dynamic
+///   <see cref="IClockDayTimeTimer.Change(LocalTime)"/>, <see cref="ConcurrentTriggerProcessing"/> overlap
+///   handling, async callback completion paths, and <see cref="IClockDayTimeTimer.Start"/>), including UTC
+///   calendar-day scheduling constructed without <see cref="System.TimeOnly"/> APIs so the same scenarios run when the
 ///   library is consumed from <c>netstandard2.0</c> (for example under the unit test
 ///   <c>net481</c> target).
 /// </summary>
@@ -352,6 +355,308 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         afterChange.Should()
             .BeInRange(expectedThirtyMinutesMs - VirtualClockTimerAssertionToleranceMilliseconds,
                 expectedThirtyMinutesMs + VirtualClockTimerAssertionToleranceMilliseconds);
+    }
+
+    /// <summary>
+    ///   Millisecond wall-clock budget for thread synchronization waits in callback-overlap tests.
+    /// </summary>
+    private static readonly TimeSpan ThreadSyncWaitMargin = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///   Verifies that <see cref="TimerCallbackKind.ContextActionWithToken"/> passes the registration
+    ///   cancellation token into the user callback when <c>OnTimerTick</c> runs.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_OnTimerTick_ContextActionWithToken_PassesRegistrationCancellationToken ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(18, 0, 0);
+        using ManualResetEventSlim done = new(false);
+        using CancellationTokenSource cts = new();
+        CancellationToken? receivedToken = null;
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.ContextActionWithToken,
+            (Action<ClockTimerCallbackContext, CancellationToken>)((_, ct) =>
+            {
+                receivedToken = ct;
+                done.Set();
+            }),
+            null,
+            null,
+            cts.Token);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        onTimerTick.Invoke(registration, new object?[] { null });
+        done.Wait(ThreadSyncWaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        receivedToken.Should().NotBeNull();
+        receivedToken!.Value.Should().Be(cts.Token);
+    }
+
+#pragma warning disable xUnit1031 // Overlap tests host OnTimerTick on a worker; parent thread drives the second tick and release.
+#pragma warning disable xUnit1051 // Coordination waits use CancellationToken.None so test teardown cannot strand callbacks before release.
+
+    /// <summary>
+    ///   Verifies that with <see cref="ConcurrentTriggerProcessing.Skip"/>, a second <c>OnTimerTick</c>
+    ///   while the first callback is still running does not run the user callback again for that overlap.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_ConcurrentSkip_OverlappingOnTimerTick_SecondCallbackSkipped ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(18, 0, 0);
+        DayTimeTimerOptions options = new()
+        {
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.Skip,
+        };
+        using ManualResetEventSlim enteredFirstCallback = new(false);
+        using ManualResetEventSlim releaseFirstCallback = new(false);
+        using ManualResetEventSlim firstCallbackExited = new(false);
+        int invokeCount = 0;
+        Action userCallback = () =>
+        {
+            if (Interlocked.Increment(ref invokeCount) != 1)
+            {
+                return;
+            }
+
+            enteredFirstCallback.Set();
+            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+            firstCallbackExited.Set();
+        };
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.SimpleAction,
+            userCallback,
+            null,
+            options,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        enteredFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        onTimerTick.Invoke(registration, new object?[] { null });
+        releaseFirstCallback.Set();
+        firstCallbackExited.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+        Volatile.Read(ref invokeCount).Should().Be(1);
+    }
+
+    /// <summary>
+    ///   Verifies that with <see cref="ConcurrentTriggerProcessing.RunSequentially"/>, a second
+    ///   <c>OnTimerTick</c> while the first callback is still running defers work and the registration
+    ///   eventually runs the deferred callback (exercising <c>ProcessCallback</c>).
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_ConcurrentRunSequentially_OverlappingOnTimerTick_DeferredCallbackRuns ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(18, 0, 0);
+        DayTimeTimerOptions options = new()
+        {
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+        };
+        using ManualResetEventSlim enteredFirstCallback = new(false);
+        using ManualResetEventSlim releaseFirstCallback = new(false);
+        int invokeCount = 0;
+        Action userCallback = () =>
+        {
+            if (Interlocked.Increment(ref invokeCount) != 1)
+            {
+                return;
+            }
+
+            enteredFirstCallback.Set();
+            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        };
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.SimpleAction,
+            userCallback,
+            null,
+            options,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        enteredFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        onTimerTick.Invoke(registration, new object?[] { null });
+        releaseFirstCallback.Set();
+        SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
+        firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="TimerCallbackKind.SimpleAsync"/> with a synchronously completed
+    ///   <see cref="ValueTask"/> runs the synchronous completion loop in <c>RunAsync</c> twice when a
+    ///   sequential run is pending after an overlapping tick.
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_SimpleAsync_SyncCompleteWithPendingSequential_InvokesTwiceInOneRunAsync ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(18, 0, 0);
+        DayTimeTimerOptions options = new()
+        {
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+        };
+        using ManualResetEventSlim innerStarted = new(false);
+        using ManualResetEventSlim allowSecondTick = new(false);
+        int callCount = 0;
+        Func<CancellationToken, ValueTask> run = _ =>
+        {
+            int n = Interlocked.Increment(ref callCount);
+            if (n == 1)
+            {
+                innerStarted.Set();
+                allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+            }
+
+            return default;
+        };
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.SimpleAsync,
+            run,
+            null,
+            options,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        innerStarted.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        onTimerTick.Invoke(registration, new object?[] { null });
+        allowSecondTick.Set();
+        SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
+        firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="TimerCallbackKind.ContextAsync"/> with
+    ///   <see cref="ConcurrentTriggerProcessing.RunSequentially"/>, when a second tick arrives while the
+    ///   first callback is still incomplete, eventually runs the deferred callback (async completion and
+    ///   <c>Task.Run</c> continuation path).
+    /// </summary>
+    [Fact]
+    public void UtcSchedule_ContextAsync_OverlappingOnTimerTickWhileIncomplete_RunsDeferredCallback ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime targetUtc = new(18, 0, 0);
+        DayTimeTimerOptions options = new()
+        {
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+        };
+        using ManualResetEventSlim enteredAsyncBody = new(false);
+        using ManualResetEventSlim allowSecondTick = new(false);
+        int enteredCount = 0;
+        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback = async (_, ct) =>
+        {
+            if (Interlocked.Increment(ref enteredCount) != 1)
+            {
+                return;
+            }
+
+            enteredAsyncBody.Set();
+            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+            await Task.Delay(50, ct).ConfigureAwait(false);
+        };
+        using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
+            utcTimeOfDaySchedule: true,
+            targetUtc,
+            TimerCallbackKind.ContextAsync,
+            callback,
+            null,
+            options,
+            TestContext.Current.CancellationToken);
+        MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
+            typeof(ClockDayTimeTimerRegistration));
+        fake.Advance(Duration.FromHours(8));
+        Task firstTickWork = Task.Run(() => onTimerTick.Invoke(registration, new object?[] { null }));
+        enteredAsyncBody.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        onTimerTick.Invoke(registration, new object?[] { null });
+        allowSecondTick.Set();
+        SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
+        firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+    }
+
+#pragma warning restore xUnit1051
+#pragma warning restore xUnit1031
+
+    /// <summary>
+    ///   Verifies that <see cref="IClockDayTimeTimer.Start"/> after <see cref="IClockTimer.Stop"/> returns
+    ///   <c>true</c> and restores an active registration.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_StopThenStart_ReturnsTrueAndRestoresActive ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime farTarget = new(20, 0, 0);
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(farTarget,
+            static () => { },
+            TestContext.Current.CancellationToken);
+        timer.State.Should().Be(TimerState.Active);
+        timer.Stop().Should().BeTrue();
+        timer.State.Should().Be(TimerState.Disabled);
+        timer.Start().Should().BeTrue();
+        timer.State.Should().Be(TimerState.Active);
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IClockDayTimeTimer.Start"/> returns <c>false</c> when the registration is
+    ///   already active.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_StartWhenActive_ReturnsFalse ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime farTarget = new(20, 0, 0);
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(farTarget,
+            static () => { },
+            TestContext.Current.CancellationToken);
+        timer.State.Should().Be(TimerState.Active);
+        timer.Start().Should().BeFalse();
+    }
+
+    /// <summary>
+    ///   Verifies that <see cref="IClockDayTimeTimer.Start"/> returns <c>false</c> when the registration is
+    ///   cancelled.
+    /// </summary>
+    [Fact]
+    public void RegisterTimeOfDay_StartWhenCancelled_ReturnsFalse ()
+    {
+        Instant utcNow = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        FakeClock fake = new(utcNow);
+        IPrimeClock clock = new PrimeClock(fake, DateTimeZone.Utc);
+        LocalTime farTarget = new(20, 0, 0);
+        using (IClockDayTimeTimer timer = clock.RegisterTimeOfDay(farTarget,
+                   static () => { },
+                   TestContext.Current.CancellationToken))
+        {
+            timer.Cancel();
+            timer.Start().Should().BeFalse();
+        }
     }
 
 #if NET
