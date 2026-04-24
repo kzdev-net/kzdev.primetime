@@ -10,6 +10,7 @@ using KZDev.PrimeTime.Tests;
 
 using NodaTime;
 using NodaTime.Testing;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.PrimeTime.UnitTests;
 
@@ -18,7 +19,7 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   <see cref="IClockDayTimeTimer"/> (elapsed / time-until-next metrics, dynamic
 ///   <see cref="IClockDayTimeTimer.Change(LocalTime)"/>, <see cref="ConcurrentTriggerProcessing"/> overlap
 ///   handling, async callback completion paths, and <see cref="IClockDayTimeTimer.Start"/>), including UTC
-///   calendar-day scheduling constructed without <see cref="System.TimeOnly"/> APIs so the same scenarios run when the
+///   calendar-day scheduling constructed without <c>System.TimeOnly</c> APIs so the same scenarios run when the
 ///   library is consumed from <c>netstandard2.0</c> (for example under the unit test
 ///   <c>net481</c> target).
 /// </summary>
@@ -230,7 +231,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
 
     /// <summary>
     ///   Verifies <see cref="IDayTimeTimer.ElapsedTime"/> is <c>-1</c> before any callback for a UTC-scheduled
-    ///   registration created without <see cref="System.TimeOnly"/> surface APIs.
+    ///   registration created without <c>System.TimeOnly</c> surface APIs.
     /// </summary>
     [Fact]
     public void UtcSchedule_BeforeFirstFire_ElapsedTime_IsNegativeOne ()

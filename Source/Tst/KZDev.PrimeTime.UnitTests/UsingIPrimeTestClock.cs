@@ -8,6 +8,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
 using NodaTime;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.PrimeTime.UnitTests;
 
@@ -162,7 +163,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> adds duration to virtual time.
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> adds duration to virtual time.
     /// </summary>
     [Fact]
     public void Advance_WithPositiveDuration_AddsToVirtualTime ()
@@ -175,7 +176,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with zero does not change time.
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> with zero does not change time.
     /// </summary>
     [Fact]
     public void Advance_WithZero_LeavesTimeUnchanged ()
@@ -188,7 +189,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with negative duration does not move
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> with negative duration does not move
     ///   time backward (implementation treats it as zero).
     /// </summary>
     [Fact]
@@ -202,7 +203,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> with <see cref="Duration.MaxValue"/> throws
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> with <see cref="Duration.MaxValue"/> throws
     ///   <see cref="OverflowException"/> when the resulting instant exceeds Noda instant bounds.
     /// </summary>
     [Fact]
@@ -221,7 +222,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     #region RunFor
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.RunFor"/> advances virtual time by the given duration.
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor(Duration)"/> advances virtual time by the given duration.
     /// </summary>
     [Fact]
     public void RunFor_WithDuration_AdvancesVirtualTimeByDuration ()
@@ -260,7 +261,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Start"/> and <see cref="IPrimeTestClock.Stop"/> set
+    ///   Verifies that <see cref="IPrimeTestClock.Start(Duration)"/> and <see cref="IPrimeTestClock.Stop"/> set
     ///   IsRunning and that Stop returns true when was running.
     /// </summary>
     [Fact]
@@ -501,7 +502,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that a local time-of-day timer fires when virtual time reaches the target time of day, and that
-    ///   <see cref="IClockTimer.ElapsedTime"/> / <see cref="IClockTimer.TimeUntilNextCallback"/> match the virtual schedule
+    ///   <see cref="IClockDayTimeTimer.ElapsedTime"/> / <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> match the virtual schedule
     ///   before and after the first fire.
     /// </summary>
     [Fact]
@@ -533,8 +534,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that before the first fire, <see cref="IClockTimer.ElapsedTime"/> is <c>-1</c> and
-    ///   <see cref="IClockTimer.TimeUntilNextCallback"/> matches the gap to the next local occurrence.
+    ///   Verifies that before the first fire, <see cref="IClockDayTimeTimer.ElapsedTime"/> is <c>-1</c> and
+    ///   <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> matches the gap to the next local occurrence.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_Local_BeforeDue_ElapsedTimeNegativeOne_TimeUntilNextMatchesVirtualSchedule ()
@@ -554,7 +555,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that after a local day-time callback, advancing virtual time increases
-    ///   <see cref="IClockTimer.ElapsedTime"/> in line with the virtual local clock.
+    ///   <see cref="IClockDayTimeTimer.ElapsedTime"/> in line with the virtual local clock.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_Local_AfterFire_Advance_ElapsedTimeTracksVirtualLocalClock ()

@@ -113,7 +113,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         get
         {
-            lock (_gate)
+            lock (Gate)
                 return _now;
         }
     }
@@ -125,7 +125,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         get
         {
-            lock (_gate)
+            lock (Gate)
                 return _now.InUtc();
         }
     }
@@ -137,7 +137,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         get
         {
-            lock (_gate)
+            lock (Gate)
                 return _now.InZone(_zone);
         }
     }
@@ -296,7 +296,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset)
     {
         Instant snapshot;
-        lock (_gate)
+        lock (Gate)
             snapshot = _now;
 
         ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
@@ -312,7 +312,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     public void SetInstant (Instant instant)
     {
         DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (_gate)
+        lock (Gate)
             SetVirtualUtcNowLocked(utc);
 
         RaiseClockEventsAfterVirtualUtcChange(utc);
@@ -325,7 +325,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         Instant instant = localDateTime.InZoneLeniently(_zone).ToInstant();
         DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (_gate)
+        lock (Gate)
             SetVirtualUtcNowLocked(utc);
 
         RaiseClockEventsAfterVirtualUtcChange(utc);

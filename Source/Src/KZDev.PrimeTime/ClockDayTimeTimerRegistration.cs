@@ -170,14 +170,15 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
             Instant nextInstant = scheduleZonedDateTime.ToInstant();
             Duration naiveDelay = nextInstant - nowInstant;
-            if (IsEarlyTickOnSameDay(nowInstant, nextInstant, naiveDelay))
+            if (!IsEarlyTickOnSameDay(nowInstant, nextInstant, naiveDelay))
             {
-                scheduleLocalDateTime = utcCalendarDate.PlusDays(1).At(_targetTimeOfDay);
-                scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
-                return scheduleZonedDateTime.ToInstant() - nowInstant;
+                return naiveDelay;
             }
 
-            return naiveDelay;
+            scheduleLocalDateTime = utcCalendarDate.PlusDays(1).At(_targetTimeOfDay);
+            scheduleZonedDateTime = scheduleLocalDateTime.InZoneLeniently(DateTimeZone.Utc);
+            return scheduleZonedDateTime.ToInstant() - nowInstant;
+
         }
 
         // Local schedule: calendar boundaries and DST follow the clock's local zone; skipped and duplicate

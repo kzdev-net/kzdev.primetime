@@ -4,6 +4,7 @@
 using AwesomeAssertions;
 
 using NodaTime;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.PrimeTime.UnitTests;
 

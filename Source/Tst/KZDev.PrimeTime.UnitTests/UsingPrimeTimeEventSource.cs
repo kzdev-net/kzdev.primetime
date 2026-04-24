@@ -12,6 +12,7 @@ using KZDev.PrimeTime.Observability;
 using KZDev.PrimeTime.Tests;
 
 using Xunit;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.PrimeTime.UnitTests;
 

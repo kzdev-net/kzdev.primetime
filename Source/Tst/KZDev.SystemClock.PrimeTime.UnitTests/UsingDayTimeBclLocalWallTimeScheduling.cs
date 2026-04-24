@@ -148,7 +148,7 @@ public class UsingDayTimeBclLocalWallTimeScheduling : UnitTestBase
     /// </summary>
     /// <param name="skippedTimeBehavior">Skipped spring-gap policy.</param>
     /// <param name="duplicateTimeBehavior">Ambiguous local-time policy.</param>
-    /// <returns>Options for <see cref="IPrimeClock.RegisterTimeOfDay"/>.</returns>
+    /// <returns>Options for <c>IPrimeClock.RegisterTimeOfDay</c>.</returns>
     private static DayTimeTimerOptions CreateLocalDayTimeTimerOptions (SkippedTimeBehavior skippedTimeBehavior,
         DuplicateTimeBehavior duplicateTimeBehavior) =>
         new DayTimeTimerOptions

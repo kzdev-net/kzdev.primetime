@@ -12,6 +12,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
 using Microsoft.Extensions.Time.Testing;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
@@ -182,11 +183,13 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         Func<CancellationToken, ValueTask> run = _ =>
         {
             int n = Interlocked.Increment(ref callCount);
-            if (n == 1)
+            if (n != 1)
             {
-                innerStarted.Set();
-                allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+                return default;
             }
+
+            innerStarted.Set();
+            allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
 
             return default;
         };

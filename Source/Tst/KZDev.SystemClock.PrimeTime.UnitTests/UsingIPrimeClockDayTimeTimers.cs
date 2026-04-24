@@ -84,7 +84,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that a local time-of-day timer returns a registration with
-    ///   <see cref="IRegisteredTimer.IsTimeOfDay"/> true and correct options.
+    ///   <see cref="IClockTimer.IsTimeOfDay"/> true and correct options.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_LocalTimeOfDay_ReturnsTimerWithCorrectContractProperties ()
@@ -143,7 +143,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
     /// <summary>
     ///   Verifies that a UTC time-of-day timer returns a registration with
-    ///   <see cref="IRegisteredTimer.IsLocalTimeRepresentation"/> false.
+    ///   <see cref="IClockTimer.IsLocalTimeRepresentation"/> false.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_UtcTimeOfDay_IsLocalTimeRepresentationFalse ()

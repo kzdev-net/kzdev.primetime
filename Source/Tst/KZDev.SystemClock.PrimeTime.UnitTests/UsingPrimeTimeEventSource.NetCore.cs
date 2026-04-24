@@ -10,6 +10,7 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
 using KZDev.SystemClock.PrimeTime.Observability;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 

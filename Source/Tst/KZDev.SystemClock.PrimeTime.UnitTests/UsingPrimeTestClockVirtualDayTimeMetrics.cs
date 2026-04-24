@@ -14,7 +14,7 @@ using KZDev.PrimeTime.Tests;
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 
 /// <summary>
-///   Verifies <see cref="IClockTimer.ElapsedTime"/> and <see cref="IClockTimer.TimeUntilNextCallback"/> for
+///   Verifies <see cref="IClockDayTimeTimer.ElapsedTime"/> and <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> for
 ///   <see cref="PrimeTestClock"/> day-time registrations across machine local time zones.
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -34,7 +34,7 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     #endregion Constructors/Finalizers
 
     /// <summary>
-    ///   Computes the expected value in milliseconds for <see cref="IClockTimer.TimeUntilNextCallback"/> before the
+    ///   Computes the expected value in milliseconds for <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> before the
     ///   first fire of a <c>local</c> day-time registration on <see cref="PrimeTestClock"/>: the span from
     ///   the virtual clock's current instant to the UTC instant of the next wall-clock occurrence of
     ///   <paramref name="targetTimeOfDay"/> in the machine's local time zone.
@@ -50,7 +50,7 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     /// <param name="targetTimeOfDay">The registered local time of day since local midnight.</param>
     /// <returns>
     ///   Whole milliseconds from <see cref="DateTimeOffset.ToUniversalTime"/> of <see cref="IPrimeTestClock.LocalNowDateTimeOffset"/>
-    ///   to the next due UTC instant; suitable to compare to <see cref="IClockTimer.TimeUntilNextCallback"/>.
+    ///   to the next due UTC instant; suitable to compare to <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/>.
     /// </returns>
     private static long ExpectedMillisecondsUntilNextLocalFire (IPrimeTestClock clock, TimeOnly targetTimeOfDay)
     {
@@ -62,8 +62,8 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that before the first fire, <see cref="IClockTimer.ElapsedTime"/> is <c>-1</c> and
-    ///   <see cref="IClockTimer.TimeUntilNextCallback"/> matches the next local occurrence.
+    ///   Verifies that before the first fire, <see cref="IClockDayTimeTimer.ElapsedTime"/> is <c>-1</c> and
+    ///   <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> matches the next local occurrence.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_Local_BeforeDue_ElapsedTimeNegativeOne_TimeUntilNextMatchesVirtualSchedule ()
@@ -81,8 +81,8 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that after firing, advancing virtual time increases <see cref="IClockTimer.ElapsedTime"/> by the
-    ///   same amount (uses <see cref="IClockTimer.TimeUntilNextCallback"/> to reach the first fire so the test is
+    ///   Verifies that after firing, advancing virtual time increases <see cref="IClockDayTimeTimer.ElapsedTime"/> by the
+    ///   same amount (uses <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> to reach the first fire so the test is
     ///   time-zone agnostic).
     /// </summary>
     [Fact]
@@ -108,7 +108,7 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
 
     /// <summary>
     ///   Verifies UTC day-time registrations use the virtual UTC clock for
-    ///   <see cref="IClockTimer.TimeUntilNextCallback"/>.
+    ///   <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/>.
     /// </summary>
     [Fact]
     public void RegisterTimeOfDay_Utc_BeforeDue_TimeUntilNextCallbackUsesUtcDayBoundary ()

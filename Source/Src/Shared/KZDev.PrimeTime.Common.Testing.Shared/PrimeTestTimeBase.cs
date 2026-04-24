@@ -128,12 +128,12 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
     /// <summary>
     ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
     /// </summary>
-    protected readonly Lock _gate = new();
+    internal readonly Lock Gate = new();
 #else
     /// <summary>
     ///   Synchronizes virtual time, pending delays, expiries, and timer lists.
     /// </summary>
-    protected readonly object _gate = new();
+    internal readonly object Gate = new();
 #endif
 
     /// <summary>
@@ -154,7 +154,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Reads the virtual UTC instant while <see cref="_gate"/> is held.
+    ///   Reads the virtual UTC instant while <see cref="Gate"/> is held.
     /// </summary>
     /// <returns>The current virtual UTC time.</returns>
     protected partial DateTimeOffset ReadVirtualUtcNowLocked ();
@@ -170,7 +170,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
     {
         get
         {
-            lock (_gate)
+            lock (Gate)
             {
                 return _isRunning;
             }
@@ -191,7 +191,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
 
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + sleepTime;
             _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
@@ -226,29 +226,31 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
 
         TaskCompletionSource<bool> taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + delayTime;
             _pendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
         }
 
-        if (cancellationToken.CanBeCanceled)
+        if (!cancellationToken.CanBeCanceled)
         {
-            CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
-            {
-                lock (_gate)
-                {
-                    if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
-                        taskCompletionSource.TrySetCanceled(cancellationToken);
-                }
-            });
-
-            _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
-                cancellationRegistration,
-                CancellationToken.None,
-                TaskContinuationOptions.None,
-                TaskScheduler.Default);
+            return taskCompletionSource.Task;
         }
+
+        CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
+        {
+            lock (Gate)
+            {
+                if (_pendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
+                    taskCompletionSource.TrySetCanceled(cancellationToken);
+            }
+        });
+
+        _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
+            cancellationRegistration,
+            CancellationToken.None,
+            TaskContinuationOptions.None,
+            TaskScheduler.Default);
 
         return taskCompletionSource.Task;
     }
@@ -271,7 +273,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         CancellationTokenSource cts = new();
         TimeCancellationTokenSource wrapper = new(cts);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper));
@@ -295,7 +297,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
         TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + TimeSpan.FromMilliseconds(cancelMilliseconds);
             _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
@@ -313,7 +315,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, token1, token2);
         TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
@@ -329,7 +331,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(timeCts.Token, cancellationToken);
         TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
@@ -355,7 +357,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(all);
         TimeCancellationTokenSource wrapper = new(linked, [timeCts]);
 
-        lock (_gate)
+        lock (Gate)
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             _timeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));

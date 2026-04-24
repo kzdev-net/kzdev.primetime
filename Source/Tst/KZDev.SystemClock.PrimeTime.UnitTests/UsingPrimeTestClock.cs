@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
+// ReSharper disable AccessToDisposedClosure
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 

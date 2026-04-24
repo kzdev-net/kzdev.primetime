@@ -13,6 +13,7 @@ using KZDev.PrimeTime.Tests;
 
 #if NET
 using Microsoft.Extensions.Time.Testing;
+// ReSharper disable AccessToDisposedClosure
 #endif
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
@@ -353,12 +354,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                     return;
                 }
 
-                if (callbackIndex == 2)
+                if (callbackIndex != 2)
                 {
-                    secondCallbackStarted.Set();
-                    secondCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
-                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    return;
                 }
+
+                secondCallbackStarted.Set();
+                secondCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
+                    TestContext.Current.CancellationToken).Should().BeTrue();
             },
             TestContext.Current.CancellationToken,
             timerOptions: timerOptions);
@@ -474,12 +477,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         TimeSpan firstElapsed = times[0] - start;
         firstElapsed.Should().BeGreaterThanOrEqualTo(newFirst - TimingTolerance);
         firstElapsed.Should().BeLessThanOrEqualTo(newFirst + WaitMargin);
-        if (times.Count >= 2)
+        if (times.Count < 2)
         {
-            TimeSpan secondElapsed = times[1] - times[0];
-            secondElapsed.Should().BeGreaterThanOrEqualTo(newRepeat - TimingTolerance);
-            secondElapsed.Should().BeLessThanOrEqualTo(newRepeat + WaitMargin);
+            return;
         }
+
+        TimeSpan secondElapsed = times[1] - times[0];
+        secondElapsed.Should().BeGreaterThanOrEqualTo(newRepeat - TimingTolerance);
+        secondElapsed.Should().BeLessThanOrEqualTo(newRepeat + WaitMargin);
     }
     //----------------------------------------------------------------------------
 
@@ -502,8 +507,8 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     #region Stop / Start
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer.Stop"/> sets state to
-    ///   <see cref="TimerState.Disabled"/>, and <see cref="IRegisteredTimer.Start"/> after
+    ///   Verifies that <see cref="IClockTimer.Stop"/> sets state to
+    ///   <see cref="TimerState.Disabled"/>, and <see cref="IClockTimer.Start"/> after
     ///   <see cref="IClockIntervalTimer.Change(TimeSpan)"/> reschedules and allows the callback to fire.
     /// </summary>
     [Fact]
@@ -776,7 +781,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IRegisteredTimer.Start"/> throws
+    ///   Verifies that <see cref="IClockTimer.Start"/> throws
     ///   <see cref="ObjectDisposedException"/> after the timer registration has been disposed.
     /// </summary>
     [Fact]
@@ -792,7 +797,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that setting <see cref="IRegisteredTimer.Enabled"/> throws
+    ///   Verifies that setting <see cref="IClockTimer.Enabled"/> throws
     ///   <see cref="ObjectDisposedException"/> after the timer registration has been disposed.
     /// </summary>
     [Fact]
