@@ -45,7 +45,7 @@ public abstract partial class PrimeTestTimeBase
     /// <returns>
     ///   The current virtual UTC time.
     /// </returns>
-    protected partial DateTimeOffset ReadVirtualUtcNowLocked () => _utcNow;
+    internal partial DateTimeOffset ReadVirtualUtcNowLocked () => _utcNow;
     //----------------------------------------------------------------------------
 }
 //################################################################################

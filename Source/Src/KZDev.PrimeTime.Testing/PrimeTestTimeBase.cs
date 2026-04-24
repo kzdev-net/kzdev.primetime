@@ -99,7 +99,7 @@ public abstract partial class PrimeTestTimeBase
     /// <returns>
     ///   The current virtual time with zero offset (UTC).
     /// </returns>
-    protected partial DateTimeOffset ReadVirtualUtcNowLocked () =>
+    internal partial DateTimeOffset ReadVirtualUtcNowLocked () =>
         new(_now.ToDateTimeUtc(), TimeSpan.Zero);
     //----------------------------------------------------------------------------
 

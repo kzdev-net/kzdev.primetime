@@ -1491,7 +1491,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private static int _nextTimerId;
 
     /// <summary>
-    ///   Background thread used when <see cref="_isRunning"/> is <c>true</c>.
+    ///   Background thread used when <see cref="PrimeTestTimeBase.InternalIsRunning"/> is <c>true</c>.
     /// </summary>
     private Thread? _runThread;
 
@@ -1512,13 +1512,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private readonly List<VirtualDayTimeTimerBase> _dayTimeTimers = [];
 #endif
 
-
     /// <summary>
     ///   Occurs when the clock's current time has changed.
     /// </summary>
     public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a virtual UTC instant to local-offset representation used by local-time APIs.
@@ -1526,8 +1523,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <param name="utcNowOffset">Virtual instant in UTC offset form.</param>
     /// <returns>Same instant in the clock's local coordinate system.</returns>
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Returns the UTC offset for a local wall-clock calendar <see cref="DateTime"/> in the same time zone
@@ -1537,23 +1532,17 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <returns>The offset from UTC at that local wall time.</returns>
     private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Sets the virtual UTC instant while <see cref="Gate"/> is held.
+    ///   Sets the virtual UTC instant while <see cref="PrimeTestTimeBase.Gate"/> is held.
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Adds virtual elapsed time while <see cref="Gate"/> is held.
+    ///   Adds virtual elapsed time while <see cref="PrimeTestTimeBase.Gate"/> is held.
     /// </summary>
-    /// <param name="duration">Amount of virtual time to add (may be clamped by partial implementations).</param>
+    /// <param name="duration">Amount of virtual time to add (maybe clamped by partial implementations).</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Raises <see cref="ClockEvents"/> after the virtual UTC instant changed.
@@ -1621,7 +1610,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             TimeSpan toAdvance;
             lock (Gate)
             {
-                if (!_isRunning)
+                if (!InternalIsRunning)
                     return;
                 toAdvance = _runRate;
             }
@@ -1630,10 +1619,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Removes an interval registration from the active list (under <see cref="Gate"/>).
+    ///   Removes an interval registration from the active list (under <see cref="PrimeTestTimeBase.Gate"/>).
     /// </summary>
     /// <param name="timer">The registration to remove.</param>
     private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
@@ -1644,9 +1631,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     //----------------------------------------------------------------------------
 
 #if NET || !SYSTEMCLOCK
+
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Removes a day-time registration from the active list (under <see cref="Gate"/>).
+    ///   Removes a day-time registration from the active list (under <see cref="PrimeTestTimeBase.Gate"/>).
     /// </summary>
     /// <param name="timer">The registration to remove.</param>
     private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
@@ -1654,8 +1642,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         lock (Gate)
             _dayTimeTimers.Remove(timer);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a local time-of-day timer and adds it to <see cref="_dayTimeTimers"/>.
@@ -1686,8 +1672,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             _dayTimeTimers.Add(t);
         return t;
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer and adds it to <see cref="_dayTimeTimers"/>.
@@ -1740,8 +1724,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         RaiseClockEventsAfterVirtualUtcChange(utcTime);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Advance (TimeSpan duration)
     {
@@ -1761,24 +1743,24 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             AddVirtualTimeLocked(duration);
             newNow = ReadVirtualUtcNowLocked();
 
-            foreach (PendingDelay pd in _pendingDelays)
+            foreach (PendingDelay pendingDelay in PendingDelays)
             {
-                if (pd.DueUtc > newNow)
+                if (pendingDelay.DueUtc > newNow)
                 {
                     continue;
                 }
 
                 toComplete ??= [];
-                toComplete.Add(pd);
+                toComplete.Add(pendingDelay);
             }
 
             if (toComplete != null)
             {
-                foreach (PendingDelay pd in toComplete)
-                    _pendingDelays.Remove(pd);
+                foreach (PendingDelay toCompleteDelay in toComplete)
+                    PendingDelays.Remove(toCompleteDelay);
             }
 
-            foreach (TimeExpiryEntry tee in _timeExpiryEntries)
+            foreach (TimeExpiryEntry tee in TimeExpiryEntries)
             {
                 if (tee.ExpireUtc > newNow)
                 {
@@ -1791,64 +1773,64 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
             if (toCancel != null)
             {
-                foreach (TimeExpiryEntry tee in toCancel)
-                    _timeExpiryEntries.Remove(tee);
+                foreach (TimeExpiryEntry timeExpiry in toCancel)
+                    TimeExpiryEntries.Remove(timeExpiry);
             }
 
-            foreach (VirtualIntervalTimerBase t in _intervalTimers)
+            foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
             {
-                if (!t.IsDue(newNow))
+                if (!timerBase.IsDue(newNow))
                 {
                     continue;
                 }
 
                 intervalDue ??= [];
-                intervalDue.Add(t);
+                intervalDue.Add(timerBase);
             }
 
 #if NET || !SYSTEMCLOCK
-            foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
+            foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
             {
-                if (!t.IsDue(newNow))
+                if (!timerBase.IsDue(newNow))
                 {
                     continue;
                 }
 
                 dayTimeDue ??= [];
-                dayTimeDue.Add(t);
+                dayTimeDue.Add(timerBase);
             }
 #endif
         }
 
         if (toComplete != null)
         {
-            foreach (PendingDelay pd in toComplete)
-                pd.Complete();
+            foreach (PendingDelay pendingDelay in toComplete)
+                pendingDelay.Complete();
         }
 
         if (toCancel != null)
         {
-            foreach (TimeExpiryEntry tee in toCancel)
-                tee.Cancel();
+            foreach (TimeExpiryEntry timeExpiry in toCancel)
+                timeExpiry.Cancel();
         }
 
         while (intervalDue is { Count: > 0 })
         {
-            foreach (VirtualIntervalTimerBase t in intervalDue)
-                t.RunDueCallback(newNow);
+            foreach (VirtualIntervalTimerBase timerBase in intervalDue)
+                timerBase.RunDueCallback(newNow);
 
             intervalDue = null;
             lock (Gate)
             {
-                foreach (VirtualIntervalTimerBase t in _intervalTimers)
+                foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
                 {
-                    if (!t.IsDue(newNow))
+                    if (!timerBase.IsDue(newNow))
                     {
                         continue;
                     }
 
                     intervalDue ??= [];
-                    intervalDue.Add(t);
+                    intervalDue.Add(timerBase);
                 }
             }
         }
@@ -1856,21 +1838,21 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #if NET || !SYSTEMCLOCK
         while (dayTimeDue is { Count: > 0 })
         {
-            foreach (VirtualDayTimeTimerBase t in dayTimeDue)
-                t.RunDueCallback(newNow);
+            foreach (VirtualDayTimeTimerBase timerBase in dayTimeDue)
+                timerBase.RunDueCallback(newNow);
 
             dayTimeDue = null;
             lock (Gate)
             {
-                foreach (VirtualDayTimeTimerBase t in _dayTimeTimers)
+                foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
                 {
-                    if (!t.IsDue(newNow))
+                    if (!timerBase.IsDue(newNow))
                     {
                         continue;
                     }
 
                     dayTimeDue ??= [];
-                    dayTimeDue.Add(t);
+                    dayTimeDue.Add(timerBase);
                 }
             }
         }
@@ -1879,24 +1861,20 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         RaiseClockEventsAfterVirtualUtcChange(newNow);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void RunFor (TimeSpan duration)
     {
         Advance(duration);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (TimeSpan? rate = null)
     {
         lock (Gate)
         {
-            if (_isRunning)
+            if (InternalIsRunning)
                 return;
-            _isRunning = true;
+            InternalIsRunning = true;
             _runRate = rate ?? TimeSpan.FromSeconds(1);
         }
 
@@ -1907,16 +1885,14 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         _runThread.Start();
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
     {
         lock (Gate)
         {
-            if (!_isRunning)
+            if (!InternalIsRunning)
                 return false;
-            _isRunning = false;
+            InternalIsRunning = false;
         }
 
         _runThread?.Join(TimeSpan.FromSeconds(5));
@@ -1930,6 +1906,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #if SYSTEMCLOCK
     #region IPrimeClock Implementation — Now
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset LocalNowDateTimeOffset
     {
@@ -1939,7 +1916,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return ToLocalOffset(ReadVirtualUtcNowLocked());
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowDateTimeOffset
     {
@@ -1949,7 +1926,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return ReadVirtualUtcNowLocked();
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime
     {
@@ -1959,7 +1936,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime;
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime
     {
@@ -1969,8 +1946,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return ReadVirtualUtcNowLocked().UtcDateTime;
         }
     }
+    //----------------------------------------------------------------------------
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly LocalNowTimeOnly
     {
@@ -1980,7 +1959,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return TimeOnly.FromDateTime(ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime);
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly UtcNowTimeOnly
     {
@@ -1990,7 +1969,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return TimeOnly.FromDateTime(ReadVirtualUtcNowLocked().UtcDateTime);
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly LocalNowDateOnly
     {
@@ -2000,7 +1979,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return DateOnly.FromDateTime(ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime);
         }
     }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly UtcNowDateOnly
     {
@@ -2010,6 +1989,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return DateOnly.FromDateTime(ReadVirtualUtcNowLocked().UtcDateTime);
         }
     }
+    //----------------------------------------------------------------------------
 #endif
 
     #endregion IPrimeClock Implementation — Now
@@ -2021,42 +2001,27 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null)
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, IntervalTimerOptions? timerOptions = null)
     {
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            TimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
+            callbackTime, repeatInterval, TimerCallbackKind.ContextAction,
+            callback, state, timerOptions, cancellationToken);
         lock (Gate)
             _intervalTimers.Add(intervalTimer);
         return intervalTimer;
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
         TimeSpan repeatInterval,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null)
+        object? state = null, IntervalTimerOptions? timerOptions = null)
     {
         VirtualIntervalTimerBase intervalTimer = new VirtualIntervalTimer(this,
-            callbackTime,
-            repeatInterval,
-            TimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
+            callbackTime, repeatInterval, TimerCallbackKind.ContextAsync,
+            callback, state, timerOptions, cancellationToken);
         lock (Gate)
             _intervalTimers.Add(intervalTimer);
         return intervalTimer;
@@ -2068,37 +2033,34 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #if NET
     #region IPrimeClock Implementation — Day-time timers
 
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAction, callback, state, timerOptions, cancellationToken);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAction, callback, state, timerOptions, cancellationToken);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation — Day-time timers
 #endif
