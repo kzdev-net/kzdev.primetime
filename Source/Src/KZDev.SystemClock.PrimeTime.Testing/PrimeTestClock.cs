@@ -61,7 +61,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     ///   Assigns the virtual UTC time. The caller must hold the shared gate lock.
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
-    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) => _utcNow = utcNowOffset;
+    private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) => UtcNow = utcNowOffset;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     ///   Advances virtual time by the given amount. The caller must hold the shared gate lock.
     /// </summary>
     /// <param name="duration">The virtual elapsed time to add.</param>
-    private partial void AddVirtualTimeLocked (TimeSpan duration) => _utcNow += duration;
+    private partial void AddVirtualTimeLocked (TimeSpan duration) => UtcNow += duration;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------

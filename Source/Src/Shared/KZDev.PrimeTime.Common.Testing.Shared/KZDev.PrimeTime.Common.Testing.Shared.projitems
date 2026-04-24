@@ -13,6 +13,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.VirtualDayTimeTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.VirtualIntervalTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestTimeBase.cs" />
   </ItemGroup>
 </Project>

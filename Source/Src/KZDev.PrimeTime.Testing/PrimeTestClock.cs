@@ -114,7 +114,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
         get
         {
             lock (Gate)
-                return _now;
+                return Now;
         }
     }
     //----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
         get
         {
             lock (Gate)
-                return _now.InUtc();
+                return Now.InUtc();
         }
     }
     //----------------------------------------------------------------------------
@@ -138,7 +138,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
         get
         {
             lock (Gate)
-                return _now.InZone(_zone);
+                return Now.InZone(TimeZone);
         }
     }
     //----------------------------------------------------------------------------
@@ -217,7 +217,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         [DebuggerStepThrough]
         get =>
-        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_zone);
+        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(TimeZone);
     }
     //----------------------------------------------------------------------------
 
@@ -247,7 +247,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset)
     {
         Instant instant = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
-        return instant.InZone(_zone).ToDateTimeOffset();
+        return instant.InZone(TimeZone).ToDateTimeOffset();
     }
     //----------------------------------------------------------------------------
 
@@ -262,7 +262,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified)
     {
         LocalDateTime ldt = LocalDateTime.FromDateTime(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
-        return _zone.AtLeniently(ldt).Offset.ToTimeSpan();
+        return TimeZone.AtLeniently(ldt).Offset.ToTimeSpan();
     }
     //----------------------------------------------------------------------------
 
@@ -272,7 +272,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) =>
-        _now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
+        Now = Instant.FromDateTimeUtc(utcNowOffset.UtcDateTime);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -281,7 +281,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     /// </summary>
     /// <param name="duration">The virtual elapsed time to add.</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration) =>
-        _now += Duration.FromTimeSpan(duration);
+        Now += Duration.FromTimeSpan(duration);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -297,7 +297,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     {
         Instant snapshot;
         lock (Gate)
-            snapshot = _now;
+            snapshot = Now;
 
         ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
     }
@@ -323,7 +323,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     /// <inheritdoc />
     public void SetLocalTime (LocalDateTime localDateTime)
     {
-        Instant instant = localDateTime.InZoneLeniently(_zone).ToInstant();
+        Instant instant = localDateTime.InZoneLeniently(TimeZone).ToInstant();
         DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
         lock (Gate)
             SetVirtualUtcNowLocked(utc);

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
@@ -10,7 +12,7 @@ public abstract partial class PrimeTestTimeBase
     /// <summary>
     ///   The current virtual UTC time; read and updated under the shared gate lock in the main partial.
     /// </summary>
-    protected DateTimeOffset _utcNow;
+    internal DateTimeOffset UtcNow { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -21,7 +23,7 @@ public abstract partial class PrimeTestTimeBase
     /// </summary>
     protected PrimeTestTimeBase ()
     {
-        _utcNow = DateTimeOffset.UtcNow;
+        UtcNow = DateTimeOffset.UtcNow;
     }
     //----------------------------------------------------------------------------
 
@@ -32,7 +34,7 @@ public abstract partial class PrimeTestTimeBase
     /// <param name="initialUtcTime">The initial virtual UTC time.</param>
     protected PrimeTestTimeBase (DateTimeOffset initialUtcTime)
     {
-        _utcNow = initialUtcTime;
+        UtcNow = initialUtcTime;
     }
     //----------------------------------------------------------------------------
 
@@ -45,7 +47,7 @@ public abstract partial class PrimeTestTimeBase
     /// <returns>
     ///   The current virtual UTC time.
     /// </returns>
-    internal partial DateTimeOffset ReadVirtualUtcNowLocked () => _utcNow;
+    internal partial DateTimeOffset ReadVirtualUtcNowLocked () => UtcNow;
     //----------------------------------------------------------------------------
 }
 //################################################################################

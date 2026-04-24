@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -15,14 +17,14 @@ public abstract partial class PrimeTestTimeBase
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   The time zone used for local zoned date and time in virtual time.
-    /// </summary>
-    protected readonly DateTimeZone _zone;
-
-    /// <summary>
     ///   The current virtual instant on the UTC timeline; read and updated under the shared gate lock.
     /// </summary>
-    protected Instant _now;
+    internal Instant Now { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+    /// <summary>
+    ///   The time zone used for local zoned date and time in virtual time.
+    /// </summary>
+    internal DateTimeZone TimeZone { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -33,8 +35,8 @@ public abstract partial class PrimeTestTimeBase
     /// </summary>
     protected PrimeTestTimeBase ()
     {
-        _now = SystemClock.Instance.GetCurrentInstant();
-        _zone = GetSystemDefaultTimeZone();
+        Now = SystemClock.Instance.GetCurrentInstant();
+        TimeZone = GetSystemDefaultTimeZone();
     }
     //----------------------------------------------------------------------------
 
@@ -45,8 +47,8 @@ public abstract partial class PrimeTestTimeBase
     /// <param name="initialInstant">The initial virtual instant.</param>
     protected PrimeTestTimeBase (Instant initialInstant)
     {
-        _now = initialInstant;
-        _zone = GetSystemDefaultTimeZone();
+        Now = initialInstant;
+        TimeZone = GetSystemDefaultTimeZone();
     }
     //----------------------------------------------------------------------------
 
@@ -61,8 +63,8 @@ public abstract partial class PrimeTestTimeBase
     /// </exception>
     protected PrimeTestTimeBase (Instant initialInstant, DateTimeZone zone)
     {
-        _now = initialInstant;
-        _zone = zone ?? throw new ArgumentNullException(nameof(zone));
+        Now = initialInstant;
+        TimeZone = zone ?? throw new ArgumentNullException(nameof(zone));
     }
     //----------------------------------------------------------------------------
 
@@ -91,8 +93,6 @@ public abstract partial class PrimeTestTimeBase
         }
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Reads the virtual instant as a UTC <see cref="DateTimeOffset"/>. The caller must hold the gate lock.
     /// </summary>
@@ -100,7 +100,7 @@ public abstract partial class PrimeTestTimeBase
     ///   The current virtual time with zero offset (UTC).
     /// </returns>
     internal partial DateTimeOffset ReadVirtualUtcNowLocked () =>
-        new(_now.ToDateTimeUtc(), TimeSpan.Zero);
+        new(Now.ToDateTimeUtc(), TimeSpan.Zero);
     //----------------------------------------------------------------------------
 
     #region Interface Implementations
@@ -112,13 +112,9 @@ public abstract partial class PrimeTestTimeBase
     public void Sleep (Duration duration) =>
         Sleep(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration) =>
         DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken) =>
@@ -134,20 +130,14 @@ public abstract partial class PrimeTestTimeBase
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter) =>
         GetTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter));
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken) =>
         LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
         CancellationToken secondCancellationToken) =>
         LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), firstCancellationToken, secondCancellationToken);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,

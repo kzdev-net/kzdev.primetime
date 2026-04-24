@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 
+
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -221,20 +222,19 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
             return taskCompletionSource.Task;
         }
 
-        CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(() =>
+        CancellationTokenRegistration cancellationRegistration = cancellationToken.Register(static args =>
         {
-            lock (Gate)
+            (PrimeTestTimeBase @this, TaskCompletionSource<bool> taskCompletion, CancellationToken cancellationToken) =
+                (Tuple<PrimeTestTimeBase, TaskCompletionSource<bool>, CancellationToken>)args!;
+            lock (@this.Gate)
             {
-                if (PendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletionSource) > 0)
-                    taskCompletionSource.TrySetCanceled(cancellationToken);
+                if (@this.PendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletion) > 0)
+                    taskCompletion.TrySetCanceled(cancellationToken);
             }
-        });
+        }, Tuple.Create(this, taskCompletionSource, cancellationToken));
 
         _ = taskCompletionSource.Task.ContinueWith((_, state) => ((CancellationTokenRegistration)state!).Dispose(),
-            cancellationRegistration,
-            CancellationToken.None,
-            TaskContinuationOptions.None,
-            TaskScheduler.Default);
+            cancellationRegistration, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
 
         return taskCompletionSource.Task;
     }
