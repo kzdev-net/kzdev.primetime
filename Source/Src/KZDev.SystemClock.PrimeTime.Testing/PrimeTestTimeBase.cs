@@ -26,8 +26,6 @@ public abstract partial class PrimeTestTimeBase
         UtcNow = DateTimeOffset.UtcNow;
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with the specified initial virtual UTC time.
     /// </summary>

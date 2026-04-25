@@ -4,6 +4,23 @@
     <BuildType Name="Package" />
     <BuildType Name="Release" />
   </Configurations>
+  <Folder Name="/Development/">
+    <File Path="Dev/Directory.Build.props" />
+  </Folder>
+  <Folder Name="/Development/Production/">
+    <File Path="Dev/Production/Directory.Build.props" />
+    <File Path="Dev/Production/Directory.Packages.props" />
+    <Project Path="Dev/Production/KZDev.PrimeTime.Examples/KZDev.PrimeTime.Examples.csproj">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
+    <Project Path="Dev/Production/KZDev.SystemClock.PrimeTime.Examples/KZDev.SystemClock.PrimeTime.Examples.csproj">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Development/Testing/">
+    <File Path="Dev/Testing/Directory.Build.props" />
+    <File Path="Dev/Testing/Directory.Packages.props" />
+  </Folder>
   <Folder Name="/Docs/" />
   <Folder Name="/Package/">
     <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
@@ -24,14 +41,6 @@
   <Folder Name="/Source/">
     <File Path="Src/Directory.Build.props" />
     <File Path="Src/Directory.Packages.props" />
-  </Folder>
-  <Folder Name="/Source/Dev/">
-    <File Path="Dev/Directory.Build.props" />
-    <File Path="Dev/Directory.Packages.props" />
-  </Folder>
-  <Folder Name="/Source/Perf/">
-    <File Path="Perf/Directory.Build.props" />
-    <File Path="Perf/Directory.Packages.props" />
   </Folder>
   <Folder Name="/Source/Production/">
     <Project Path="Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj" />
@@ -60,8 +69,7 @@
     </Project>
   </Folder>
   <Folder Name="/Tests/FrameworkTests/" />
-  <Folder Name="/Tests/Shared/" />
-  <Folder Name="/Tests/StandardTests/">
+  <Folder Name="/Tests/FrameworkTests/StandardTests/">
     <Project Path="Tst/KZDev.PrimeTime.UnitTests/KZDev.PrimeTime.UnitTests.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
@@ -69,4 +77,5 @@
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
   </Folder>
+  <Folder Name="/Tests/Shared/" />
 </Solution>
