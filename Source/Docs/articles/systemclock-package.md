@@ -51,6 +51,30 @@ On supported targets, use **`RegisterTimeOfDay`** / **`RegisterAsyncTimeOfDay`**
 
 Use **`PrimeTestClock`** and **`IPrimeTestClock`**. Constructors are **BCL-first** (for example starting from a **`DateTimeOffset`**). Advance virtual time to exercise timers without wall-clock delays.
 
+## Runnable examples and snippet sources
+
+Production and testing examples for this stack are available in-repo:
+
+- Production app: `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples`
+- Testing examples: `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples`
+
+The production app defaults to a short demo mode and supports an optional long mode. See the following files:
+
+- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Program.cs`
+- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Helpers/DemoRunModeParser.cs`
+
+For self-contained snippet extraction points, use scenario files in `Scenarios`:
+
+- DI registration: `DiRegistrationScenario.cs`
+- "Now" surfaces: `NowSurfaceScenario.cs`
+- Sleep/delay/cancellation: `SleepDelayCancellationScenario.cs`
+- Interval timers: `IntervalTimerScenario.cs`
+- Time-of-day timers: `TimeOfDayTimerScenario.cs`
+- `TimeProvider` bridge: `TimeProviderBridgeScenario.cs`
+- DST behavior: `DstScenario.cs`, `EnvironmentAwareDstScenario.cs`
+
+The production DST examples are environment-aware so they can adapt to machine timezone capabilities. The testing examples show deterministic virtual-time patterns for reliable assertions.
+
 ## Related documentation
 
 - [Choosing a package](choosing-a-package.md)

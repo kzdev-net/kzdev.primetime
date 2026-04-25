@@ -43,6 +43,29 @@ Both testing packages provide DI helpers for test scenarios where you replace ru
 - NodaTime production stack: use extension methods from `KZDev.PrimeTime.Testing`.
 - BCL/SystemClock stack: use extension methods from `KZDev.SystemClock.PrimeTime.Testing`.
 
+## Runnable testing examples
+
+Use the in-repo example test projects for copy/paste-friendly scenarios:
+
+- NodaTime stack: `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples`
+- BCL/SystemClock stack: `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples`
+
+Each project demonstrates:
+
+- Test clock control APIs (`Set*`, `Advance`, `RunFor`, `Start`/`Stop`)
+- Deterministic interval timers (synchronous and asynchronous callbacks)
+- DI replacement with `AddPrimeTestClock`
+- Daylight saving scenarios
+
+## Daylight saving guidance for tests
+
+Both testing example projects include DST-focused scenarios, but with different emphasis:
+
+- `KZDev.PrimeTime.Testing.Examples` uses deterministic zone-based setup (e.g. fixed TZDB zones) and optionally probes the local environment.
+- `KZDev.SystemClock.PrimeTime.Testing.Examples` uses environment-aware local probes plus virtual-time advancement patterns.
+
+These patterns keep tests stable across machines while still showing realistic local-time behavior.
+
 ## API links
 
 - [API Reference](xref:PrimeTime)

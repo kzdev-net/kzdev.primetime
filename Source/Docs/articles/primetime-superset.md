@@ -57,6 +57,28 @@ Use these when the rest of your domain speaks NodaTime. BCL projections remain a
 
 **`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [API Reference](xref:PrimeTime) for exact constructors and **`IPrimeTestClock`** members.
 
+## Runnable examples and snippet sources
+
+Production and testing examples for this stack are available in-repo:
+
+- Production app: `Source/Dev/Production/KZDev.PrimeTime.Examples`
+- Testing examples: `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples`
+
+The production app defaults to a short demo mode and supports an optional long mode. See the following files:
+
+- `Source/Dev/Production/KZDev.PrimeTime.Examples/Program.cs`
+- `Source/Dev/Production/KZDev.PrimeTime.Examples/Helpers/DemoRunModeParser.cs`
+
+For self-contained snippet extraction points, use scenario files in `Scenarios`:
+
+- DI registration: `DiRegistrationScenario.cs`
+- "Now" surfaces: `NowSurfaceScenario.cs`
+- Sleep/delay/cancellation: `SleepDelayCancellationScenario.cs`
+- Interval timers: `IntervalTimerScenario.cs`
+- Time-of-day timers: `TimeOfDayTimerScenario.cs`
+- `TimeProvider` bridge: `TimeProviderBridgeScenario.cs`
+- DST behavior: `DstScenario.cs`, `EnvironmentAwareDstScenario.cs`
+
 ## Related documentation
 
 - [Choosing a package](choosing-a-package.md)
