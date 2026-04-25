@@ -3,12 +3,30 @@
 
 using KZDev.PrimeTime.Examples.Helpers;
 using KZDev.PrimeTime.Examples.Infrastructure;
+using KZDev.PrimeTime.Examples.Scenarios;
 
 DemoRunMode runMode = DemoRunModeParser.Parse(args);
 ITimeZoneScenarioContextFactory scenarioContextFactory = new LocalTimeZoneScenarioContextFactory();
 TimeZoneScenarioContext scenarioContext = scenarioContextFactory.Create();
+IReadOnlyList<IExampleScenario> scenarios = ScenarioCatalog.CreateScenarios(runMode, scenarioContext);
 
-Console.WriteLine("KZDev.PrimeTime examples foundation is configured.");
+Console.WriteLine("KZDev.PrimeTime examples");
+Console.WriteLine("========================");
 Console.WriteLine($"Run mode: {runMode}");
 Console.WriteLine($"Local time zone: {scenarioContext.LocalTimeZoneId}");
 Console.WriteLine($"Supports DST transitions: {scenarioContext.SupportsDaylightSavingTime}");
+Console.WriteLine();
+
+for (int scenarioIndex = 0; scenarioIndex < scenarios.Count; scenarioIndex++)
+{
+    IExampleScenario scenario = scenarios[scenarioIndex];
+
+    Console.WriteLine($"[{scenarioIndex + 1}/{scenarios.Count}] {scenario.Name}");
+    Console.WriteLine(new string('-', scenario.Name.Length + 12));
+
+    await scenario.RunAsync(CancellationToken.None);
+
+    Console.WriteLine();
+}
+
+Console.WriteLine("All PrimeTime production scenarios completed.");

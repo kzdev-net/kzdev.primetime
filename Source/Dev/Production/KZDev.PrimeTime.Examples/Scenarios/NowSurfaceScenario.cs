@@ -1,0 +1,35 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
+using Microsoft.Extensions.DependencyInjection;
+
+namespace KZDev.PrimeTime.Examples.Scenarios;
+
+/// <summary>
+/// Demonstrates current-time APIs exposed by the PrimeTime clock.
+/// </summary>
+public sealed class NowSurfaceScenario : IExampleScenario
+{
+    /// <inheritdoc />
+    public string Name => "\"Now\" API surfaces";
+
+    /// <inheritdoc />
+    public Task RunAsync(CancellationToken cancellationToken)
+    {
+        ServiceCollection services = [];
+        services.AddPrimeClock();
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
+
+        Console.WriteLine($"NowInstant: {primeClock.NowInstant}");
+        Console.WriteLine($"LocalNowInstant: {primeClock.LocalNowInstant}");
+        Console.WriteLine($"UtcNowInstant: {primeClock.UtcNowInstant}");
+        Console.WriteLine($"LocalZonedNowInstant: {primeClock.LocalZonedNowInstant}");
+        Console.WriteLine($"LocalNowTime: {primeClock.LocalNowTime}");
+        Console.WriteLine($"LocalNowDate: {primeClock.LocalNowDate}");
+        Console.WriteLine($"LocalNowDateTimeOffset: {primeClock.LocalNowDateTimeOffset:O}");
+
+        return Task.CompletedTask;
+    }
+}

@@ -12,6 +12,14 @@ namespace KZDev.SystemClock.PrimeTime.Examples.Infrastructure;
 /// <param name="SupportsDaylightSavingTime">
 /// Indicates whether the local time zone has daylight-saving transitions.
 /// </param>
+/// <param name="InvalidLocalTimeExample">
+/// A representative invalid local time in the zone, if one can be identified.
+/// </param>
+/// <param name="AmbiguousLocalTimeExample">
+/// A representative ambiguous local time in the zone, if one can be identified.
+/// </param>
 public sealed record TimeZoneScenarioContext(
     string LocalTimeZoneId,
-    bool SupportsDaylightSavingTime);
+    bool SupportsDaylightSavingTime,
+    DateTime? InvalidLocalTimeExample,
+    DateTime? AmbiguousLocalTimeExample);

@@ -21,28 +21,25 @@ public static class ScenarioCatalog
     /// The timezone and DST context.
     /// </param>
     /// <returns>
-    /// A list of baseline scenario labels.
+    /// A list of runnable production scenarios.
     /// </returns>
-    public static IReadOnlyList<string> CreateBaselineScenarioNames(
+    public static IReadOnlyList<IExampleScenario> CreateScenarios(
         DemoRunMode runMode,
         TimeZoneScenarioContext context)
     {
-        List<string> scenarios =
+        global::System.ArgumentNullException.ThrowIfNull(context);
+
+        List<IExampleScenario> scenarios =
         [
-            "DI registration baseline",
-            "Clock now baseline",
-            "Timer baseline",
+            new DiRegistrationScenario(),
+            new NowSurfaceScenario(),
+            new SleepDelayCancellationScenario(runMode),
+            new IntervalTimerScenario(runMode),
+            new TimeOfDayTimerScenario(runMode),
+            new TimeProviderBridgeScenario(),
+            new DstScenario(),
+            new EnvironmentAwareDstScenario(context),
         ];
-
-        if (context.SupportsDaylightSavingTime)
-        {
-            scenarios.Add("DST transition baseline");
-        }
-
-        if (runMode == DemoRunMode.Long)
-        {
-            scenarios.Add("Extended runtime baseline");
-        }
 
         return scenarios;
     }
