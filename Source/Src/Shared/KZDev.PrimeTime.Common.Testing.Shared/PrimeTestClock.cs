@@ -161,7 +161,9 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private void RemoveIntervalTimer (VirtualIntervalTimerBase timer)
     {
         lock (Gate)
+        {
             _intervalTimers.Remove(timer);
+        }
     }
     //----------------------------------------------------------------------------
 
@@ -175,7 +177,9 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private void RemoveDayTimeTimer (VirtualDayTimeTimerBase timer)
     {
         lock (Gate)
+        {
             _dayTimeTimers.Remove(timer);
+        }
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -189,22 +193,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The new registration.</returns>
     private IClockDayTimeTimer RegisterTimeOfDayLocal (TimeSpan targetTimeOfDay,
-        TimerCallbackKind kind,
-        Delegate callback,
-        object? state,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
+        TimerCallbackKind kind, Delegate callback, object? state,
+        DayTimeTimerOptions? options, CancellationToken cancellationToken)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
-            isLocal: true,
-            targetTimeOfDay,
-            kind,
-            callback,
-            state,
-            options,
-            cancellationToken);
+        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this, isLocal: true,
+            targetTimeOfDay, kind, callback, state, options, cancellationToken);
         lock (Gate)
+        {
             _dayTimeTimers.Add(t);
+        }
         return t;
     }
     //----------------------------------------------------------------------------
@@ -219,22 +216,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The new registration.</returns>
     private IClockDayTimeTimer RegisterTimeOfDayUtc (TimeSpan targetTimeOfDay,
-        TimerCallbackKind kind,
-        Delegate callback,
-        object? state,
-        DayTimeTimerOptions? options,
-        CancellationToken cancellationToken)
+        TimerCallbackKind kind, Delegate callback, object? state,
+        DayTimeTimerOptions? options, CancellationToken cancellationToken)
     {
-        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this,
-            isLocal: false,
-            targetTimeOfDay,
-            kind,
-            callback,
-            state,
-            options,
-            cancellationToken);
+        VirtualDayTimeTimerBase t = new VirtualDayTimeTimer(this, isLocal: false,
+            targetTimeOfDay, kind, callback, state, options, cancellationToken);
         lock (Gate)
+        {
             _dayTimeTimers.Add(t);
+        }
         return t;
     }
     //----------------------------------------------------------------------------
@@ -411,27 +401,29 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return;
             InternalIsRunning = true;
             _runRate = rate ?? TimeSpan.FromSeconds(1);
-        }
 
-        _runThread = new Thread(RunLoop)
-        {
-            IsBackground = true
-        };
-        _runThread.Start();
+            _runThread = new Thread(RunLoop)
+            {
+                IsBackground = true
+            };
+            _runThread.Start();
+        }
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
     {
+        Thread? runningThread;
+
         lock (Gate)
         {
             if (!InternalIsRunning)
                 return false;
             InternalIsRunning = false;
+            runningThread = _runThread;
+            _runThread = null;
         }
-
-        _runThread?.Join(TimeSpan.FromSeconds(5));
-        _runThread = null;
+        runningThread?.Join(TimeSpan.FromSeconds(5));
         return true;
     }
     //----------------------------------------------------------------------------

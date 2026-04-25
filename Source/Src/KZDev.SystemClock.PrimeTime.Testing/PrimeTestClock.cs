@@ -7,7 +7,7 @@ namespace KZDev.SystemClock.PrimeTime;
 /// <summary>
 ///   BCL virtual-time storage and event args for <see cref="PrimeTestClock"/>.
 /// </summary>
-public sealed partial class PrimeTestClock : PrimeTestTimeBase
+public sealed partial class PrimeTestClock
 {
     #region Constructors/Finalizers
 
@@ -18,8 +18,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     public PrimeTestClock ()
     {
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Initializes a new instance with the specified initial virtual UTC time.
@@ -43,8 +41,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     private partial DateTimeOffset ToLocalOffset (DateTimeOffset utcNowOffset) =>
         TimeZoneInfo.ConvertTime(utcNowOffset, TimeZoneInfo.Local);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the UTC offset for an unspecified-kind local wall-clock value in <see cref="TimeZoneInfo.Local"/>.
     /// </summary>
@@ -55,23 +51,17 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase
     private partial TimeSpan GetLocalWallClockUtcOffset (DateTime localUnspecified) =>
         TimeZoneInfo.Local.GetUtcOffset(DateTime.SpecifyKind(localUnspecified, DateTimeKind.Unspecified));
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Assigns the virtual UTC time. The caller must hold the shared gate lock.
     /// </summary>
     /// <param name="utcNowOffset">The new virtual UTC time.</param>
     private partial void SetVirtualUtcNowLocked (DateTimeOffset utcNowOffset) => UtcNow = utcNowOffset;
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Advances virtual time by the given amount. The caller must hold the shared gate lock.
     /// </summary>
     /// <param name="duration">The virtual elapsed time to add.</param>
     private partial void AddVirtualTimeLocked (TimeSpan duration) => UtcNow += duration;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> after virtual UTC time changed.
