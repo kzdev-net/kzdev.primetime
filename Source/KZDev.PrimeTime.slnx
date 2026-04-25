@@ -20,6 +20,12 @@
   <Folder Name="/Development/Testing/">
     <File Path="Dev/Testing/Directory.Build.props" />
     <File Path="Dev/Testing/Directory.Packages.props" />
+    <Project Path="Dev/Testing/KZDev.PrimeTime.Testing.Examples/KZDev.PrimeTime.Testing.Examples.csproj" Id="142e8641-83b8-4d18-96a9-2f9516ce0478">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
+    <Project Path="Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples/KZDev.SystemClock.PrimeTime.Testing.Examples.csproj" Id="f91c82f9-ce0f-4be1-a1e5-31850798814f">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
   </Folder>
   <Folder Name="/Docs/" />
   <Folder Name="/Package/">
@@ -77,5 +83,4 @@
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
   </Folder>
-  <Folder Name="/Tests/Shared/" />
 </Solution>
