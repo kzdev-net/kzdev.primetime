@@ -9,19 +9,19 @@ namespace KZDev.SystemClock.PrimeTime.Testing.Examples.Scenarios;
 public static class ScenarioCatalog
 {
     /// <summary>
-    /// Gets baseline scenario names for Phase 1 scaffolding.
+    /// Gets the scenario categories implemented by the SystemClock testing example tests.
     /// </summary>
     /// <returns>
-    /// Scenario names that define the planned testing example areas.
+    /// Human-readable scenario names aligned with the example test classes.
     /// </returns>
-    public static IReadOnlyList<string> GetBaselineScenarioNames()
+    public static IReadOnlyList<string> GetImplementedScenarioNames ()
     {
         return
         [
-            "Test clock control baseline",
-            "Deterministic timer baseline",
-            "DI replacement baseline",
-            "DST baseline",
+            "Test clock control (SetTime, Advance, RunFor, Start/Stop)",
+            "Deterministic interval timers (sync and async callbacks)",
+            "DI replacement via AddPrimeTestClock",
+            "DST (environment-aware local probe plus virtual advance smoke)",
         ];
     }
 }

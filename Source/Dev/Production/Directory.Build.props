@@ -7,5 +7,6 @@
     Dev folder: development-production/example projects.
     -->
     <PropertyGroup Label="DevProdGlobals">
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
 </Project>
