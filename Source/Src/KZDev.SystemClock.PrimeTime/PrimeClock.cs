@@ -63,34 +63,30 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get => _timeProvider.GetLocalNow(); }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get => _timeProvider.GetUtcNow(); }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime { [DebuggerStepThrough] get => _timeProvider.GetLocalNow().LocalDateTime; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime { [DebuggerStepThrough] get => _timeProvider.GetUtcNow().UtcDateTime; }
     //----------------------------------------------------------------------------
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly LocalNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(_timeProvider.GetLocalNow().DateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime); }
+    //----------------------------------------------------------------------------
 #endif
 
     #endregion IPrimeClock Implementation

@@ -19,21 +19,21 @@ public sealed class TimeProviderBridgeScenario : IExampleScenario
         ServiceCollection services = [];
         services.AddPrimeClock();
 
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        await using ServiceProvider serviceProvider = services.BuildServiceProvider();
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
         TimeProvider provider = primeClock.ToTimeProvider();
-        Console.WriteLine($"TimeProvider UTC now: {provider.GetUtcNow():O}");
-        Console.WriteLine($"TimeProvider local zone: {provider.LocalTimeZone.Id}");
+        ScenarioConsole.WriteLine($"TimeProvider UTC now: {provider.GetUtcNow():O}");
+        ScenarioConsole.WriteLine($"TimeProvider local zone: {provider.LocalTimeZone.Id}");
 
+        TimeSpan dueTime = TimeSpan.FromMilliseconds(250);
         TaskCompletionSource timerCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        using ITimer timer = provider.CreateTimer(
-            callback: _ => timerCompleted.TrySetResult(),
-            state: null,
-            dueTime: TimeSpan.FromMilliseconds(250),
-            period: Timeout.InfiniteTimeSpan);
+        ScenarioConsole.WriteLine($"Starting TimeProvider.CreateTimer with due time {dueTime}.");
+        await using ITimer timer = provider.CreateTimer(callback: _ => timerCompleted.TrySetResult(),
+            state: null, dueTime: dueTime, period: Timeout.InfiniteTimeSpan);
 
+        ScenarioConsole.WriteLine("Waiting for TimeProvider.CreateTimer callback...");
         await timerCompleted.Task.WaitAsync(cancellationToken);
-        Console.WriteLine("TimeProvider.CreateTimer callback completed.");
+        ScenarioConsole.WriteLine("TimeProvider.CreateTimer callback completed.");
     }
 }

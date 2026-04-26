@@ -22,13 +22,13 @@ public sealed class NowSurfaceScenario : IExampleScenario
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
-        Console.WriteLine($"NowInstant: {primeClock.NowInstant}");
-        Console.WriteLine($"LocalNowInstant: {primeClock.LocalNowInstant}");
-        Console.WriteLine($"UtcNowInstant: {primeClock.UtcNowInstant}");
-        Console.WriteLine($"LocalZonedNowInstant: {primeClock.LocalZonedNowInstant}");
-        Console.WriteLine($"LocalNowTime: {primeClock.LocalNowTime}");
-        Console.WriteLine($"LocalNowDate: {primeClock.LocalNowDate}");
-        Console.WriteLine($"LocalNowDateTimeOffset: {primeClock.LocalNowDateTimeOffset:O}");
+        ScenarioConsole.WriteLine($"NowInstant: {primeClock.NowInstant}");
+        ScenarioConsole.WriteLine($"LocalNowInstant: {primeClock.LocalNowInstant}");
+        ScenarioConsole.WriteLine($"UtcNowInstant: {primeClock.UtcNowInstant}");
+        ScenarioConsole.WriteLine($"LocalZonedNowInstant: {primeClock.LocalZonedNowInstant}");
+        ScenarioConsole.WriteLine($"LocalNowTime: {primeClock.LocalNowTime}");
+        ScenarioConsole.WriteLine($"LocalNowDate: {primeClock.LocalNowDate}");
+        ScenarioConsole.WriteLine($"LocalNowDateTimeOffset: {primeClock.LocalNowDateTimeOffset:O}");
 
         return Task.CompletedTask;
     }

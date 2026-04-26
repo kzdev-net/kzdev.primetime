@@ -36,7 +36,7 @@ public sealed class SleepDelayCancellationScenario : IExampleScenario
         ServiceCollection services = [];
         services.AddPrimeClock();
 
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        await using ServiceProvider serviceProvider = services.BuildServiceProvider();
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
         Duration sleepDuration = _runMode == DemoRunMode.Long
@@ -51,24 +51,24 @@ public sealed class SleepDelayCancellationScenario : IExampleScenario
             ? Duration.FromSeconds(2)
             : Duration.FromMilliseconds(800);
 
-        Console.WriteLine($"Sleeping for {sleepDuration}...");
+        ScenarioConsole.WriteLine($"Sleeping for {sleepDuration}...");
         primeClock.Sleep(sleepDuration);
-        Console.WriteLine("Sleep completed.");
+        ScenarioConsole.WriteLine("Sleep completed.");
 
-        Console.WriteLine($"Running DelayAsync for {delayDuration}...");
+        ScenarioConsole.WriteLine($"Running DelayAsync for {delayDuration}...");
         await primeClock.DelayAsync(delayDuration, cancellationToken);
-        Console.WriteLine("DelayAsync completed.");
+        ScenarioConsole.WriteLine("DelayAsync completed.");
 
         using TimeCancellationTokenSource timeout = primeClock.GetTimeCancellationToken(cancellationAfter);
         try
         {
-            Console.WriteLine($"Starting cancellable delay; timeout in {cancellationAfter}.");
+            ScenarioConsole.WriteLine($"Starting cancellable delay; timeout in {cancellationAfter}.");
             await primeClock.DelayAsync(Duration.FromSeconds(10), timeout.Token);
-            Console.WriteLine("Delay completed before timeout.");
+            ScenarioConsole.WriteLine("Delay completed before timeout.");
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("Delay canceled by time-based cancellation token.");
+            ScenarioConsole.WriteLine("Delay canceled by time-based cancellation token.");
         }
     }
 }

@@ -23,8 +23,8 @@ public sealed class DstScenario : IExampleScenario
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
         TimeZoneInfo localScheduleZone = primeClock.LocalScheduleTimeZone;
-        Console.WriteLine($"Clock LocalScheduleTimeZone: {localScheduleZone.Id}");
-        Console.WriteLine($"Clock zone supports DST: {localScheduleZone.SupportsDaylightSavingTime}");
+        ScenarioConsole.WriteLine($"Clock LocalScheduleTimeZone: {localScheduleZone.Id}");
+        ScenarioConsole.WriteLine($"Clock zone supports DST: {localScheduleZone.SupportsDaylightSavingTime}");
 
         return Task.CompletedTask;
     }

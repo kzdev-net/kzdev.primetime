@@ -25,9 +25,9 @@ public sealed class DiRegistrationScenario : IExampleScenario
         IPrimeTime primeTime = serviceProvider.GetRequiredService<IPrimeTime>();
         TimeProvider timeProvider = serviceProvider.GetRequiredService<TimeProvider>();
 
-        Console.WriteLine($"IPrimeClock: {primeClock.GetType().Name}");
-        Console.WriteLine($"IPrimeTime resolves same singleton: {ReferenceEquals(primeClock, primeTime)}");
-        Console.WriteLine($"TimeProvider registered: {timeProvider.GetType().Name}");
+        ScenarioConsole.WriteLine($"IPrimeClock: {primeClock.GetType().Name}");
+        ScenarioConsole.WriteLine($"IPrimeTime resolves same singleton: {ReferenceEquals(primeClock, primeTime)}");
+        ScenarioConsole.WriteLine($"TimeProvider registered: {timeProvider.GetType().Name}");
 
         return Task.CompletedTask;
     }

@@ -27,9 +27,9 @@ public sealed class DiRegistrationScenario : IExampleScenario
         IPrimeTime primeTime = serviceProvider.GetRequiredService<IPrimeTime>();
         IClock nodaClock = serviceProvider.GetRequiredService<IClock>();
 
-        Console.WriteLine($"IPrimeClock: {primeClock.GetType().Name}");
-        Console.WriteLine($"IPrimeTime resolves same singleton: {ReferenceEquals(primeClock, primeTime)}");
-        Console.WriteLine($"Noda IClock registered: {nodaClock.GetType().Name}");
+        ScenarioConsole.WriteLine($"IPrimeClock: {primeClock.GetType().Name}");
+        ScenarioConsole.WriteLine($"IPrimeTime resolves same singleton: {ReferenceEquals(primeClock, primeTime)}");
+        ScenarioConsole.WriteLine($"Noda IClock registered: {nodaClock.GetType().Name}");
 
         return Task.CompletedTask;
     }

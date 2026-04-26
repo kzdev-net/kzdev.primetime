@@ -25,22 +25,25 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
             (invalidLocalTimeExample, ambiguousLocalTimeExample) = FindTransitionExamples(localTimeZone);
         }
 
-        return new TimeZoneScenarioContext(
-            localTimeZone.Id,
-            localTimeZone.SupportsDaylightSavingTime,
-            invalidLocalTimeExample,
-            ambiguousLocalTimeExample);
+        return new TimeZoneScenarioContext(localTimeZone.Id, localTimeZone.SupportsDaylightSavingTime,
+            invalidLocalTimeExample, ambiguousLocalTimeExample);
     }
 
     private static (DateTime? invalidLocalTimeExample, DateTime? ambiguousLocalTimeExample) FindTransitionExamples(TimeZoneInfo timeZone)
     {
         DateTime? invalid = null;
         DateTime? ambiguous = null;
+        TimeZoneInfo.AdjustmentRule[] rules = timeZone.GetAdjustmentRules();
 
         for (int year = DateTime.Now.Year - 1; year <= DateTime.Now.Year + 2; year++)
         {
+            if (invalid is not null && ambiguous is not null)
+            {
+                break;
+            }
+
             TimeZoneInfo.AdjustmentRule? applicableRule = null;
-            foreach (TimeZoneInfo.AdjustmentRule rule in timeZone.GetAdjustmentRules())
+            foreach (TimeZoneInfo.AdjustmentRule rule in rules)
             {
                 if (year >= rule.DateStart.Year && year <= rule.DateEnd.Year)
                 {
@@ -54,12 +57,10 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
                 continue;
             }
 
-            DateTime daylightStart = BuildTransitionDate(year, applicableRule.DaylightTransitionStart);
-            DateTime daylightEnd = BuildTransitionDate(year, applicableRule.DaylightTransitionEnd);
-
             if (invalid is null)
             {
-                DateTime candidateInvalid = daylightStart;
+                DateTime daylightStart = BuildTransitionDate(year, applicableRule.DaylightTransitionStart);
+                DateTime candidateInvalid = daylightStart.AddMinutes(1);
                 if (timeZone.IsInvalidTime(candidateInvalid))
                 {
                     invalid = candidateInvalid;
@@ -68,16 +69,12 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
 
             if (ambiguous is null)
             {
+                DateTime daylightEnd = BuildTransitionDate(year, applicableRule.DaylightTransitionEnd);
                 DateTime candidateAmbiguous = daylightEnd.AddMinutes(-30);
                 if (timeZone.IsAmbiguousTime(candidateAmbiguous))
                 {
                     ambiguous = candidateAmbiguous;
                 }
-            }
-
-            if (invalid is not null && ambiguous is not null)
-            {
-                break;
             }
         }
 

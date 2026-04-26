@@ -27,7 +27,32 @@
       <BuildType Solution="Package|*" Project="Debug" />
     </Project>
   </Folder>
-  <Folder Name="/Docs/" />
+  <Folder Name="/Docs/">
+    <File Path="Docs/.gitignore" />
+    <File Path="Docs/docfx.json" />
+    <File Path="Docs/filterConfig.yml" />
+    <File Path="Docs/index.md" />
+    <File Path="Docs/toc.yml" />
+  </Folder>
+  <Folder Name="/Docs/Articles/">
+    <File Path="Docs/articles/choosing-a-package.md" />
+    <File Path="Docs/articles/concepts-timers-and-testing.md" />
+    <File Path="Docs/articles/event-monitoring.md" />
+    <File Path="Docs/articles/overview.md" />
+    <File Path="Docs/articles/primetime-superset.md" />
+    <File Path="Docs/articles/systemclock-package.md" />
+    <File Path="Docs/articles/testing-packages.md" />
+    <File Path="Docs/articles/toc.yml" />
+  </Folder>
+  <Folder Name="/Docs/Images/">
+    <File Path="Docs/images/.gitkeep" />
+  </Folder>
+  <Folder Name="/Docs/Reference/">
+    <File Path="Docs/Reference/CronNotes.md" />
+  </Folder>
+  <Folder Name="/Docs/Templates/">
+    <File Path="Docs/templates/.gitkeep" />
+  </Folder>
   <Folder Name="/Package/">
     <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
     <File Path="Src/Package/KZDev.SystemClock.PrimeTime.readme.md" />

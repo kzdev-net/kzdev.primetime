@@ -19,9 +19,15 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     #region Nested types
 
     //============================================================================
+    /// <summary>
+    ///   Adapts an <see cref="IClockIntervalTimer"/> registration to the <see cref="ITimer"/> contract.
+    /// </summary>
     private sealed class PrimeClockTimerToITimerAdapter : ITimer
     {
         //------------------------------------------------------------------------
+        /// <summary>
+        ///   The underlying PrimeTime interval timer registration.
+        /// </summary>
         private readonly IClockIntervalTimer _registration;
         //------------------------------------------------------------------------
 
@@ -45,7 +51,18 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
         #region Interface Implementations
 
         //------------------------------------------------------------------------
-        /// <inheritdoc />
+        /// <summary>
+        ///   Updates the due time and repeat interval for this timer registration.
+        /// </summary>
+        /// <param name="dueTime">
+        ///   The amount of time to delay before invoking the timer callback.
+        /// </param>
+        /// <param name="period">
+        ///   The interval between callback invocations, or <see cref="Timeout.InfiniteTimeSpan"/> to disable repetition.
+        /// </param>
+        /// <returns>
+        ///   <c>true</c> if the timer was updated; otherwise, <c>false</c>.
+        /// </returns>
         /// <exception cref="InvalidOperationException">
         ///   The underlying <see cref="IClockIntervalTimer"/> rejects the change (for example, converting a
         ///   one-shot registration to repeating).
@@ -59,14 +76,14 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
             return _registration.Change(next, repeat);
         }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <inheritdoc />
+        /// <summary>
+        ///   Releases the underlying timer registration resources.
+        /// </summary>
         public void Dispose () => _registration.Dispose();
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <inheritdoc />
+        /// <summary>
+        ///   Asynchronously releases the underlying timer registration resources.
+        /// </summary>
         public ValueTask DisposeAsync ()
         {
             _registration.Dispose();
@@ -110,23 +127,17 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     /// <inheritdoc />
     public override DateTimeOffset GetUtcNow () => _clock.UtcNowInstant.ToDateTimeOffset();
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public override TimeZoneInfo LocalTimeZone => _clock.LocalScheduleTimeZone;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="callback"/> is <c>null</c>.
     /// </exception>
     public override ITimer CreateTimer (TimerCallback callback,
-        object? state,
-        TimeSpan dueTime,
-        TimeSpan period)
+        object? state, TimeSpan dueTime, TimeSpan period)
     {
-        if (callback == null)
+        if (callback is null)
             throw new ArgumentNullException(nameof(callback));
 
         Duration due = Duration.FromTimeSpan(dueTime);
@@ -135,10 +146,8 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
             : Duration.FromTimeSpan(period);
 
         IClockIntervalTimer registration = _clock.RegisterTimer(due,
-            repeatInterval,
-            () => callback(state),
-            CancellationToken.None,
-            timerOptions: null);
+            repeatInterval, context => callback(context.CallbackState), CancellationToken.None, 
+            state, timerOptions: null);
 
         return new PrimeClockTimerToITimerAdapter(registration);
     }

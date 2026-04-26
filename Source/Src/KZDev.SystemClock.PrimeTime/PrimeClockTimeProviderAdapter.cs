@@ -109,23 +109,17 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
     /// <inheritdoc />
     public override DateTimeOffset GetUtcNow () => _clock.UtcNowDateTimeOffset;
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public override TimeZoneInfo LocalTimeZone => _clock.LocalScheduleTimeZone;
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="callback"/> is <c>null</c>.
     /// </exception>
-    public override ITimer CreateTimer (TimerCallback callback,
-        object? state,
-        TimeSpan dueTime,
-        TimeSpan period)
+    public override ITimer CreateTimer (TimerCallback callback, object? state,
+        TimeSpan dueTime, TimeSpan period)
     {
-        if (callback == null)
+        if (callback is null)
             throw new ArgumentNullException(nameof(callback));
 
         TimeSpan repeatInterval = (period == Timeout.InfiniteTimeSpan || period < TimeSpan.Zero)
@@ -133,10 +127,7 @@ internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
             : period;
 
         IClockIntervalTimer registration = _clock.RegisterTimer(dueTime,
-            repeatInterval,
-            _ => callback(state),
-            CancellationToken.None,
-            null,
+            repeatInterval, context => callback(context.CallbackState), CancellationToken.None, state,
             timerOptions: null);
 
         return new ClockIntervalTimerToITimerAdapter(registration);

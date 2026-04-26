@@ -36,7 +36,7 @@ public sealed class IntervalTimerScenario : IExampleScenario
         ServiceCollection services = [];
         services.AddPrimeClock();
 
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        await using ServiceProvider serviceProvider = services.BuildServiceProvider();
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
         Duration dueTime = _runMode == DemoRunMode.Long
@@ -53,27 +53,27 @@ public sealed class IntervalTimerScenario : IExampleScenario
         int syncCount = 0;
         int asyncCount = 0;
 
-        IClockIntervalTimer syncTimer = primeClock.RegisterTimer(dueTime,
-            repeat,
-            context =>
+        ScenarioConsole.WriteLine($"Starting sync interval timer (due: {dueTime}, repeat: {repeat}).");
+        IClockIntervalTimer syncTimer = primeClock.RegisterTimer(dueTime, repeat,
+            (context, callbackCancellationToken) =>
             {
+                callbackCancellationToken.ThrowIfCancellationRequested();
                 int currentCount = Interlocked.Increment(ref syncCount);
-                Console.WriteLine($"sync interval callback #{currentCount} on registration {context.Registration.Id}");
+                ScenarioConsole.WriteLine($"sync interval callback #{currentCount} on registration {context.Registration.Id}");
                 if (currentCount >= 2)
                 {
                     syncCompleted.TrySetResult();
                 }
             },
-            cancellationToken,
-            state: "sync timer",
-            timerOptions: null);
+            cancellationToken, state: "sync timer", timerOptions: null);
 
-        IClockIntervalTimer asyncTimer = primeClock.RegisterAsyncTimer(dueTime,
-            repeat,
+        ScenarioConsole.WriteLine($"Starting async interval timer (due: {dueTime}, repeat: {repeat}).");
+        IClockIntervalTimer asyncTimer = primeClock.RegisterAsyncTimer(dueTime, repeat,
             async (context, callbackCancellationToken) =>
             {
+                callbackCancellationToken.ThrowIfCancellationRequested();
                 int currentCount = Interlocked.Increment(ref asyncCount);
-                Console.WriteLine($"async interval callback #{currentCount} on registration {context.Registration.Id}");
+                ScenarioConsole.WriteLine($"async interval callback #{currentCount} on registration {context.Registration.Id}");
                 if (currentCount >= 2)
                 {
                     asyncCompleted.TrySetResult();
@@ -81,11 +81,11 @@ public sealed class IntervalTimerScenario : IExampleScenario
 
                 await ValueTask.CompletedTask;
             },
-            cancellationToken,
-            state: "async timer",
-            timerOptions: null);
+            cancellationToken, state: "async timer", timerOptions: null);
 
+        ScenarioConsole.WriteLine("Waiting for both interval timers to fire twice...");
         await Task.WhenAll(syncCompleted.Task, asyncCompleted.Task);
+        ScenarioConsole.WriteLine("Both interval timers completed required callback count.");
 
         syncTimer.Dispose();
         asyncTimer.Dispose();

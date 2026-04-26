@@ -34,12 +34,11 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
         ServiceCollection services = [];
         services.AddPrimeClock();
 
-        using ServiceProvider serviceProvider = services.BuildServiceProvider();
+        await using ServiceProvider serviceProvider = services.BuildServiceProvider();
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
 
         TimeOnly now = primeClock.LocalNowTimeOnly;
-        TimeOnly target = now.Add(
-            _runMode == DemoRunMode.Long
+        TimeOnly target = now.Add(_runMode == DemoRunMode.Long
                 ? TimeSpan.FromSeconds(8)
                 : TimeSpan.FromSeconds(4));
 
@@ -47,28 +46,30 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
         TaskCompletionSource syncCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource asyncCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        ScenarioConsole.WriteLine($"Starting sync time-of-day timer for local time {timeOfDay}.");
         IClockDayTimeTimer syncTimer = primeClock.RegisterTimeOfDay(timeOfDay,
-            context =>
+            (context, callbackCancellationToken) =>
             {
-                Console.WriteLine($"sync time-of-day callback fired. RegistrationId={context.Registration.Id}");
+                callbackCancellationToken.ThrowIfCancellationRequested();
+                ScenarioConsole.WriteLine($"sync time-of-day callback fired. RegistrationId={context.Registration.Id}");
                 syncCompleted.TrySetResult();
             },
-            cancellationToken,
-            state: "sync time-of-day",
-            timerOptions: null);
+            cancellationToken, state: "sync time-of-day", timerOptions: null);
 
+        ScenarioConsole.WriteLine($"Starting async time-of-day timer for local time {timeOfDay}.");
         IClockDayTimeTimer asyncTimer = primeClock.RegisterAsyncTimeOfDay(timeOfDay,
             async (context, callbackCancellationToken) =>
             {
-                Console.WriteLine($"async time-of-day callback fired. RegistrationId={context.Registration.Id}");
+                callbackCancellationToken.ThrowIfCancellationRequested();
+                ScenarioConsole.WriteLine($"async time-of-day callback fired. RegistrationId={context.Registration.Id}");
                 asyncCompleted.TrySetResult();
                 await ValueTask.CompletedTask;
             },
-            cancellationToken,
-            state: "async time-of-day",
-            timerOptions: null);
+            cancellationToken, state: "async time-of-day", timerOptions: null);
 
+        ScenarioConsole.WriteLine("Waiting for both time-of-day timers to fire...");
         await Task.WhenAll(syncCompleted.Task, asyncCompleted.Task);
+        ScenarioConsole.WriteLine("Both time-of-day timers have fired.");
 
         syncTimer.Dispose();
         asyncTimer.Dispose();

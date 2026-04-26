@@ -202,7 +202,7 @@ public class UsingCommonTimerContracts : UnitTestBase
     [Fact]
     public void IClockIntervalTimer_ExtendsITimer ()
     {
-        typeof(IClockIntervalTimer).GetInterfaces().Should().Contain(typeof(System.Threading.ITimer));
+        typeof(IClockIntervalTimer).GetInterfaces().Should().Contain(typeof(ITimer));
     }
     //----------------------------------------------------------------------------
 

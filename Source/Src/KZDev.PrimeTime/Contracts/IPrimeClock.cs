@@ -88,12 +88,9 @@ public partial interface IPrimeClock
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional timer options.</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        IntervalTimerOptions? timerOptions = null);
+    IClockIntervalTimer RegisterTimer (Duration callbackTime, Duration repeatInterval,
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, IntervalTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay, a repeat interval, and an asynchronous callback that receives
@@ -109,11 +106,9 @@ public partial interface IPrimeClock
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional timer options.</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
-    IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
-        Duration repeatInterval,
+    IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime, Duration repeatInterval,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         IntervalTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
 
@@ -135,11 +130,8 @@ public partial interface IPrimeClock
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
+    IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay, Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken, object? state = null, DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token.
@@ -156,8 +148,7 @@ public partial interface IPrimeClock
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
 

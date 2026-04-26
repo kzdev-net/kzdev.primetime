@@ -34,7 +34,7 @@ public static partial class PrimeClockTimeProviderExtensions
     /// </exception>
     public static TimeProvider ToTimeProvider (this IPrimeClock clock)
     {
-        if (clock == null)
+        if (clock is null)
             throw new ArgumentNullException(nameof(clock));
         return new PrimeClockTimeProviderAdapter(clock);
     }

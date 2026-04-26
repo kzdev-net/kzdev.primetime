@@ -129,79 +129,57 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public Instant NowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant(); }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcNowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant().InUtc(); }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime LocalZonedNowInstant { [DebuggerStepThrough] get => _clock.GetCurrentInstant().InZone(_systemDefaultZone); }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public ZonedDateTime UtcZonedNowInstant { [DebuggerStepThrough] get => UtcNowInstant; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDateTime LocalNowInstant { [DebuggerStepThrough] get => LocalZonedNowInstant.LocalDateTime; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime LocalNowTime { [DebuggerStepThrough] get => LocalZonedNowInstant.TimeOfDay; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalTime UtcNowTime { [DebuggerStepThrough] get => UtcNowInstant.TimeOfDay; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate LocalNowDate { [DebuggerStepThrough] get => LocalZonedNowInstant.Date; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public LocalDate UtcNowDate { [DebuggerStepThrough] get => UtcNowInstant.Date; }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get => LocalZonedNowInstant.ToDateTimeOffset(); }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get => UtcNowInstant.ToDateTimeOffset(); }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime LocalNowDateTime { [DebuggerStepThrough] get => LocalNowDateTimeOffset.LocalDateTime; }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTime UtcNowDateTime { [DebuggerStepThrough] get => UtcNowDateTimeOffset.UtcDateTime; }
     //----------------------------------------------------------------------------
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(LocalNowDateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(UtcNowDateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly LocalNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(LocalNowDateTime); }
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(UtcNowDateTime); }
+    //----------------------------------------------------------------------------
 #endif
 
     //----------------------------------------------------------------------------
@@ -217,21 +195,13 @@ internal sealed partial class PrimeClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterTimer (Duration callbackTime,
-        Duration repeatInterval,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        Duration repeatInterval, Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken, object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
+        new ClockIntervalTimerRegistration(this, NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
-            TimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
+            TimerCallbackKind.ContextAction, callback, state, timerOptions,
             cancellationToken);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockIntervalTimer RegisterAsyncTimer (Duration callbackTime,
@@ -243,11 +213,8 @@ internal sealed partial class PrimeClock
         new ClockIntervalTimerRegistration(this,
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
             NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
-            TimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
+            TimerCallbackKind.ContextAsync, callback, state,
+            timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Interval timers (RegisterTimer)
@@ -255,51 +222,37 @@ internal sealed partial class PrimeClock
     #region IPrimeClock — Time-of-day timers (RegisterTimeOfDay)
 
 #if NET
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         RegisterAsyncTimeOfDay(TimeOnlyToLocalTime(timeOfDay.Value), callback, cancellationToken, state, timerOptions);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            true,
-            TimeOnlyToLocalTime(timeOfDay.Value),
-            TimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, DayTimeTimerOptions? timerOptions = null) =>
+        new ClockDayTimeTimerRegistration(this, true, TimeOnlyToLocalTime(timeOfDay.Value),
+            TimerCallbackKind.ContextAction, callback, state, timerOptions,
             cancellationToken);
-
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
         new ClockDayTimeTimerRegistration(this,
-            true,
-            TimeOnlyToLocalTime(timeOfDay.Value),
-            TimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
+            true, TimeOnlyToLocalTime(timeOfDay.Value),
+            TimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
+    //----------------------------------------------------------------------------
 
 #endif
 
@@ -307,33 +260,19 @@ internal sealed partial class PrimeClock
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
         Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            TimerCallbackKind.ContextAction,
-            callback,
-            state,
-            timerOptions,
-            cancellationToken);
-    //----------------------------------------------------------------------------
-
+        new ClockDayTimeTimerRegistration(this, false, timeOfDay,
+            TimerCallbackKind.ContextAction, callback, state,
+            timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        new ClockDayTimeTimerRegistration(this,
-            false,
-            timeOfDay,
-            TimerCallbackKind.ContextAsync,
-            callback,
-            state,
-            timerOptions,
+        new ClockDayTimeTimerRegistration(this, false, timeOfDay,
+            TimerCallbackKind.ContextAsync, callback, state, timerOptions,
             cancellationToken);
     //----------------------------------------------------------------------------
 

@@ -23,11 +23,10 @@ public static class ScenarioCatalog
     /// <returns>
     /// A list of runnable production scenarios.
     /// </returns>
-    public static IReadOnlyList<IExampleScenario> CreateScenarios(
-        DemoRunMode runMode,
+    public static IReadOnlyList<IExampleScenario> CreateScenarios(DemoRunMode runMode,
         TimeZoneScenarioContext context)
     {
-        global::System.ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(context);
 
         List<IExampleScenario> scenarios =
         [

@@ -156,7 +156,7 @@ public sealed class TimeCancellationTokenSource : IDisposable
         if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
             return;
         _primary.Dispose();
-        if (_additionalToDispose == null)
+        if (_additionalToDispose is null)
         {
             return;
         }

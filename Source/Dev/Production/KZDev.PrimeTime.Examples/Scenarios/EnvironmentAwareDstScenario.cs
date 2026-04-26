@@ -32,33 +32,33 @@ public sealed class EnvironmentAwareDstScenario : IExampleScenario
         TimeZoneInfo localZone = TimeZoneInfo.Local;
         if (!_context.SupportsDaylightSavingTime)
         {
-            Console.WriteLine("Local timezone does not expose DST transitions on this machine.");
+            ScenarioConsole.WriteLine("Local timezone does not expose DST transitions on this machine.");
             return Task.CompletedTask;
         }
 
         if (_context.InvalidLocalTimeExample is DateTime invalidLocalTime)
         {
             bool isInvalid = localZone.IsInvalidTime(invalidLocalTime);
-            Console.WriteLine($"Invalid local time sample: {invalidLocalTime:yyyy-MM-dd HH:mm:ss} (IsInvalidTime={isInvalid})");
+            ScenarioConsole.WriteLine($"Invalid local time sample: {invalidLocalTime:yyyy-MM-dd HH:mm:ss} (IsInvalidTime={isInvalid})");
         }
         else
         {
-            Console.WriteLine("No invalid-time sample could be computed for the current environment.");
+            ScenarioConsole.WriteLine("No invalid-time sample could be computed for the current environment.");
         }
 
         if (_context.AmbiguousLocalTimeExample is DateTime ambiguousLocalTime)
         {
             bool isAmbiguous = localZone.IsAmbiguousTime(ambiguousLocalTime);
-            Console.WriteLine($"Ambiguous local time sample: {ambiguousLocalTime:yyyy-MM-dd HH:mm:ss} (IsAmbiguousTime={isAmbiguous})");
+            ScenarioConsole.WriteLine($"Ambiguous local time sample: {ambiguousLocalTime:yyyy-MM-dd HH:mm:ss} (IsAmbiguousTime={isAmbiguous})");
             if (isAmbiguous)
             {
                 TimeSpan[] offsets = localZone.GetAmbiguousTimeOffsets(ambiguousLocalTime);
-                Console.WriteLine($"Ambiguous offsets: {string.Join(", ", offsets)}");
+                ScenarioConsole.WriteLine($"Ambiguous offsets: {string.Join(", ", offsets)}");
             }
         }
         else
         {
-            Console.WriteLine("No ambiguous-time sample could be computed for the current environment.");
+            ScenarioConsole.WriteLine("No ambiguous-time sample could be computed for the current environment.");
         }
 
         return Task.CompletedTask;
