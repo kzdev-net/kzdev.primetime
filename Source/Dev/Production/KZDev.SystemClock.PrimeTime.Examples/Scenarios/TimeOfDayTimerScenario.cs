@@ -46,7 +46,7 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
         TaskCompletionSource syncCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource asyncCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        ScenarioConsole.WriteLine($"Starting sync time-of-day timer for local time {timeOfDay}.");
+        ScenarioConsole.WriteLine($"Starting sync time-of-day timer for local time {timeOfDay.ToLongTimeString()}.");
         IClockDayTimeTimer syncTimer = primeClock.RegisterTimeOfDay(timeOfDay,
             (context, callbackCancellationToken) =>
             {
@@ -56,7 +56,7 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
             },
             cancellationToken, state: "sync time-of-day", timerOptions: null);
 
-        ScenarioConsole.WriteLine($"Starting async time-of-day timer for local time {timeOfDay}.");
+        ScenarioConsole.WriteLine($"Starting async time-of-day timer for local time {timeOfDay.ToLongTimeString()}.");
         IClockDayTimeTimer asyncTimer = primeClock.RegisterAsyncTimeOfDay(timeOfDay,
             async (context, callbackCancellationToken) =>
             {
