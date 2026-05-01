@@ -101,7 +101,7 @@ internal sealed partial class ClockIntervalTimerRegistration
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Computes <see cref="TimeUntilNextCallback"/> while <see cref="Gate"/> is held.
+    ///   Computes <see cref="TimeUntilNextCallback"/> while <c>Gate</c> is held.
     /// </summary>
     /// <returns>
     ///   Milliseconds until the next callback, <c>0</c> when due or overdue, or <c>-1</c> when not applicable or not scheduled.

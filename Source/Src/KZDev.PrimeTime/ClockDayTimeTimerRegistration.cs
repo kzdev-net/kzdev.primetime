@@ -301,17 +301,6 @@ internal sealed partial class ClockDayTimeTimerRegistration
 
     #region Interface Implementations
 
-    #region IClockTimer Implementation
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Gets the instant at which this registration was created.
-    /// </summary>
-    public Instant RegisteredInstant { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
-    //----------------------------------------------------------------------------
-
-    #endregion IClockTimer Implementation
-
     #region IClockDayTimeTimer Implementation
 
     //----------------------------------------------------------------------------
