@@ -53,6 +53,14 @@
   <Folder Name="/Docs/Templates/">
     <File Path="Docs/templates/.gitkeep" />
   </Folder>
+  <Folder Name="/GitHub/" />
+  <Folder Name="/GitHub/IssueTemplates/">
+    <File Path="../.github/ISSUE_TEMPLATE/bug_report.md" />
+    <File Path="../.github/ISSUE_TEMPLATE/feature_request.md" />
+  </Folder>
+  <Folder Name="/GitHub/Workflows/">
+    <File Path="../.github/workflows/docfx-publish.yml" />
+  </Folder>
   <Folder Name="/Package/">
     <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
     <File Path="Src/Package/KZDev.SystemClock.PrimeTime.readme.md" />
