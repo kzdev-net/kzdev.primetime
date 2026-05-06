@@ -1,0 +1,39 @@
+name: Build / Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test-standard:
+    name: test-standard
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+
+      - name: Restore
+        run: dotnet restore Source/KZDev.PrimeTime.slnx
+
+      - name: Build
+        run: dotnet build Source/KZDev.PrimeTime.slnx -c Release
+
+      - name: Test
+        run: dotnet test Source/KZDev.PrimeTime.slnx -c Release --no-build
+
+      - name: Upload Release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-release-artifacts
+          path: artifacts
+          if-no-files-found: error
+          retention-days: 7
+
