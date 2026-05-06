@@ -26,4 +26,103 @@
     <PropertyGroup Condition=" '$(IsPacking)'=='' AND '$(Configuration)'!='Package' ">
         <IsPacking>false</IsPacking>
     </PropertyGroup>
+    <UsingTask
+        TaskName="ExtractPackageReleaseNotesTask"
+        TaskFactory="RoslynCodeTaskFactory"
+        AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <ReleaseNotesFilePath ParameterType="System.String" Required="true" />
+            <PackageVersion ParameterType="System.String" Required="true" />
+            <PackageId ParameterType="System.String" Required="true" />
+            <PackageReleaseNotes ParameterType="System.String" Output="true" />
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System" />
+            <Using Namespace="System.IO" />
+            <Using Namespace="System.Linq" />
+            <Using Namespace="System.Text" />
+            <Code Type="Fragment" Language="cs"><![CDATA[
+string normalizedReleaseNotesPath = Path.GetFullPath(ReleaseNotesFilePath);
+if (!File.Exists(normalizedReleaseNotesPath))
+{
+    Log.LogError($"Release notes file does not exist for package '{PackageId}': '{normalizedReleaseNotesPath}'.");
+    return false;
+}
+
+string fileContent = File.ReadAllText(normalizedReleaseNotesPath).Replace("\r\n", "\n");
+string normalizedVersionHeading = $"## Version {PackageVersion}";
+string[] allLines = fileContent.Split('\n');
+int versionHeadingIndex = Array.FindIndex(allLines, line => string.Equals(line.TrimEnd(), normalizedVersionHeading, StringComparison.Ordinal));
+if (versionHeadingIndex < 0)
+{
+    Log.LogError($"Missing version heading '{normalizedVersionHeading}' for package '{PackageId}' in '{normalizedReleaseNotesPath}'.");
+    return false;
+}
+
+int nextVersionHeadingIndex = Array.FindIndex(
+    allLines,
+    versionHeadingIndex + 1,
+    line => line.StartsWith("## Version ", StringComparison.Ordinal));
+int versionSectionEndIndex = nextVersionHeadingIndex >= 0 ? nextVersionHeadingIndex : allLines.Length;
+string[] versionLines = allLines.Skip(versionHeadingIndex + 1).Take(versionSectionEndIndex - versionHeadingIndex - 1).ToArray();
+
+string[] expectedHeadings = ["### Added", "### Changed", "### Fixed", "### Notes", "### Package"];
+int previousHeadingIndex = -1;
+foreach (string heading in expectedHeadings)
+{
+    int headingIndex = Array.FindIndex(versionLines, line => string.Equals(line.TrimEnd(), heading, StringComparison.Ordinal));
+    if (headingIndex < 0)
+    {
+        Log.LogError($"Version section '{normalizedVersionHeading}' for package '{PackageId}' is missing required heading '{heading}'.");
+        return false;
+    }
+
+    if (headingIndex <= previousHeadingIndex)
+    {
+        Log.LogError($"Version section '{normalizedVersionHeading}' for package '{PackageId}' is not in the required heading order.");
+        return false;
+    }
+
+    previousHeadingIndex = headingIndex;
+}
+
+int packageHeadingIndex = Array.FindIndex(versionLines, line => string.Equals(line.TrimEnd(), "### Package", StringComparison.Ordinal));
+int packageContentStartIndex = packageHeadingIndex + 1;
+while (packageContentStartIndex < versionLines.Length && string.IsNullOrWhiteSpace(versionLines[packageContentStartIndex]))
+{
+    packageContentStartIndex++;
+}
+
+int packageContentEndIndex = versionLines.Length;
+for (int index = packageContentStartIndex; index < versionLines.Length; index++)
+{
+    if (versionLines[index].StartsWith("### ", StringComparison.Ordinal))
+    {
+        packageContentEndIndex = index;
+        break;
+    }
+}
+
+string packageSectionText = string.Join("\n", versionLines.Skip(packageContentStartIndex).Take(packageContentEndIndex - packageContentStartIndex)).Trim();
+if (string.IsNullOrWhiteSpace(packageSectionText))
+{
+    Log.LogError($"Version section '{normalizedVersionHeading}' for package '{PackageId}' has an empty '### Package' section.");
+    return false;
+}
+
+PackageReleaseNotes = packageSectionText;
+return true;
+]]></Code>
+        </Task>
+    </UsingTask>
+    <Target Name="GeneratePackageReleaseNotes" BeforeTargets="GenerateNuspec">
+        <Error Condition="'$(PackageReleaseNotesSourceFile)' == ''" Text="PackageReleaseNotesSourceFile is required for package '$(PackageId)'." />
+        <ExtractPackageReleaseNotesTask
+            ReleaseNotesFilePath="$(PackageReleaseNotesSourceFile)"
+            PackageVersion="$(Version)"
+            PackageId="$(PackageId)">
+            <Output TaskParameter="PackageReleaseNotes" PropertyName="PackageReleaseNotes" />
+        </ExtractPackageReleaseNotesTask>
+        <Error Condition="'$(PackageReleaseNotes)' == ''" Text="PackageReleaseNotes was not generated for package '$(PackageId)'." />
+    </Target>
 </Project>

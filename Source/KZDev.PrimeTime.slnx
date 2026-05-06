@@ -47,6 +47,12 @@
   <Folder Name="/Docs/Images/">
     <File Path="Docs/images/.gitkeep" />
   </Folder>
+  <Folder Name="/Docs/Notes/">
+    <File Path="Docs/Notes/KZDev.PrimeTime.release-notes.md" />
+    <File Path="Docs/Notes/KZDev.PrimeTime.Testing.release-notes.md" />
+    <File Path="Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md" />
+    <File Path="Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md" />
+  </Folder>
   <Folder Name="/Docs/Reference/">
     <File Path="Docs/Reference/CronNotes.md" />
   </Folder>

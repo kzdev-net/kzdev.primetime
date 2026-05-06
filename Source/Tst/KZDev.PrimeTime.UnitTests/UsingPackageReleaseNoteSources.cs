@@ -24,7 +24,8 @@ public class UsingPackageReleaseNoteSources
         "### Added",
         "### Changed",
         "### Fixed",
-        "### Notes"
+        "### Notes",
+        "### Package"
     ];
 
     private static readonly IReadOnlyList<string> ReleaseNoteFileNames =

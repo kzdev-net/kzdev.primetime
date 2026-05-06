@@ -7,6 +7,7 @@
   - `### Changed`
   - `### Fixed`
   - `### Notes`
+  - `### Package`
 - Use `- None.` for categories without entries.
 
 ## Version 0.0.5
@@ -22,3 +23,6 @@
 
 ### Notes
 - Baseline entry represents the currently shipped package state at version `0.0.5`.
+
+### Package
+- KZDev.PrimeTime package baseline release summary for version `0.0.5`.
