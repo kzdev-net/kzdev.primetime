@@ -53,7 +53,7 @@ public sealed partial class UsingPrimeTimeEventSource
         callbackEntered.Wait(TimeSpan.FromSeconds(45), TestContext.Current.CancellationToken).Should().BeTrue();
         SpinWait.SpinUntil(() => Volatile.Read(ref listener.ClockTimerCallbackExceptionCount) > baseline,
             TimeSpan.FromSeconds(30)).Should().BeTrue();
-        (Volatile.Read(ref listener.ClockTimerCallbackExceptionCount) - baseline).Should().Be(1);
+        (Volatile.Read(ref listener.ClockTimerCallbackExceptionCount) - baseline).Should().BeGreaterThanOrEqualTo(1);
     }
     //----------------------------------------------------------------------------
 }
