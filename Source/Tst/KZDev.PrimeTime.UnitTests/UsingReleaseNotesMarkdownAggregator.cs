@@ -101,5 +101,45 @@ public class UsingReleaseNotesMarkdownAggregator
         Action act = () => ReleaseNotesMarkdownAggregator.BuildAggregatedReleaseNotesDocument(string.Empty, "1.0.0");
         act.Should().Throw<ReleaseNotesAggregationException>();
     }
+
+    /// <summary>
+    ///   Verifies validation succeeds for the repository's current version across all package release-notes sources.
+    /// </summary>
+    [Fact]
+    public void Validator_ForRepositoryCurrentVersion_DoesNotThrow ()
+    {
+        string version = RepositoryVersionReader.ReadVersionFromSrcDirectoryBuildProps(RepositoryRootPath);
+        Action act = () => ReleaseNotesMarkdownAggregator.ValidateReleaseNotesForVersion(RepositoryRootPath, version);
+        act.Should().NotThrow();
+    }
+
+    /// <summary>
+    ///   Verifies validation fails when a configured source does not contain the requested version heading.
+    /// </summary>
+    [Fact]
+    public void Validator_WhenConfiguredSourceMissingVersion_ThrowsReleaseNotesAggregationException ()
+    {
+        string temporaryDirectoryPath = Path.Combine(Path.GetTempPath(), $"primetime-release-notes-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectoryPath);
+
+        try
+        {
+            string releaseNotesPath = Path.Combine(temporaryDirectoryPath, "pkg.release-notes.md");
+            File.WriteAllText(releaseNotesPath, "## Version 1.0.0\n\n### Added\n- sample\n");
+            IReadOnlyList<PackageReleaseNotesSource> sources =
+            [
+                new PackageReleaseNotesSource("Test.Package", "pkg.release-notes.md")
+            ];
+            Action act = () => ReleaseNotesMarkdownAggregator.ValidateReleaseNotesForVersion(temporaryDirectoryPath, "2.0.0", sources);
+            act.Should().Throw<ReleaseNotesAggregationException>();
+        }
+        finally
+        {
+            if (Directory.Exists(temporaryDirectoryPath))
+            {
+                Directory.Delete(temporaryDirectoryPath, recursive: true);
+            }
+        }
+    }
 }
 //################################################################################

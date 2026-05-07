@@ -53,6 +53,13 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
   - [KZDev.SystemClock.PrimeTime.Testing](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md)
 - **Index (DocFX):** [Release notes](Source/Docs/articles/release-notes.md).
 
+### Compatibility and maintenance cadence
+
+- **SemVer compatibility:** Breaking API changes are intended for major version bumps only; minor/patch updates are expected to remain compatible.
+- **Per-package lifecycle:** The latest published `major.minor` for each package line is the primary maintenance focus, including both production and testing packages.
+- **Older package lines:** Backports to older lines are best-effort and not guaranteed; plan upgrades to current package lines.
+- **Cadence expectation:** Releases are need-driven (no fixed schedule). Change details and compatibility implications are published in each package release-notes file.
+
 ## Features (high level)
 
 - **`IPrimeClock` / `PrimeClock`** — production clock; timer registration and “now” projections (exact members depend on package and TFM).

@@ -12,6 +12,52 @@ namespace KZDev.PrimeTime.ReleaseAggregation;
 public static class ReleaseNotesMarkdownAggregator
 {
     /// <summary>
+    ///   Validates that every configured package release-notes file exists and contains a
+    ///   <c>## Version {version}</c> section.
+    /// </summary>
+    /// <param name="repositoryRootPath">
+    ///   Repository root directory.
+    /// </param>
+    /// <param name="version">
+    ///   Version to match in each file (must match <c>## Version {version}</c> headings).
+    /// </param>
+    /// <param name="sources">
+    ///   Package id and release-notes relative path pairs (defaults to <see cref="PrimeTimePackageReleaseNotesSources" />).
+    /// </param>
+    /// <exception cref="ReleaseNotesAggregationException">
+    ///   Thrown when a file is missing or the version section is not found.
+    /// </exception>
+    public static void ValidateReleaseNotesForVersion (
+        string repositoryRootPath,
+        string version,
+        IReadOnlyList<PackageReleaseNotesSource>? sources = null)
+    {
+        if (string.IsNullOrWhiteSpace(repositoryRootPath))
+        {
+            throw new ReleaseNotesAggregationException("Repository root path is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            throw new ReleaseNotesAggregationException("Version is required.");
+        }
+
+        IReadOnlyList<PackageReleaseNotesSource> packageSources = sources ?? PrimeTimePackageReleaseNotesSources;
+        foreach (PackageReleaseNotesSource packageSource in packageSources)
+        {
+            string notesPath = Path.Combine(repositoryRootPath, packageSource.ReleaseNotesRelativePath);
+            if (!File.Exists(notesPath))
+            {
+                throw new ReleaseNotesAggregationException(
+                    $"Release notes file missing for package '{packageSource.PackageId}': '{notesPath}'.");
+            }
+
+            string fileContent = File.ReadAllText(notesPath);
+            _ = ExtractVersionSection(fileContent, version, packageSource.PackageId, notesPath);
+        }
+    }
+
+    /// <summary>
     ///   The four publishable PrimeTime packages and their <c>Source/Docs/Notes/*.release-notes.md</c> paths.
     /// </summary>
     public static IReadOnlyList<PackageReleaseNotesSource> PrimeTimePackageReleaseNotesSources { get; } =
@@ -51,16 +97,7 @@ public static class ReleaseNotesMarkdownAggregator
         string version,
         IReadOnlyList<PackageReleaseNotesSource>? sources = null)
     {
-        if (string.IsNullOrWhiteSpace(repositoryRootPath))
-        {
-            throw new ReleaseNotesAggregationException("Repository root path is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            throw new ReleaseNotesAggregationException("Version is required.");
-        }
-
+        ValidateReleaseNotesForVersion(repositoryRootPath, version, sources);
         IReadOnlyList<PackageReleaseNotesSource> packageSources = sources ?? PrimeTimePackageReleaseNotesSources;
         StringBuilder stringBuilder = new();
         stringBuilder.AppendLine($"# KZDev PrimeTime {version}");
@@ -72,12 +109,6 @@ public static class ReleaseNotesMarkdownAggregator
         foreach (PackageReleaseNotesSource packageSource in packageSources)
         {
             string notesPath = Path.Combine(repositoryRootPath, packageSource.ReleaseNotesRelativePath);
-            if (!File.Exists(notesPath))
-            {
-                throw new ReleaseNotesAggregationException(
-                    $"Release notes file missing for package '{packageSource.PackageId}': '{notesPath}'.");
-            }
-
             string fileContent = File.ReadAllText(notesPath);
             string versionSection = ExtractVersionSection(fileContent, version, packageSource.PackageId, notesPath);
             stringBuilder.AppendLine($"## {packageSource.PackageId}");

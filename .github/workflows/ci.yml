@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, dev]
 
+concurrency:
+  group: primetime-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-standard:
     name: test-standard
@@ -25,6 +29,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.x
+
+      - name: Validate release-notes sources for current version
+        run: >
+          dotnet run --project "Source/Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.PrimeTime.ReleaseAggregation.Cli.csproj" -c Release --
+          validate
+          --repository-root "${{ github.workspace }}"
 
       - name: Restore
         run: dotnet restore Source/KZDev.PrimeTime.slnx

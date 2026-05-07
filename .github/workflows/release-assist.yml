@@ -22,6 +22,10 @@ on:
           - 'true'
           - 'false'
 
+concurrency:
+  group: primetime-release-assist-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -42,6 +46,12 @@ jobs:
         with:
           dotnet-version: 10.x
 
+      - name: Verify governance documentation
+        run: |
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f SUPPORT.md
+
       - name: Resolve version
         id: resolve_version
         shell: bash
@@ -59,6 +69,13 @@ jobs:
           fi
           echo "version=${V}" >> "${GITHUB_OUTPUT}"
           echo "release_tag=v${V}" >> "${GITHUB_OUTPUT}"
+
+      - name: Validate release-notes sources for resolved version
+        run: >
+          dotnet run --project "Source/Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.PrimeTime.ReleaseAggregation.Cli.csproj" -c Release --
+          validate
+          --repository-root "${{ github.workspace }}"
+          --version "${{ steps.resolve_version.outputs.version }}"
 
       - name: Restore
         run: dotnet restore "Source/KZDev.PrimeTime.slnx"

@@ -25,7 +25,10 @@ internal static class Program
         {
             Console.Error.WriteLine(
                 "Usage: KZDev.PrimeTime.ReleaseAggregation.Cli aggregate --repository-root <path> [--version <x.y.z>] --output <file.md>");
-            Console.Error.WriteLine("       If --version is omitted, reads <Version> from Source/Src/Directory.Build.props.");
+            Console.Error.WriteLine(
+                "       KZDev.PrimeTime.ReleaseAggregation.Cli validate --repository-root <path> [--version <x.y.z>]");
+            Console.Error.WriteLine(
+                "       If --version is omitted, reads <Version> from Source/Src/Directory.Build.props.");
             return 1;
         }
 
@@ -34,11 +37,15 @@ internal static class Program
         {
             Console.Error.WriteLine(
                 "Usage: KZDev.PrimeTime.ReleaseAggregation.Cli aggregate --repository-root <path> [--version <x.y.z>] --output <file.md>");
-            Console.Error.WriteLine("       If --version is omitted, reads <Version> from Source/Src/Directory.Build.props.");
+            Console.Error.WriteLine(
+                "       KZDev.PrimeTime.ReleaseAggregation.Cli validate --repository-root <path> [--version <x.y.z>]");
+            Console.Error.WriteLine(
+                "       If --version is omitted, reads <Version> from Source/Src/Directory.Build.props.");
             return 0;
         }
 
-        if (!string.Equals(args[0], "aggregate", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(args[0], "aggregate", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(args[0], "validate", StringComparison.OrdinalIgnoreCase))
         {
             Console.Error.WriteLine($"Unknown command '{args[0]}'.");
             return 1;
@@ -78,7 +85,8 @@ internal static class Program
                 return 1;
             }
 
-            if (string.IsNullOrWhiteSpace(outputPath))
+            bool isValidateCommand = string.Equals(args[0], "validate", StringComparison.OrdinalIgnoreCase);
+            if (!isValidateCommand && string.IsNullOrWhiteSpace(outputPath))
             {
                 Console.Error.WriteLine("--output is required.");
                 return 1;
@@ -89,16 +97,24 @@ internal static class Program
                 version = RepositoryVersionReader.ReadVersionFromSrcDirectoryBuildProps(repositoryRoot);
             }
 
-            string markdown = ReleaseNotesMarkdownAggregator.BuildAggregatedReleaseNotesDocument(
-                repositoryRoot,
-                version);
-            string? outputDirectory = Path.GetDirectoryName(Path.GetFullPath(outputPath));
+            if (isValidateCommand)
+            {
+                ReleaseNotesMarkdownAggregator.ValidateReleaseNotesForVersion(repositoryRoot, version);
+                Console.WriteLine(
+                    $"Validated release notes for version '{version}' across {ReleaseNotesMarkdownAggregator.PrimeTimePackageReleaseNotesSources.Count} packages.");
+                return 0;
+            }
+
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+            string aggregateOutputPath = outputPath;
+            string markdown = ReleaseNotesMarkdownAggregator.BuildAggregatedReleaseNotesDocument(repositoryRoot, version);
+            string? outputDirectory = Path.GetDirectoryName(Path.GetFullPath(aggregateOutputPath));
             if (!string.IsNullOrEmpty(outputDirectory))
             {
                 Directory.CreateDirectory(outputDirectory);
             }
 
-            File.WriteAllText(outputPath, markdown);
+            File.WriteAllText(aggregateOutputPath, markdown);
             return 0;
         }
         catch (ReleaseNotesAggregationException ex)
