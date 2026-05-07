@@ -2,7 +2,8 @@
 
 PrimeTime is a **.NET** library family for **injectable clocks**, **deterministic test time**, and **timer** registration—including **interval** timers and, on modern frameworks, **local time-of-day** schedules with explicit **daylight-saving** behavior.
 
-This repository builds **two NuGet packages**. They share one **design**; they differ by **namespace**, **dependencies**, and **API surface**. **Use only one package per application.**
+This repository builds **four NuGet packages**. It ships two production packages and two testing packages that share one **design** but differ by
+**namespace**, **dependencies**, and **API surface**. **Use only one production package per application.**
 
 ## Packages
 
