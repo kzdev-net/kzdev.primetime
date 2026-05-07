@@ -39,9 +39,11 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 - **Hosted docs (DocFX):** [kzdev-net.github.io/kzdev.primetime](https://kzdev-net.github.io/kzdev.primetime/)
 - **Articles in repo:** [Source/Docs/articles](Source/Docs/articles/) — start with [Choosing a package](Source/Docs/articles/choosing-a-package.md), then the guide for [SystemClock](Source/Docs/articles/systemclock-package.md) or [PrimeTime superset](Source/Docs/articles/primetime-superset.md).
 
-## Support, lifecycle, and release notes
+## Support, lifecycle, security, and contributing
 
 - **Support and lifecycle policy:** [SUPPORT.md](SUPPORT.md) (best-effort support, no SLA, versioning expectations).
+- **Security disclosures:** [SECURITY.md](SECURITY.md) (public GitHub Issues accepted; optional private advisory).
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) (external PRs not accepted; Issues and Discussions welcome).
 - **Hosted summary:** [Support and lifecycle](Source/Docs/articles/support-and-lifecycle.md) in docs (links to the canonical `SUPPORT.md` on GitHub).
 - **Per-package release notes** (source for NuGet `PackageReleaseNotes`):
   - [KZDev.PrimeTime](Source/Docs/Notes/KZDev.PrimeTime.release-notes.md)
@@ -61,7 +63,8 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 
 - **Source:** [github.com/kzdev-net/kzdev.primetime](https://github.com/kzdev-net/kzdev.primetime)
 - **License:** [MIT](LICENSE)
+- **Governance:** [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Contributing
 
-At this time, external pull requests are not accepted. Feedback and bug reports are welcome via GitHub **Discussions** and **Issues**; see [SUPPORT.md](SUPPORT.md) for channels and expectations, and the hosted overview for additional context.
+External pull requests are not accepted. Use GitHub **Issues** and **Discussions** as described in [CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md). The hosted overview is in [Support and lifecycle](Source/Docs/articles/support-and-lifecycle.md).

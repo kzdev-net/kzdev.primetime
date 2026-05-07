@@ -25,6 +25,10 @@ Packages follow **Semantic Versioning** (SemVer). Breaking API changes are inten
 
 Release cadence is not fixed. New versions ship when there is sufficient value or need.
 
+## Security
+
+Report security vulnerabilities according to [SECURITY.md](SECURITY.md).
+
 ## Contributing
 
-External pull requests are not accepted. See [README.md](README.md) for feedback channels and repository norms.
+External pull requests are not accepted. See [CONTRIBUTING.md](CONTRIBUTING.md) and [README.md](README.md) for feedback channels and repository norms.

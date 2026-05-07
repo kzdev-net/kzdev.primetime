@@ -7,6 +7,10 @@ assignees: ''
 
 ---
 
+> **Security vulnerabilities:** Follow [SECURITY.md](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md) instead of this template when reporting security issues.
+>
+> **Pull requests:** External PRs are not accepted; see [CONTRIBUTING.md](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md).
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 

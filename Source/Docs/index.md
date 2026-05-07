@@ -18,6 +18,8 @@ _layout: landing
 - [KZDev.SystemClock.PrimeTime guide](articles/systemclock-package.md)
 - [KZDev.PrimeTime guide](articles/primetime-superset.md)
 - [Support and lifecycle](articles/support-and-lifecycle.md)
+- [Security policy](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md) (repository root)
+- [Contributing](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md) (repository root)
 - [Release notes (all packages)](articles/release-notes.md)
 - [Cron and scheduling notes](Reference/CronNotes.md)
 - [API Reference](xref:PrimeTime)

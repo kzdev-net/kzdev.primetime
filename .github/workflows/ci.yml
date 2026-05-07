@@ -15,6 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify governance documentation
+        run: |
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f SUPPORT.md
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:

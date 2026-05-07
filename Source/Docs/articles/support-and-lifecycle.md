@@ -8,6 +8,7 @@ The canonical **support and lifecycle** policy lives in the repository as [`SUPP
 - **Channels:** GitHub **Issues** (bugs, small requests) and **Discussions** (questions).
 - **Versions:** SemVer; breaking changes intended only on **major** bumps. Prefer the latest **major.minor** on NuGet for each package.
 - **Older releases:** Fixes may not be backported; upgrade when practical.
-- **Contributing:** External pull requests are not accepted; see the repository **README**.
+- **Contributing:** External pull requests are not accepted; see [**CONTRIBUTING.md**](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md) and the repository **README**.
+- **Security:** Report vulnerabilities per [**SECURITY.md**](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md).
 
 For version-by-version changes, use the per-package [Release notes](release-notes.md) index.

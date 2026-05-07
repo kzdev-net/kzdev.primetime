@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/kzdev-net/kzdev.primetime/discussions
+    about: Ask usage questions and discuss ideas here.
+
+  - name: Security vulnerability report
+    url: https://github.com/kzdev-net/kzdev.primetime/issues/new?title=%5BSECURITY%5D%20
+    about: Public reports are accepted per SECURITY.md; read SECURITY.md before filing.
