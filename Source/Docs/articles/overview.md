@@ -17,6 +17,8 @@ Reference **exactly one** of these in a given app. They are **not** intended to 
 2. [KZDev.SystemClock.PrimeTime usage guide](systemclock-package.md) — `TimeProvider`, DI defaults, BCL-focused workflow.
 3. [KZDev.PrimeTime usage guide](primetime-superset.md) — NodaTime-first workflow and superset-only APIs.
 4. [Timers, daylight saving, and testing](concepts-timers-and-testing.md) — concepts that apply to both packages.
+5. [Support and lifecycle](support-and-lifecycle.md) — support expectations, SemVer, and release-line boundaries.
+6. [Release notes](release-notes.md) — per-package version history sources in this repository.
 
 ## API reference and external notes
 

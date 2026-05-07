@@ -32,8 +32,18 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - run: dotnet restore Source/KZDev.PrimeTime.sln
-      - run: dotnet build -c Release Source/KZDev.PrimeTime.sln
+      - run: dotnet restore Source/KZDev.PrimeTime.slnx
+      - run: dotnet build -c Release Source/KZDev.PrimeTime.slnx
+      - name: Verify support and release-notes sources exist
+        run: |
+          set -e
+          test -f SUPPORT.md
+          test -f Source/Docs/articles/support-and-lifecycle.md
+          test -f Source/Docs/articles/release-notes.md
+          test -f Source/Docs/Notes/KZDev.PrimeTime.release-notes.md
+          test -f Source/Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md
+          test -f Source/Docs/Notes/KZDev.PrimeTime.Testing.release-notes.md
+          test -f Source/Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md
       - run: dotnet tool update -g docfx
       - run: docfx Source/Docs/docfx.json
 

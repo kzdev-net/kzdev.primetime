@@ -39,6 +39,17 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 - **Hosted docs (DocFX):** [kzdev-net.github.io/kzdev.primetime](https://kzdev-net.github.io/kzdev.primetime/)
 - **Articles in repo:** [Source/Docs/articles](Source/Docs/articles/) — start with [Choosing a package](Source/Docs/articles/choosing-a-package.md), then the guide for [SystemClock](Source/Docs/articles/systemclock-package.md) or [PrimeTime superset](Source/Docs/articles/primetime-superset.md).
 
+## Support, lifecycle, and release notes
+
+- **Support and lifecycle policy:** [SUPPORT.md](SUPPORT.md) (best-effort support, no SLA, versioning expectations).
+- **Hosted summary:** [Support and lifecycle](Source/Docs/articles/support-and-lifecycle.md) in docs (links to the canonical `SUPPORT.md` on GitHub).
+- **Per-package release notes** (source for NuGet `PackageReleaseNotes`):
+  - [KZDev.PrimeTime](Source/Docs/Notes/KZDev.PrimeTime.release-notes.md)
+  - [KZDev.SystemClock.PrimeTime](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md)
+  - [KZDev.PrimeTime.Testing](Source/Docs/Notes/KZDev.PrimeTime.Testing.release-notes.md)
+  - [KZDev.SystemClock.PrimeTime.Testing](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md)
+- **Index (DocFX):** [Release notes](Source/Docs/articles/release-notes.md).
+
 ## Features (high level)
 
 - **`IPrimeClock` / `PrimeClock`** — production clock; timer registration and “now” projections (exact members depend on package and TFM).
@@ -53,4 +64,4 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 
 ## Contributing
 
-At this time, external pull requests are not accepted. Feedback and bug reports are welcome via GitHub **Discussions** and **Issues**; see the hosted overview for the maintainer’s preferred channels.
+At this time, external pull requests are not accepted. Feedback and bug reports are welcome via GitHub **Discussions** and **Issues**; see [SUPPORT.md](SUPPORT.md) for channels and expectations, and the hosted overview for additional context.

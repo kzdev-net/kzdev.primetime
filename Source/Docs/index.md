@@ -17,6 +17,8 @@ _layout: landing
 - [Timers, DST, and testing](articles/concepts-timers-and-testing.md)
 - [KZDev.SystemClock.PrimeTime guide](articles/systemclock-package.md)
 - [KZDev.PrimeTime guide](articles/primetime-superset.md)
+- [Support and lifecycle](articles/support-and-lifecycle.md)
+- [Release notes (all packages)](articles/release-notes.md)
 - [Cron and scheduling notes](Reference/CronNotes.md)
 - [API Reference](xref:PrimeTime)
 
@@ -24,3 +26,5 @@ _layout: landing
 
 - [KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)
 - [KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)
+- [KZDev.PrimeTime.Testing](https://www.nuget.org/packages/KZDev.PrimeTime.Testing)
+- [KZDev.SystemClock.PrimeTime.Testing](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime.Testing)
