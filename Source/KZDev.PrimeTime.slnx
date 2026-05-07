@@ -34,16 +34,6 @@
     <File Path="Docs/index.md" />
     <File Path="Docs/toc.yml" />
   </Folder>
-  <Folder Name="/Docs/Articles/">
-    <File Path="Docs/articles/choosing-a-package.md" />
-    <File Path="Docs/articles/concepts-timers-and-testing.md" />
-    <File Path="Docs/articles/event-monitoring.md" />
-    <File Path="Docs/articles/overview.md" />
-    <File Path="Docs/articles/primetime-superset.md" />
-    <File Path="Docs/articles/systemclock-package.md" />
-    <File Path="Docs/articles/testing-packages.md" />
-    <File Path="Docs/articles/toc.yml" />
-  </Folder>
   <Folder Name="/Docs/Images/">
     <File Path="Docs/images/.gitkeep" />
   </Folder>
@@ -53,8 +43,25 @@
     <File Path="Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md" />
     <File Path="Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md" />
   </Folder>
+  <Folder Name="/Docs/Public/">
+    <File Path="Docs/docfx.json" />
+    <File Path="Docs/filterConfig.yml" />
+    <File Path="Docs/index.md" />
+    <File Path="Docs/toc.yml" />
+  </Folder>
+  <Folder Name="/Docs/Public/Articles/">
+    <File Path="Docs/articles/choosing-a-package.md" />
+    <File Path="Docs/articles/concepts-timers-and-testing.md" />
+    <File Path="Docs/articles/event-monitoring.md" />
+    <File Path="Docs/articles/overview.md" />
+    <File Path="Docs/articles/primetime-superset.md" />
+    <File Path="Docs/articles/systemclock-package.md" />
+    <File Path="Docs/articles/testing-packages.md" />
+    <File Path="Docs/articles/toc.yml" />
+  </Folder>
   <Folder Name="/Docs/Reference/">
-    <File Path="Docs/Reference/CronNotes.md" />
+    <File Path="Reference/CronNotes.md" />
+    <File Path="Reference/release-assist.md" />
   </Folder>
   <Folder Name="/Docs/Templates/">
     <File Path="Docs/templates/.gitkeep" />
@@ -66,6 +73,7 @@
   </Folder>
   <Folder Name="/GitHub/Workflows/">
     <File Path="../.github/workflows/docfx-publish.yml" />
+    <File Path="../.github/workflows/release-assist.yml" />
   </Folder>
   <Folder Name="/Package/">
     <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
@@ -86,6 +94,11 @@
   <Folder Name="/Source/">
     <File Path="Src/Directory.Build.props" />
     <File Path="Src/Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <File Path="Tools/Directory.Build.props" />
+    <Project Path="Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.PrimeTime.ReleaseAggregation.Cli.csproj" />
+    <Project Path="Tools/KZDev.PrimeTime.ReleaseAggregation/KZDev.PrimeTime.ReleaseAggregation.csproj" />
   </Folder>
   <Folder Name="/Source/Production/">
     <Project Path="Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj" />

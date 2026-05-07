@@ -1,0 +1,136 @@
+# Release assist: validate, pack, aggregate release notes, optionally create a draft GitHub release, then (after
+# manual environment approval) publish the release. Configure repository Environment "primetime-release" with
+# required reviewers before relying on the finalize job.
+name: Release assist
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: >-
+          Version to release (must match each package release-notes file ## Version). Leave empty to use
+          Source/Src/Directory.Build.props.
+        required: false
+        type: string
+      dry_run:
+        description: >-
+          When true, runs restore/build/test/pack and uploads artifacts only (no GitHub release or finalize job).
+        required: true
+        type: choice
+        default: 'true'
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare_draft:
+    name: Prepare packages and draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      version: ${{ steps.resolve_version.outputs.version }}
+      release_tag: ${{ steps.resolve_version.outputs.release_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.x
+
+      - name: Resolve version
+        id: resolve_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          if [ -z "${INPUT_VERSION}" ]; then
+            V="$(grep -oE '<Version>[^<]+</Version>' "Source/Src/Directory.Build.props" | head -1 | sed 's/<Version>//;s/<\/Version>//;s/^[[:space:]]*//;s/[[:space:]]*$//')"
+          else
+            V="${INPUT_VERSION}"
+          fi
+          if [ -z "${V}" ]; then
+            echo "Could not resolve version."
+            exit 1
+          fi
+          echo "version=${V}" >> "${GITHUB_OUTPUT}"
+          echo "release_tag=v${V}" >> "${GITHUB_OUTPUT}"
+
+      - name: Restore
+        run: dotnet restore "Source/KZDev.PrimeTime.slnx"
+
+      - name: Build
+        run: dotnet build "Source/KZDev.PrimeTime.slnx" -c Release --no-restore
+
+      - name: Test
+        run: dotnet test "Source/KZDev.PrimeTime.slnx" -c Release --no-build
+
+      - name: Pack packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          pack_one () {
+            dotnet pack "$1" -c Release --no-restore -p:IsPacking=true -p:ContinuousIntegrationBuild=true
+          }
+          pack_one "Source/Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj"
+          pack_one "Source/Src/KZDev.SystemClock.PrimeTime/KZDev.SystemClock.PrimeTime.csproj"
+          pack_one "Source/Src/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj"
+          pack_one "Source/Src/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj"
+
+      - name: Aggregate release notes
+        run: >
+          dotnet run --no-build -c Release
+          --project "Source/Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.PrimeTime.ReleaseAggregation.Cli.csproj"
+          --
+          aggregate
+          --repository-root "${{ github.workspace }}"
+          --version "${{ steps.resolve_version.outputs.version }}"
+          --output "${{ github.workspace }}/release-body.md"
+
+      - name: Upload release assist outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assist-${{ steps.resolve_version.outputs.version }}
+          path: |
+            artifacts/package/release/*.nupkg
+            artifacts/package/release/*.snupkg
+            release-body.md
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create draft GitHub release
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.resolve_version.outputs.release_tag }}"
+          VERSION="${{ steps.resolve_version.outputs.version }}"
+          gh release create "${TAG}" \
+            --draft \
+            --title "KZDev PrimeTime ${VERSION}" \
+            --notes-file "${{ github.workspace }}/release-body.md" \
+            artifacts/package/release/*.nupkg \
+            artifacts/package/release/*.snupkg
+
+  finalize_publish:
+    name: Finalize publish (manual approval)
+    needs: prepare_draft
+    if: ${{ github.event.inputs.dry_run == 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: primetime-release
+    steps:
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release edit "${{ needs.prepare_draft.outputs.release_tag }}" --draft=false --latest

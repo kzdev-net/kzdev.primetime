@@ -2,7 +2,5 @@
   href: articles/
 - name: Testing API
   href: articles/testing-packages.md
-- name: Reference
-  href: Reference/CronNotes.md
 - name: API
   href: api/

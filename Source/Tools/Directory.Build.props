@@ -1,0 +1,9 @@
+<Project>
+    <!--
+    Tooling projects under Source/Tools: inherit solution-level defaults but are not shipped as NuGet packages.
+    -->
+    <Import Project="..\Directory.Build.props" />
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+</Project>
