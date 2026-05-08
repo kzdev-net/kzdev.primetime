@@ -10,7 +10,7 @@ using KZDev.PrimeTime.Tests;
 using NodaTime;
 // ReSharper disable AccessToDisposedClosure
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -670,4 +670,5 @@ public class UsingIPrimeTestClock : UnitTestBase
     #endregion Day-time timer driven by virtual time
 }
 //################################################################################
+
 

@@ -11,7 +11,7 @@ using KZDev.PrimeTime.Tests;
 using NodaTime;
 using NodaTime.TimeZones;
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Testing.UnitTests;
 
 /// <summary>
 ///   Verifies <see cref="PrimeTestClock"/> virtual local day-time scheduling honors
@@ -111,3 +111,4 @@ public class UsingPrimeTestClockVirtualDayTimeDstOptions : UnitTestBase
 }
 
 #endif
+

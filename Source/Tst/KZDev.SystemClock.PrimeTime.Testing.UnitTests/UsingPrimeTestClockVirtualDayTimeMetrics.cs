@@ -11,7 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 
-namespace KZDev.SystemClock.PrimeTime.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.Testing.UnitTests;
 
 /// <summary>
 ///   Verifies <see cref="IClockDayTimeTimer.ElapsedTime"/> and <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> for
@@ -127,3 +127,4 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
 }
 
 #endif
+

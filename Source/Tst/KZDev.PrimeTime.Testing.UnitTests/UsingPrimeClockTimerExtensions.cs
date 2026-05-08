@@ -9,7 +9,7 @@ using KZDev.PrimeTime.Tests;
 
 using NodaTime;
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -449,3 +449,4 @@ public class UsingPrimeClockTimerExtensions : UnitTestBase
 #endif
 }
 //################################################################################
+

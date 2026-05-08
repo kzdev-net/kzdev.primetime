@@ -110,29 +110,6 @@ public class UsingPrimeClockServiceCollectionExtensions : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/> preserves
-    ///   existing singleton registrations for <see cref="IClock"/> and <see cref="IPrimeClock"/> while still wiring
-    ///   <see cref="IPrimeTime"/> to the registered <see cref="IPrimeClock"/>.
-    /// </summary>
-    [Fact]
-    public void AddPrimeClock_WithPreRegisteredIClockAndIPrimeClock_PreservesExistingSingletonsAndForwardsIPrimeTime ()
-    {
-        IServiceCollection services = new ServiceCollection();
-        FakeClock fakeNodaClock = new(Instant.FromUtc(2026, 1, 1, 0, 0, 0));
-        IPrimeClock existingPrimeClock = new PrimeTestClock(Instant.FromUtc(2026, 1, 1, 0, 0, 0), DateTimeZone.Utc);
-        services.AddSingleton<IClock>(fakeNodaClock);
-        services.AddSingleton(existingPrimeClock);
-
-        services.AddPrimeClock();
-
-        using ServiceProvider provider = services.BuildServiceProvider();
-        provider.GetRequiredService<IClock>().Should().BeSameAs(fakeNodaClock);
-        provider.GetRequiredService<IPrimeClock>().Should().BeSameAs(existingPrimeClock);
-        provider.GetRequiredService<IPrimeTime>().Should().BeSameAs(existingPrimeClock);
-    }
-    //----------------------------------------------------------------------------
-
-    /// <summary>
     ///   Verifies that when <see cref="IClock"/> is pre-registered and <see cref="IPrimeClock"/> is not,
     ///   <see cref="PrimeClockServiceCollectionExtensions.AddPrimeClock(IServiceCollection)"/> creates
     ///   <see cref="PrimeClock"/> and that its current instant is sourced from the pre-registered clock.

@@ -9,7 +9,7 @@ using KZDev.PrimeTime.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KZDev.SystemClock.PrimeTime.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -150,3 +150,4 @@ public class UsingPrimeTestClockServiceCollectionExtensions : UnitTestBase
     //----------------------------------------------------------------------------
 }
 //################################################################################
+

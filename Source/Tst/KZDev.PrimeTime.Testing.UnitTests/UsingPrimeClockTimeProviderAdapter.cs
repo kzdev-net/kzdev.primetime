@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 // Unit tests for TimeProvider adapter.
-// Verifies that ToTimeProvider() returns a TimeProvider driven by the PrimeTime clock,
+// Verifies that ToTimeProvider() returns a TimeProvider driven by the PrimeTime NodaTime clock,
 // and that GetUtcNow and CreateTimer are controllable via the test clock.
 
 using System.Diagnostics.CodeAnalysis;
@@ -11,7 +11,9 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
 
-namespace KZDev.SystemClock.PrimeTime.UnitTests;
+using NodaTime;
+
+namespace KZDev.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -47,7 +49,8 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void ToTimeProvider_WithPrimeTestClock_ReturnsNonNullTimeProvider ()
     {
-        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.Zero));
+        Instant initial = Instant.FromUtc(2020, 6, 15, 12, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         provider.Should().NotBeNull();
     }
@@ -72,16 +75,16 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
 
     /// <summary>
     ///   Verifies that the TimeProvider returned from the test clock reports GetUtcNow
-    ///   equal to the clock's UtcNowDateTimeOffset after SetTime.
+    ///   equal to the clock's instant after SetInstant.
     /// </summary>
     [Fact]
-    public void GetUtcNow_AfterSetTime_ReturnsSetTime ()
+    public void GetUtcNow_AfterSetInstant_ReturnsCorrespondingDateTimeOffset ()
     {
-        DateTimeOffset setTime = new(2025, 1, 10, 14, 30, 0, TimeSpan.Zero);
+        Instant setInstant = Instant.FromUtc(2025, 1, 10, 14, 30, 0);
         IPrimeTestClock clock = new PrimeTestClock();
-        clock.SetTime(setTime);
+        clock.SetInstant(setInstant);
         TimeProvider provider = clock.ToTimeProvider();
-        provider.GetUtcNow().Should().Be(setTime);
+        provider.GetUtcNow().Should().Be(setInstant.InUtc().ToDateTimeOffset());
     }
     //----------------------------------------------------------------------------
 
@@ -91,12 +94,12 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void GetUtcNow_AfterAdvance_ReturnsAdvancedTime ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
-        provider.GetUtcNow().Should().Be(initial);
-        clock.Advance(TimeSpan.FromHours(2));
-        provider.GetUtcNow().Should().Be(initial + TimeSpan.FromHours(2));
+        provider.GetUtcNow().Should().Be(initial.InUtc().ToDateTimeOffset());
+        clock.Advance(Duration.FromHours(2));
+        provider.GetUtcNow().Should().Be(initial.Plus(Duration.FromHours(2)).InUtc().ToDateTimeOffset());
     }
     //----------------------------------------------------------------------------
 
@@ -106,11 +109,11 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void GetUtcNow_AfterRunFor_ReturnsAdvancedTime ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
-        clock.RunFor(TimeSpan.FromMinutes(30));
-        provider.GetUtcNow().Should().Be(initial + TimeSpan.FromMinutes(30));
+        clock.RunFor(Duration.FromMinutes(30));
+        provider.GetUtcNow().Should().Be(initial.Plus(Duration.FromMinutes(30)).InUtc().ToDateTimeOffset());
     }
     //----------------------------------------------------------------------------
 
@@ -121,12 +124,12 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void GetLocalNow_UsesProviderLocalTimeZone ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
 
         provider.GetLocalNow().Should().Be(TimeZoneInfo.ConvertTime(provider.GetUtcNow(), provider.LocalTimeZone));
-        provider.LocalTimeZone.Should().Be(clock.LocalScheduleTimeZone);
+        provider.LocalTimeZone.Should().Be(TimeZoneInfo.Local);
     }
     //----------------------------------------------------------------------------
 
@@ -157,15 +160,15 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void CreateTimer_WithDueTime_AfterAdvance_FiresCallback ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
         using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
         fired.Should().Be(0);
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(0);
-        clock.Advance(TimeSpan.FromMinutes(10));
+        clock.Advance(Duration.FromMinutes(10));
         fired.Should().Be(1);
     }
     //----------------------------------------------------------------------------
@@ -177,16 +180,16 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void CreateTimer_Repeating_AfterAdvance_FiresMultipleTimes ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
         using ITimer timer = provider.CreateTimer(_ => { fired++; }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(1);
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(2);
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(3);
     }
     //----------------------------------------------------------------------------
@@ -197,15 +200,15 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void CreateTimer_WithNegativePeriod_FiresOnlyOnce ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
 
         using ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(-1));
 
-        clock.Advance(TimeSpan.FromMinutes(5));
-        clock.Advance(TimeSpan.FromMinutes(10));
+        clock.Advance(Duration.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(10));
 
         fired.Should().Be(1);
     }
@@ -217,18 +220,18 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public void CreateTimer_Change_ReschedulesNextFire ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
 
         using ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(10), Timeout.InfiniteTimeSpan);
 
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         timer.Change(TimeSpan.FromMinutes(2), Timeout.InfiniteTimeSpan).Should().BeTrue();
-        clock.Advance(TimeSpan.FromMinutes(1));
+        clock.Advance(Duration.FromMinutes(1));
         fired.Should().Be(0);
-        clock.Advance(TimeSpan.FromMinutes(1));
+        clock.Advance(Duration.FromMinutes(1));
         fired.Should().Be(1);
     }
     //----------------------------------------------------------------------------
@@ -239,18 +242,18 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     [Fact]
     public async Task CreateTimer_DisposeAsync_PreventsFutureCallbacks ()
     {
-        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
         int fired = 0;
 
         ITimer timer = provider.CreateTimer(_ => fired++, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
-        clock.Advance(TimeSpan.FromMinutes(5));
+        clock.Advance(Duration.FromMinutes(5));
         fired.Should().Be(1);
 
         await timer.DisposeAsync();
-        clock.Advance(TimeSpan.FromMinutes(10));
+        clock.Advance(Duration.FromMinutes(10));
 
         fired.Should().Be(1);
     }

@@ -8,7 +8,7 @@ using AwesomeAssertions;
 using KZDev.PrimeTime.Tests;
 // ReSharper disable AccessToDisposedClosure
 
-namespace KZDev.SystemClock.PrimeTime.UnitTests;
+namespace KZDev.SystemClock.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -514,5 +514,6 @@ public class UsingPrimeTestClock : UnitTestBase
 #endif
 }
 //################################################################################
+
 
 

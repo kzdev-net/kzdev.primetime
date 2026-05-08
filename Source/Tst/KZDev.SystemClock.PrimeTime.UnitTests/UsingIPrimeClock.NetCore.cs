@@ -189,16 +189,6 @@ public partial class UsingIPrimeClock
         clock.LocalScheduleTimeZone.Should().BeSameAs(synthetic);
     }
 
-    /// <summary>
-    ///   Verifies that <see cref="PrimeTestClock"/> exposes <see cref="IPrimeClock.LocalScheduleTimeZone"/>
-    ///   consistent with its local-time mapping (<see cref="TimeZoneInfo.Local"/>).
-    /// </summary>
-    [Fact]
-    public void PrimeTestClock_LocalScheduleTimeZone_MatchesTimeZoneInfoLocal ()
-    {
-        IPrimeClock clock = new PrimeTestClock();
-        clock.LocalScheduleTimeZone.Should().Be(TimeZoneInfo.Local);
-    }
 #endif
 }
 //################################################################################

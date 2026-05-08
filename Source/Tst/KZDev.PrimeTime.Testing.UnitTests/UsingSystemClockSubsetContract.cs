@@ -8,7 +8,7 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Testing.UnitTests;
 
 //################################################################################
 /// <summary>
@@ -377,3 +377,4 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 #endif
 }
 //################################################################################
+
