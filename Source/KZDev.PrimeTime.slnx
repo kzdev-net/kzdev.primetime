@@ -95,6 +95,20 @@
     <File Path="Src/Directory.Build.props" />
     <File Path="Src/Directory.Packages.props" />
   </Folder>
+  <Folder Name="/Tests/UnitTests/">
+    <Project Path="Tst/KZDev.PrimeTime.Testing.UnitTests/KZDev.PrimeTime.Testing.UnitTests.csproj" Id="438dd806-21e0-4461-aaee-5407bc92f899">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
+    <Project Path="Tst/KZDev.PrimeTime.UnitTests/KZDev.PrimeTime.UnitTests.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+    <Project Path="Tst/KZDev.SystemClock.PrimeTime.Testing.UnitTests/KZDev.SystemClock.PrimeTime.Testing.UnitTests.csproj" Id="a75ef243-fe85-4556-a9d4-3ce8addede05">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
+    <Project Path="Tst/KZDev.SystemClock.PrimeTime.UnitTests/KZDev.SystemClock.PrimeTime.UnitTests.csproj">
+      <BuildType Solution="Package|*" Project="Release" />
+    </Project>
+  </Folder>
   <Folder Name="/Tools/">
     <File Path="Tools/Directory.Build.props" />
     <Project Path="Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.PrimeTime.ReleaseAggregation.Cli.csproj" />
@@ -123,15 +137,6 @@
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
     <Project Path="Tst/KZDev.PrimeTime.Tst.UnitTestBase/KZDev.PrimeTime.Tst.UnitTestBase.csproj">
-      <BuildType Solution="Package|*" Project="Release" />
-    </Project>
-  </Folder>
-  <Folder Name="/Tests/FrameworkTests/" />
-  <Folder Name="/Tests/FrameworkTests/StandardTests/">
-    <Project Path="Tst/KZDev.PrimeTime.UnitTests/KZDev.PrimeTime.UnitTests.csproj">
-      <BuildType Solution="Package|*" Project="Release" />
-    </Project>
-    <Project Path="Tst/KZDev.SystemClock.PrimeTime.UnitTests/KZDev.SystemClock.PrimeTime.UnitTests.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
   </Folder>

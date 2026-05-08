@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<IsTestProject>true</IsTestProject>
@@ -23,18 +23,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Tools\KZDev.PrimeTime.ReleaseAggregation\KZDev.PrimeTime.ReleaseAggregation.csproj" />
+		<ProjectReference Include="..\..\Src\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
+		<ProjectReference Include="..\..\Src\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
 		<ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
 		<ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime.Testing\KZDev.SystemClock.PrimeTime.Testing.csproj" />
 		<ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Using Include="KZDev.SystemClock.PrimeTime" />
-		<Using Include="Xunit" />
-	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
-		<PackageReference Include="Microsoft.Bcl.TimeProvider" />
+	<ItemGroup>
+		<Using Include="Xunit" />
 	</ItemGroup>
 
 </Project>

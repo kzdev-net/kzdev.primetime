@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<IsTestProject>true</IsTestProject>
@@ -29,12 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="KZDev.SystemClock.PrimeTime" />
 		<Using Include="Xunit" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net481'">
-		<PackageReference Include="Microsoft.Bcl.TimeProvider" />
 	</ItemGroup>
 
 </Project>
