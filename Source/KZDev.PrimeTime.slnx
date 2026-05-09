@@ -61,6 +61,9 @@
     <File Path="Docs/articles/testing-packages.md" />
     <File Path="Docs/articles/toc.yml" />
   </Folder>
+  <Folder Name="/Docs/Public/Articles/Concepts/" />
+  <Folder Name="/Docs/Public/Articles/Primetime/" />
+  <Folder Name="/Docs/Public/Articles/SystemClock/" />
   <Folder Name="/Docs/Reference/">
     <File Path="Reference/CronNotes.md" />
     <File Path="Reference/release-assist.md" />

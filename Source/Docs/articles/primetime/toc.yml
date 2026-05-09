@@ -2,3 +2,11 @@
   href: index.md
 - name: Usage guide
   href: primetime-superset.md
+- name: Concepts
+  href: ../concepts/toc.yml
+- name: Testing packages guide
+  href: ../testing-packages.md#primetime-stack
+- name: Production API
+  href: ../../api/primetime/KZDev.PrimeTime.yml
+- name: Testing API
+  href: ../../api/primetime/KZDev.PrimeTime.Testing.yml

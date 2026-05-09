@@ -5,6 +5,7 @@ Use **KZDev.SystemClock.PrimeTime** when you want injectable clocks and timers b
 ## In this track
 
 - **[Usage guide](systemclock-package.md)** — `AddPrimeClock`, `IPrimeClock`, timers, and testing-focused notes.
+- **[Testing packages guide](../testing-packages.md#system-clock-stack)** — conceptual guide for paired testing packages (not a substitute for generated API pages below).
 - **[Concepts](../concepts/index.md)** — choosing a stack, shared timer/DST behavior, and ETW event monitoring.
 
 ## API reference

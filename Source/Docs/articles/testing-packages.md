@@ -22,52 +22,67 @@ Testing-focused contracts and implementations are delivered via the testing pack
 - `PrimeTestClock`
 - `PrimeTestTimeBase`
 
-## Installation
+## System Clock stack (BCL / TimeProvider) {#system-clock-stack}
 
-Install your production package and the matching testing package:
+Use **`KZDev.SystemClock.PrimeTime`** with **`KZDev.SystemClock.PrimeTime.Testing`** when your production code stays on **`TimeProvider`** and **BCL** date/time types.
 
-```bash
-dotnet add package KZDev.PrimeTime
-dotnet add package KZDev.PrimeTime.Testing
-```
+### Installation
 
 ```bash
 dotnet add package KZDev.SystemClock.PrimeTime
 dotnet add package KZDev.SystemClock.PrimeTime.Testing
 ```
 
-## Dependency injection for tests
+### Dependency injection for tests
 
-Both testing packages provide DI helpers for test scenarios where you replace runtime clock services with virtual time.
+Use extension methods from **`KZDev.SystemClock.PrimeTime.Testing`** to replace runtime clock services with virtual time in tests.
 
-- NodaTime production stack: use extension methods from `KZDev.PrimeTime.Testing`.
-- BCL/SystemClock stack: use extension methods from `KZDev.SystemClock.PrimeTime.Testing`.
+### Runnable testing examples
 
-## Runnable testing examples
-
-Use the in-repo example test projects for copy/paste-friendly scenarios:
-
-- NodaTime stack: `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples`
-- BCL/SystemClock stack: `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples`
-
-Each project demonstrates:
+Use the in-repo example project `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples` for copy/paste-friendly scenarios. It demonstrates:
 
 - Test clock control APIs (`Set*`, `Advance`, `RunFor`, `Start`/`Stop`)
 - Deterministic interval timers (synchronous and asynchronous callbacks)
 - DI replacement with `AddPrimeTestClock`
 - Daylight saving scenarios
 
-## Daylight saving guidance for tests
+### Daylight saving notes
 
-Both testing example projects include DST-focused scenarios, but with different emphasis:
+`KZDev.SystemClock.PrimeTime.Testing.Examples` uses environment-aware local probes plus virtual-time advancement patterns.
 
-- `KZDev.PrimeTime.Testing.Examples` uses deterministic zone-based setup (e.g. fixed TZDB zones) and optionally probes the local environment.
-- `KZDev.SystemClock.PrimeTime.Testing.Examples` uses environment-aware local probes plus virtual-time advancement patterns.
+Browse the generated testing assembly docs in the **Testing API** section of the sidebar, or start from [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing).
 
-These patterns keep tests stable across machines while still showing realistic local-time behavior.
+## PrimeTime stack (NodaTime) {#primetime-stack}
 
-## API links
+Use **`KZDev.PrimeTime`** with **`KZDev.PrimeTime.Testing`** when your production code uses **NodaTime** (`Instant`, `Duration`, `LocalTime`, etc.) on **`IPrimeClock`**.
 
-- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime.Testing) / [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime.Testing) (testing assemblies match each production stack)
+### Installation
+
+```bash
+dotnet add package KZDev.PrimeTime
+dotnet add package KZDev.PrimeTime.Testing
+```
+
+### Dependency injection for tests
+
+Use extension methods from **`KZDev.PrimeTime.Testing`** to replace runtime clock services with virtual time in tests.
+
+### Runnable testing examples
+
+Use the in-repo example project `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples` for copy/paste-friendly scenarios. It demonstrates:
+
+- Test clock control APIs (`Set*`, `Advance`, `RunFor`, `Start`/`Stop`)
+- Deterministic interval timers (synchronous and asynchronous callbacks)
+- DI replacement with `AddPrimeTestClock`
+- Daylight saving scenarios
+
+### Daylight saving notes
+
+`KZDev.PrimeTime.Testing.Examples` uses deterministic zone-based setup (for example, fixed TZDB zones) and optionally probes the local environment.
+
+Browse the generated testing assembly docs in the **Testing API** section of the sidebar, or start from [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing).
+
+## Related conceptual docs
+
 - [Choosing a package](concepts/choosing-a-package.md)
 - [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md)

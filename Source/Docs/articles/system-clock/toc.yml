@@ -2,3 +2,11 @@
   href: index.md
 - name: Usage guide
   href: systemclock-package.md
+- name: Concepts
+  href: ../concepts/toc.yml
+- name: Testing packages guide
+  href: ../testing-packages.md#system-clock-stack
+- name: Production API
+  href: ../../api/system-clock/KZDev.SystemClock.PrimeTime.yml
+- name: Testing API
+  href: ../../api/system-clock/KZDev.SystemClock.PrimeTime.Testing.yml
