@@ -1,14 +1,79 @@
-# Release notes
+# KZDev PrimeTime 0.0.5
 
-Each publishable package maintains its own versioned release notes in the repository. These files are the source of truth for **NuGet `PackageReleaseNotes`** on packaged builds.
+Aggregated per-package release notes for this version (source: `Source/Docs/Notes/*.release-notes.md`).
 
-| Package | Release notes (repository) |
-|---------|---------------------------|
-| **KZDev.PrimeTime** | [KZDev.PrimeTime.release-notes.md](../Notes/KZDev.PrimeTime.release-notes.md) |
-| **KZDev.SystemClock.PrimeTime** | [KZDev.SystemClock.PrimeTime.release-notes.md](../Notes/KZDev.SystemClock.PrimeTime.release-notes.md) |
-| **KZDev.PrimeTime.Testing** | [KZDev.PrimeTime.Testing.release-notes.md](../Notes/KZDev.PrimeTime.Testing.release-notes.md) |
-| **KZDev.SystemClock.PrimeTime.Testing** | [KZDev.SystemClock.PrimeTime.Testing.release-notes.md](../Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md) |
+## KZDev.PrimeTime
 
-On GitHub (browse without cloning), open the `Source/Docs/Notes/` folder from the repository root.
+## Version 0.0.5
 
-NuGet package pages also surface **Release Notes** for published versions.
+### Added
+- Initial per-package release-notes baseline established for public release traceability.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- Baseline entry represents the currently shipped package state at version `0.0.5`.
+
+### Package
+- KZDev.PrimeTime package baseline release summary for version `0.0.5`.
+
+## KZDev.SystemClock.PrimeTime
+
+## Version 0.0.5
+
+### Added
+- Initial per-package release-notes baseline established for public release traceability.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- Baseline entry represents the currently shipped package state at version `0.0.5`.
+
+### Package
+- KZDev.SystemClock.PrimeTime package baseline release summary for version `0.0.5`.
+
+## KZDev.PrimeTime.Testing
+
+## Version 0.0.5
+
+### Added
+- Initial per-package release-notes baseline established for public release traceability.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- Baseline entry represents the currently shipped package state at version `0.0.5`.
+
+### Package
+- KZDev.PrimeTime.Testing package baseline release summary for version `0.0.5`.
+
+## KZDev.SystemClock.PrimeTime.Testing
+
+## Version 0.0.5
+
+### Added
+- Initial per-package release-notes baseline established for public release traceability.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- Baseline entry represents the currently shipped package state at version `0.0.5`.
+
+### Package
+- KZDev.SystemClock.PrimeTime.Testing package baseline release summary for version `0.0.5`.

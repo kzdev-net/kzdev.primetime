@@ -46,24 +46,27 @@
     <File Path="Docs/toc.yml" />
   </Folder>
   <Folder Name="/Docs/Public/Articles/">
+    <File Path="Docs/articles/overview.md" />
+    <File Path="Docs/articles/testing-packages.md" />
+    <File Path="Docs/articles/toc.yml" />
+  </Folder>
+  <Folder Name="/Docs/Public/Articles/Concepts/">
     <File Path="Docs/articles/concepts/choosing-a-package.md" />
     <File Path="Docs/articles/concepts/concepts-timers-and-testing.md" />
     <File Path="Docs/articles/concepts/event-monitoring.md" />
     <File Path="Docs/articles/concepts/index.md" />
     <File Path="Docs/articles/concepts/toc.yml" />
-    <File Path="Docs/articles/overview.md" />
+  </Folder>
+  <Folder Name="/Docs/Public/Articles/Primetime/">
     <File Path="Docs/articles/primetime/index.md" />
     <File Path="Docs/articles/primetime/primetime-superset.md" />
     <File Path="Docs/articles/primetime/toc.yml" />
+  </Folder>
+  <Folder Name="/Docs/Public/Articles/SystemClock/">
     <File Path="Docs/articles/system-clock/index.md" />
     <File Path="Docs/articles/system-clock/systemclock-package.md" />
     <File Path="Docs/articles/system-clock/toc.yml" />
-    <File Path="Docs/articles/testing-packages.md" />
-    <File Path="Docs/articles/toc.yml" />
   </Folder>
-  <Folder Name="/Docs/Public/Articles/Concepts/" />
-  <Folder Name="/Docs/Public/Articles/Primetime/" />
-  <Folder Name="/Docs/Public/Articles/SystemClock/" />
   <Folder Name="/Docs/Reference/">
     <File Path="Reference/CronNotes.md" />
     <File Path="Reference/release-assist.md" />

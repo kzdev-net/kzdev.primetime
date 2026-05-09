@@ -84,3 +84,6 @@ Packing locally matches `Source/Src/package.cmd` patterns: `dotnet pack` on each
 - Per-package release notes: `Source/Docs/Notes/`
 - Version and pack-time note extraction: `Source/Src/Directory.Build.props`
 - Aggregation tests: `Source/Tst/KZDev.PrimeTime.UnitTests/UsingReleaseNotesMarkdownAggregator.cs`
+- GitHub Pages (`.github/workflows/docfx-publish.yml`): runs the **same** `validate` and `aggregate` steps as
+  this workflow, writing `Source/Docs/articles/release-notes.md` before `docfx build`, so hosted release notes
+  stay aligned with the aggregated markdown used for GitHub release bodies here.

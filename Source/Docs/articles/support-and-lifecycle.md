@@ -21,4 +21,4 @@ Compatibility should be evaluated per package line:
 - **Line focus:** The latest published `major.minor` line for each package is the primary maintenance target.
 - **Upgrade guidance:** If you are on an older line, expect best-effort fixes only and prefer moving to the latest line.
 
-For version-by-version changes, use the per-package [Release notes](release-notes.md) index.
+For version-by-version changes, see [Release notes](release-notes.md) (aggregated from `Source/Docs/Notes/` for the version in `Source/Src/Directory.Build.props` when the documentation site is published).
