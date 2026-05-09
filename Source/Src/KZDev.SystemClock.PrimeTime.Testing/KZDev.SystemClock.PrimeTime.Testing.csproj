@@ -46,8 +46,7 @@
 		<None Include="..\Package\nuget.icon.png" Pack="true" Visible="false" PackagePath="images\icon.png" />
 	</ItemGroup>
 	<ItemGroup>
-		<InternalsVisibleTo Include="KZDev.PrimeTime.UnitTests" />
-		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.UnitTests" />
+		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing.UnitTests" />
 	</ItemGroup>
 	<Import Project="..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 

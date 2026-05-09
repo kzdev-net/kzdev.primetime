@@ -47,6 +47,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing" />
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.UnitTests" />
+		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing.UnitTests" />
 	</ItemGroup>
 
 </Project>

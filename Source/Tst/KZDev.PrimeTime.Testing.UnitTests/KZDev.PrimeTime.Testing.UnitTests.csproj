@@ -23,7 +23,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Tools\KZDev.PrimeTime.ReleaseAggregation\KZDev.PrimeTime.ReleaseAggregation.csproj" />
 		<ProjectReference Include="..\..\Src\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
 		<ProjectReference Include="..\..\Src\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
 		<ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
