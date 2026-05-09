@@ -50,7 +50,7 @@ Use the in-repo example project `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.
 
 `KZDev.SystemClock.PrimeTime.Testing.Examples` uses environment-aware local probes plus virtual-time advancement patterns.
 
-Browse the generated testing assembly docs in the **Testing API** section of the sidebar, or start from [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing).
+Browse from the **System Clock track** sidebar (**Testing API** → **`api/system-clock/`**), or open [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing) directly.
 
 ## PrimeTime stack (NodaTime) {#primetime-stack}
 
@@ -80,7 +80,7 @@ Use the in-repo example project `Source/Dev/Testing/KZDev.PrimeTime.Testing.Exam
 
 `KZDev.PrimeTime.Testing.Examples` uses deterministic zone-based setup (for example, fixed TZDB zones) and optionally probes the local environment.
 
-Browse the generated testing assembly docs in the **Testing API** section of the sidebar, or start from [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing).
+Browse from the **PrimeTime track** sidebar (**Testing API** → **`api/primetime/`**), or open [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing) directly.
 
 ## Related conceptual docs
 

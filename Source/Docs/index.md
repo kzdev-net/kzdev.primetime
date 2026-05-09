@@ -20,7 +20,7 @@ _layout: landing
 - [Security policy](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md) (repository root)
 - [Contributing](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md) (repository root)
 - [Release notes (all packages)](articles/release-notes.md)
-- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime) (**`api/primetime/`**)
 
 ## NuGet
 

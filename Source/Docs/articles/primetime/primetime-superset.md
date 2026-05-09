@@ -55,7 +55,7 @@ Use these when the rest of your domain speaks NodaTime. BCL projections remain a
 
 ## Virtual time tests
 
-**`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [API reference for this stack](xref:KZDev.PrimeTime.Testing) for exact constructors and **`IPrimeTestClock`** members.
+**`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [testing assembly reference](xref:KZDev.PrimeTime.Testing) (**`api/primetime/`**) for exact constructors and **`IPrimeTestClock`** members.
 
 ## Runnable examples and snippet sources
 
@@ -84,4 +84,4 @@ For self-contained snippet extraction points, use scenario files in `Scenarios`:
 - [Choosing a package](../concepts/choosing-a-package.md)
 - [KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)
 - [Shared concepts](../concepts/concepts-timers-and-testing.md)
-- **Production API:** [KZDev.PrimeTime](xref:KZDev.PrimeTime) · **Testing API:** [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing)
+- **Production API:** [KZDev.PrimeTime](xref:KZDev.PrimeTime) · **Testing API:** [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing) (**both under `api/primetime/`**)

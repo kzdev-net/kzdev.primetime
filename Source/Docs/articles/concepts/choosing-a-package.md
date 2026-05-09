@@ -31,4 +31,4 @@ PrimeTime ships as **two NuGet packages**. They share one **design** (clock abst
 - [KZDev.SystemClock.PrimeTime usage guide](../system-clock/systemclock-package.md)
 - [KZDev.PrimeTime (NodaTime superset) usage guide](../primetime/primetime-superset.md)
 - [Timers, daylight saving, and testing](concepts-timers-and-testing.md)
-- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime) (**`api/primetime/`**)

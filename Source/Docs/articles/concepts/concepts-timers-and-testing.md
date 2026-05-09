@@ -67,4 +67,4 @@ The example projects are intentionally organized as small scenario classes so do
 ## Further reading
 
 - [Choosing a package](choosing-a-package.md)
-- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime) (**`api/primetime/`**)
