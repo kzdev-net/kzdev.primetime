@@ -13,15 +13,14 @@ _layout: landing
 ## Documentation
 
 - [Overview](articles/overview.md)
-- [Choosing a package](articles/choosing-a-package.md)
-- [Timers, DST, and testing](articles/concepts-timers-and-testing.md)
-- [KZDev.SystemClock.PrimeTime guide](articles/systemclock-package.md)
-- [KZDev.PrimeTime guide](articles/primetime-superset.md)
+- [Concepts](articles/concepts/index.md)
+- [System Clock track](articles/system-clock/index.md)
+- [PrimeTime (NodaTime) track](articles/primetime/index.md)
 - [Support and lifecycle](articles/support-and-lifecycle.md)
 - [Security policy](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md) (repository root)
 - [Contributing](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md) (repository root)
 - [Release notes (all packages)](articles/release-notes.md)
-- [API Reference](xref:PrimeTime)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)
 
 ## NuGet
 

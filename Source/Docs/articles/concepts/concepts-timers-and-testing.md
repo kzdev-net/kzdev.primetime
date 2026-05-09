@@ -1,6 +1,6 @@
 # Timers, daylight saving, and testing
 
-This article applies to **both** [KZDev.SystemClock.PrimeTime](systemclock-package.md) and [KZDev.PrimeTime](primetime-superset.md). API shapes differ (BCL vs NodaTime types), but the **ideas** are shared.
+This article applies to **both** [KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md) and [KZDev.PrimeTime](../primetime/primetime-superset.md). API shapes differ (BCL vs NodaTime types), but the **ideas** are shared.
 
 ## Core types
 
@@ -67,4 +67,4 @@ The example projects are intentionally organized as small scenario classes so do
 ## Further reading
 
 - [Choosing a package](choosing-a-package.md)
-- [API Reference](xref:PrimeTime)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)

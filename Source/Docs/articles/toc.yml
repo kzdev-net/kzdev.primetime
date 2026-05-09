@@ -1,18 +1,14 @@
 - name: Overview
   href: overview.md
-- name: Choosing a package
-  href: choosing-a-package.md
-- name: Timers, DST, and testing
-  href: concepts-timers-and-testing.md
-- name: Event monitoring (ETW)
-  href: event-monitoring.md
+- name: Concepts
+  href: concepts/toc.yml
+- name: System Clock track
+  href: system-clock/toc.yml
+- name: PrimeTime (NodaTime) track
+  href: primetime/toc.yml
 - name: Testing packages
   href: testing-packages.md
 - name: Support and lifecycle
   href: support-and-lifecycle.md
 - name: Release notes
   href: release-notes.md
-- name: KZDev.SystemClock.PrimeTime guide
-  href: systemclock-package.md
-- name: KZDev.PrimeTime guide
-  href: primetime-superset.md

@@ -68,6 +68,6 @@ These patterns keep tests stable across machines while still showing realistic l
 
 ## API links
 
-- [API Reference](xref:PrimeTime)
-- [Choosing a package](choosing-a-package.md)
-- [Timers, daylight saving, and testing](concepts-timers-and-testing.md)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime.Testing) / [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime.Testing) (testing assemblies match each production stack)
+- [Choosing a package](concepts/choosing-a-package.md)
+- [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md)

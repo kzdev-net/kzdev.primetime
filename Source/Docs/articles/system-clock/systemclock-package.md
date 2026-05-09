@@ -11,7 +11,7 @@ This guide describes the **BCL / `TimeProvider`** deliverable: same **names** (`
 - You **must not** add a NodaTime dependency.
 - You want **`IPrimeClock.LocalScheduleTimeZone`** for local calendar time-of-day behavior (see API docs).
 
-If you need **`Instant`**, **`Duration`**, or **`LocalTime`** members on **`IPrimeClock`**, use **[KZDev.PrimeTime](primetime-superset.md)** instead.
+If you need **`Instant`**, **`Duration`**, or **`LocalTime`** members on **`IPrimeClock`**, use **[KZDev.PrimeTime](../primetime/primetime-superset.md)** instead.
 
 ## Install
 
@@ -41,11 +41,11 @@ services.AddPrimeClock();
 
 ## Using the clock
 
-Prefer **`IPrimeClock`** in application code. Typical members include UTC and local projections using BCL types (for example **`UtcNowDateTimeOffset`**), plus timer registration methods. Exact members depend on target framework; see the [API Reference](xref:PrimeTime).
+Prefer **`IPrimeClock`** in application code. Typical members include UTC and local projections using BCL types (for example **`UtcNowDateTimeOffset`**), plus timer registration methods. Exact members depend on target framework; see the [API reference for this stack](xref:KZDev.SystemClock.PrimeTime).
 
 ## Time-of-day timers
 
-On supported targets, use **`RegisterTimeOfDay`** / **`RegisterAsyncTimeOfDay`** with **`LocalTimeOfDay`** / **`UtcTimeOfDay`** wrappers and **`DayTimeTimerOptions`** for DST policy. See [Timers, daylight saving, and testing](concepts-timers-and-testing.md).
+On supported targets, use **`RegisterTimeOfDay`** / **`RegisterAsyncTimeOfDay`** with **`LocalTimeOfDay`** / **`UtcTimeOfDay`** wrappers and **`DayTimeTimerOptions`** for DST policy. See [Timers, daylight saving, and testing](../concepts/concepts-timers-and-testing.md).
 
 ## Virtual time tests
 
@@ -77,7 +77,7 @@ The production DST examples are environment-aware so they can adapt to machine t
 
 ## Related documentation
 
-- [Choosing a package](choosing-a-package.md)
-- [KZDev.PrimeTime (NodaTime superset)](primetime-superset.md)
-- [Shared concepts](concepts-timers-and-testing.md)
-- [API Reference](xref:PrimeTime)
+- [Choosing a package](../concepts/choosing-a-package.md)
+- [KZDev.PrimeTime (NodaTime superset)](../primetime/primetime-superset.md)
+- [Shared concepts](../concepts/concepts-timers-and-testing.md)
+- **Production API:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime) · **Testing API:** [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing)

@@ -11,7 +11,7 @@ This guide describes the **full** PrimeTime package: everything in the SystemClo
 - You want **`Instant`**, **`ZonedDateTime`**, **`LocalTime`**, and **`Duration`** on the same clock abstraction as your BCL projections.
 - You want **`Duration`-based** interval registration and **`LocalTime`-based** time-of-day registration on **`IPrimeClock`** (see API reference).
 
-If you want **only** BCL types and **`TimeProvider`**, use **[KZDev.SystemClock.PrimeTime](systemclock-package.md)** instead.
+If you want **only** BCL types and **`TimeProvider`**, use **[KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)** instead.
 
 ## Install
 
@@ -51,11 +51,11 @@ Use these when the rest of your domain speaks NodaTime. BCL projections remain a
 ## Timers
 
 - **Interval:** use **`TimeSpan`** overloads **or** **`Duration`** overloads (superset-only).
-- **Time of day:** use **`LocalTime`** / **`LocalDate`** overloads on supported targets, with **`DayTimeTimerOptions`** for DST. See [Timers, daylight saving, and testing](concepts-timers-and-testing.md).
+- **Time of day:** use **`LocalTime`** / **`LocalDate`** overloads on supported targets, with **`DayTimeTimerOptions`** for DST. See [Timers, daylight saving, and testing](../concepts/concepts-timers-and-testing.md).
 
 ## Virtual time tests
 
-**`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [API Reference](xref:PrimeTime) for exact constructors and **`IPrimeTestClock`** members.
+**`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [API reference for this stack](xref:KZDev.PrimeTime.Testing) for exact constructors and **`IPrimeTestClock`** members.
 
 ## Runnable examples and snippet sources
 
@@ -81,7 +81,7 @@ For self-contained snippet extraction points, use scenario files in `Scenarios`:
 
 ## Related documentation
 
-- [Choosing a package](choosing-a-package.md)
-- [KZDev.SystemClock.PrimeTime](systemclock-package.md)
-- [Shared concepts](concepts-timers-and-testing.md)
-- [API Reference](xref:PrimeTime)
+- [Choosing a package](../concepts/choosing-a-package.md)
+- [KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)
+- [Shared concepts](../concepts/concepts-timers-and-testing.md)
+- **Production API:** [KZDev.PrimeTime](xref:KZDev.PrimeTime) · **Testing API:** [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing)
