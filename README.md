@@ -45,7 +45,6 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 - **Support and lifecycle policy:** [SUPPORT.md](SUPPORT.md) (best-effort support, no SLA, versioning expectations).
 - **Security disclosures:** [SECURITY.md](SECURITY.md) (public GitHub Issues accepted; optional private advisory).
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) (external PRs not accepted; Issues and Discussions welcome).
-- **Hosted summary:** [Support and lifecycle](Source/Docs/articles/support-and-lifecycle.md) in docs (links to the canonical `SUPPORT.md` on GitHub).
 - **Per-package release notes** (source for NuGet `PackageReleaseNotes`):
   - [KZDev.PrimeTime](Source/Docs/Notes/KZDev.PrimeTime.release-notes.md)
   - [KZDev.SystemClock.PrimeTime](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md)
@@ -75,4 +74,4 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 
 ## Contributing
 
-External pull requests are not accepted. Use GitHub **Issues** and **Discussions** as described in [CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md). The hosted overview is in [Support and lifecycle](Source/Docs/articles/support-and-lifecycle.md).
+External pull requests are not accepted. Use GitHub **Issues** and **Discussions** as described in [CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md).
