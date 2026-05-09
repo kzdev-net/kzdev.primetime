@@ -3,19 +3,7 @@
         {
             "src": [
                 {
-                    "src": "../../artifacts/bin/KZDev.PrimeTime/release_net10.0",
-                    "dest": "api",
-                    "cwd": "src",
-                    "properties": {
-                        "TargetFramework": "net10.0"
-                    },
-                    "files": [
-                        "KZDev.PrimeTime.dll"
-                    ]
-                },
-                {
                     "src": "../../artifacts/bin/KZDev.SystemClock.PrimeTime/release_net10.0",
-                    "dest": "api",
                     "cwd": "src",
                     "properties": {
                         "TargetFramework": "net10.0"
@@ -25,19 +13,7 @@
                     ]
                 },
                 {
-                    "src": "../../artifacts/bin/KZDev.PrimeTime.Testing/release_net10.0",
-                    "dest": "api",
-                    "cwd": "src",
-                    "properties": {
-                        "TargetFramework": "net10.0"
-                    },
-                    "files": [
-                        "KZDev.PrimeTime.Testing.dll"
-                    ]
-                },
-                {
                     "src": "../../artifacts/bin/KZDev.SystemClock.PrimeTime.Testing/release_net10.0",
-                    "dest": "api",
                     "cwd": "src",
                     "properties": {
                         "TargetFramework": "net10.0"
@@ -47,7 +23,37 @@
                     ]
                 }
             ],
-            "dest": "api",
+            "dest": "api/system-clock",
+            "filter": "filterConfig.yml",
+            "outputFormat": "mref",
+            "memberLayout": "separatePages",
+            "enumSortOrder": "declaringOrder",
+            "allowCompilationErrors": false
+        },
+        {
+            "src": [
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime/release_net10.0",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net10.0"
+                    },
+                    "files": [
+                        "KZDev.PrimeTime.dll"
+                    ]
+                },
+                {
+                    "src": "../../artifacts/bin/KZDev.PrimeTime.Testing/release_net10.0",
+                    "cwd": "src",
+                    "properties": {
+                        "TargetFramework": "net10.0"
+                    },
+                    "files": [
+                        "KZDev.PrimeTime.Testing.dll"
+                    ]
+                }
+            ],
+            "dest": "api/primetime",
             "filter": "filterConfig.yml",
             "outputFormat": "mref",
             "memberLayout": "separatePages",
