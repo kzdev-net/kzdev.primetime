@@ -8,7 +8,5 @@
   href: primetime/toc.yml
 - name: Testing packages
   href: testing-packages.md
-- name: Support and lifecycle
-  href: support-and-lifecycle.md
 - name: Release notes
   href: release-notes.md

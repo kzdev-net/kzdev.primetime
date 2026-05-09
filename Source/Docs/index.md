@@ -19,13 +19,11 @@ Each production line has a **matching testing package**—**`KZDev.PrimeTime.Tes
 - [Overview](articles/overview.md)
 - [Concepts](articles/concepts/index.md)
 - [System Clock track](articles/system-clock/index.md)
-- [PrimeTime (NodaTime) track](articles/primetime/index.md)
-- [Security policy](https://github.com/kzdev-net/kzdev.primetime/blob/main/SECURITY.md) (repository root)
-- [Contributing](https://github.com/kzdev-net/kzdev.primetime/blob/main/CONTRIBUTING.md) (repository root)
+- [PrimeTime (NodaTime Extended) track](articles/primetime/index.md)
 - [Release notes (all packages)](articles/release-notes.md)
 - **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime) (**`api/primetime/`**)
 
-Support expectations, lifecycle, and compatibility cadence are documented in the **[repository README](https://github.com/kzdev-net/kzdev.primetime/blob/main/README.md)** and **[SUPPORT.md](https://github.com/kzdev-net/kzdev.primetime/blob/main/SUPPORT.md)**—not duplicated here.
+Support expectations, lifecycle, and compatibility cadence are documented in the **[repository README](https://github.com/kzdev-net/kzdev.primetime/blob/main/README.md)** and **[SUPPORT](https://github.com/kzdev-net/kzdev.primetime/blob/main/SUPPORT.md)** files—not duplicated here.
 
 ## NuGet
 

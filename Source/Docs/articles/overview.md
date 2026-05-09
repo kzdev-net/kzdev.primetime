@@ -17,9 +17,8 @@ Reference **exactly one** of these in a given app. They are **not** intended to 
 2. [KZDev.SystemClock.PrimeTime usage guide](system-clock/systemclock-package.md) — `TimeProvider`, DI defaults, BCL-focused workflow.
 3. [KZDev.PrimeTime usage guide](primetime/primetime-superset.md) — NodaTime-first workflow and superset-only APIs.
 4. [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md) — concepts that apply to both packages.
-5. [Support and lifecycle](support-and-lifecycle.md) — support expectations, SemVer, and release-line boundaries.
-6. [Release notes](release-notes.md) — for the version declared in `Source/Src/Directory.Build.props`, aggregated from `Source/Docs/Notes/` when the documentation site is published.
-7. **API reference** — each stack publishes under its own URL prefix (**`api/system-clock/`** for the BCL stack, **`api/primetime/`** for the NodaTime stack): [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
+5. [Release notes](release-notes.md) — for the version declared in `Source/Src/Directory.Build.props`, aggregated from `Source/Docs/Notes/` when the documentation site is published.
+6. **API reference** — each stack publishes under its own URL prefix (**`api/system-clock/`** for the BCL stack, **`api/primetime/`** for the NodaTime stack): [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
 
 ## Source and license
 
