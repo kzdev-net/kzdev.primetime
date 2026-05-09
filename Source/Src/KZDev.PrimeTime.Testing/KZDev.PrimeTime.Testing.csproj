@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<RootNamespace>KZDev.PrimeTime</RootNamespace>
+		<RootNamespace>KZDev.PrimeTime.Testing</RootNamespace>
 		<AssemblyName>KZDev.PrimeTime.Testing</AssemblyName>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>

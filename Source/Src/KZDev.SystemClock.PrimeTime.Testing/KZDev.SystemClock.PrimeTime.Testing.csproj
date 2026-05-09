@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<RootNamespace>KZDev.SystemClock.PrimeTime</RootNamespace>
+		<RootNamespace>KZDev.SystemClock.PrimeTime.Testing</RootNamespace>
 		<AssemblyName>KZDev.SystemClock.PrimeTime.Testing</AssemblyName>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>

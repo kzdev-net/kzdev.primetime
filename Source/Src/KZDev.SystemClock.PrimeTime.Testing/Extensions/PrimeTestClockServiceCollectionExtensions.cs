@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KZDev.SystemClock.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime.Testing;
 
 /// <summary>
 ///   Extension methods for adding PrimeTime virtual test clock services to an

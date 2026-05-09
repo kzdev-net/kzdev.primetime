@@ -331,23 +331,23 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> has a matching
+    ///   Verifies that each public instance method on <see cref="KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock"/> has a matching
     ///   method on <see cref="IPrimeTestClock"/>.
     /// </summary>
     [Fact]
     public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllMethodsMatch ()
     {
-        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+        AssertInterfaceMethodsSubset(typeof(KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock), typeof(IPrimeTestClock));
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.IPrimeTestClock"/> exists on
+    ///   Verifies that each public instance property on <see cref="KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock"/> exists on
     ///   <see cref="IPrimeTestClock"/> with the same type.
     /// </summary>
     [Fact]
     public void SystemClock_IPrimeTestClockSubset_OnFullIPrimeTestClock_AllPropertiesMatch ()
     {
-        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.IPrimeTestClock), typeof(IPrimeTestClock));
+        AssertInterfacePropertiesSubset(typeof(KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock), typeof(IPrimeTestClock));
     }
     //----------------------------------------------------------------------------
 

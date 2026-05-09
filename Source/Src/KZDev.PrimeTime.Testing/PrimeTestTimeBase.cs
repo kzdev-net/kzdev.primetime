@@ -6,7 +6,7 @@ using System.Diagnostics;
 using NodaTime;
 using NodaTime.TimeZones;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>

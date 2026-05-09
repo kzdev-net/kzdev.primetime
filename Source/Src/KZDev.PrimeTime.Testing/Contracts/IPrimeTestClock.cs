@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>

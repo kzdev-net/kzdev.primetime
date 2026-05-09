@@ -6,7 +6,7 @@
     <SharedGUID>b8c031ab-dfb9-4a50-8531-9fb4f7b928a8</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>KZDev.PrimeTime.Common.Shared</Import_RootNamespace>
+    <Import_RootNamespace>KZDev.PrimeTime</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ClockDayTimeTimerRegistration.cs" />

@@ -2,7 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.DependencyInjection;
-namespace KZDev.PrimeTime;
+namespace KZDev.PrimeTime.Testing;
 
 /// <summary>
 ///   Extension methods for adding PrimeTime virtual test clock services to an

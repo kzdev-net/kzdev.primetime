@@ -1,9 +1,9 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
-namespace KZDev.SystemClock.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime.Testing;
 #else
-namespace KZDev.PrimeTime;
+namespace KZDev.PrimeTime.Testing;
 //################################################################################
 #endif
 

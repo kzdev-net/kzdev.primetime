@@ -4,11 +4,11 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
-namespace KZDev.SystemClock.PrimeTime;
+namespace KZDev.SystemClock.PrimeTime.Testing;
 #else
 using NodaTime;
 
-namespace KZDev.PrimeTime;
+namespace KZDev.PrimeTime.Testing;
 #endif
 
 //################################################################################
