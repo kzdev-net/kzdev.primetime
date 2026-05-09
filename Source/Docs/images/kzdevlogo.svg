@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="2.25in"
+   height="0.986in"
+   viewBox="0 0 57.150001 25.0444"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="KZDevText2.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="in"
+     inkscape:zoom="4.0970529"
+     inkscape:cx="81.644052"
+     inkscape:cy="74.321715"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="3846"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-46.716934,-56.560115)">
+    <g
+       id="g3"
+       transform="matrix(1.0001573,0,0,1,0.37365229,0.25400038)"
+       style="stroke-width:0.999921">
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.7556px;line-height:1.25;font-family:Verdana;-inkscape-font-specification:'Verdana, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#0025ad;fill-opacity:1;stroke:none;stroke-width:0.264562"
+         x="44.739445"
+         y="70.923439"
+         id="text1"
+         inkscape:label="KZ"><tspan
+           sodipodi:role="line"
+           id="tspan1"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.7556px;font-family:Verdana;-inkscape-font-specification:'Verdana, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#0025ad;fill-opacity:1;stroke-width:0.264562"
+           x="44.739445"
+           y="70.923439">KZ</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:16.9333px;line-height:1.25;font-family:sans-serif;fill:#21316a;fill-opacity:1;stroke:none;stroke-width:0.264562"
+         x="72.433395"
+         y="70.923439"
+         id="text2"
+         inkscape:label="DEV"><tspan
+           sodipodi:role="line"
+           id="tspan2"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16.9333px;font-family:'Lucida Console';-inkscape-font-specification:'Lucida Console';fill:#21316a;fill-opacity:1;stroke-width:0.264562"
+           x="72.433395"
+           y="70.923439">DEV</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.87778px;line-height:1.25;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#6c6c6c;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="51.2579"
+       y="81.483742"
+       id="text3"
+       inkscape:label="kzdev.net"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.87778px;font-family:'Segoe UI';-inkscape-font-specification:'Segoe UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#6c6c6c;fill-opacity:1;stroke-width:0.264583"
+         x="51.2579"
+         y="81.483742">kzdev.net</tspan></text>
+  </g>
+</svg>

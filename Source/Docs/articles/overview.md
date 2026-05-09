@@ -19,11 +19,7 @@ Reference **exactly one** of these in a given app. They are **not** intended to 
 4. [Timers, daylight saving, and testing](concepts-timers-and-testing.md) — concepts that apply to both packages.
 5. [Support and lifecycle](support-and-lifecycle.md) — support expectations, SemVer, and release-line boundaries.
 6. [Release notes](release-notes.md) — per-package version history sources in this repository.
-
-## API reference and external notes
-
-- [API Reference](xref:PrimeTime) — generated from both assemblies published on this site.
-- [Cron and scheduling notes](../Reference/CronNotes.md) — background on cron libraries in .NET (PrimeTime itself is a **clock/timer** library, not a cron engine).
+7. [API Reference](xref:PrimeTime) — generated from both assemblies published on this site.
 
 ## Source and license
 

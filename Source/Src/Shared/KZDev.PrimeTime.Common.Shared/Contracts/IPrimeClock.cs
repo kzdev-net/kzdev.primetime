@@ -90,10 +90,8 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="timerOptions">Optional timer options.</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
     IClockIntervalTimer RegisterTimer (TimeSpan callbackTime,
-        TimeSpan repeatInterval,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        TimeSpan repeatInterval, Action<ClockTimerCallbackContext> callback,
+        CancellationToken cancellationToken, object? state = null,
         IntervalTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -111,10 +109,8 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="timerOptions">Optional timer options.</param>
     /// <returns>An <see cref="IClockIntervalTimer"/> to monitor or change the timer.</returns>
     IClockIntervalTimer RegisterAsyncTimer (TimeSpan callbackTime,
-        TimeSpan repeatInterval,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        TimeSpan repeatInterval, Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+        CancellationToken cancellationToken, object? state = null,
         IntervalTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
 
@@ -138,10 +134,8 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a local time-of-day timer with an asynchronous callback that receives timer context and cancellation token.
@@ -158,8 +152,7 @@ public partial interface IPrimeClock : IPrimeTime
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -176,10 +169,8 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null);
+        Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
+        object? state = null, DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a UTC time-of-day timer with an asynchronous callback that receives timer context and cancellation token.
@@ -196,8 +187,7 @@ public partial interface IPrimeClock : IPrimeTime
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
+        CancellationToken cancellationToken, object? state = null,
         DayTimeTimerOptions? timerOptions = null);
     //----------------------------------------------------------------------------
 

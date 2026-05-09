@@ -68,4 +68,3 @@ The example projects are intentionally organized as small scenario classes so do
 
 - [Choosing a package](choosing-a-package.md)
 - [API Reference](xref:PrimeTime)
-- [Cron and scheduling notes](../Reference/CronNotes.md) (ecosystem context; PrimeTime is not a cron scheduler)
