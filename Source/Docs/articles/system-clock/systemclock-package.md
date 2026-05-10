@@ -41,7 +41,7 @@ services.AddPrimeClock();
 
 ## Using the clock
 
-Prefer **`IPrimeClock`** in application code. Typical members include UTC and local projections using BCL types (for example **`UtcNowDateTimeOffset`**), plus timer registration methods. Exact members depend on target framework; see the [API reference for this stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**).
+Prefer **`IPrimeClock`** in application code. Typical members include UTC and local projections using BCL types (for example **`UtcNowDateTimeOffset`**), plus timer registration methods. Exact members depend on target framework; see the [API reference for this stack](xref:KZDev.SystemClock.PrimeTime).
 
 ## Time-of-day timers
 
@@ -68,4 +68,4 @@ The production DST examples are environment-aware so they can adapt to machine t
 - [Choosing a package](../concepts/choosing-a-package.md)
 - [KZDev.PrimeTime (NodaTime superset)](../primetime/primetime-superset.md)
 - [Shared concepts](../concepts/concepts-timers-and-testing.md)
-- **Production API:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime) · **Testing API:** [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing) (**both under `api/system-clock/`**)
+- **Production API:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime) · **Testing API:** [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing)

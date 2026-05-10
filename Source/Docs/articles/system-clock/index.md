@@ -13,5 +13,5 @@ Use **KZDev.SystemClock.PrimeTime** when you want injectable clocks and timers b
 
 Browse generated docs scoped to this stack:
 
-- **Production:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**)
+- **Production:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime)
 - **Testing:** [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing)

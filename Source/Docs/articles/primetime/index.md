@@ -13,5 +13,5 @@ Use **KZDev.PrimeTime** when you want **`Instant`**, **`Duration`**, **`LocalTim
 
 Browse generated docs scoped to this stack:
 
-- **Production:** [KZDev.PrimeTime](xref:KZDev.PrimeTime) (**`api/primetime/`**)
+- **Production:** [KZDev.PrimeTime](xref:KZDev.PrimeTime)
 - **Testing:** [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing)
