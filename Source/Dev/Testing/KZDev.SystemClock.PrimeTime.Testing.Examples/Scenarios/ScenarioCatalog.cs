@@ -22,6 +22,7 @@ public static class ScenarioCatalog
             "Deterministic interval timers (sync and async callbacks)",
             "DI replacement via AddPrimeTestClock",
             "DST (environment-aware local probe plus virtual advance smoke)",
+            "Persistence and schedule-zone conversions (UTC offsets, DateOnly/TimeOnly)",
         ];
     }
 }

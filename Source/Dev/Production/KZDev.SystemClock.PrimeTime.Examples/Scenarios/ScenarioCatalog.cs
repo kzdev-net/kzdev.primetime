@@ -32,6 +32,7 @@ public static class ScenarioCatalog
         [
             new DiRegistrationScenario(),
             new NowSurfaceScenario(),
+            new PersistenceAndConversionScenario(),
             new SleepDelayCancellationScenario(runMode),
             new IntervalTimerScenario(runMode),
             new TimeOfDayTimerScenario(runMode),
