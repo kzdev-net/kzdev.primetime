@@ -63,6 +63,7 @@ Self-contained snippets for this stack live under [PrimeTime (NodaTime) examples
 
 - [DI registration](examples/di-registration-production.md) — what `AddPrimeClock` registers (including the NodaTime `IClock`) and how to resolve it.
 - ["Now" surfaces](examples/now-surfaces-production.md) — NodaTime-first projections (`NowInstant`, `LocalZonedNowInstant`, `LocalNowTime`, `LocalNowDate`).
+- [Persistence and conversions](examples/persistence-and-conversions-production.md) — schedule-zone projection for persisted **`Instant`** values; time-of-day and delay conversions (see also [testing](examples/persistence-and-conversions-testing.md)).
 - [Sleep, delay, and cancellation](examples/sleep-delay-cancellation-production.md) — `Sleep`, `DelayAsync`, and time-based cancellation tokens (Duration-typed).
 - [Interval timers](examples/interval-timer-production.md) and [time-of-day & DST](examples/time-of-day-and-dst-production.md) — production wall-clock scheduling.
 - Testing counterparts: [Interval (testing)](examples/interval-timer-testing.md), [Time-of-day & DST (testing)](examples/time-of-day-and-dst-testing.md), and the cross-track [DI replacement](../concepts/examples/di-replacement-testing.md) and [test-clock control](../concepts/examples/test-clock-control-testing.md) pages.
@@ -70,6 +71,7 @@ Self-contained snippets for this stack live under [PrimeTime (NodaTime) examples
 ## Related documentation
 
 - [Choosing a package](../concepts/choosing-a-package.md)
+- [Persistence and time conversions](../concepts/persistence-and-conversions.md)
 - [KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)
 - [Shared concepts](../concepts/concepts-timers-and-testing.md)
 - **Production API:** [KZDev.PrimeTime](xref:KZDev.PrimeTime) · **Testing API:** [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing)

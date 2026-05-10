@@ -57,6 +57,7 @@ Self-contained snippets for this stack live under [System Clock examples](exampl
 
 - [DI registration](examples/di-registration-production.md) — what `AddPrimeClock` registers and how to resolve it.
 - ["Now" surfaces](examples/now-surfaces-production.md) — `LocalNow*` and `UtcNow*` BCL projections.
+- [Persistence and conversions](examples/persistence-and-conversions-production.md) — BCL schedule-zone projection from persisted UTC offsets (see also [testing](examples/persistence-and-conversions-testing.md)).
 - [Sleep, delay, and cancellation](examples/sleep-delay-cancellation-production.md) — `Sleep`, `DelayAsync`, and time-based cancellation tokens.
 - [Interval timers](examples/interval-timer-production.md) and [time-of-day & DST](examples/time-of-day-and-dst-production.md) — production wall-clock scheduling.
 - Testing counterparts: [Interval (testing)](examples/interval-timer-testing.md), [Time-of-day & DST (testing)](examples/time-of-day-and-dst-testing.md), and the cross-track [DI replacement](../concepts/examples/di-replacement-testing.md) and [test-clock control](../concepts/examples/test-clock-control-testing.md) pages.
@@ -66,6 +67,7 @@ The production DST examples are environment-aware so they can adapt to machine t
 ## Related documentation
 
 - [Choosing a package](../concepts/choosing-a-package.md)
+- [Persistence and time conversions](../concepts/persistence-and-conversions.md)
 - [KZDev.PrimeTime (NodaTime superset)](../primetime/primetime-superset.md)
 - [Shared concepts](../concepts/concepts-timers-and-testing.md)
 - **Production API:** [KZDev.SystemClock.PrimeTime](xref:KZDev.SystemClock.PrimeTime) · **Testing API:** [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing)

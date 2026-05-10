@@ -57,4 +57,5 @@ Testing examples:
 ## Further reading
 
 - [Choosing a package](choosing-a-package.md)
+- [Persistence and time conversions](persistence-and-conversions.md)
 - **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)

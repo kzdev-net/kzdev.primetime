@@ -28,6 +28,7 @@ PrimeTime ships as **two NuGet packages**. They share one **design** (clock abst
 
 ## Next steps
 
+- [Persistence and time conversions](persistence-and-conversions.md) — persistence shapes and schedule-zone conversion helpers.
 - [KZDev.SystemClock.PrimeTime usage guide](../system-clock/systemclock-package.md)
 - [KZDev.PrimeTime (NodaTime superset) usage guide](../primetime/primetime-superset.md)
 - [Timers, daylight saving, and testing](concepts-timers-and-testing.md)

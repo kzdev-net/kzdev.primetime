@@ -10,6 +10,23 @@
   - `### Package`
 - Use `- None.` for categories without entries.
 
+## Version 0.0.6
+
+### Added
+- DocFx **Persistence and conversions (testing)** example page referencing in-repo **`UsingPersistenceAndConversionExamples`** (BCL schedule-zone assertions with **`PrimeTestClock`**).
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- Example sources live under `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples/`; API surface is unchanged aside from documentation cross-references.
+
+### Package
+- KZDev.SystemClock.PrimeTime.Testing v0.0.6 publishes updated package release notes aligned with persistence-and-conversions documentation and examples.
+
 ## Version 0.0.5
 
 ### Added

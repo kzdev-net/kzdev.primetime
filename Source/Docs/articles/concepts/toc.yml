@@ -2,6 +2,8 @@
   href: index.md
 - name: Choosing a package
   href: choosing-a-package.md
+- name: Persistence and conversions
+  href: persistence-and-conversions.md
 - name: Timers, DST, and testing
   href: concepts-timers-and-testing.md
 - name: Event monitoring (ETW)

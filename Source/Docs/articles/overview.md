@@ -14,10 +14,11 @@ Reference **exactly one** of these in a given app. They are **not** intended to 
 ## Where to read next
 
 1. [Choosing a package](concepts/choosing-a-package.md) — short comparison and decision table.
-2. [KZDev.SystemClock.PrimeTime usage guide](system-clock/systemclock-package.md) — `TimeProvider`, DI defaults, BCL-focused workflow.
-3. [KZDev.PrimeTime usage guide](primetime/primetime-superset.md) — NodaTime-first workflow and superset-only APIs.
-4. [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md) — concepts that apply to both packages.
-5. **API reference**: [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
+2. [Persistence and time conversions](concepts/persistence-and-conversions.md) — storing instants and zoned values; schedule-zone helpers vs raw NodaTime/BCL.
+3. [KZDev.SystemClock.PrimeTime usage guide](system-clock/systemclock-package.md) — `TimeProvider`, DI defaults, BCL-focused workflow.
+4. [KZDev.PrimeTime usage guide](primetime/primetime-superset.md) — NodaTime-first workflow and superset-only APIs.
+5. [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md) — concepts that apply to both packages.
+6. **API reference**: [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
 
 ## Source and license
 

@@ -10,6 +10,24 @@
   - `### Package`
 - Use `- None.` for categories without entries.
 
+## Version 0.0.6
+
+### Added
+- Schedule-zone conversion extensions on **`IPrimeTime`** (**`PrimeTimeScheduleZoneExtensions`**) for **`DateTimeOffset`** and UTC **`DateTime`**, using **`IPrimeClock.LocalScheduleTimeZone`** (BCL **`DateOnly`**, **`TimeOnly`**, and wall **`DateTime`** helpers).
+- DocFx concept article **Persistence and time conversions** and System Clock track example pages (production and testing) with runnable snippets.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- See `Source/Docs/articles/concepts/persistence-and-conversions.md` for persistence shapes and BCL-oriented schedule-zone projection.
+
+### Package
+- KZDev.SystemClock.PrimeTime v0.0.6 adds public BCL schedule-zone conversion helpers and matching documentation.
+
 ## Version 0.0.5
 
 ### Added

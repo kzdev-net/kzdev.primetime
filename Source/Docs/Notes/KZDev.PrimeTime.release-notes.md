@@ -10,6 +10,26 @@
   - `### Package`
 - Use `- None.` for categories without entries.
 
+## Version 0.0.6
+
+### Added
+- Schedule-zone conversion extensions on **`IPrimeTime`** (**`PrimeTimeScheduleZoneExtensions`**) for **`Instant`** and **`ZonedDateTime`**, using **`IPrimeClock.LocalScheduleDateTimeZone`**.
+- **`PrimeTimeOfDayConversion`**, **`NodaDurationBclConversion`**, and **`NodaDateTimeZoneBclConversion`** for NodaTime/BCL interop where PrimeTime encodes non-obvious policy (for example delay **`TimeSpan`** clamping).
+- **`IPrimeClock.LocalScheduleDateTimeZone`** (**`DateTimeZone`**) alongside the existing BCL schedule zone.
+- DocFx concept article **Persistence and time conversions** and PrimeTime track example pages (production and testing) with runnable snippets.
+
+### Changed
+- None.
+
+### Fixed
+- None.
+
+### Notes
+- See `Source/Docs/articles/concepts/persistence-and-conversions.md` for persistence shapes and when to use these helpers versus raw NodaTime APIs.
+
+### Package
+- KZDev.PrimeTime v0.0.6 adds public conversion helpers, **`LocalScheduleDateTimeZone`**, and documentation for persistence and schedule-zone projections.
+
 ## Version 0.0.5
 
 ### Added

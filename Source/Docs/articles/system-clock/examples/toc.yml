@@ -16,5 +16,11 @@
   href: di-registration-production.md
 - name: '"Now" surfaces'
   href: now-surfaces-production.md
+- name: Persistence and conversions
+  items:
+    - name: Production
+      href: persistence-and-conversions-production.md
+    - name: Testing
+      href: persistence-and-conversions-testing.md
 - name: Sleep, delay, and cancellation
   href: sleep-delay-cancellation-production.md
