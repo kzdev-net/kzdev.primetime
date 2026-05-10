@@ -33,6 +33,7 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
     /// <inheritdoc />
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -73,5 +74,6 @@ public sealed class TimeOfDayTimerScenario : IExampleScenario
 
         syncTimer.Dispose();
         asyncTimer.Dispose();
+        #endregion Snippet
     }
 }

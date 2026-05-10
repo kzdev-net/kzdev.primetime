@@ -18,6 +18,7 @@ namespace KZDev.PrimeTime.Testing.Examples;
 /// </summary>
 public sealed class UsingPrimeTestClockDependencyInjectionExamples
 {
+    #region Snippet
     /// <summary>
     /// Verifies DI consumers receive the same <see cref="PrimeTestClock"/> instance for
     /// <see cref="IPrimeTestClock"/>, <see cref="IPrimeClock"/>, and <see cref="IPrimeTime"/>.
@@ -64,4 +65,5 @@ public sealed class UsingPrimeTestClockDependencyInjectionExamples
         public Instant ReadInstant () =>
             _clock.NowInstant;
     }
+    #endregion Snippet
 }

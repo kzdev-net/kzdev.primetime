@@ -18,6 +18,7 @@ public sealed class DiRegistrationScenario : IExampleScenario
     /// <inheritdoc />
     public Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -32,5 +33,6 @@ public sealed class DiRegistrationScenario : IExampleScenario
         ScenarioConsole.WriteLine($"Noda IClock registered: {nodaClock.GetType().Name}");
 
         return Task.CompletedTask;
+        #endregion Snippet
     }
 }

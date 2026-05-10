@@ -57,27 +57,15 @@ Use these when the rest of your domain speaks NodaTime. BCL projections remain a
 
 **`PrimeTestClock`** supports NodaTime-centric construction (for example an initial **`Instant`** and **`DateTimeZone`**). That combination is especially useful for **deterministic DST** tests. See the [testing assembly reference](xref:KZDev.PrimeTime.Testing) (**`api/primetime/`**) for exact constructors and **`IPrimeTestClock`** members.
 
-## Runnable examples and snippet sources
+## Runnable examples
 
-Production and testing examples for this stack are available in-repo:
+Self-contained snippets for this stack live under [PrimeTime (NodaTime) examples](examples/index.md). Each page reproduces the relevant code in the documentation site so you do not need to navigate the repository to read it. Highlights:
 
-- Production app: `Source/Dev/Production/KZDev.PrimeTime.Examples`
-- Testing examples: `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples`
-
-The production app defaults to a short demo mode and supports an optional long mode. See the following files:
-
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Program.cs`
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Helpers/DemoRunModeParser.cs`
-
-For self-contained snippet extraction points, use scenario files in `Scenarios`:
-
-- DI registration: `DiRegistrationScenario.cs`
-- "Now" surfaces: `NowSurfaceScenario.cs`
-- Sleep/delay/cancellation: `SleepDelayCancellationScenario.cs`
-- Interval timers: `IntervalTimerScenario.cs`
-- Time-of-day timers: `TimeOfDayTimerScenario.cs`
-- `TimeProvider` bridge: `TimeProviderBridgeScenario.cs`
-- DST behavior: `DstScenario.cs`, `EnvironmentAwareDstScenario.cs`
+- [DI registration](examples/di-registration-production.md) — what `AddPrimeClock` registers (including the NodaTime `IClock`) and how to resolve it.
+- ["Now" surfaces](examples/now-surfaces-production.md) — NodaTime-first projections (`NowInstant`, `LocalZonedNowInstant`, `LocalNowTime`, `LocalNowDate`).
+- [Sleep, delay, and cancellation](examples/sleep-delay-cancellation-production.md) — `Sleep`, `DelayAsync`, and time-based cancellation tokens (Duration-typed).
+- [Interval timers](examples/interval-timer-production.md) and [time-of-day & DST](examples/time-of-day-and-dst-production.md) — production wall-clock scheduling.
+- Testing counterparts: [Interval (testing)](examples/interval-timer-testing.md), [Time-of-day & DST (testing)](examples/time-of-day-and-dst-testing.md), and the cross-track [DI replacement](../concepts/examples/di-replacement-testing.md) and [test-clock control](../concepts/examples/test-clock-control-testing.md) pages.
 
 ## Related documentation
 

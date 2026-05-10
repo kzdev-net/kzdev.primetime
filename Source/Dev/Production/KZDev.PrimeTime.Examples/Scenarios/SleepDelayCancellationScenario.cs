@@ -33,6 +33,7 @@ public sealed class SleepDelayCancellationScenario : IExampleScenario
     /// <inheritdoc />
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -70,5 +71,6 @@ public sealed class SleepDelayCancellationScenario : IExampleScenario
         {
             ScenarioConsole.WriteLine("Delay canceled by time-based cancellation token.");
         }
+        #endregion Snippet
     }
 }

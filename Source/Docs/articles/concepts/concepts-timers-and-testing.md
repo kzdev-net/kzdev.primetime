@@ -17,10 +17,8 @@ Use **`IntervalTimerOptions`** where you need to tune behavior described in the 
 
 Runnable examples:
 
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Scenarios/IntervalTimerScenario.cs`
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Scenarios/IntervalTimerScenario.cs`
-- `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples/UsingPrimeTestClockIntervalTimerExamples.cs`
-- `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples/UsingPrimeTestClockIntervalTimerExamples.cs`
+- **System Clock track:** [Interval timer (production)](../system-clock/examples/interval-timer-production.md) · [Interval timer (testing)](../system-clock/examples/interval-timer-testing.md)
+- **PrimeTime (NodaTime) track:** [Interval timer (production)](../primetime/examples/interval-timer-production.md) · [Interval timer (testing)](../primetime/examples/interval-timer-testing.md)
 
 ## Time-of-day timers and daylight saving
 
@@ -35,19 +33,14 @@ Configure these on **`DayTimeTimerOptions`**. **UTC** time-of-day registrations 
 
 Runnable examples:
 
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Scenarios/TimeOfDayTimerScenario.cs`
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Scenarios/TimeOfDayTimerScenario.cs`
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Scenarios/EnvironmentAwareDstScenario.cs`
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Scenarios/EnvironmentAwareDstScenario.cs`
+- **System Clock track:** [Time-of-day and DST (production)](../system-clock/examples/time-of-day-and-dst-production.md)
+- **PrimeTime (NodaTime) track:** [Time-of-day and DST (production)](../primetime/examples/time-of-day-and-dst-production.md)
+
+Each track's page covers the time-of-day timer registration, environment-aware skipped/ambiguous local-time probes, and the clock's local schedule zone.
 
 ## Bridging to `TimeProvider`
 
 Both stacks can expose a **`TimeProvider`** that delegates to an **`IPrimeClock`** via **`PrimeClockTimeProviderExtensions.ToTimeProvider`**. That helps integrate with APIs that expect **`TimeProvider`** while keeping PrimeTime as the source of truth (especially under a **`PrimeTestClock`**).
-
-Runnable examples:
-
-- `Source/Dev/Production/KZDev.PrimeTime.Examples/Scenarios/TimeProviderBridgeScenario.cs`
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Scenarios/TimeProviderBridgeScenario.cs`
 
 ## Testing tips
 
@@ -55,10 +48,11 @@ Runnable examples:
 2. Drive time with **`Advance`** / **`RunFor`** so timers fire predictably.
 3. For **daylight saving** edge cases around local wall times, the **NodaTime** **`PrimeTestClock`** constructor that accepts a **`DateTimeZone`** is the most direct way to model zone rules in tests. The SystemClock package exposes **`LocalScheduleTimeZone`** on **`IPrimeClock`** for BCL-oriented local scheduling; align that with your test scenario.
 
-Testing example references:
+Testing examples:
 
-- `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples/UsingPrimeTestClockDstExamples.cs`
-- `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples/UsingPrimeTestClockDstExamples.cs`
+- **System Clock track:** [Time-of-day and DST (testing)](../system-clock/examples/time-of-day-and-dst-testing.md)
+- **PrimeTime (NodaTime) track:** [Time-of-day and DST (testing)](../primetime/examples/time-of-day-and-dst-testing.md)
+- **Cross-track:** [Test-clock control APIs](examples/test-clock-control-testing.md) · [DI replacement with `AddPrimeTestClock`](examples/di-replacement-testing.md)
 
 ## Further reading
 

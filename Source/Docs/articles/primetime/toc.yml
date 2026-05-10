@@ -2,6 +2,9 @@
   href: index.md
 - name: Usage guide
   href: primetime-superset.md
+- name: Examples
+  href: examples/
+  homepage: examples/index.md
 - name: Testing packages guide
   href: ../testing-packages.md#primetime-stack
 - name: Production API

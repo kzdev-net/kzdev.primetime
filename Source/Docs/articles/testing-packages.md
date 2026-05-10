@@ -39,16 +39,21 @@ Use extension methods from **`KZDev.SystemClock.PrimeTime.Testing`** to replace 
 
 ### Runnable testing examples
 
-Use the in-repo example project `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples` for copy/paste-friendly scenarios. It demonstrates:
+Browse the dedicated example pages:
 
-- Test clock control APIs (`Set*`, `Advance`, `RunFor`, `Start`/`Stop`)
-- Deterministic interval timers (synchronous and asynchronous callbacks)
-- DI replacement with `AddPrimeTestClock`
-- Daylight saving scenarios
+**System Clock-specific examples**
+
+- [Interval timer (testing)](system-clock/examples/interval-timer-testing.md) — deterministic interval timers under `PrimeTestClock` with `Advance`.
+- [Time-of-day and DST (testing)](system-clock/examples/time-of-day-and-dst-testing.md) — environment-aware DST probes plus stable virtual-clock advancement.
+
+**Cross-track testing examples** (both stacks shown side-by-side)
+
+- [Test-clock control APIs](concepts/examples/test-clock-control-testing.md) — `Set*`, `Advance`, `RunFor`, `Start`/`Stop` reference patterns.
+- [DI replacement with `AddPrimeTestClock`](concepts/examples/di-replacement-testing.md) — substitute virtual time in a Microsoft DI container.
 
 ### Daylight saving notes
 
-`KZDev.SystemClock.PrimeTime.Testing.Examples` uses environment-aware local probes plus virtual-time advancement patterns.
+The System Clock testing examples use environment-aware local probes plus virtual-time advancement patterns; the DST page above describes the shape and the host-dependent fallbacks.
 
 Browse from the **System Clock track** sidebar (**Testing API** → **`api/system-clock/`**), or open [KZDev.SystemClock.PrimeTime.Testing](xref:KZDev.SystemClock.PrimeTime.Testing) directly.
 
@@ -69,16 +74,21 @@ Use extension methods from **`KZDev.PrimeTime.Testing`** to replace runtime cloc
 
 ### Runnable testing examples
 
-Use the in-repo example project `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples` for copy/paste-friendly scenarios. It demonstrates:
+Browse the dedicated example pages:
 
-- Test clock control APIs (`Set*`, `Advance`, `RunFor`, `Start`/`Stop`)
-- Deterministic interval timers (synchronous and asynchronous callbacks)
-- DI replacement with `AddPrimeTestClock`
-- Daylight saving scenarios
+**PrimeTime-specific examples**
+
+- [Interval timer (testing)](primetime/examples/interval-timer-testing.md) — deterministic interval timers under `PrimeTestClock` with `Advance`.
+- [Time-of-day and DST (testing)](primetime/examples/time-of-day-and-dst-testing.md) — deterministic spring-forward and fall-back examples against a fixed NodaTime `DateTimeZone`.
+
+**Cross-track testing examples** (both stacks shown side-by-side)
+
+- [Test-clock control APIs](concepts/examples/test-clock-control-testing.md) — `Set*`, `Advance`, `RunFor`, `Start`/`Stop` reference patterns.
+- [DI replacement with `AddPrimeTestClock`](concepts/examples/di-replacement-testing.md) — substitute virtual time in a Microsoft DI container.
 
 ### Daylight saving notes
 
-`KZDev.PrimeTime.Testing.Examples` uses deterministic zone-based setup (for example, fixed TZDB zones) and optionally probes the local environment.
+The PrimeTime testing examples use deterministic zone-based setup (fixed TZDB zones via the NodaTime `DateTimeZone` constructor of `PrimeTestClock`) and optionally probe the local environment.
 
 Browse from the **PrimeTime track** sidebar (**Testing API** → **`api/primetime/`**), or open [KZDev.PrimeTime.Testing](xref:KZDev.PrimeTime.Testing) directly.
 

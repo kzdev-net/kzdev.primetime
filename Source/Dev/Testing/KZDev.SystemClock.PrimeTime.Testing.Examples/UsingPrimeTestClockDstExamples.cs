@@ -14,6 +14,7 @@ namespace KZDev.SystemClock.PrimeTime.Testing.Examples;
 /// </summary>
 public sealed class UsingPrimeTestClockDstExamples
 {
+    #region Snippet
     /// <summary>
     /// When the machine exposes a spring-forward gap example, documents that the BCL marks that
     /// wall-clock value as invalid for <see cref="TimeZoneInfo.Local"/>.
@@ -59,4 +60,5 @@ public sealed class UsingPrimeTestClockDstExamples
         Action act = () => clock.Advance(TimeSpan.FromDays(400));
         act.Should().NotThrow();
     }
+    #endregion Snippet
 }

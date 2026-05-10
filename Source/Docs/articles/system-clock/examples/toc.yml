@@ -1,0 +1,20 @@
+- name: Examples overview
+  href: index.md
+- name: Interval timers
+  items:
+    - name: Production
+      href: interval-timer-production.md
+    - name: Testing
+      href: interval-timer-testing.md
+- name: Time-of-day and DST
+  items:
+    - name: Production
+      href: time-of-day-and-dst-production.md
+    - name: Testing
+      href: time-of-day-and-dst-testing.md
+- name: DI registration
+  href: di-registration-production.md
+- name: '"Now" surfaces'
+  href: now-surfaces-production.md
+- name: Sleep, delay, and cancellation
+  href: sleep-delay-cancellation-production.md

@@ -6,3 +6,6 @@
   href: concepts-timers-and-testing.md
 - name: Event monitoring (ETW)
   href: event-monitoring.md
+- name: Cross-track examples
+  href: examples/
+  homepage: examples/index.md

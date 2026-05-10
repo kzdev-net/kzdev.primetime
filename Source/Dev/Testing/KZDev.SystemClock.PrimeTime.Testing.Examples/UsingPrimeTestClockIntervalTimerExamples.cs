@@ -13,6 +13,7 @@ namespace KZDev.SystemClock.PrimeTime.Testing.Examples;
 /// </summary>
 public sealed class UsingPrimeTestClockIntervalTimerExamples
 {
+    #region Snippet
     /// <summary>
     /// Verifies a one-shot interval timer fires after virtual time advances past the initial delay.
     /// </summary>
@@ -78,4 +79,5 @@ public sealed class UsingPrimeTestClockIntervalTimerExamples
         fired.Should().Be(1);
         registration.State.Should().Be(TimerState.Completed);
     }
+    #endregion Snippet
 }

@@ -51,27 +51,15 @@ On supported targets, use **`RegisterTimeOfDay`** / **`RegisterAsyncTimeOfDay`**
 
 Use **`PrimeTestClock`** and **`IPrimeTestClock`**. Constructors are **BCL-first** (for example starting from a **`DateTimeOffset`**). Advance virtual time to exercise timers without wall-clock delays.
 
-## Runnable examples and snippet sources
+## Runnable examples
 
-Production and testing examples for this stack are available in-repo:
+Self-contained snippets for this stack live under [System Clock examples](examples/index.md). Each page reproduces the relevant code in the documentation site so you do not need to navigate the repository to read it. Highlights:
 
-- Production app: `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples`
-- Testing examples: `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples`
-
-The production app defaults to a short demo mode and supports an optional long mode. See the following files:
-
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Program.cs`
-- `Source/Dev/Production/KZDev.SystemClock.PrimeTime.Examples/Helpers/DemoRunModeParser.cs`
-
-For self-contained snippet extraction points, use scenario files in `Scenarios`:
-
-- DI registration: `DiRegistrationScenario.cs`
-- "Now" surfaces: `NowSurfaceScenario.cs`
-- Sleep/delay/cancellation: `SleepDelayCancellationScenario.cs`
-- Interval timers: `IntervalTimerScenario.cs`
-- Time-of-day timers: `TimeOfDayTimerScenario.cs`
-- `TimeProvider` bridge: `TimeProviderBridgeScenario.cs`
-- DST behavior: `DstScenario.cs`, `EnvironmentAwareDstScenario.cs`
+- [DI registration](examples/di-registration-production.md) — what `AddPrimeClock` registers and how to resolve it.
+- ["Now" surfaces](examples/now-surfaces-production.md) — `LocalNow*` and `UtcNow*` BCL projections.
+- [Sleep, delay, and cancellation](examples/sleep-delay-cancellation-production.md) — `Sleep`, `DelayAsync`, and time-based cancellation tokens.
+- [Interval timers](examples/interval-timer-production.md) and [time-of-day & DST](examples/time-of-day-and-dst-production.md) — production wall-clock scheduling.
+- Testing counterparts: [Interval (testing)](examples/interval-timer-testing.md), [Time-of-day & DST (testing)](examples/time-of-day-and-dst-testing.md), and the cross-track [DI replacement](../concepts/examples/di-replacement-testing.md) and [test-clock control](../concepts/examples/test-clock-control-testing.md) pages.
 
 The production DST examples are environment-aware so they can adapt to machine timezone capabilities. The testing examples show deterministic virtual-time patterns for reliable assertions.
 

@@ -33,6 +33,7 @@ public sealed class IntervalTimerScenario : IExampleScenario
     /// <inheritdoc />
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -89,5 +90,6 @@ public sealed class IntervalTimerScenario : IExampleScenario
 
         syncTimer.Dispose();
         asyncTimer.Dispose();
+        #endregion Snippet
     }
 }

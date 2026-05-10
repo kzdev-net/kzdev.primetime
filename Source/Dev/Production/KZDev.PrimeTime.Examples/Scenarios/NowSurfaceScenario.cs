@@ -16,6 +16,7 @@ public sealed class NowSurfaceScenario : IExampleScenario
     /// <inheritdoc />
     public Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -31,5 +32,6 @@ public sealed class NowSurfaceScenario : IExampleScenario
         ScenarioConsole.WriteLine($"LocalNowDateTimeOffset: {primeClock.LocalNowDateTimeOffset:O}");
 
         return Task.CompletedTask;
+        #endregion Snippet
     }
 }

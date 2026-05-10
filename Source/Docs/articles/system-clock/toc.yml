@@ -2,6 +2,9 @@
   href: index.md
 - name: Usage guide
   href: systemclock-package.md
+- name: Examples
+  href: examples/
+  homepage: examples/index.md
 - name: Testing packages guide
   href: ../testing-packages.md#system-clock-stack
 - name: Production API

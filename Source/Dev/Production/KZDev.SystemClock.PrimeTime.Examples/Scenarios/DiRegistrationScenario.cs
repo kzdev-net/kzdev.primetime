@@ -16,6 +16,7 @@ public sealed class DiRegistrationScenario : IExampleScenario
     /// <inheritdoc />
     public Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -30,5 +31,6 @@ public sealed class DiRegistrationScenario : IExampleScenario
         ScenarioConsole.WriteLine($"TimeProvider registered: {timeProvider.GetType().Name}");
 
         return Task.CompletedTask;
+        #endregion Snippet
     }
 }

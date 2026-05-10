@@ -29,6 +29,7 @@ public sealed class EnvironmentAwareDstScenario : IExampleScenario
     /// <inheritdoc />
     public Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         TimeZoneInfo localZone = TimeZoneInfo.Local;
         if (!_context.SupportsDaylightSavingTime)
         {
@@ -62,5 +63,6 @@ public sealed class EnvironmentAwareDstScenario : IExampleScenario
         }
 
         return Task.CompletedTask;
+        #endregion Snippet
     }
 }

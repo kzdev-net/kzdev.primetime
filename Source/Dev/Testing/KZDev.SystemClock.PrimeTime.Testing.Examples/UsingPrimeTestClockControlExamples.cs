@@ -12,6 +12,7 @@ namespace KZDev.SystemClock.PrimeTime.Testing.Examples;
 /// </summary>
 public sealed class UsingPrimeTestClockControlExamples
 {
+    #region Snippet
     /// <summary>
     /// Verifies <see cref="IPrimeTestClock.SetTime(System.DateTimeOffset)"/> moves the virtual UTC
     /// timeline used by <see cref="IPrimeClock.UtcNowDateTimeOffset"/>.
@@ -56,4 +57,5 @@ public sealed class UsingPrimeTestClockControlExamples
         clock.Stop().Should().BeTrue();
         clock.IsRunning.Should().BeFalse();
     }
+    #endregion Snippet
 }

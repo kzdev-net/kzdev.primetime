@@ -16,6 +16,7 @@ namespace KZDev.PrimeTime.Testing.Examples;
 /// </summary>
 public sealed class UsingPrimeTestClockDstExamples
 {
+    #region Snippet
     /// <summary>
     /// Verifies advancing virtual time across a US Eastern spring-forward transition changes the
     /// resolved UTC offset for local zoned "now".
@@ -61,4 +62,5 @@ public sealed class UsingPrimeTestClockDstExamples
 
         TimeZoneInfo.Local.IsInvalidTime(invalid).Should().BeTrue();
     }
+    #endregion Snippet
 }

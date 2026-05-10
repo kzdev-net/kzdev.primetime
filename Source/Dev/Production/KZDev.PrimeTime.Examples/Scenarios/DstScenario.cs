@@ -16,6 +16,7 @@ public sealed class DstScenario : IExampleScenario
     /// <inheritdoc />
     public Task RunAsync(CancellationToken cancellationToken)
     {
+        #region Snippet
         ServiceCollection services = [];
         services.AddPrimeClock();
 
@@ -27,5 +28,6 @@ public sealed class DstScenario : IExampleScenario
         ScenarioConsole.WriteLine($"Clock zone supports DST: {localScheduleZone.SupportsDaylightSavingTime}");
 
         return Task.CompletedTask;
+        #endregion Snippet
     }
 }
