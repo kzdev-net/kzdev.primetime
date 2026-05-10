@@ -5,6 +5,7 @@ These articles apply to **either** production stack ([**KZDev.SystemClock.PrimeT
 ## Articles
 
 - [Choosing a package](choosing-a-package.md)
+- [Schedule zone naming (why “Schedule” in API names?)](schedule-zone-naming.md)
 - [Persistence and time conversions](persistence-and-conversions.md)
 - [Timers, daylight saving, and testing](concepts-timers-and-testing.md)
 - [Event monitoring (ETW)](event-monitoring.md)

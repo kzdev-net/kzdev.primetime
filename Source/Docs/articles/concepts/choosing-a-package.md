@@ -28,6 +28,7 @@ PrimeTime ships as **two NuGet packages**. They share one **design** (clock abst
 
 ## Next steps
 
+- [Schedule zone naming (why “Schedule” in API names?)](schedule-zone-naming.md) — what **Schedule** means and why it is not named like **`LocalTimeZone`** alone.
 - [Persistence and time conversions](persistence-and-conversions.md) — persistence shapes and schedule-zone conversion helpers.
 - [KZDev.SystemClock.PrimeTime usage guide](../system-clock/systemclock-package.md)
 - [KZDev.PrimeTime (NodaTime superset) usage guide](../primetime/primetime-superset.md)

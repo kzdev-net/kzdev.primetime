@@ -10,6 +10,8 @@ This article describes **how to store** absolute and zoned time with PrimeTime, 
 
 ## Schedule zone vs “UTC day”
 
+For **why** public APIs use the word **Schedule** in names such as **`LocalScheduleTimeZone`** and **`ToScheduleLocalDate`**, see [Schedule zone naming (why “Schedule” in API names?)](schedule-zone-naming.md).
+
 PrimeTime’s **local schedule** uses the same zone as **`IPrimeClock.LocalScheduleTimeZone`** (BCL) or **`IPrimeClock.LocalScheduleDateTimeZone`** (NodaTime, **KZDev.PrimeTime** only). Extensions on **`IPrimeTime`** such as **`ToScheduleLocalDate`**, **`ToScheduleDateTimeOffset`**, and related members project a **stored absolute** value into **that** zone—so “what day is it on the operations calendar?” and “what is the wall clock there?” align with how **time-of-day timers** interpret local time.
 
 Those extensions are implemented in:
@@ -46,6 +48,7 @@ For conversions that are **straightforward one-liners** in NodaTime or the BCL (
 ## Related
 
 - [Choosing a package](choosing-a-package.md)
+- [Schedule zone naming (why “Schedule” in API names?)](schedule-zone-naming.md)
 - [Timers, daylight saving, and testing](concepts-timers-and-testing.md)
 - [Event monitoring (ETW)](event-monitoring.md) — persistence shapes for monitored events, if applicable
 - **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)
