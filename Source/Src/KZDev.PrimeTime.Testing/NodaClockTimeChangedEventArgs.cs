@@ -20,7 +20,7 @@ public sealed class NodaClockTimeChangedEventArgs : ClockTimeChangedEventArgs
     /// <param name="instant">
     ///   The new current instant (UTC) of the clock after the change.
     /// </param>
-    public NodaClockTimeChangedEventArgs (Instant instant)
+    internal NodaClockTimeChangedEventArgs (Instant instant)
         : base(new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero))
     {
         Instant = instant;

@@ -42,7 +42,7 @@ public readonly struct ClockTimerCallbackContext : IEquatable<ClockTimerCallback
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="registration"/> is <c>null</c>.
     /// </exception>
-    public ClockTimerCallbackContext (IClockTimer registration, object? callbackState)
+    internal ClockTimerCallbackContext (IClockTimer registration, object? callbackState)
     {
         Registration = registration ?? throw new ArgumentNullException(nameof(registration));
         CallbackState = callbackState;

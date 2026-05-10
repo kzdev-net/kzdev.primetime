@@ -6,7 +6,7 @@
 
 | Package | Namespace | Role |
 |---------|-----------|------|
-| **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** | `KZDev.PrimeTime` | **Superset:** shared model **plus** **NodaTime** APIs on `IPrimeClock` (for example `Instant`, `Duration`, `LocalTime` timers). Includes a NodaTime dependency. |
+| **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** | `KZDev.PrimeTime` | **Superset:** shared model **BCL plus NodaTime** APIs on `IPrimeClock` (for example `Instant`, `Duration`, `LocalTime` timers). Includes a NodaTime dependency. |
 | **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** | `KZDev.SystemClock.PrimeTime` | **BCL subset:** same core type **names** and overlapping contracts using **`TimeProvider`** and BCL date/time types **only**—no NodaTime. |
 
 Reference **exactly one** of these in a given app. They are **not** intended to be used together.
@@ -17,8 +17,7 @@ Reference **exactly one** of these in a given app. They are **not** intended to 
 2. [KZDev.SystemClock.PrimeTime usage guide](system-clock/systemclock-package.md) — `TimeProvider`, DI defaults, BCL-focused workflow.
 3. [KZDev.PrimeTime usage guide](primetime/primetime-superset.md) — NodaTime-first workflow and superset-only APIs.
 4. [Timers, daylight saving, and testing](concepts/concepts-timers-and-testing.md) — concepts that apply to both packages.
-5. [Release notes](release-notes.md) — for the version declared in `Source/Src/Directory.Build.props`, aggregated from `Source/Docs/Notes/` when the documentation site is published.
-6. **API reference** — each stack publishes under its own URL prefix (**`api/system-clock/`** for the BCL stack, **`api/primetime/`** for the NodaTime stack): [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
+5. **API reference** — each stack publishes under its own URL prefix (**`api/system-clock/`** for the BCL stack, **`api/primetime/`** for the NodaTime stack): [System Clock API](xref:KZDev.SystemClock.PrimeTime), [PrimeTime / NodaTime API](xref:KZDev.PrimeTime).
 
 ## Source and license
 

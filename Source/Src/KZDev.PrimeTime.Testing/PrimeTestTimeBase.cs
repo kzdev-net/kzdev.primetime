@@ -33,7 +33,7 @@ public abstract partial class PrimeTestTimeBase
     /// <summary>
     ///   Initializes a new instance with virtual time set to the current system instant.
     /// </summary>
-    protected PrimeTestTimeBase ()
+    internal PrimeTestTimeBase ()
     {
         Now = SystemClock.Instance.GetCurrentInstant();
         TimeZone = GetSystemDefaultTimeZone();
@@ -45,7 +45,7 @@ public abstract partial class PrimeTestTimeBase
     ///   Initializes a new instance with the specified initial instant and system default zone.
     /// </summary>
     /// <param name="initialInstant">The initial virtual instant.</param>
-    protected PrimeTestTimeBase (Instant initialInstant)
+    internal PrimeTestTimeBase (Instant initialInstant)
     {
         Now = initialInstant;
         TimeZone = GetSystemDefaultTimeZone();
@@ -61,7 +61,7 @@ public abstract partial class PrimeTestTimeBase
     /// <exception cref="ArgumentNullException">
     ///   <paramref name="zone"/> is <c>null</c>.
     /// </exception>
-    protected PrimeTestTimeBase (Instant initialInstant, DateTimeZone zone)
+    internal PrimeTestTimeBase (Instant initialInstant, DateTimeZone zone)
     {
         Now = initialInstant;
         TimeZone = zone ?? throw new ArgumentNullException(nameof(zone));

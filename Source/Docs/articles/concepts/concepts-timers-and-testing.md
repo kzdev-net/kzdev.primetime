@@ -24,7 +24,7 @@ Runnable examples:
 
 ## Time-of-day timers and daylight saving
 
-On **.NET 6+** (SDK `NET`), **`IPrimeClock`** includes **local** and **UTC** time-of-day registration APIs. **Local** wall-clock scheduling uses the clock’s view of the local zone and honors:
+On **.NET 8+** (SDK `NET`), **`IPrimeClock`** includes **local** and **UTC** time-of-day registration APIs. **Local** wall-clock scheduling uses the clock’s view of the local zone and honors:
 
 - **`SkippedTimeBehavior`** — What to do when the requested local time does not exist (spring-forward gap).
 - **`DuplicateTimeBehavior`** — What to do when the same local time occurs twice (fall-back overlap).
@@ -60,11 +60,7 @@ Testing example references:
 - `Source/Dev/Testing/KZDev.PrimeTime.Testing.Examples/UsingPrimeTestClockDstExamples.cs`
 - `Source/Dev/Testing/KZDev.SystemClock.PrimeTime.Testing.Examples/UsingPrimeTestClockDstExamples.cs`
 
-## Snippet alignment notes
-
-The example projects are intentionally organized as small scenario classes so documentation snippets can be copied from single files with minimal adaptation. For runnable walkthrough output and default short-mode behavior (with optional long mode), see each production example `Program.cs` and `Helpers/DemoRunModeParser.cs`.
-
 ## Further reading
 
 - [Choosing a package](choosing-a-package.md)
-- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) (**`api/system-clock/`**) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime) (**`api/primetime/`**)
+- **API:** [System Clock stack](xref:KZDev.SystemClock.PrimeTime) · [PrimeTime / NodaTime stack](xref:KZDev.PrimeTime)

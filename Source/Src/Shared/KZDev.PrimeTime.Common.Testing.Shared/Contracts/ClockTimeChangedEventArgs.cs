@@ -22,7 +22,7 @@ public class ClockTimeChangedEventArgs : EventArgs
     /// <param name="utcNowDateTimeOffset">
     ///   The new current UTC time of the clock after the change.
     /// </param>
-    public ClockTimeChangedEventArgs (DateTimeOffset utcNowDateTimeOffset)
+    internal ClockTimeChangedEventArgs (DateTimeOffset utcNowDateTimeOffset)
     {
         UtcNowDateTimeOffset = utcNowDateTimeOffset;
     }
