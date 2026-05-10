@@ -110,6 +110,62 @@ public sealed partial class UsingPrimeTimeScheduleZoneExtensions
         act.Should().Throw<ArgumentException>().WithParameterName("utcDateTime");
     }
 
+    /// <summary>
+    ///   Verifies <see cref="DateTimeKind.Local"/> is rejected for the UTC <see cref="DateTime"/> overload.
+    /// </summary>
+    [Fact]
+    public void UtcDateTime_LocalKind_ToScheduleDateTimeOffset_ThrowsArgumentException ()
+    {
+        IPrimeTime time = new PrimeClock(TimeProvider.System);
+        DateTime localKind = DateTime.SpecifyKind(new DateTime(2025, 1, 1, 12, 0, 0), DateTimeKind.Local);
+        Action act = () => _ = time.ToScheduleDateTimeOffset(localKind);
+        act.Should().Throw<ArgumentException>().WithParameterName("utcDateTime");
+    }
+
+    /// <summary>
+    ///   Verifies schedule <see cref="DateTimeOffset"/> conversion maps the same absolute instant consistently for
+    ///   differing offset representations.
+    /// </summary>
+    [Fact]
+    public void PrimeClock_SystemProvider_DateTimeOffsetsSameInstant_ToScheduleDateTimeOffset_AreEqual ()
+    {
+        IPrimeTime time = new PrimeClock(TimeProvider.System);
+        DateTimeOffset utc = new(2025, 6, 1, 16, 0, 0, TimeSpan.Zero);
+        DateTimeOffset withOffset = new(2025, 6, 1, 18, 0, 0, TimeSpan.FromHours(2));
+        withOffset.UtcDateTime.Should().Be(utc.UtcDateTime);
+        DateTimeOffset a = time.ToScheduleDateTimeOffset(utc);
+        DateTimeOffset b = time.ToScheduleDateTimeOffset(withOffset);
+        a.Should().Be(b);
+    }
+
+    /// <summary>
+    ///   Verifies schedule-local wall <see cref="DateTime"/> matches the local component of the schedule
+    ///   <see cref="DateTimeOffset"/> for the same absolute instant.
+    /// </summary>
+    [Fact]
+    public void PrimeClock_SystemProvider_ToScheduleLocalWallDateTime_MatchesInZoneOffsetDateTime ()
+    {
+        IPrimeTime time = new PrimeClock(TimeProvider.System);
+        DateTimeOffset instant = new(2025, 6, 1, 16, 0, 0, TimeSpan.Zero);
+        DateTimeOffset inZone = time.ToScheduleDateTimeOffset(instant);
+        DateTime wall = time.ToScheduleLocalWallDateTime(instant);
+        wall.Should().Be(inZone.DateTime);
+        wall.Kind.Should().Be(DateTimeKind.Unspecified);
+    }
+
+    /// <summary>
+    ///   Verifies non-clock receivers fail for schedule-local wall <see cref="DateTime"/> conversion from
+    ///   <see cref="DateTimeOffset"/>.
+    /// </summary>
+    [Fact]
+    public void NonClock_ToScheduleLocalWallDateTime_ThrowsArgumentException ()
+    {
+        IPrimeTime time = new NonClockPrimeTime();
+        DateTimeOffset instant = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        Action act = () => _ = time.ToScheduleLocalWallDateTime(instant);
+        act.Should().Throw<ArgumentException>().WithParameterName("time");
+    }
+
 #if NET
     /// <summary>
     ///   Verifies schedule <see cref="DateTimeOffset"/> matches <see cref="TimeZoneInfo.ConvertTime(DateTimeOffset, TimeZoneInfo)"/>.
@@ -176,6 +232,24 @@ public sealed partial class UsingPrimeTimeScheduleZoneExtensions
         TimeOnly expected = TimeOnly.FromDateTime(inZone.DateTime);
         TimeOnly actual = time.ToScheduleTimeOnly(utcInstant);
         actual.Should().Be(expected);
+    }
+
+    /// <summary>
+    ///   Verifies UTC <see cref="DateTime"/> wall projection matches conversion from the same instant as
+    ///   <see cref="DateTimeOffset"/>.
+    /// </summary>
+    [Fact]
+    public void PrimeClock_FakeProvider_UtcDateTime_ToScheduleLocalWallDateTime_MatchesOffsetOverload ()
+    {
+        DateTimeOffset utcInstant = new(2025, 6, 1, 16, 0, 0, TimeSpan.Zero);
+        FakeTimeProvider fake = new(utcInstant);
+        TimeZoneInfo zone = TimeZoneInfo.CreateCustomTimeZone("KZDevSchedule+03b", TimeSpan.FromHours(3), null, null);
+        fake.SetLocalTimeZone(zone);
+        IPrimeTime time = new PrimeClock(fake);
+        DateTime utcDateTime = utcInstant.UtcDateTime;
+        DateTime fromOffsetOverload = time.ToScheduleLocalWallDateTime(utcInstant);
+        DateTime fromDateTimeOverload = time.ToScheduleLocalWallDateTime(utcDateTime);
+        fromDateTimeOverload.Should().Be(fromOffsetOverload);
     }
 #endif
 }

@@ -144,6 +144,69 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate"/> matches the calendar date in the
+    ///   schedule zone.
+    /// </summary>
+    [Fact]
+    public void PrimeTestClock_Instant_ToScheduleLocalDate_MatchesInZoneDate ()
+    {
+        Instant instant = Instant.FromUtc(2025, 6, 1, 4, 30, 0);
+        DateTimeZone zone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        IPrimeTime time = new PrimeTestClock(instant, zone);
+        LocalDate expected = instant.InZone(zone).Date;
+        LocalDate actual = time.ToScheduleLocalDate(instant);
+        actual.Should().Be(expected);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalTime"/> matches wall time in the schedule
+    ///   zone.
+    /// </summary>
+    [Fact]
+    public void PrimeTestClock_Instant_ToScheduleLocalTime_MatchesInZoneTimeOfDay ()
+    {
+        Instant instant = Instant.FromUtc(2025, 6, 1, 4, 30, 0);
+        DateTimeZone zone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        IPrimeTime time = new PrimeTestClock(instant, zone);
+        LocalTime expected = instant.InZone(zone).TimeOfDay;
+        LocalTime actual = time.ToScheduleLocalTime(instant);
+        actual.Should().Be(expected);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalWallDateTime"/> matches Noda local wall
+    ///   projection.
+    /// </summary>
+    [Fact]
+    public void PrimeTestClock_Instant_ToScheduleLocalWallDateTime_MatchesLocalDateTimeToDateTimeUnspecified ()
+    {
+        Instant instant = Instant.FromUtc(2025, 6, 1, 4, 30, 0);
+        DateTimeZone zone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        IPrimeTime time = new PrimeTestClock(instant, zone);
+        DateTime expected = instant.InZone(zone).LocalDateTime.ToDateTimeUnspecified();
+        DateTime actual = time.ToScheduleLocalWallDateTime(instant);
+        actual.Should().Be(expected);
+        actual.Kind.Should().Be(DateTimeKind.Unspecified);
+    }
+
+    /// <summary>
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleZonedDateTime(ZonedDateTime)"/> ignores the
+    ///   source zone and uses only the instant.
+    /// </summary>
+    [Fact]
+    public void PrimeTestClock_ZonedInTokyo_ToScheduleZonedDateTime_MatchesScheduleZoneWall ()
+    {
+        Instant instant = Instant.FromUtc(2025, 6, 1, 16, 0, 0);
+        DateTimeZone scheduleZone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        IPrimeTime time = new PrimeTestClock(instant, scheduleZone);
+        DateTimeZone tokyo = DateTimeZoneProviders.Tzdb["Asia/Tokyo"];
+        ZonedDateTime tokyoZoned = instant.InZone(tokyo);
+        ZonedDateTime expected = instant.InZone(scheduleZone);
+        ZonedDateTime actual = time.ToScheduleZonedDateTime(tokyoZoned);
+        actual.Should().Be(expected);
+    }
+
+    /// <summary>
     ///   Verifies a non-clock <see cref="IPrimeTime"/> throws <see cref="ArgumentException"/>.
     /// </summary>
     [Fact]
@@ -165,6 +228,18 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
         Instant instant = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Action act = () => _ = time!.ToScheduleZonedDateTime(instant);
         act.Should().Throw<ArgumentNullException>().WithParameterName("time");
+    }
+
+    /// <summary>
+    ///   Verifies non-clock receivers fail for <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate"/>.
+    /// </summary>
+    [Fact]
+    public void NonClock_ToScheduleLocalDate_ThrowsArgumentException ()
+    {
+        IPrimeTime time = new NonClockPrimeTime();
+        Instant instant = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Action act = () => _ = time.ToScheduleLocalDate(instant);
+        act.Should().Throw<ArgumentException>().WithParameterName("time");
     }
 }
 //################################################################################

@@ -57,6 +57,31 @@ public sealed class UsingPrimeTimeOfDayConversion
         PrimeTimeOfDayConversion.ToLocalTime(wall).Should().Be(expected);
     }
     //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies midnight <see cref="LocalTime"/> round-trips through <see cref="LocalTimeOfDay"/>.
+    /// </summary>
+    [Fact]
+    public void LocalTime_Midnight_ToLocalTimeOfDay_RoundTrips ()
+    {
+        LocalTime midnight = LocalTime.Midnight;
+        LocalTimeOfDay wrapped = PrimeTimeOfDayConversion.ToLocalTimeOfDay(midnight);
+        wrapped.Value.Should().Be(TimeOnly.MinValue);
+        PrimeTimeOfDayConversion.ToLocalTime(wrapped).Should().Be(midnight);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies end-of-day tick values round-trip through <see cref="LocalTimeOfDay"/>.
+    /// </summary>
+    [Fact]
+    public void LocalTime_EndOfDay_ToLocalTimeOfDay_RoundTrips ()
+    {
+        LocalTime endOfDay = LocalTime.FromTicksSinceMidnight(TimeOnly.MaxValue.Ticks);
+        LocalTimeOfDay wrapped = PrimeTimeOfDayConversion.ToLocalTimeOfDay(endOfDay);
+        PrimeTimeOfDayConversion.ToLocalTime(wrapped).Should().Be(endOfDay);
+    }
+    //----------------------------------------------------------------------------
 }
 //################################################################################
 #endif

@@ -47,5 +47,16 @@ public sealed class UsingNodaDateTimeZoneBclConversion
         NodaDateTimeZoneBclConversion.GetLocalScheduleTimeZoneInfo(zone).Should().BeSameAs(synthetic);
     }
     //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies non-<see cref="BclDateTimeZone"/> sources fall back to <see cref="TimeZoneInfo.Local"/>.
+    /// </summary>
+    [Fact]
+    public void GetLocalScheduleTimeZoneInfo_WhenTzdbZone_ReturnsLocalTimeZoneInfo ()
+    {
+        DateTimeZone zone = DateTimeZoneProviders.Tzdb["America/New_York"];
+        NodaDateTimeZoneBclConversion.GetLocalScheduleTimeZoneInfo(zone).Should().Be(TimeZoneInfo.Local);
+    }
+    //----------------------------------------------------------------------------
 }
 //################################################################################

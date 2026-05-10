@@ -127,5 +127,53 @@ public sealed class UsingNodaDurationBclConversion
             "non-positive durations coerce to zero for delay APIs only");
     }
     //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies the upper inclusive bound for delay clamping maps <see cref="TimeSpan.MaxValue"/> durations to
+    ///   <see cref="TimeSpan.MaxValue"/>.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForDelay_WhenExactlyTimeSpanMaxDuration_ReturnsTimeSpanMaxValue ()
+    {
+        Duration atCap = Duration.FromTimeSpan(TimeSpan.MaxValue);
+        NodaDurationBclConversion.ToTimeSpanForDelay(atCap).Should().Be(TimeSpan.MaxValue);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies durations just below the delay cap use <see cref="Duration.ToTimeSpan"/> without clamping.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForDelay_WhenOneTickBelowTimeSpanMax_ReturnsEquivalentTimeSpan ()
+    {
+        Duration belowCap = Duration.FromTimeSpan(TimeSpan.MaxValue) - Duration.FromTicks(1);
+        NodaDurationBclConversion.ToTimeSpanForDelay(belowCap).Should().Be(belowCap.ToTimeSpan());
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies the inclusive millisecond cap for cancellation timers maps exactly to
+    ///   <see cref="int.MaxValue"/> milliseconds.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForCancellationToken_WhenExactlyIntMaxMillis_ReturnsIntMaxValueAsTimeSpan ()
+    {
+        Duration atCap = Duration.FromMilliseconds(int.MaxValue);
+        NodaDurationBclConversion.ToTimeSpanForCancellationToken(atCap).Should().Be(
+            TimeSpan.FromMilliseconds(int.MaxValue));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies timer-interval conversion treats <see cref="TimeSpan.MaxValue"/> durations like other
+    ///   non-representable positive spans.
+    /// </summary>
+    [Fact]
+    public void ToTimeSpanForTimerInterval_WhenExactlyTimeSpanMaxDuration_ReturnsTimeSpanMaxValue ()
+    {
+        Duration atCap = Duration.FromTimeSpan(TimeSpan.MaxValue);
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(atCap).Should().Be(TimeSpan.MaxValue);
+    }
+    //----------------------------------------------------------------------------
 }
 //################################################################################
