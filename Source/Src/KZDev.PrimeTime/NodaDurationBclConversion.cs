@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 ///   so delays, cancellation timers, interval registration, and virtual clock advances stay aligned with
 ///   <see cref="TimeSpan"/>-based <see cref="IPrimeClock"/> members and avoid <see cref="OverflowException"/>.
 /// </summary>
-internal static class NodaDurationBclConversions
+public static class NodaDurationBclConversion
 {
     //----------------------------------------------------------------------------
     /// <summary>
@@ -42,7 +42,7 @@ internal static class NodaDurationBclConversions
     ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
     ///   <see cref="TimeSpan"/> in the branch that calls it.
     /// </exception>
-    internal static TimeSpan ToTimeSpanForDelay (Duration duration)
+    public static TimeSpan ToTimeSpanForDelay (Duration duration)
     {
         if (duration <= Duration.Zero)
         {
@@ -74,7 +74,7 @@ internal static class NodaDurationBclConversions
     ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
     ///   <see cref="TimeSpan"/> in the branch that calls it.
     /// </exception>
-    internal static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
+    public static TimeSpan ToTimeSpanForCancellationToken (Duration duration)
     {
         if (duration <= Duration.Zero)
         {
@@ -114,7 +114,7 @@ internal static class NodaDurationBclConversions
     ///   Thrown by <see cref="Duration.ToTimeSpan"/> when <paramref name="duration"/> is not representable as a
     ///   <see cref="TimeSpan"/>.
     /// </exception>
-    internal static TimeSpan ToTimeSpanForTimerInterval (Duration duration)
+    public static TimeSpan ToTimeSpanForTimerInterval (Duration duration)
     {
         if (duration > Duration.Zero && duration >= MaxDurationForDelay)
         {

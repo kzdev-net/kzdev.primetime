@@ -37,6 +37,7 @@
     <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
         <Compile Remove="UsingIPrimeClockDayTimeTimers.cs" />
         <Compile Remove="UsingDayTimeNodaLocalWallTimeScheduling.cs" />
+        <Compile Remove="UsingPrimeTimeOfDayConversion.NetCore.cs" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net481'">

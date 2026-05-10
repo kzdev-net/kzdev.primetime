@@ -348,7 +348,7 @@ public static class PrimeClockNodaTimerExtensions
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(LocalTime.FromTicksSinceMidnight(timeOfDay.Value.Ticks), callback, cancellationToken, state,
+        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
             timerOptions);
     //----------------------------------------------------------------------------
 
@@ -373,7 +373,7 @@ public static class PrimeClockNodaTimerExtensions
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(LocalTime.FromTicksSinceMidnight(timeOfDay.Value.Ticks), callback, cancellationToken, state,
+        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
             timerOptions);
     //----------------------------------------------------------------------------
 
@@ -398,7 +398,7 @@ public static class PrimeClockNodaTimerExtensions
         CancellationToken cancellationToken,
         object? state = null,
         DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterAsyncTimeOfDay(LocalTime.FromTicksSinceMidnight(timeOfDay.Value.Ticks), callback, cancellationToken, state,
+        clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
             timerOptions);
     //----------------------------------------------------------------------------
 
@@ -421,7 +421,7 @@ public static class PrimeClockNodaTimerExtensions
         Action callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(LocalTime.FromTicksSinceMidnight(timeOfDay.Value.Ticks), callback, cancellationToken, timerOptions);
+        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, timerOptions);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -442,7 +442,7 @@ public static class PrimeClockNodaTimerExtensions
         Func<CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken,
         DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterAsyncTimeOfDay(LocalTime.FromTicksSinceMidnight(timeOfDay.Value.Ticks), callback, cancellationToken,
+        clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken,
             timerOptions);
     //----------------------------------------------------------------------------
 #endif

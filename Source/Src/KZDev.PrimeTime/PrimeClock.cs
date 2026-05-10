@@ -25,10 +25,10 @@ internal sealed partial class PrimeClock
     /// </summary>
     /// <param name="timeOnly">The wall-clock time of day.</param>
     /// <returns>
-    ///   The equivalent Noda <see cref="LocalTime"/> from <see cref="LocalTime.FromTicksSinceMidnight"/>.
+    ///   The equivalent Noda <see cref="LocalTime"/> from <see cref="PrimeTimeOfDayConversion.ToLocalTime(TimeOnly)"/>.
     /// </returns>
     private static LocalTime TimeOnlyToLocalTime (TimeOnly timeOnly) =>
-        LocalTime.FromTicksSinceMidnight(timeOnly.Ticks);
+        PrimeTimeOfDayConversion.ToLocalTime(timeOnly);
     //----------------------------------------------------------------------------
 
 #endif
@@ -185,7 +185,10 @@ internal sealed partial class PrimeClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeZoneInfo LocalScheduleTimeZone { [DebuggerStepThrough] get =>
-        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(_systemDefaultZone); }
+        NodaDateTimeZoneBclConversion.GetLocalScheduleTimeZoneInfo(_systemDefaultZone); }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public DateTimeZone LocalScheduleDateTimeZone { [DebuggerStepThrough] get => _systemDefaultZone; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation
@@ -198,8 +201,8 @@ internal sealed partial class PrimeClock
         Duration repeatInterval, Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken, object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        new ClockIntervalTimerRegistration(this, NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+        new ClockIntervalTimerRegistration(this, NodaDurationBclConversion.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(repeatInterval),
             TimerCallbackKind.ContextAction, callback, state, timerOptions,
             cancellationToken);
     //----------------------------------------------------------------------------
@@ -211,8 +214,8 @@ internal sealed partial class PrimeClock
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
         new ClockIntervalTimerRegistration(this,
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(repeatInterval),
             TimerCallbackKind.ContextAsync, callback, state,
             timerOptions, cancellationToken);
     //----------------------------------------------------------------------------

@@ -113,7 +113,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     /// <param name="newTimeOfDay">New time of day.</param>
     private partial void ApplyLocalScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+        _targetTimeOfDay = PrimeTimeOfDayConversion.ToLocalTime(newTimeOfDay);
 
     /// <summary>
     ///   Applies a UTC <see cref="TimeOnly"/> schedule after a dynamic change, preserving the full
@@ -121,7 +121,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
     /// </summary>
     /// <param name="newTimeOfDay">New time of day.</param>
     private partial void ApplyUtcScheduleTimeOfDay (TimeOnly newTimeOfDay) =>
-        _targetTimeOfDay = LocalTime.FromTicksSinceMidnight(newTimeOfDay.Ticks);
+        _targetTimeOfDay = PrimeTimeOfDayConversion.ToLocalTime(newTimeOfDay);
 #endif
 
     //----------------------------------------------------------------------------

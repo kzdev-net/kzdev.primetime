@@ -15,102 +15,102 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   <see cref="TimeSpan"/>-based <see cref="IPrimeClock"/> timer and delay semantics.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed class UsingNodaDurationBclConversions
+public sealed class UsingNodaDurationBclConversion
 {
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Duration strictly larger than <see cref="TimeSpan.MaxValue"/> in the Noda ordering used by
-    ///   <see cref="NodaDurationBclConversions"/>.
+    ///   <see cref="NodaDurationBclConversion"/>.
     /// </summary>
     private static readonly Duration DurationStrictlyBeyondTimeSpanMaxValue =
         Duration.FromTimeSpan(TimeSpan.MaxValue) + Duration.FromMilliseconds(1);
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForDelay"/> maps zero and negative
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForDelay"/> maps zero and negative
     ///   <see cref="Duration"/> values to <see cref="TimeSpan.Zero"/> for BCL delay semantics.
     /// </summary>
     [Fact]
     public void ToTimeSpanForDelay_WhenNonPositive_ReturnsZero ()
     {
-        NodaDurationBclConversions.ToTimeSpanForDelay(Duration.Zero).Should().Be(TimeSpan.Zero);
-        NodaDurationBclConversions.ToTimeSpanForDelay(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversion.ToTimeSpanForDelay(Duration.Zero).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversion.ToTimeSpanForDelay(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForDelay"/> clamps durations above
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForDelay"/> clamps durations above
     ///   <see cref="TimeSpan.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
     /// </summary>
     [Fact]
     public void ToTimeSpanForDelay_WhenExceedsTimeSpanMaxValue_ReturnsTimeSpanMaxValue ()
     {
-        NodaDurationBclConversions.ToTimeSpanForDelay(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(TimeSpan.MaxValue);
+        NodaDurationBclConversion.ToTimeSpanForDelay(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(TimeSpan.MaxValue);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForCancellationToken"/> caps huge
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForCancellationToken"/> caps huge
     ///   durations at <see cref="int.MaxValue"/> milliseconds as a <see cref="TimeSpan"/>.
     /// </summary>
     [Fact]
     public void ToTimeSpanForCancellationToken_WhenExceedsIntMillisCap_ReturnsIntMaxValueAsTimeSpan ()
     {
         Duration huge = Duration.FromDays(300_000);
-        TimeSpan ts = NodaDurationBclConversions.ToTimeSpanForCancellationToken(huge);
+        TimeSpan ts = NodaDurationBclConversion.ToTimeSpanForCancellationToken(huge);
         ts.Should().Be(TimeSpan.FromMilliseconds(int.MaxValue));
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForCancellationToken"/> maps zero and negative
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForCancellationToken"/> maps zero and negative
     ///   values to <see cref="TimeSpan.Zero"/>.
     /// </summary>
     [Fact]
     public void ToTimeSpanForCancellationToken_WhenNonPositive_ReturnsZero ()
     {
-        NodaDurationBclConversions.ToTimeSpanForCancellationToken(Duration.Zero).Should().Be(TimeSpan.Zero);
-        NodaDurationBclConversions.ToTimeSpanForCancellationToken(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversion.ToTimeSpanForCancellationToken(Duration.Zero).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversion.ToTimeSpanForCancellationToken(Duration.FromMilliseconds(-1)).Should().Be(TimeSpan.Zero);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> clamps positive
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForTimerInterval"/> clamps positive
     ///   durations above <see cref="TimeSpan.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
     /// </summary>
     [Fact]
     public void ToTimeSpanForTimerInterval_WhenPositiveAndBeyondTimeSpanMaxValue_ReturnsTimeSpanMaxValue ()
     {
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(DurationStrictlyBeyondTimeSpanMaxValue).Should().Be(
             TimeSpan.MaxValue);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> clamps
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForTimerInterval"/> clamps
     ///   <see cref="Duration.MaxValue"/> to <see cref="TimeSpan.MaxValue"/>.
     /// </summary>
     [Fact]
     public void ToTimeSpanForTimerInterval_WhenDurationMaxValue_ReturnsTimeSpanMaxValue ()
     {
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(Duration.MaxValue).Should().Be(TimeSpan.MaxValue);
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(Duration.MaxValue).Should().Be(TimeSpan.MaxValue);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="NodaDurationBclConversions.ToTimeSpanForTimerInterval"/> preserves
+    ///   Verifies that <see cref="NodaDurationBclConversion.ToTimeSpanForTimerInterval"/> preserves
     ///   <see cref="Timeout.InfiniteTimeSpan"/> for one-shot timer due-time registration.
     /// </summary>
     [Fact]
     public void ToTimeSpanForTimerInterval_WhenInfiniteDueTime_PreservesInfiniteTimeSpan ()
     {
         Duration infiniteDueTime = Duration.FromTimeSpan(Timeout.InfiniteTimeSpan);
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(infiniteDueTime).Should().Be(Timeout.InfiniteTimeSpan);
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(infiniteDueTime).Should().Be(Timeout.InfiniteTimeSpan);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Documents intentional difference from <see cref="NodaDurationBclConversions.ToTimeSpanForDelay"/>: timer paths
+    ///   Documents intentional difference from <see cref="NodaDurationBclConversion.ToTimeSpanForDelay"/>: timer paths
     ///   pass zero and negative <see cref="Duration"/> through <see cref="Duration.ToTimeSpan"/> instead of coercing
     ///   to <see cref="TimeSpan.Zero"/> so they match BCL <see cref="TimeSpan"/> timer registration semantics.
     /// </summary>
@@ -118,12 +118,12 @@ public sealed class UsingNodaDurationBclConversions
     public void ToTimeSpanForTimerInterval_WhenZeroOrNegative_MatchesDurationToTimeSpan_NotDelayCoercion ()
     {
         Duration zero = Duration.Zero;
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(zero).Should().Be(zero.ToTimeSpan());
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(zero).Should().Be(TimeSpan.Zero);
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(zero).Should().Be(zero.ToTimeSpan());
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(zero).Should().Be(TimeSpan.Zero);
 
         Duration negative = Duration.FromMilliseconds(-10);
-        NodaDurationBclConversions.ToTimeSpanForTimerInterval(negative).Should().Be(negative.ToTimeSpan());
-        NodaDurationBclConversions.ToTimeSpanForDelay(negative).Should().Be(TimeSpan.Zero,
+        NodaDurationBclConversion.ToTimeSpanForTimerInterval(negative).Should().Be(negative.ToTimeSpan());
+        NodaDurationBclConversion.ToTimeSpanForDelay(negative).Should().Be(TimeSpan.Zero,
             "non-positive durations coerce to zero for delay APIs only");
     }
     //----------------------------------------------------------------------------

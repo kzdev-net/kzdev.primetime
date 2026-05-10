@@ -135,8 +135,11 @@ public sealed partial class PrimeTestClock
     {
         [DebuggerStepThrough]
         get =>
-        NodaDateTimeZoneBclInterop.GetLocalScheduleTimeZoneInfo(TimeZone);
+        NodaDateTimeZoneBclConversion.GetLocalScheduleTimeZoneInfo(TimeZone);
     }
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public DateTimeZone LocalScheduleDateTimeZone { [DebuggerStepThrough] get => TimeZone; }
     //----------------------------------------------------------------------------
 
     #endregion IPrimeClock Implementation — Local schedule zone
@@ -239,15 +242,15 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Advance (Duration duration) =>
-        Advance(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+        Advance(NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void RunFor (Duration duration) =>
-        RunFor(NodaDurationBclConversions.ToTimeSpanForTimerInterval(duration));
+        RunFor(NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (Duration? rate = null) =>
-        Start(rate is { } d ? NodaDurationBclConversions.ToTimeSpanForTimerInterval(d) : null);
+        Start(rate is { } d ? NodaDurationBclConversion.ToTimeSpanForTimerInterval(d) : null);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock Implementation — Noda
@@ -262,8 +265,8 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+        RegisterTimer(NodaDurationBclConversion.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(repeatInterval),
             callback,
             cancellationToken,
             state,
@@ -276,8 +279,8 @@ public sealed partial class PrimeTestClock
         CancellationToken cancellationToken,
         object? state = null,
         IntervalTimerOptions? timerOptions = null) =>
-        RegisterAsyncTimer(NodaDurationBclConversions.ToTimeSpanForTimerInterval(callbackTime),
-            NodaDurationBclConversions.ToTimeSpanForTimerInterval(repeatInterval),
+        RegisterAsyncTimer(NodaDurationBclConversion.ToTimeSpanForTimerInterval(callbackTime),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(repeatInterval),
             callback,
             cancellationToken,
             state,

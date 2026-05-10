@@ -176,6 +176,13 @@ public partial interface IPrimeClock
     /// </remarks>
     TimeZoneInfo LocalScheduleTimeZone { get; }
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the Noda <see cref="DateTimeZone"/> used for local calendar-day and local wall-clock time when
+    ///   resolving <see cref="LocalZonedNowInstant"/> and local day-time timer registration (the same zone object
+    ///   that backs <see cref="LocalScheduleTimeZone"/> when that property exposes a wrapped BCL zone).
+    /// </summary>
+    DateTimeZone LocalScheduleDateTimeZone { get; }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Local schedule zone
 }

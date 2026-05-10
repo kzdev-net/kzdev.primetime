@@ -110,15 +110,15 @@ public abstract partial class PrimeTestTimeBase
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Sleep (Duration duration) =>
-        Sleep(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
+        Sleep(NodaDurationBclConversion.ToTimeSpanForDelay(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration) =>
-        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration));
+        DelayAsync(NodaDurationBclConversion.ToTimeSpanForDelay(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken) =>
-        DelayAsync(NodaDurationBclConversions.ToTimeSpanForDelay(duration), cancellationToken);
+        DelayAsync(NodaDurationBclConversion.ToTimeSpanForDelay(duration), cancellationToken);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTime / IPrimeClock — Delays (Duration)
@@ -128,21 +128,21 @@ public abstract partial class PrimeTestTimeBase
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter) =>
-        GetTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter));
+        GetTimeCancellationToken(NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
+        LinkTimeCancellationToken(NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter), cancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
         CancellationToken secondCancellationToken) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), firstCancellationToken, secondCancellationToken);
+        LinkTimeCancellationToken(NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter), firstCancellationToken, secondCancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens) =>
-        LinkTimeCancellationToken(NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
+        LinkTimeCancellationToken(NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter), cancellationTokens);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTime / IPrimeClock — Time cancellation (Duration)

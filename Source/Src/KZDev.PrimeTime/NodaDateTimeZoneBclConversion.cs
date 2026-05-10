@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 ///   Maps Noda <see cref="DateTimeZone"/> values to BCL <see cref="TimeZoneInfo"/> for
 ///   <see cref="IPrimeClock.LocalScheduleTimeZone"/> and <see cref="TimeProvider.LocalTimeZone"/> adapters.
 /// </summary>
-internal static class NodaDateTimeZoneBclInterop
+public static class NodaDateTimeZoneBclConversion
 {
     //----------------------------------------------------------------------------
     /// <summary>
@@ -23,7 +23,7 @@ internal static class NodaDateTimeZoneBclInterop
     /// <returns>
     ///   <see cref="BclDateTimeZone.OriginalZone"/> when applicable; otherwise <see cref="TimeZoneInfo.Local"/>.
     /// </returns>
-    internal static TimeZoneInfo GetLocalScheduleTimeZoneInfo (DateTimeZone zone)
+    public static TimeZoneInfo GetLocalScheduleTimeZoneInfo (DateTimeZone zone)
     {
         if (zone is BclDateTimeZone bclZone)
             return bclZone.OriginalZone;

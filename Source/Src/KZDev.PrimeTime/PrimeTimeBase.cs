@@ -27,21 +27,21 @@ internal abstract partial class PrimeTimeBase
     /// </remarks>
     public void Sleep (Duration duration)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForDelay(duration);
         Thread.Sleep(timeSpan);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForDelay(duration);
         return Task.Delay(timeSpan);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public Task DelayAsync (Duration duration, CancellationToken cancellationToken)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForDelay(duration);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForDelay(duration);
         return Task.Delay(timeSpan, cancellationToken);
     }
     //----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ internal abstract partial class PrimeTimeBase
     /// <inheritdoc />
     public TimeCancellationTokenSource GetTimeCancellationToken (Duration cancelAfter)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource cancellationTokenSource = new(timeSpan);
         return new TimeCancellationTokenSource(cancellationTokenSource);
     }
@@ -62,7 +62,7 @@ internal abstract partial class PrimeTimeBase
     /// <inheritdoc />
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken cancellationToken)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
         CancellationTokenSource linkedCancellationTokenSource =
             CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, cancellationToken);
@@ -73,7 +73,7 @@ internal abstract partial class PrimeTimeBase
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter, CancellationToken firstCancellationToken,
         CancellationToken secondCancellationToken)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
         CancellationTokenSource linkedCancellationTokenSource =
             CancellationTokenSource.CreateLinkedTokenSource(timeLimitedCancellationTokenSource.Token, firstCancellationToken, secondCancellationToken);
@@ -84,7 +84,7 @@ internal abstract partial class PrimeTimeBase
     public TimeCancellationTokenSource LinkTimeCancellationToken (Duration cancelAfter,
         params CancellationToken[] cancellationTokens)
     {
-        TimeSpan timeSpan = NodaDurationBclConversions.ToTimeSpanForCancellationToken(cancelAfter);
+        TimeSpan timeSpan = NodaDurationBclConversion.ToTimeSpanForCancellationToken(cancelAfter);
         CancellationTokenSource timeLimitedCancellationTokenSource = new(timeSpan);
         CancellationTokenSource linkedCancellationTokenSource =
             CancellationTokenSource.CreateLinkedTokenSource([timeLimitedCancellationTokenSource.Token, .. cancellationTokens]);
