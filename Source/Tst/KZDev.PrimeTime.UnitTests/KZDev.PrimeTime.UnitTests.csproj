@@ -25,6 +25,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Tools\KZDev.PrimeTime.ReleaseAggregation\KZDev.PrimeTime.ReleaseAggregation.csproj" />
         <ProjectReference Include="..\..\Src\KZDev.PrimeTime\KZDev.PrimeTime.csproj" />
+        <ProjectReference Include="..\..\Src\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
         <ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
         <ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
     </ItemGroup>
@@ -37,6 +38,7 @@
     <ItemGroup Condition="'$(TargetFramework)' == 'net481'">
         <Compile Remove="UsingIPrimeClockDayTimeTimers.cs" />
         <Compile Remove="UsingDayTimeNodaLocalWallTimeScheduling.cs" />
+        <Compile Remove="UsingPrimeTimeScheduleZoneExtensions.NetCore.cs" />
         <Compile Remove="UsingPrimeTimeOfDayConversion.NetCore.cs" />
     </ItemGroup>
 
