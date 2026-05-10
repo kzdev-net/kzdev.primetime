@@ -62,8 +62,8 @@ Use this package for test scenarios requiring NodaTime's advanced time handling 
 
 Both **KZDev.SystemClock.PrimeTime** and **KZDev.PrimeTime** share the **same core design** (identical service registration patterns, `IPrimeClock` interface shape, and conceptual model) but target **different type systems**. They are **mutually exclusive**—pick **exactly one production package** per application:
 
-- Use **SystemClock.PrimeTime** for BCL-only applications or when you want minimal dependencies
-- Use **PrimeTime** when you need NodaTime's superior time zone handling, clarity, and type safety
+- Use **SystemClock.PrimeTime** when you prefer BCL types and want minimal dependencies
+- Use **PrimeTime** when you need NodaTime's superior time zone handling, clarity, and type safety (includes all SystemClock functionality)
 
 Each production package has a **matching testing package** aligned to the same type system. See **[Testing packages](articles/testing-packages.md)** for detailed guidance on virtual time, dependency injection patterns, and examples.
 

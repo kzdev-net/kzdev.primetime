@@ -1,6 +1,6 @@
 # System Clock track
 
-Use **KZDev.SystemClock.PrimeTime** when you want injectable clocks and timers built on **`TimeProvider`** and **BCL** date/time types only (**no NodaTime**).
+Use **KZDev.SystemClock.PrimeTime** when you want injectable clocks and timers built on **`TimeProvider`** and **BCL** date/time types with minimal dependencies.
 
 ## In this track
 

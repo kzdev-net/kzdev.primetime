@@ -3,15 +3,15 @@
 **Package ID:** `KZDev.SystemClock.PrimeTime`  
 **Namespace:** `KZDev.SystemClock.PrimeTime`
 
-This guide describes the **BCL / `TimeProvider`** deliverable: same **names** (`IPrimeClock`, `PrimeClock`, `PrimeTestClock`, …) as the superset where they overlap, **without** NodaTime.
+This guide describes the **BCL / `TimeProvider`** foundation package: same **names** (`IPrimeClock`, `PrimeClock`, `PrimeTestClock`, …) as the superset where they overlap, using only BCL types and minimal dependencies.
 
 ## When to use this package
 
 - You standardize on **`DateTimeOffset`**, **`TimeSpan`**, and **`TimeProvider`**.
-- You **must not** add a NodaTime dependency.
+- You want to minimize dependencies (no NodaTime required).
 - You want **`IPrimeClock.LocalScheduleTimeZone`** for local calendar time-of-day behavior (see API docs).
 
-If you need **`Instant`**, **`Duration`**, or **`LocalTime`** members on **`IPrimeClock`**, use **[KZDev.PrimeTime](../primetime/primetime-superset.md)** instead.
+If you also need **`Instant`**, **`Duration`**, or **`LocalTime`** extensions on **`IPrimeClock`**, use **[KZDev.PrimeTime](../primetime/primetime-superset.md)** which includes all SystemClock functionality plus NodaTime support.
 
 ## Install
 

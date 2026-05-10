@@ -6,8 +6,8 @@
 
 | Package | Namespace | Role |
 |---------|-----------|------|
-| **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** | `KZDev.PrimeTime` | **Superset:** shared model **BCL plus NodaTime** APIs on `IPrimeClock` (for example `Instant`, `Duration`, `LocalTime` timers). Includes a NodaTime dependency. |
-| **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** | `KZDev.SystemClock.PrimeTime` | **BCL subset:** same core type **names** and overlapping contracts using **`TimeProvider`** and BCL date/time types **only**—no NodaTime. |
+| **[KZDev.PrimeTime](https://www.nuget.org/packages/KZDev.PrimeTime)** | `KZDev.PrimeTime` | **Superset:** shared model with **BCL plus NodaTime** APIs on `IPrimeClock` (for example `Instant`, `Duration`, `LocalTime` timers). Includes all SystemClock functionality plus NodaTime extensions. |
+| **[KZDev.SystemClock.PrimeTime](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime)** | `KZDev.SystemClock.PrimeTime` | **BCL foundation:** core contracts using **`TimeProvider`** and BCL date/time types. Minimal dependencies. |
 
 Reference **exactly one** of these in a given app. They are **not** intended to be used together.
 

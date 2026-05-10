@@ -11,7 +11,7 @@ This guide describes the **full** PrimeTime package: everything in the SystemClo
 - You want **`Instant`**, **`ZonedDateTime`**, **`LocalTime`**, and **`Duration`** on the same clock abstraction as your BCL projections.
 - You want **`Duration`-based** interval registration and **`LocalTime`-based** time-of-day registration on **`IPrimeClock`** (see API reference).
 
-If you want **only** BCL types and **`TimeProvider`**, use **[KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)** instead.
+This package includes all the BCL/`TimeProvider` functionality from SystemClock plus NodaTime extensions. If you prefer minimal dependencies and don't need NodaTime types, use **[KZDev.SystemClock.PrimeTime](../system-clock/systemclock-package.md)**.
 
 ## Install
 

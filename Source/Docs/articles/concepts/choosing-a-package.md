@@ -6,8 +6,8 @@ PrimeTime ships as **two NuGet packages**. They share one **design** (clock abst
 
 1. **Pick exactly one package** per application (or bounded context). They are **not** designed to be referenced together.
 2. Choose from **your time model**:
-   - **BCL only** → **KZDev.SystemClock.PrimeTime** (`KZDev.SystemClock.PrimeTime`).
-   - **NodaTime in production** (or you want NodaTime-first clock APIs) → **KZDev.PrimeTime** (`KZDev.PrimeTime`).
+   - **BCL types preferred, minimal dependencies** → **KZDev.SystemClock.PrimeTime** (`KZDev.SystemClock.PrimeTime`).
+   - **NodaTime in production** (or you want NodaTime extensions alongside BCL support) → **KZDev.PrimeTime** (`KZDev.PrimeTime`).
 
 ## Side-by-side comparison
 
