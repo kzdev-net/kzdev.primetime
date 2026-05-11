@@ -536,6 +536,11 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
 #if NET
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public bool Change (LocalTimeOfDay newTimeOfDay)
     {
         if (!IsLocalDayTimeSchedule)
@@ -553,6 +558,11 @@ internal sealed partial class ClockDayTimeTimerRegistration : ClockTimerRegistra
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public bool Change (UtcTimeOfDay newTimeOfDay)
     {
         if (!IsUtcDayTimeSchedule)

@@ -478,6 +478,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #if NET
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public TimeOnly LocalNowTimeOnly
     {
         get
@@ -488,6 +493,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public TimeOnly UtcNowTimeOnly
     {
         get
@@ -498,6 +508,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public DateOnly LocalNowDateOnly
     {
         get
@@ -508,6 +523,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public DateOnly UtcNowDateOnly
     {
         get
@@ -562,12 +582,22 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
         object? state = null, DayTimeTimerOptions? timerOptions = null) =>
         RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAction, callback, state, timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken, object? state = null,
@@ -575,6 +605,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         RegisterTimeOfDayLocal(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAsync, callback, state, timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback,
         CancellationToken cancellationToken, object? state = null,
@@ -582,6 +617,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         RegisterTimeOfDayUtc(timeOfDay.Value.ToTimeSpan(), TimerCallbackKind.ContextAction, callback, state, timerOptions, cancellationToken);
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken, object? state = null,

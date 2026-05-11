@@ -12,6 +12,11 @@ namespace KZDev.PrimeTime;
 ///   (<see cref="TimeOnly"/>, <see cref="LocalTimeOfDay"/>, <see cref="UtcTimeOfDay"/>), preserving
 ///   100-nanosecond tick resolution.
 /// </summary>
+/// <remarks>
+///   <para>
+///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+///   </para>
+/// </remarks>
 public static class PrimeTimeOfDayConversion
 {
     //----------------------------------------------------------------------------

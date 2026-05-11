@@ -15,11 +15,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     API reference generated from a modern target (for example .NET 10) may list
-///     <c>Change</c> overloads that are not emitted when you target .NET Standard 2.0 or
-///     .NET Framework (for example .NET Framework 4.8.1). Those overloads depend on
-///     <c>System.TimeOnly</c> and are included only when the library is built with the SDK
-///     <c>NET</c> conditional compilation symbol (effectively .NET 6+).
+///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
 ///   </para>
 /// </remarks>
 public partial interface IClockDayTimeTimer : IDayTimeTimer
@@ -36,8 +32,7 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
     /// </returns>
     /// <remarks>
     ///   <para>
-    ///     Not present in the compiled contract for .NET Standard 2.0 or .NET Framework; requires
-    ///     <see cref="TimeOnly"/> (see remarks on <see cref="IClockDayTimeTimer"/>).
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
     bool Change (LocalTimeOfDay newTimeOfDay);
@@ -52,8 +47,7 @@ public partial interface IClockDayTimeTimer : IDayTimeTimer
     /// </returns>
     /// <remarks>
     ///   <para>
-    ///     Not present in the compiled contract for .NET Standard 2.0 or .NET Framework; requires
-    ///     <see cref="TimeOnly"/> (see remarks on <see cref="IClockDayTimeTimer"/>).
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
     bool Change (UtcTimeOfDay newTimeOfDay);

@@ -274,6 +274,11 @@ public static class PrimeClockTimerExtensions
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
         LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -300,6 +305,11 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
         LocalTimeOfDay timeOfDay,
         Action callback,
@@ -325,6 +335,11 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterAsyncTimeOfDay (this IPrimeClock clock,
         LocalTimeOfDay timeOfDay,
         Func<CancellationToken, ValueTask> callback,
@@ -351,6 +366,11 @@ public static class PrimeClockTimerExtensions
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
         UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext, CancellationToken> callback,
@@ -377,6 +397,11 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
         UtcTimeOfDay timeOfDay,
         Action callback,
@@ -402,6 +427,11 @@ public static class PrimeClockTimerExtensions
     /// </param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static IClockDayTimeTimer RegisterAsyncTimeOfDay (this IPrimeClock clock,
         UtcTimeOfDay timeOfDay,
         Func<CancellationToken, ValueTask> callback,

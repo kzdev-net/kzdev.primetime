@@ -24,7 +24,7 @@ public abstract partial class PrimeTestTimeBase
     /// <summary>
     ///   Initializes a new instance with virtual UTC time set to <see cref="DateTimeOffset.UtcNow"/>.
     /// </summary>
-    protected PrimeTestTimeBase ()
+    internal PrimeTestTimeBase ()
     {
         UtcNow = DateTimeOffset.UtcNow;
     }
@@ -33,7 +33,7 @@ public abstract partial class PrimeTestTimeBase
     ///   Initializes a new instance with the specified initial virtual UTC time.
     /// </summary>
     /// <param name="initialUtcTime">The initial virtual UTC time.</param>
-    protected PrimeTestTimeBase (DateTimeOffset initialUtcTime)
+    internal PrimeTestTimeBase (DateTimeOffset initialUtcTime)
     {
         UtcNow = initialUtcTime;
     }

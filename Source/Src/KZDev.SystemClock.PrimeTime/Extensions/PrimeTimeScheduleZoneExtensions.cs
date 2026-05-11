@@ -137,6 +137,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static DateOnly ToScheduleDateOnly (this IPrimeTime time, DateTimeOffset instant)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(instant);
@@ -161,6 +166,11 @@ public static class PrimeTimeScheduleZoneExtensions
     ///   <paramref name="utcDateTime"/> does not use <see cref="DateTimeKind.Utc"/>, or <paramref name="time"/> is not
     ///   an <see cref="IPrimeClock"/>.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static DateOnly ToScheduleDateOnly (this IPrimeTime time, DateTime utcDateTime)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(utcDateTime);
@@ -182,6 +192,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static TimeOnly ToScheduleTimeOnly (this IPrimeTime time, DateTimeOffset instant)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(instant);
@@ -206,6 +221,11 @@ public static class PrimeTimeScheduleZoneExtensions
     ///   <paramref name="utcDateTime"/> does not use <see cref="DateTimeKind.Utc"/>, or <paramref name="time"/> is not
     ///   an <see cref="IPrimeClock"/>.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static TimeOnly ToScheduleTimeOnly (this IPrimeTime time, DateTime utcDateTime)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(utcDateTime);

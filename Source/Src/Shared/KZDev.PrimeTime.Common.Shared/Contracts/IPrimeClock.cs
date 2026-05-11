@@ -13,11 +13,7 @@ namespace KZDev.PrimeTime;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     Members that use <c>System.TimeOnly</c>, <c>System.DateOnly</c>, or day-time registration
-///     with the <c>LocalTimeOfDay</c> / <c>UtcTimeOfDay</c> wrappers are compiled only when the
-///     SDK <c>NET</c> symbol is defined (effectively .NET 6+). They are omitted from the reference
-///     assembly for .NET Standard 2.0 and .NET Framework. API documentation produced from a newer
-///     target may still list those members.
+///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
 ///   </para>
 /// </remarks>
 public partial interface IPrimeClock : IPrimeTime
@@ -51,21 +47,41 @@ public partial interface IPrimeClock : IPrimeTime
     /// <summary>
     ///   Gets the current local time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     TimeOnly LocalNowTimeOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC time-of-day as <see cref="TimeOnly"/>.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     TimeOnly UtcNowTimeOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current local date as <see cref="DateOnly"/>.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     DateOnly LocalNowDateOnly { get; }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Gets the current UTC date as <see cref="DateOnly"/>.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     DateOnly UtcNowDateOnly { get; }
     //----------------------------------------------------------------------------
 #endif
@@ -133,6 +149,11 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
         object? state = null, DayTimeTimerOptions? timerOptions = null);
@@ -150,6 +171,11 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken, object? state = null,
@@ -168,6 +194,11 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     IClockDayTimeTimer RegisterTimeOfDay (UtcTimeOfDay timeOfDay,
         Action<ClockTimerCallbackContext> callback, CancellationToken cancellationToken,
         object? state = null, DayTimeTimerOptions? timerOptions = null);
@@ -185,6 +216,11 @@ public partial interface IPrimeClock : IPrimeTime
     /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
     /// <param name="timerOptions">Optional day-time timer options.</param>
     /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     IClockDayTimeTimer RegisterAsyncTimeOfDay (UtcTimeOfDay timeOfDay,
         Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
         CancellationToken cancellationToken, object? state = null,

@@ -169,6 +169,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static DateOnly ToScheduleDateOnly (this IPrimeTime time, Instant instant)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(instant);
@@ -190,6 +195,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static TimeOnly ToScheduleTimeOnly (this IPrimeTime time, Instant instant)
     {
         DateTime wall = time.ToScheduleLocalWallDateTime(instant);
@@ -339,6 +349,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static DateOnly ToScheduleDateOnly (this IPrimeTime time, ZonedDateTime zonedDateTime)
     {
         return time.ToScheduleDateOnly(zonedDateTime.ToInstant());
@@ -359,6 +374,11 @@ public static class PrimeTimeScheduleZoneExtensions
     /// <exception cref="ArgumentException">
     ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
     /// </exception>
+    /// <remarks>
+    ///   <para>
+    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+    ///   </para>
+    /// </remarks>
     public static TimeOnly ToScheduleTimeOnly (this IPrimeTime time, ZonedDateTime zonedDateTime)
     {
         return time.ToScheduleTimeOnly(zonedDateTime.ToInstant());

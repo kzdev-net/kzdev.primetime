@@ -18,8 +18,7 @@ namespace KZDev.PrimeTime;
 ///     day-time timer registration APIs can require the correct interpretation without ambiguity.
 ///   </para>
 ///   <para>
-///     This type is not included when the library targets .NET Standard 2.0 or .NET Framework; it
-///     requires <see cref="TimeOnly"/>.
+///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
 ///   </para>
 /// </remarks>
 public readonly struct LocalTimeOfDay : IEquatable<LocalTimeOfDay>
