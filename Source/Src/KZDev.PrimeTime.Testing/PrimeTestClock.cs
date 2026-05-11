@@ -270,7 +270,7 @@ public sealed partial class PrimeTestClock
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (Duration? rate = null) =>
-        Start(rate is { } d ? NodaDurationBclConversion.ToTimeSpanForTimerInterval(d) : null);
+        Start(rate is { } duration ? NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration) : null);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock Implementation — Noda

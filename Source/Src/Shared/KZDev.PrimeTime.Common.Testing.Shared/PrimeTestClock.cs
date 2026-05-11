@@ -285,15 +285,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                     PendingDelays.Remove(toCompleteDelay);
             }
 
-            foreach (TimeExpiryEntry tee in TimeExpiryEntries)
+            foreach (TimeExpiryEntry expiryEntry in TimeExpiryEntries)
             {
-                if (tee.ExpireUtc > newNow)
+                if (expiryEntry.ExpireUtc > newNow)
                 {
                     continue;
                 }
 
                 toCancel ??= [];
-                toCancel.Add(tee);
+                toCancel.Add(expiryEntry);
             }
 
             if (toCancel != null)
