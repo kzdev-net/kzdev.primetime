@@ -297,6 +297,49 @@ public sealed partial class PrimeTestClock
         }
         //------------------------------------------------------------------------
         /// <summary>
+        ///   Updates <paramref name="bestUtc"/> with this registration&apos;s <see cref="NextDueUtc"/> when it lies in
+        ///   <c>(<paramref name="nowUtc"/>, <paramref name="targetUtc"/>]</c>.
+        /// </summary>
+        /// <remarks>
+        ///   <para>
+        ///     The caller must already hold <see cref="PrimeTestTimeBase.Gate"/> on the owning <see cref="PrimeTestClock"/>.
+        ///     This method then acquires this registration&apos;s per-timer <c>Gate</c> (a different synchronization object
+        ///     from the clock gate) while reading <see cref="NextDueUtc"/>.
+        ///   </para>
+        /// </remarks>
+        /// <param name="bestUtc">The best (minimum) candidate instant discovered so far, or <c>null</c> if none.</param>
+        /// <param name="nowUtc">Current virtual UTC instant.</param>
+        /// <param name="targetUtc">Inclusive upper bound for the next march instant.</param>
+        internal void ConsiderEarliestDueUtcStrictlyAfterForMarch(ref DateTimeOffset? bestUtc, DateTimeOffset nowUtc,
+            DateTimeOffset targetUtc)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !IntervalTimerEnabled)
+                {
+                    return;
+                }
+
+                if (NextDueUtc is not { } nextDueUtc)
+                {
+                    return;
+                }
+
+                if (nextDueUtc <= nowUtc)
+                {
+                    return;
+                }
+
+                if (nextDueUtc > targetUtc)
+                {
+                    return;
+                }
+
+                bestUtc = bestUtc is null || nextDueUtc < bestUtc ? nextDueUtc : bestUtc;
+            }
+        }
+        //------------------------------------------------------------------------
+        /// <summary>
         ///   Runs the callback when this registration is due at <paramref name="now"/>.
         /// </summary>
         /// <param name="now">Virtual UTC instant passed from <see cref="PrimeTestClock.Advance(System.TimeSpan)"/>.</param>
@@ -483,7 +526,6 @@ public sealed partial class PrimeTestClock
         {
             bool resetBefore;
             bool isRepeating;
-            DateTimeOffset firedAt;
 
             lock (Gate)
             {
@@ -491,14 +533,14 @@ public sealed partial class PrimeTestClock
                     return;
                 if (NextDueUtc is not { } next || next > now)
                     return;
-                firedAt = next;
+                DateTimeOffset firedAt = next;
                 isRepeating = IsRepeating;
                 resetBefore = IsResetBeforeCallback;
                 if (isRepeating && resetBefore)
                     NextDueUtc = now + RepeatInterval;
                 else
                     NextDueUtc = null;
-                LastCallbackUtc = now;
+                LastCallbackUtc = firedAt;
                 State = isRepeating && resetBefore ? TimerState.RepeatProcessingCallback : TimerState.ProcessingCallback;
                 CallbacksRunning++;
             }

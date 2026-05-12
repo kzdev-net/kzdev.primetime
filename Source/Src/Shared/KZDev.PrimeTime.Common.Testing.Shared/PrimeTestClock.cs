@@ -245,6 +245,263 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
     #endregion Private helpers
 
+    #region Virtual-time march
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes the next virtual UTC instant to stop at when marching from <paramref name="nowUtc"/> toward
+    ///   <paramref name="targetUtc"/>: the minimum of <paramref name="targetUtc"/> and every pending delay, time
+    ///   expiry, interval, or day-time deadline strictly after <paramref name="nowUtc"/> and on or before
+    ///   <paramref name="targetUtc"/>.
+    /// </summary>
+    /// <param name="nowUtc">Current virtual UTC instant (caller holds <see cref="PrimeTestTimeBase.Gate"/>).</param>
+    /// <param name="targetUtc">Inclusive march horizon in UTC.</param>
+    /// <returns>The next instant to assign to the virtual clock.</returns>
+    private DateTimeOffset ComputeNextMarchInstantUtcLocked (DateTimeOffset nowUtc, DateTimeOffset targetUtc)
+    {
+        DateTimeOffset? bestUtc = null;
+        foreach (PendingDelay pendingDelay in PendingDelays)
+        {
+            if (pendingDelay.DueUtc <= nowUtc)
+            {
+                continue;
+            }
+
+            if (pendingDelay.DueUtc > targetUtc)
+            {
+                continue;
+            }
+
+            bestUtc = bestUtc is null || pendingDelay.DueUtc < bestUtc ? pendingDelay.DueUtc : bestUtc;
+        }
+
+        foreach (TimeExpiryEntry expiryEntry in TimeExpiryEntries)
+        {
+            if (expiryEntry.ExpireUtc <= nowUtc)
+            {
+                continue;
+            }
+
+            if (expiryEntry.ExpireUtc > targetUtc)
+            {
+                continue;
+            }
+
+            bestUtc = bestUtc is null || expiryEntry.ExpireUtc < bestUtc ? expiryEntry.ExpireUtc : bestUtc;
+        }
+
+        foreach (VirtualIntervalTimerBase intervalTimer in _intervalTimers)
+        {
+            intervalTimer.ConsiderEarliestDueUtcStrictlyAfterForMarch(ref bestUtc, nowUtc, targetUtc);
+        }
+
+#if NET || !SYSTEMCLOCK
+        foreach (VirtualDayTimeTimerBase dayTimeTimer in _dayTimeTimers)
+        {
+            dayTimeTimer.ConsiderEarliestDueUtcStrictlyAfterForMarch(ref bestUtc, nowUtc, targetUtc);
+        }
+#endif
+
+        return bestUtc ?? targetUtc;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Dispatches all delay completions, time expiries, and timer callbacks that are due at the current virtual UTC
+    ///   instant, without advancing virtual time.
+    /// </summary>
+    /// <returns>
+    ///   <c>true</c> if any work was dispatched; otherwise <c>false</c>.
+    /// </returns>
+    private bool TryDispatchAllDueAtCurrentVirtualUtc ()
+    {
+        DateTimeOffset instantUtc;
+        lock (Gate)
+        {
+            instantUtc = ReadVirtualUtcNowLocked();
+        }
+
+        List<PendingDelay>? toComplete = null;
+        List<TimeExpiryEntry>? toCancel = null;
+        List<VirtualIntervalTimerBase>? intervalDue = null;
+#if NET || !SYSTEMCLOCK
+        List<VirtualDayTimeTimerBase>? dayTimeDue = null;
+#endif
+
+        lock (Gate)
+        {
+            foreach (PendingDelay pendingDelay in PendingDelays)
+            {
+                if (pendingDelay.DueUtc > instantUtc)
+                {
+                    continue;
+                }
+
+                toComplete ??= [];
+                toComplete.Add(pendingDelay);
+            }
+
+            if (toComplete != null)
+            {
+                foreach (PendingDelay toCompleteDelay in toComplete)
+                {
+                    PendingDelays.Remove(toCompleteDelay);
+                }
+            }
+
+            foreach (TimeExpiryEntry expiryEntry in TimeExpiryEntries)
+            {
+                if (expiryEntry.ExpireUtc > instantUtc)
+                {
+                    continue;
+                }
+
+                toCancel ??= [];
+                toCancel.Add(expiryEntry);
+            }
+
+            if (toCancel != null)
+            {
+                foreach (TimeExpiryEntry timeExpiry in toCancel)
+                {
+                    TimeExpiryEntries.Remove(timeExpiry);
+                }
+            }
+
+            foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
+            {
+                if (!timerBase.IsDue(instantUtc))
+                {
+                    continue;
+                }
+
+                intervalDue ??= [];
+                intervalDue.Add(timerBase);
+            }
+
+#if NET || !SYSTEMCLOCK
+            foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
+            {
+                if (!timerBase.IsDue(instantUtc))
+                {
+                    continue;
+                }
+
+                dayTimeDue ??= [];
+                dayTimeDue.Add(timerBase);
+            }
+#endif
+        }
+
+        bool didWork = toComplete != null || toCancel != null || intervalDue != null;
+#if NET || !SYSTEMCLOCK
+        didWork = didWork || dayTimeDue != null;
+#endif
+
+        if (toComplete != null)
+        {
+            foreach (PendingDelay pendingDelay in toComplete)
+            {
+                pendingDelay.Complete();
+            }
+        }
+
+        if (toCancel != null)
+        {
+            foreach (TimeExpiryEntry timeExpiry in toCancel)
+            {
+                timeExpiry.Cancel();
+            }
+        }
+
+        while (intervalDue is { Count: > 0 })
+        {
+            foreach (VirtualIntervalTimerBase timerBase in intervalDue)
+            {
+                timerBase.RunDueCallback(instantUtc);
+            }
+
+            intervalDue = null;
+            lock (Gate)
+            {
+                foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
+                {
+                    if (!timerBase.IsDue(instantUtc))
+                    {
+                        continue;
+                    }
+
+                    intervalDue ??= [];
+                    intervalDue.Add(timerBase);
+                }
+            }
+
+            didWork = true;
+        }
+
+#if NET || !SYSTEMCLOCK
+        while (dayTimeDue is { Count: > 0 })
+        {
+            foreach (VirtualDayTimeTimerBase timerBase in dayTimeDue)
+            {
+                timerBase.RunDueCallback(instantUtc);
+            }
+
+            dayTimeDue = null;
+            lock (Gate)
+            {
+                foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
+                {
+                    if (!timerBase.IsDue(instantUtc))
+                    {
+                        continue;
+                    }
+
+                    dayTimeDue ??= [];
+                    dayTimeDue.Add(timerBase);
+                }
+            }
+
+            didWork = true;
+        }
+#endif
+
+        return didWork;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Marches virtual UTC forward to <paramref name="targetUtc"/> along pending deadlines, dispatching work at each
+    ///   distinct instant and raising <see cref="ClockEvents"/> once per marched instant where virtual time changes.
+    /// </summary>
+    /// <param name="targetUtc">Virtual UTC instant to reach.</param>
+    private void MarchVirtualUtcForwardToTargetRaisingClockEvents (DateTimeOffset targetUtc)
+    {
+        while (true)
+        {
+            while (TryDispatchAllDueAtCurrentVirtualUtc())
+            {
+            }
+
+            DateTimeOffset stepUtc;
+            lock (Gate)
+            {
+                DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
+                if (nowUtc >= targetUtc)
+                {
+                    return;
+                }
+
+                stepUtc = ComputeNextMarchInstantUtcLocked(nowUtc, targetUtc);
+                SetVirtualUtcNowLocked(stepUtc);
+            }
+
+            _ = TryDispatchAllDueAtCurrentVirtualUtc();
+            RaiseClockEventsAfterVirtualUtcChange(stepUtc);
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Virtual-time march
+
     #region Interface Implementations
 
     #region IPrimeTestClock Implementation
@@ -265,137 +522,28 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     public void Advance (TimeSpan duration)
     {
         if (duration < TimeSpan.Zero)
+        {
             duration = TimeSpan.Zero;
+        }
 
-        DateTimeOffset newNow;
-        List<PendingDelay>? toComplete = null;
-        List<TimeExpiryEntry>? toCancel = null;
-        List<VirtualIntervalTimerBase>? intervalDue = null;
-#if NET || !SYSTEMCLOCK
-        List<VirtualDayTimeTimerBase>? dayTimeDue = null;
-#endif
-
+        DateTimeOffset targetUtc;
         lock (Gate)
         {
-            AddVirtualTimeLocked(duration);
-            newNow = ReadVirtualUtcNowLocked();
-
-            foreach (PendingDelay pendingDelay in PendingDelays)
-            {
-                if (pendingDelay.DueUtc > newNow)
-                {
-                    continue;
-                }
-
-                toComplete ??= [];
-                toComplete.Add(pendingDelay);
-            }
-
-            if (toComplete != null)
-            {
-                foreach (PendingDelay toCompleteDelay in toComplete)
-                    PendingDelays.Remove(toCompleteDelay);
-            }
-
-            foreach (TimeExpiryEntry expiryEntry in TimeExpiryEntries)
-            {
-                if (expiryEntry.ExpireUtc > newNow)
-                {
-                    continue;
-                }
-
-                toCancel ??= [];
-                toCancel.Add(expiryEntry);
-            }
-
-            if (toCancel != null)
-            {
-                foreach (TimeExpiryEntry timeExpiry in toCancel)
-                    TimeExpiryEntries.Remove(timeExpiry);
-            }
-
-            foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
-            {
-                if (!timerBase.IsDue(newNow))
-                {
-                    continue;
-                }
-
-                intervalDue ??= [];
-                intervalDue.Add(timerBase);
-            }
-
-#if NET || !SYSTEMCLOCK
-            foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
-            {
-                if (!timerBase.IsDue(newNow))
-                {
-                    continue;
-                }
-
-                dayTimeDue ??= [];
-                dayTimeDue.Add(timerBase);
-            }
-#endif
+            targetUtc = ReadVirtualUtcNowLocked() + duration;
         }
 
-        if (toComplete != null)
-        {
-            foreach (PendingDelay pendingDelay in toComplete)
-                pendingDelay.Complete();
-        }
+        MarchVirtualUtcForwardToTargetRaisingClockEvents(targetUtc);
 
-        if (toCancel != null)
+        if (duration == TimeSpan.Zero)
         {
-            foreach (TimeExpiryEntry timeExpiry in toCancel)
-                timeExpiry.Cancel();
-        }
-
-        while (intervalDue is { Count: > 0 })
-        {
-            foreach (VirtualIntervalTimerBase timerBase in intervalDue)
-                timerBase.RunDueCallback(newNow);
-
-            intervalDue = null;
+            DateTimeOffset utcNow;
             lock (Gate)
             {
-                foreach (VirtualIntervalTimerBase timerBase in _intervalTimers)
-                {
-                    if (!timerBase.IsDue(newNow))
-                    {
-                        continue;
-                    }
-
-                    intervalDue ??= [];
-                    intervalDue.Add(timerBase);
-                }
+                utcNow = ReadVirtualUtcNowLocked();
             }
+
+            RaiseClockEventsAfterVirtualUtcChange(utcNow);
         }
-
-#if NET || !SYSTEMCLOCK
-        while (dayTimeDue is { Count: > 0 })
-        {
-            foreach (VirtualDayTimeTimerBase timerBase in dayTimeDue)
-                timerBase.RunDueCallback(newNow);
-
-            dayTimeDue = null;
-            lock (Gate)
-            {
-                foreach (VirtualDayTimeTimerBase timerBase in _dayTimeTimers)
-                {
-                    if (!timerBase.IsDue(newNow))
-                    {
-                        continue;
-                    }
-
-                    dayTimeDue ??= [];
-                    dayTimeDue.Add(timerBase);
-                }
-            }
-        }
-#endif
-
-        RaiseClockEventsAfterVirtualUtcChange(newNow);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />

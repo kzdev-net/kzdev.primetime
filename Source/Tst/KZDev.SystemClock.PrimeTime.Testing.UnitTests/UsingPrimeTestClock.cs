@@ -139,6 +139,72 @@ public class UsingPrimeTestClock : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> with negative duration does not move
+    ///   virtual time backward (implementation treats it as zero).
+    /// </summary>
+    [Fact]
+    public void Advance_WithNegativeDuration_LeavesTimeUnchanged ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        clock.Advance(TimeSpan.FromHours(-1));
+        clock.UtcNowDateTimeOffset.Should().Be(initial);
+    }
+    //----------------------------------------------------------------------------
+
+    #region Advance — forward virtual march
+
+    /// <summary>
+    ///   Verifies that a single <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> that spans multiple interval
+    ///   ticks invokes each callback with <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> at that tick&apos;s firing instant.
+    /// </summary>
+    [Fact]
+    public void Advance_OverMultipleIntervalTicks_CallbackSeesUtcNowAtEachFiringInstant ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        List<DateTimeOffset> observedNow = [];
+        using (clock.RegisterTimer(TimeSpan.FromSeconds(10),
+                   _ => observedNow.Add(clock.UtcNowDateTimeOffset),
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.Advance(TimeSpan.FromSeconds(30));
+        }
+
+        observedNow.Should().HaveCount(3);
+        observedNow[0].Should().Be(initial + TimeSpan.FromSeconds(10));
+        observedNow[1].Should().Be(initial + TimeSpan.FromSeconds(20));
+        observedNow[2].Should().Be(initial + TimeSpan.FromSeconds(30));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised once per distinct virtual instant crossed
+    ///   during one <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> when multiple interval ticks occur.
+    /// </summary>
+    [Fact]
+    public void Advance_SpanningMultipleDueInstants_RaisesClockEventsOncePerDistinctInstant ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        using (clock.RegisterTimer(TimeSpan.FromSeconds(10),
+                   _ => { },
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.Advance(TimeSpan.FromSeconds(30));
+        }
+
+        eventCount.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Advance — forward virtual march
+
     #endregion SetTime and Advance
 
     #region RunFor
@@ -475,7 +541,8 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a repeating interval timer fires multiple times as virtual time advances.
+    ///   Verifies that a repeating interval timer fires once per crossed due instant, including multiple ticks
+    ///   inside a single <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> when that advance spans several intervals.
     /// </summary>
     [Fact]
     public void RegisterTimer_Repeating_WhenAdvanceCoversMultipleIntervals_FiresMultipleTimes ()
@@ -492,8 +559,7 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Advance(TimeSpan.FromSeconds(1));
         fireCount.Should().Be(2);
         clock.Advance(TimeSpan.FromSeconds(2));
-        fireCount.Should().Be(3,
-            "with ResetIntervalBeforeCallback = false (the default), the interval is reset after the callback completes, so the next tick is scheduled from that virtual instant and one Advance cannot fire twice at the same coarse time");
+        fireCount.Should().Be(4);
     }
     //----------------------------------------------------------------------------
 
