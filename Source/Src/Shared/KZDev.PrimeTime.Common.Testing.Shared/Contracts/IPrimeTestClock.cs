@@ -53,6 +53,10 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   The amount of virtual time that elapses per real second, or <c>null</c> to
     ///   use 1 second of virtual time per real second.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="rate"/> is not <c>null</c> and is less than 100 milliseconds or greater than
+    ///   1 hour of virtual time per real second.
+    /// </exception>
     void Start (TimeSpan? rate = null);
     //----------------------------------------------------------------------------
     /// <summary>

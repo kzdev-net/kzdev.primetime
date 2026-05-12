@@ -36,6 +36,18 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private TimeSpan _runRate = TimeSpan.FromSeconds(1);
 
     /// <summary>
+    ///   Minimum amount of virtual time that may elapse per real second when starting the runner
+    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
+    /// </summary>
+    private static readonly TimeSpan MinimumStartRunRate = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    ///   Maximum amount of virtual time that may elapse per real second when starting the runner
+    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
+    /// </summary>
+    private static readonly TimeSpan MaximumStartRunRate = TimeSpan.FromHours(1);
+
+    /// <summary>
     ///   Active virtual interval timer registrations.
     /// </summary>
     private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
@@ -392,11 +404,33 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         Advance(duration);
     }
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws if <paramref name="rate"/> is outside the inclusive range allowed for
+    ///   <see cref="Start(System.TimeSpan?)"/>.
+    /// </summary>
+    /// <param name="rate">
+    ///   Virtual time that should elapse per one real second.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="rate"/> is less than 100 milliseconds or greater than 1 hour.
+    /// </exception>
+    private static void ThrowIfStartRunRateOutOfRange (TimeSpan rate)
+    {
+        if (rate < MinimumStartRunRate || rate > MaximumStartRunRate)
+        {
+            throw new ArgumentOutOfRangeException(nameof(rate),
+                rate,
+                "Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive.");
+        }
+    }
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (TimeSpan? rate = null)
     {
         lock (Gate)
         {
+            if (rate is { } explicitRate)
+                ThrowIfStartRunRateOutOfRange(explicitRate);
             if (InternalIsRunning)
                 return;
             InternalIsRunning = true;

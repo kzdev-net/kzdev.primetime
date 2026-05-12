@@ -198,6 +198,87 @@ public class UsingPrimeTestClock : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Start(System.TimeSpan?)"/> with <c>null</c> starts at the default
+    ///   1:1 virtual-to-real rate.
+    /// </summary>
+    [Fact]
+    public void Start_WithNullRate_StartsSuccessfully ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        clock.Start(null);
+        clock.IsRunning.Should().BeTrue();
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that the minimum allowed explicit run rate (100 ms virtual per real second) starts successfully.
+    /// </summary>
+    [Fact]
+    public void Start_WithMinimumAllowedRate_StartsSuccessfully ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        clock.Start(TimeSpan.FromMilliseconds(100));
+        clock.IsRunning.Should().BeTrue();
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that the maximum allowed explicit run rate (1 hour virtual per real second) starts successfully.
+    /// </summary>
+    [Fact]
+    public void Start_WithMaximumAllowedRate_StartsSuccessfully ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        clock.Start(TimeSpan.FromHours(1));
+        clock.IsRunning.Should().BeTrue();
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a run rate one tick below the minimum throws and does not start the clock.
+    /// </summary>
+    [Fact]
+    public void Start_WithRateOneTickBelowMinimum_ThrowsArgumentOutOfRangeException ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        TimeSpan belowMinimum = TimeSpan.FromMilliseconds(100) - TimeSpan.FromTicks(1);
+        Action act = () => clock.Start(belowMinimum);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a run rate one tick above the maximum throws and does not start the clock.
+    /// </summary>
+    [Fact]
+    public void Start_WithRateOneTickAboveMaximum_ThrowsArgumentOutOfRangeException ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        TimeSpan aboveMaximum = TimeSpan.FromHours(1) + TimeSpan.FromTicks(1);
+        Action act = () => clock.Start(aboveMaximum);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a zero run rate throws and does not start the clock.
+    /// </summary>
+    [Fact]
+    public void Start_WithZeroRate_ThrowsArgumentOutOfRangeException ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        Action act = () => clock.Start(TimeSpan.Zero);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
     #endregion Start and Stop
 
     #region ClockEvents
