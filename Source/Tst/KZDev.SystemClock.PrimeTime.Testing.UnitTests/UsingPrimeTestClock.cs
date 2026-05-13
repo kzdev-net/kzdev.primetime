@@ -259,6 +259,132 @@ public class UsingPrimeTestClock : UnitTestBase
 
     #endregion SetTime — forward virtual march
 
+    #region SetTime — backward virtual time rules
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.SetTime"/> to a strictly earlier virtual instant throws while the
+    ///   clock is running.
+    /// </summary>
+    [Fact]
+    public void ClockRunning_SetTimeToPastValue_ThrowsInvalidOperationException ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset earlier = initial - TimeSpan.FromHours(1);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        clock.Start(null);
+        Action act = () => clock.SetTime(earlier);
+        act.Should().Throw<InvalidOperationException>().WithMessage("*running*");
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a strictly backward <see cref="IPrimeTestClock.SetTime"/> throws when any interval timer
+    ///   registration is still active, even if the clock is not running.
+    /// </summary>
+    [Fact]
+    public void ClockStopped_ActiveIntervalTimer_SetTimeBackward_ThrowsInvalidOperationException ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset earlier = initial - TimeSpan.FromHours(1);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using (clock.RegisterTimer(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1), _ => { },
+                   TestContext.Current.CancellationToken))
+        {
+            Action act = () => clock.SetTime(earlier);
+            act.Should().Throw<InvalidOperationException>().WithMessage("*interval*");
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a strictly backward <see cref="IPrimeTestClock.SetTime"/> succeeds when the clock is stopped
+    ///   and the only interval registration has been disposed (no longer active).
+    /// </summary>
+    [Fact]
+    public void ClockStopped_DisposedIntervalTimer_SetTimeBackward_UpdatesUtcNow ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset earlier = initial - TimeSpan.FromHours(1);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        IClockIntervalTimer timer = clock.RegisterTimer(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1), _ => { },
+            TestContext.Current.CancellationToken);
+        timer.Dispose();
+        clock.SetTime(earlier);
+        clock.UtcNowDateTimeOffset.Should().Be(earlier);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a permitted strictly backward <see cref="IPrimeTestClock.SetTime"/> raises
+    ///   <see cref="IPrimeTestClock.ClockEvents"/> exactly once for the new instant.
+    /// </summary>
+    [Fact]
+    public void ClockStopped_PermittedBackwardSetTime_RaisesClockEventsOnce ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset earlier = initial - TimeSpan.FromHours(1);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        clock.SetTime(earlier);
+        eventCount.Should().Be(1);
+    }
+    //----------------------------------------------------------------------------
+
+#if NET
+
+    /// <summary>
+    ///   Verifies that after a forward march fires a UTC day-time timer and a permitted backward jump,
+    ///   <see cref="IClockTimer.TimeUntilNextCallback"/> reflects the next same-calendar occurrence (recomputed
+    ///   <c>NextDueUtc</c>), not the post-fire next day.
+    /// </summary>
+    [Fact]
+    public void ClockStopped_OnlyUtcDayTimeTimer_AfterForwardFireAndBackwardJump_TimeUntilNextCallback_MatchesNextSameDayOccurrence ()
+    {
+        DateTimeOffset morning = new(2025, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        DateTimeOffset evening = new(2025, 1, 1, 18, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(morning);
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(new UtcTimeOfDay(new TimeOnly(12, 0)),
+            _ => { },
+            TestContext.Current.CancellationToken);
+        clock.SetTime(evening);
+        long msAfterForward = timer.TimeUntilNextCallback;
+        msAfterForward.Should().Be((long)TimeSpan.FromHours(18).TotalMilliseconds);
+        clock.SetTime(morning);
+        timer.TimeUntilNextCallback.Should().Be((long)TimeSpan.FromHours(2).TotalMilliseconds);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a UTC day-time timer fires once per discrete local occurrence when virtual time is moved
+    ///   backward (permitted) between two forward marches across the same nominal fire instant.
+    /// </summary>
+    [Fact]
+    public void ClockStopped_OnlyUtcDayTimeTimer_PermittedBackwardThenForwardAgain_FiresOncePerCrossing ()
+    {
+        DateTimeOffset morning = new(2025, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        DateTimeOffset evening = new(2025, 1, 1, 18, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(morning);
+        int fireCount = 0;
+        using (clock.RegisterTimeOfDay(new UtcTimeOfDay(new TimeOnly(12, 0)),
+                   _ => fireCount++,
+                   TestContext.Current.CancellationToken))
+        {
+            clock.SetTime(evening);
+            fireCount.Should().Be(1);
+            clock.SetTime(morning);
+            fireCount.Should().Be(1);
+            clock.SetTime(evening);
+            fireCount.Should().Be(2);
+        }
+    }
+    //----------------------------------------------------------------------------
+
+#endif
+
+    #endregion SetTime — backward virtual time rules
+
     #endregion SetTime and Advance
 
     #region RunFor
