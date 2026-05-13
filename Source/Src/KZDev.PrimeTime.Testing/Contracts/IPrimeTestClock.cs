@@ -18,6 +18,10 @@ public partial interface IPrimeTestClock
     /// <param name="instant">
     ///   The new current instant on the global timeline.
     /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown under the same backward-time rules as <see cref="IPrimeTestClock.SetTime(System.DateTimeOffset)"/>
+    ///   after resolving <paramref name="instant"/> to UTC.
+    /// </exception>
     void SetInstant (Instant instant);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -27,6 +31,10 @@ public partial interface IPrimeTestClock
     /// <param name="localDateTime">
     ///   The new current local date and time.
     /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown under the same backward-time rules as <see cref="IPrimeTestClock.SetTime(System.DateTimeOffset)"/>
+    ///   after resolving <paramref name="localDateTime"/> to an instant.
+    /// </exception>
     void SetLocalTime (LocalDateTime localDateTime);
     //----------------------------------------------------------------------------
     /// <summary>

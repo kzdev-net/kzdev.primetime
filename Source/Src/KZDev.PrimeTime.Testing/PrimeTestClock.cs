@@ -243,10 +243,7 @@ public sealed partial class PrimeTestClock
     public void SetInstant (Instant instant)
     {
         DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (Gate)
-            SetVirtualUtcNowLocked(utc);
-
-        RaiseClockEventsAfterVirtualUtcChange(utc);
+        SetTime(utc);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
@@ -254,10 +251,7 @@ public sealed partial class PrimeTestClock
     {
         Instant instant = localDateTime.InZoneLeniently(TimeZone).ToInstant();
         DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
-        lock (Gate)
-            SetVirtualUtcNowLocked(utc);
-
-        RaiseClockEventsAfterVirtualUtcChange(utc);
+        SetTime(utc);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />

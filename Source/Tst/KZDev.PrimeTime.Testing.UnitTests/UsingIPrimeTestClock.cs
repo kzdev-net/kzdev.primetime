@@ -269,6 +269,164 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     #endregion Advance — forward virtual march
 
+    #region SetTime, SetInstant, SetLocalTime — forward virtual march
+
+    /// <summary>
+    ///   Verifies that a single forward <see cref="IPrimeTestClock.SetTime"/> that lands after multiple interval
+    ///   ticks invokes each callback with <see cref="IPrimeTestClock.NowInstant"/> at that tick&apos;s firing instant.
+    /// </summary>
+    [Fact]
+    public void SetTime_Forward_OverMultipleIntervalTicks_CallbackSeesNowInstantAtEachFiringInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant targetInstant = initial + Duration.FromSeconds(30);
+        DateTimeOffset targetUtc = new DateTimeOffset(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        List<Instant> observedNow = [];
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => observedNow.Add(clock.NowInstant),
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetTime(targetUtc);
+        }
+
+        observedNow.Should().HaveCount(3);
+        observedNow[0].Should().Be(initial + Duration.FromSeconds(10));
+        observedNow[1].Should().Be(initial + Duration.FromSeconds(20));
+        observedNow[2].Should().Be(initial + Duration.FromSeconds(30));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised once per distinct virtual instant crossed
+    ///   during one forward <see cref="IPrimeTestClock.SetTime"/> when multiple interval ticks occur.
+    /// </summary>
+    [Fact]
+    public void SetTime_Forward_SpanningMultipleDueInstants_RaisesClockEventsOncePerDistinctInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant targetInstant = initial + Duration.FromSeconds(30);
+        DateTimeOffset targetUtc = new DateTimeOffset(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => { },
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetTime(targetUtc);
+        }
+
+        eventCount.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a single forward <see cref="IPrimeTestClock.SetInstant"/> that lands after multiple interval
+    ///   ticks invokes each callback with <see cref="IPrimeTestClock.NowInstant"/> at that tick&apos;s firing instant.
+    /// </summary>
+    [Fact]
+    public void SetInstant_Forward_OverMultipleIntervalTicks_CallbackSeesNowInstantAtEachFiringInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant targetInstant = initial + Duration.FromSeconds(30);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        List<Instant> observedNow = [];
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => observedNow.Add(clock.NowInstant),
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetInstant(targetInstant);
+        }
+
+        observedNow.Should().HaveCount(3);
+        observedNow[0].Should().Be(initial + Duration.FromSeconds(10));
+        observedNow[1].Should().Be(initial + Duration.FromSeconds(20));
+        observedNow[2].Should().Be(initial + Duration.FromSeconds(30));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised once per distinct virtual instant crossed
+    ///   during one forward <see cref="IPrimeTestClock.SetInstant"/> when multiple interval ticks occur.
+    /// </summary>
+    [Fact]
+    public void SetInstant_Forward_SpanningMultipleDueInstants_RaisesClockEventsOncePerDistinctInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant targetInstant = initial + Duration.FromSeconds(30);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => { },
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetInstant(targetInstant);
+        }
+
+        eventCount.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a single forward <see cref="IPrimeTestClock.SetLocalTime"/> that lands after multiple interval
+    ///   ticks invokes each callback with <see cref="IPrimeTestClock.NowInstant"/> at that tick&apos;s firing instant.
+    /// </summary>
+    [Fact]
+    public void SetLocalTime_Forward_OverMultipleIntervalTicks_CallbackSeesNowInstantAtEachFiringInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        DateTimeZone zone = DateTimeZone.Utc;
+        IPrimeTestClock clock = new PrimeTestClock(initial, zone);
+        LocalDateTime targetLocal = initial.InUtc().Plus(Duration.FromSeconds(30)).LocalDateTime;
+        List<Instant> observedNow = [];
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => observedNow.Add(clock.NowInstant),
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetLocalTime(targetLocal);
+        }
+
+        observedNow.Should().HaveCount(3);
+        observedNow[0].Should().Be(initial + Duration.FromSeconds(10));
+        observedNow[1].Should().Be(initial + Duration.FromSeconds(20));
+        observedNow[2].Should().Be(initial + Duration.FromSeconds(30));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised once per distinct virtual instant crossed
+    ///   during one forward <see cref="IPrimeTestClock.SetLocalTime"/> when multiple interval ticks occur.
+    /// </summary>
+    [Fact]
+    public void SetLocalTime_Forward_SpanningMultipleDueInstants_RaisesClockEventsOncePerDistinctInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        DateTimeZone zone = DateTimeZone.Utc;
+        IPrimeTestClock clock = new PrimeTestClock(initial, zone);
+        LocalDateTime targetLocal = initial.InUtc().Plus(Duration.FromSeconds(30)).LocalDateTime;
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        using (clock.RegisterTimer(Duration.FromSeconds(10),
+                   _ => { },
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetLocalTime(targetLocal);
+        }
+
+        eventCount.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion SetTime, SetInstant, SetLocalTime — forward virtual march
+
     #endregion SetInstant, SetTime, SetLocalTime and Advance
 
     #region RunFor

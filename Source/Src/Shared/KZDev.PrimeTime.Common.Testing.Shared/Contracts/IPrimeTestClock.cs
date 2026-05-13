@@ -18,6 +18,17 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   Sets the current UTC time of the clock to the specified value. When the clock
     ///   is not running, this is the time returned by UtcNowDateTimeOffset and related members.
     /// </summary>
+    /// <remarks>
+    ///   When <paramref name="utcTime"/> is strictly after the current virtual instant, virtual time
+    ///   advances forward to that instant using the same march as <see cref="Advance(System.TimeSpan)"/>
+    ///   (fire delays, expiries, and timers at each crossed instant, and <see cref="ClockEvents"/> once
+    ///   per distinct instant). When <paramref name="utcTime"/> is on or before the current virtual instant,
+    ///   the virtual instant is assigned without forward marching.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when <paramref name="utcTime"/> is strictly before the current virtual instant and the clock is
+    ///   running, or when not running and any interval timer registration is active.
+    /// </exception>
     /// <param name="utcTime">
     ///   The new current UTC time.
     /// </param>

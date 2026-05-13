@@ -48,6 +48,28 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private static readonly TimeSpan MaximumStartRunRate = TimeSpan.FromHours(1);
 
     /// <summary>
+    ///   Defensive upper bound on the number of forward-march reconciliation attempts
+    ///   <see cref="SetTime(System.DateTimeOffset)"/> may perform before declaring the march unable
+    ///   to converge on the requested instant.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     A single attempt is the steady-state case for single-threaded forward
+    ///     <see cref="SetTime(System.DateTimeOffset)"/>. Additional attempts are needed only when another
+    ///     thread mutates virtual time between the march and the post-march observation under
+    ///     <see cref="PrimeTestTimeBase.Gate"/>, leaving the clock short of the requested target so
+    ///     marching must be retried.
+    ///   </para>
+    ///   <para>
+    ///     The value is intentionally orders of magnitude above any expected concurrent contention so it
+    ///     never trips in normal test runs, while still guaranteeing the loop terminates if a future
+    ///     logic regression caused it to fail to make progress. It is not a published product limit and
+    ///     may be tuned without affecting observable behavior.
+    ///   </para>
+    /// </remarks>
+    private const int MaximumForwardMarchReconcilePasses = 10_000;
+
+    /// <summary>
     ///   Active virtual interval timer registrations.
     /// </summary>
     private readonly List<VirtualIntervalTimerBase> _intervalTimers = [];
@@ -178,9 +200,81 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
     }
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns whether any interval timer registration on this clock is still active.
+    /// </summary>
+    /// <returns>
+    ///   <c>true</c> if at least one interval timer registration is active (see <see cref="IClockIntervalTimer"/>);
+    ///   otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </remarks>
+    private bool AnyActiveIntervalTimerLocked ()
+    {
+        foreach (VirtualIntervalTimerBase timer in _intervalTimers)
+        {
+            if (timer.IsActive)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws when changing virtual time strictly backward would violate backward-time rules for the test clock.
+    /// </summary>
+    /// <param name="targetUtc">The virtual UTC instant being set.</param>
+    /// <param name="currentUtc">The current virtual UTC instant before the adjustment.</param>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>. No-op when
+    ///   <paramref name="targetUtc"/> is on or after <paramref name="currentUtc"/>.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when <paramref name="targetUtc"/> is strictly before <paramref name="currentUtc"/> and either the
+    ///   clock is running or any interval timer registration is active.
+    /// </exception>
+    private void ThrowIfBackwardVirtualTimeChangeDisallowedLocked (DateTimeOffset targetUtc, DateTimeOffset currentUtc)
+    {
+        if (targetUtc.UtcTicks >= currentUtc.UtcTicks)
+        {
+            return;
+        }
+
+        if (InternalIsRunning)
+        {
+            throw new InvalidOperationException(
+                "Cannot move the test clock's virtual time backward while it is running.");
+        }
+
+        if (AnyActiveIntervalTimerLocked())
+        {
+            throw new InvalidOperationException(
+                "Cannot move the test clock's virtual time backward while an interval timer registration is active.");
+        }
+    }
+    //----------------------------------------------------------------------------
 
 #if NET || !SYSTEMCLOCK
 
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Recomputes next-due instants for all virtual day-time timer registrations after a permitted backward clock
+    ///   jump.
+    /// </summary>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </remarks>
+    private void RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked ()
+    {
+        DateTimeOffset virtualNowUtc = ReadVirtualUtcNowLocked();
+        foreach (VirtualDayTimeTimerBase timer in _dayTimeTimers)
+        {
+            timer.RecomputeNextDueUtcAfterPermittedBackwardJump(virtualNowUtc);
+        }
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Removes a day-time registration from the active list (under <see cref="PrimeTestTimeBase.Gate"/>).
@@ -510,12 +604,78 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <inheritdoc />
     public void SetTime (DateTimeOffset utcTime)
     {
+        bool marchToTarget;
         lock (Gate)
         {
-            SetVirtualUtcNowLocked(utcTime);
+            DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
+            if (utcTime.UtcTicks <= nowUtc.UtcTicks)
+            {
+                if (utcTime.UtcTicks < nowUtc.UtcTicks)
+                {
+                    ThrowIfBackwardVirtualTimeChangeDisallowedLocked(utcTime, nowUtc);
+                }
+
+                SetVirtualUtcNowLocked(utcTime);
+#if NET || !SYSTEMCLOCK
+                if (utcTime.UtcTicks < nowUtc.UtcTicks)
+                {
+                    RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked();
+                }
+#endif
+                marchToTarget = false;
+            }
+            else
+            {
+                marchToTarget = true;
+            }
         }
 
-        RaiseClockEventsAfterVirtualUtcChange(utcTime);
+        if (!marchToTarget)
+        {
+            RaiseClockEventsAfterVirtualUtcChange(utcTime);
+            return;
+        }
+
+        for (int attemptNumber = 1; attemptNumber <= MaximumForwardMarchReconcilePasses; attemptNumber++)
+        {
+            MarchVirtualUtcForwardToTargetRaisingClockEvents(utcTime);
+
+            lock (Gate)
+            {
+                DateTimeOffset afterMarchUtc = ReadVirtualUtcNowLocked();
+                if (afterMarchUtc.UtcTicks == utcTime.UtcTicks)
+                {
+                    return;
+                }
+
+                if (afterMarchUtc.UtcTicks > utcTime.UtcTicks)
+                {
+                    ThrowIfBackwardVirtualTimeChangeDisallowedLocked(utcTime, afterMarchUtc);
+                    SetVirtualUtcNowLocked(utcTime);
+#if NET || !SYSTEMCLOCK
+                    RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked();
+#endif
+                    RaiseClockEventsAfterVirtualUtcChange(utcTime);
+                    return;
+                }
+            }
+        }
+
+        DateTimeOffset currentAfterFinalPass;
+        lock (Gate)
+        {
+            currentAfterFinalPass = ReadVirtualUtcNowLocked();
+        }
+
+        string diagnosticMessage =
+            $"Forward virtual-time march did not reach the requested instant after {MaximumForwardMarchReconcilePasses} attempt(s). "
+            + $"Target UTC: {utcTime:o}; virtual UTC after final attempt: {currentAfterFinalPass:o}. "
+            + "This is typically caused by extreme concurrent contention (another thread mutated virtual time between the march and the "
+            + "post-march observation under the clock gate on every attempt, leaving the clock short of the target each time) or by a logic "
+            + "regression in the forward-march path that prevents virtual time from progressing toward the target. "
+            + "To diagnose, check whether other threads are concurrently advancing or setting the clock during this call, and verify that "
+            + "virtual UTC is making forward progress toward the target after each march iteration.";
+        throw new InvalidOperationException(diagnosticMessage);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />

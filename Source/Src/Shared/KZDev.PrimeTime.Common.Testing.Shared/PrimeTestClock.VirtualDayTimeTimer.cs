@@ -467,6 +467,28 @@ public sealed partial class PrimeTestClock
         public abstract void RunDueCallback (DateTimeOffset now);
         //------------------------------------------------------------------------
         /// <summary>
+        ///   Recomputes <see cref="NextDueUtc"/> after a permitted backward adjustment of the test clock&apos;s virtual
+        ///   instant.
+        /// </summary>
+        /// <param name="virtualNowUtc">The clock&apos;s virtual UTC instant after the adjustment.</param>
+        /// <remarks>
+        ///   The caller must hold the clock <see cref="PrimeTestTimeBase.Gate"/>; this method acquires this
+        ///   registration&apos;s <see cref="Gate"/>.
+        /// </remarks>
+        internal void RecomputeNextDueUtcAfterPermittedBackwardJump (DateTimeOffset virtualNowUtc)
+        {
+            lock (Gate)
+            {
+                if (Disposed || CancelRequested || State == TimerState.Cancelled || !EnabledDayTime)
+                {
+                    return;
+                }
+
+                NextDueUtc = ComputeNextDue(virtualNowUtc);
+            }
+        }
+        //------------------------------------------------------------------------
+        /// <summary>
         ///   Computes the next UTC instant when <see cref="TargetTimeOfDay"/> should fire on or after the clock&apos;s
         ///   current instant, using the same local wall-time policies as production
         ///   (<c>DayTimeBclLocalWallTimeScheduling</c> on the System Clock stack and <c>DayTimeNodaLocalWallTimeScheduling</c> in the

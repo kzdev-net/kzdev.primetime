@@ -205,6 +205,60 @@ public class UsingPrimeTestClock : UnitTestBase
 
     #endregion Advance — forward virtual march
 
+    #region SetTime — forward virtual march
+
+    /// <summary>
+    ///   Verifies that a single forward <see cref="IPrimeTestClock.SetTime"/> that lands after multiple interval
+    ///   ticks invokes each callback with <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> at that tick&apos;s firing instant.
+    /// </summary>
+    [Fact]
+    public void SetTime_Forward_OverMultipleIntervalTicks_CallbackSeesUtcNowAtEachFiringInstant ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset targetUtc = initial + TimeSpan.FromSeconds(30);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        List<DateTimeOffset> observedNow = [];
+        using (clock.RegisterTimer(TimeSpan.FromSeconds(10),
+                   _ => observedNow.Add(clock.UtcNowDateTimeOffset),
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetTime(targetUtc);
+        }
+
+        observedNow.Should().HaveCount(3);
+        observedNow[0].Should().Be(initial + TimeSpan.FromSeconds(10));
+        observedNow[1].Should().Be(initial + TimeSpan.FromSeconds(20));
+        observedNow[2].Should().Be(initial + TimeSpan.FromSeconds(30));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised once per distinct virtual instant crossed
+    ///   during one forward <see cref="IPrimeTestClock.SetTime"/> when multiple interval ticks occur.
+    /// </summary>
+    [Fact]
+    public void SetTime_Forward_SpanningMultipleDueInstants_RaisesClockEventsOncePerDistinctInstant ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset targetUtc = initial + TimeSpan.FromSeconds(30);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        int eventCount = 0;
+        clock.ClockEvents += (_, _) => eventCount++;
+        using (clock.RegisterTimer(TimeSpan.FromSeconds(10),
+                   _ => { },
+                   TestContext.Current.CancellationToken,
+                   repeat: true))
+        {
+            clock.SetTime(targetUtc);
+        }
+
+        eventCount.Should().Be(3);
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion SetTime — forward virtual march
+
     #endregion SetTime and Advance
 
     #region RunFor
