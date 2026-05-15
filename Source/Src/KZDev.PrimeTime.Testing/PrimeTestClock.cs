@@ -47,6 +47,18 @@ public sealed partial class PrimeTestClock
 
     #endregion Constructors/Finalizers
 
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the virtual UTC observation instant with persist-on-read applied when the automatic runner is active.
+    /// </summary>
+    /// <returns>The observed virtual instant in UTC.</returns>
+    private Instant GetObservationVirtualInstant ()
+    {
+        DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+        return Instant.FromDateTimeUtc(utcObservation.UtcDateTime);
+    }
+    //----------------------------------------------------------------------------
+
     #region IPrimeClock Implementation — Now (Noda)
 
     //----------------------------------------------------------------------------
@@ -55,8 +67,7 @@ public sealed partial class PrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return Now;
+            return GetObservationVirtualInstant();
         }
     }
     //----------------------------------------------------------------------------
@@ -65,8 +76,8 @@ public sealed partial class PrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return Now.InUtc();
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InUtc();
         }
     }
     //----------------------------------------------------------------------------
@@ -75,8 +86,8 @@ public sealed partial class PrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return Now.InZone(TimeZone);
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone);
         }
     }
     //----------------------------------------------------------------------------
@@ -84,31 +95,86 @@ public sealed partial class PrimeTestClock
     public ZonedDateTime UtcZonedNowInstant { [DebuggerStepThrough] get => UtcNowInstant; }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset LocalNowDateTimeOffset { [DebuggerStepThrough] get => LocalZonedNowInstant.ToDateTimeOffset(); }
+    public DateTimeOffset LocalNowDateTimeOffset
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone).ToDateTimeOffset();
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTimeOffset UtcNowDateTimeOffset { [DebuggerStepThrough] get => UtcNowInstant.ToDateTimeOffset(); }
+    public DateTimeOffset UtcNowDateTimeOffset
+    {
+        get => GetObservationVirtualUtcDateTimeOffset();
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime LocalNowDateTime { [DebuggerStepThrough] get => LocalNowDateTimeOffset.LocalDateTime; }
+    public DateTime LocalNowDateTime
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone).ToDateTimeOffset().LocalDateTime;
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public DateTime UtcNowDateTime { [DebuggerStepThrough] get => UtcNowDateTimeOffset.UtcDateTime; }
+    public DateTime UtcNowDateTime
+    {
+        get => GetObservationVirtualUtcDateTimeOffset().UtcDateTime;
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDateTime LocalNowInstant { [DebuggerStepThrough] get => LocalZonedNowInstant.LocalDateTime; }
+    public LocalDateTime LocalNowInstant
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone).LocalDateTime;
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime LocalNowTime { [DebuggerStepThrough] get => LocalZonedNowInstant.TimeOfDay; }
+    public LocalTime LocalNowTime
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone).TimeOfDay;
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalTime UtcNowTime { [DebuggerStepThrough] get => UtcNowInstant.TimeOfDay; }
+    public LocalTime UtcNowTime
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InUtc().TimeOfDay;
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate LocalNowDate { [DebuggerStepThrough] get => LocalZonedNowInstant.Date; }
+    public LocalDate LocalNowDate
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InZone(TimeZone).Date;
+        }
+    }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public LocalDate UtcNowDate { [DebuggerStepThrough] get => UtcNowInstant.Date; }
+    public LocalDate UtcNowDate
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return instant.InUtc().Date;
+        }
+    }
     //----------------------------------------------------------------------------
 
 #if NET
@@ -118,7 +184,14 @@ public sealed partial class PrimeTestClock
     ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
-    public TimeOnly LocalNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(LocalNowDateTime); }
+    public TimeOnly LocalNowTimeOnly
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return TimeOnly.FromDateTime(instant.InZone(TimeZone).ToDateTimeOffset().LocalDateTime);
+        }
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -126,7 +199,13 @@ public sealed partial class PrimeTestClock
     ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
-    public TimeOnly UtcNowTimeOnly { [DebuggerStepThrough] get => TimeOnly.FromDateTime(UtcNowDateTime); }
+    public TimeOnly UtcNowTimeOnly
+    {
+        get
+        {
+            return TimeOnly.FromDateTime(GetObservationVirtualInstant().ToDateTimeUtc());
+        }
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -134,7 +213,14 @@ public sealed partial class PrimeTestClock
     ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
-    public DateOnly LocalNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(LocalNowDateTime); }
+    public DateOnly LocalNowDateOnly
+    {
+        get
+        {
+            Instant instant = GetObservationVirtualInstant();
+            return DateOnly.FromDateTime(instant.InZone(TimeZone).ToDateTimeOffset().LocalDateTime);
+        }
+    }
 
     /// <inheritdoc />
     /// <remarks>
@@ -142,7 +228,13 @@ public sealed partial class PrimeTestClock
     ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
     ///   </para>
     /// </remarks>
-    public DateOnly UtcNowDateOnly { [DebuggerStepThrough] get => DateOnly.FromDateTime(UtcNowDateTime); }
+    public DateOnly UtcNowDateOnly
+    {
+        get
+        {
+            return DateOnly.FromDateTime(GetObservationVirtualInstant().ToDateTimeUtc());
+        }
+    }
 #endif
 
     #endregion IPrimeClock Implementation — Now (Noda)

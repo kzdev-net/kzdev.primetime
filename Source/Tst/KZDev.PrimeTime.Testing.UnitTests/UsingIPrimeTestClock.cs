@@ -1,7 +1,10 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
@@ -28,6 +31,39 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   Wall-clock guard for loops that wait for a sleep completion flag while advancing virtual time on another path.
     /// </summary>
     private static readonly Duration SleepTestRealTimeTimeout = Duration.FromSeconds(5);
+
+    /// <summary>
+    ///   Minimum virtual time per real second allowed by <see cref="PrimeTestClock.Start(NodaTime.Duration?)"/>.
+    /// </summary>
+    private static readonly Duration MinimumAllowedStartRunRate = Duration.FromMilliseconds(100);
+
+    /// <summary>
+    ///   Run rate one millisecond below <see cref="MinimumAllowedStartRunRate"/> for out-of-range start tests.
+    /// </summary>
+    private static readonly Duration StartRunRateBelowMinimum = MinimumAllowedStartRunRate - Duration.FromMilliseconds(1);
+
+    /// <summary>
+    ///   Brief real wall delay while the automatic runner is active: long enough for measurable virtual
+    ///   advancement at 10 virtual seconds per real second without slowing the suite.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningProjectionTestWallDelay = TimeSpan.FromMilliseconds(250);
+
+    /// <summary>
+    ///   Virtual-time assertion margin for runner projection tests: separate stopwatch instances,
+    ///   imprecise <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, and reads after wall stop.
+    /// </summary>
+    private static readonly Duration ClockRunningProjectionVirtualTolerance = Duration.FromMilliseconds(100);
+
+    /// <summary>
+    ///   Real wall delay before persist-on-read in delay-due tests: slightly exceeds the ~500 ms real time
+    ///   needed for a 5 s virtual delay at 10 virtual seconds per real second, plus runner scheduling slack.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningDelayDueTestWallDelay = TimeSpan.FromMilliseconds(600);
+
+    /// <summary>
+    ///   Short real wall delay used when the runner is stopped to confirm virtual time does not drift with wall time.
+    /// </summary>
+    private static readonly TimeSpan ClockStoppedNoAdvanceTestWallDelay = TimeSpan.FromMilliseconds(50);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -664,7 +700,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void Start_WithMinimumAllowedRate_StartsSuccessfully ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0));
-        clock.Start(Duration.FromMilliseconds(100));
+        clock.Start(MinimumAllowedStartRunRate);
         clock.IsRunning.Should().BeTrue();
         clock.Stop().Should().BeTrue();
     }
@@ -690,7 +726,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void Start_WithRateBelowMinimum_ThrowsArgumentOutOfRangeException ()
     {
         IPrimeTestClock clock = new PrimeTestClock();
-        Action act = () => clock.Start(Duration.FromMilliseconds(99));
+        Action act = () => clock.Start(StartRunRateBelowMinimum);
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
         clock.IsRunning.Should().BeFalse();
     }
@@ -703,7 +739,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void Start_WithRateOneTickBelowMinimum_ThrowsArgumentOutOfRangeException ()
     {
         IPrimeTestClock clock = new PrimeTestClock();
-        Duration belowMinimum = Duration.FromMilliseconds(100) - Duration.FromTicks(1);
+        Duration belowMinimum = MinimumAllowedStartRunRate - Duration.FromTicks(1);
         Action act = () => clock.Start(belowMinimum);
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
         clock.IsRunning.Should().BeFalse();
@@ -747,6 +783,73 @@ public class UsingIPrimeTestClock : UnitTestBase
         Action act = () => clock.Start(Duration.Zero);
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
         clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that while the automatic runner is active, <see cref="IPrimeTestClock.NowInstant"/> reflects linear
+    ///   projection of virtual time from the committed instant and monotonic anchor between explicit commits.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Expected virtual time is computed from a wall <see cref="Stopwatch"/> around the same real delay, using the
+    ///     same virtual-per-real-second scaling as the clock (not a fixed nominal delay), so slow or parallel test
+    ///     scheduling does not skew the assertion. A small fixed virtual tolerance remains for residual skew: the
+    ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch,
+    ///     <see cref="Task.Delay(TimeSpan, CancellationToken)"/> does not guarantee exact wall duration, 
+    ///     and the clock may advance slightly between <c>Stop()</c> on the wall
+    ///     timer and the <see cref="IPrimeTestClock.NowInstant"/> read.
+    ///   </para>
+    /// </remarks>
+    [Fact]
+    public async Task ClockRunning_NowInstantRead_AfterRealElapsed_ApproximatesProjectedInstant ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(10);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        clock.Start(runRate);
+        Stopwatch wall = Stopwatch.StartNew();
+        await Task.Delay(ClockRunningProjectionTestWallDelay, TestContext.Current.CancellationToken);
+        wall.Stop();
+        Instant observed = clock.NowInstant;
+        clock.Stop().Should().BeTrue();
+        TimeSpan virtualElapsedFromWall =
+            PrimeTestClock.ScaleRealElapsedToVirtualTime(wall.Elapsed, runRate.ToTimeSpan());
+        Instant expectedFromWall = initial + Duration.FromTimeSpan(virtualElapsedFromWall);
+        observed.Should().BeGreaterThanOrEqualTo(expectedFromWall - ClockRunningProjectionVirtualTolerance)
+            .And.BeLessThanOrEqualTo(expectedFromWall + ClockRunningProjectionVirtualTolerance);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a persist-on-read on <see cref="IPrimeTestClock.NowInstant"/> while the runner is active marches
+    ///   through due virtual-time work so a pending delay can complete without waiting for the coarse runner sleep.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_DelayDue_NowInstantRead_CompletesDelayTask ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 12, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        Task delayTask = clock.DelayAsync(Duration.FromSeconds(5), TestContext.Current.CancellationToken);
+        clock.Start(Duration.FromSeconds(10));
+        await Task.Delay(ClockRunningDelayDueTestWallDelay, TestContext.Current.CancellationToken);
+        _ = clock.NowInstant;
+        clock.Stop().Should().BeTrue();
+        delayTask.Status.Should().Be(TaskStatus.RanToCompletion);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that when the automatic runner is not active, <see cref="IPrimeTestClock.NowInstant"/> does not
+    ///   advance with real time between explicit virtual-time operations.
+    /// </summary>
+    [Fact]
+    public async Task ClockStopped_NowInstantRead_AfterRealElapsed_ReturnsPersistedInstant ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 0, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        await Task.Delay(ClockStoppedNoAdvanceTestWallDelay, TestContext.Current.CancellationToken);
+        clock.NowInstant.Should().Be(initial);
     }
     //----------------------------------------------------------------------------
 

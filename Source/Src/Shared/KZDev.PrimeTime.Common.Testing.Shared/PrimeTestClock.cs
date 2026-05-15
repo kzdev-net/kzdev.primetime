@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Threading;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
@@ -35,6 +36,45 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// </summary>
     private TimeSpan _runRate = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    ///   Real elapsed time since the last committed virtual instant while <see cref="PrimeTestTimeBase.InternalIsRunning"/>
+    ///   is <c>true</c>, shared with observer projection and (in a later phase) runner wake budgeting.
+    ///   Monotonic real-time elapsed since the committed virtual instant was established while the automatic runner is
+    ///   active.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     <see cref="Stopwatch"/> is not thread-safe for unsynchronized concurrent use. Every read or write of this
+    ///     instance (including <see cref="Stopwatch.Elapsed"/>, <see cref="Stopwatch.Restart"/>, and
+    ///     <see cref="Stopwatch.Reset"/>) occurs only while the caller holds <see cref="PrimeTestTimeBase.Gate"/>, so
+    ///     only one thread touches it at a time.
+    ///   </para>
+    /// </remarks>
+    private readonly Stopwatch _runAnchorStopwatch = new();
+
+    /// <summary>
+    ///   Cooperative wake for a future deadline-driven runner wait when scheduling or the committed anchor changes.
+    /// </summary>
+    private readonly ManualResetEventSlim _runnerWakeEvent = new(initialState: false);
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Counts nested calls from virtual-time march callbacks into observable "now" members within the same
+    ///   logical asynchronous execution flow on this clock so persist-on-read does not recurse while
+    ///   <see cref="MarchVirtualUtcForwardToTargetRaisingClockEvents"/> is in progress.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Each clock has its own <see cref="AsyncLocal{T}"/> so multiple <see cref="PrimeTestClock"/> instances in the
+    ///     same test or execution context do not share a persistence depth. Values still flow with
+    ///     <see cref="ExecutionContext"/> so continuations and typical <see cref="Task.Run(Action)"/> work observe the
+    ///     same depth as the outer observation even when they run on a different OS thread. Work that explicitly starts
+    ///     a thread without flowing context (for example <see cref="Thread.Start()"/>) does not inherit the depth.
+    ///   </para>
+    /// </remarks>
+    private readonly AsyncLocal<int> _observationUtcPersistenceFrameDepth = new();
+
+    //----------------------------------------------------------------------------
     /// <summary>
     ///   Minimum amount of virtual time that may elapse per real second when starting the runner
     ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
@@ -188,6 +228,210 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
     }
     //----------------------------------------------------------------------------
+
+    #region Run anchor and persist-on-read
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Maps a real-time elapsed interval to virtual elapsed using the configured virtual-time-per-real-second rate.
+    /// </summary>
+    /// <param name="realElapsed">Elapsed real time on the anchor stopwatch.</param>
+    /// <param name="virtualTimePerRealSecond">Virtual time that elapses per one real second.</param>
+    /// <returns>Corresponding virtual elapsed time.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     Uses <see cref="long"/> arithmetic when the intermediate product
+    ///     <c><paramref name="realElapsed"/>.Ticks * <paramref name="virtualTimePerRealSecond"/>.Ticks</c> fits in a
+    ///     <see cref="long"/>; otherwise uses <see cref="decimal"/> for that product so it does not overflow before
+    ///     dividing by <see cref="TimeSpan.TicksPerSecond"/>. Truncation toward zero when converting the scaled ticks to
+    ///     <see cref="long"/> matches the prior floating-point cast behavior for non-extreme durations.
+    ///   </para>
+    /// </remarks>
+    internal static TimeSpan ScaleRealElapsedToVirtualTime (TimeSpan realElapsed, TimeSpan virtualTimePerRealSecond)
+    {
+        long realTicks = realElapsed.Ticks;
+        long rateTicks = virtualTimePerRealSecond.Ticks;
+        const long ticksPerSecond = TimeSpan.TicksPerSecond;
+        long scaledTicks;
+        if (TicksProductFitsInInt64(realTicks, rateTicks))
+        {
+            long product = realTicks * rateTicks;
+            scaledTicks = product / ticksPerSecond;
+        }
+        else
+        {
+            decimal scaledDecimal = (decimal)realTicks * rateTicks / ticksPerSecond;
+            scaledTicks = (long)scaledDecimal;
+        }
+
+        ThrowIfScaledTicksOutsideTimeSpanRange(scaledTicks);
+        return TimeSpan.FromTicks(scaledTicks);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws <see cref="OverflowException"/> when scaled tick counts are outside the range representable as a
+    ///   <see cref="TimeSpan"/>.
+    /// </summary>
+    /// <param name="scaledTicks">Virtual elapsed ticks after scaling real elapsed by the run rate.</param>
+    private static void ThrowIfScaledTicksOutsideTimeSpanRange (long scaledTicks)
+    {
+        if (scaledTicks > TimeSpan.MaxValue.Ticks || scaledTicks < TimeSpan.MinValue.Ticks)
+        {
+            throw new OverflowException(
+                "Scaled virtual elapsed time exceeds the representable TimeSpan range.");
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns whether <c>x * y</c> is representable as a <see cref="long"/> without overflowing signed
+    ///   multiplication.
+    /// </summary>
+    /// <param name="x">First factor (typically real elapsed ticks).</param>
+    /// <param name="y">Second factor (typically virtual-time-per-real-second ticks).</param>
+    /// <returns>
+    ///   <see langword="true"/> if the product fits in <see cref="long"/>; otherwise <see langword="false"/>.
+    /// </returns>
+    private static bool TicksProductFitsInInt64 (long x, long y)
+    {
+        if (x == 0 || y == 0)
+        {
+            return true;
+        }
+
+        if (x == long.MinValue)
+        {
+            return y == 1;
+        }
+
+        if (y == long.MinValue)
+        {
+            return x == 1;
+        }
+
+        long absX = Math.Abs(x);
+        long absY = Math.Abs(y);
+        return absX <= long.MaxValue / absY;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes linearly projected virtual UTC from the last committed instant and anchor stopwatch while the
+    ///   runner is active. The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </summary>
+    /// <returns>Projected virtual UTC.</returns>
+    private DateTimeOffset ComputeProjectedVirtualUtcLocked ()
+    {
+        if (!InternalIsRunning)
+        {
+            return ReadVirtualUtcNowLocked();
+        }
+
+        DateTimeOffset committedUtc = ReadVirtualUtcNowLocked();
+        TimeSpan realElapsed = _runAnchorStopwatch.Elapsed;
+        TimeSpan virtualElapsed = ScaleRealElapsedToVirtualTime(realElapsed, _runRate);
+        return committedUtc + virtualElapsed;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Signals the runner wake handle when the automatic runner is active. The caller must hold
+    ///   <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </summary>
+    private void SignalRunnerWakeIfRunningLocked ()
+    {
+        if (InternalIsRunning)
+        {
+            _runnerWakeEvent.Set();
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Persists a new committed virtual UTC instant while the runner is active and restarts the monotonic anchor so
+    ///   projection and a future deadline-driven runner share the same timeline.
+    /// </summary>
+    /// <param name="utcNowOffset">The new committed virtual UTC instant.</param>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </remarks>
+    private void CommitVirtualUtcInstantLocked (DateTimeOffset utcNowOffset)
+    {
+        SetVirtualUtcNowLocked(utcNowOffset);
+        if (!InternalIsRunning)
+        {
+            return;
+        }
+
+        _runAnchorStopwatch.Restart();
+        SignalRunnerWakeIfRunningLocked();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns the virtual UTC instant for observable clock APIs, applying persist-on-read while the automatic runner
+    ///   is active.
+    /// </summary>
+    /// <returns>The virtual UTC instant observers should use.</returns>
+    /// <remarks>
+    ///   <para>
+    ///     For the outer persist-on-read path, <see cref="_observationUtcPersistenceFrameDepth"/> is incremented under
+    ///     <see cref="PrimeTestTimeBase.Gate"/> in the same critical section as the
+    ///     <see cref="PrimeTestTimeBase.InternalIsRunning"/> and nested-depth checks, and decremented under the same lock
+    ///     in <c>finally</c> so no other thread can begin a new gated observation pass between unlock and depth teardown.
+    ///   </para>
+    /// </remarks>
+    private DateTimeOffset GetObservationVirtualUtcDateTimeOffset ()
+    {
+        lock (Gate)
+        {
+            if (!InternalIsRunning)
+            {
+                return ReadVirtualUtcNowLocked();
+            }
+
+            if (_observationUtcPersistenceFrameDepth.Value > 0)
+            {
+                return ComputeProjectedVirtualUtcLocked();
+            }
+
+            _observationUtcPersistenceFrameDepth.Value++;
+        }
+
+        try
+        {
+            DateTimeOffset targetUtc;
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    return ReadVirtualUtcNowLocked();
+                }
+
+                targetUtc = ComputeProjectedVirtualUtcLocked();
+            }
+
+            MarchVirtualUtcForwardToTargetRaisingClockEvents(targetUtc);
+
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    return ReadVirtualUtcNowLocked();
+                }
+
+                _runAnchorStopwatch.Restart();
+                SignalRunnerWakeIfRunningLocked();
+                return ReadVirtualUtcNowLocked();
+            }
+        }
+        finally
+        {
+            lock (Gate)
+            {
+                _observationUtcPersistenceFrameDepth.Value--;
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Run anchor and persist-on-read
+
     /// <summary>
     ///   Removes an interval registration from the active list (under <see cref="PrimeTestTimeBase.Gate"/>).
     /// </summary>
@@ -585,7 +829,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 }
 
                 stepUtc = ComputeNextMarchInstantUtcLocked(nowUtc, targetUtc);
-                SetVirtualUtcNowLocked(stepUtc);
+                CommitVirtualUtcInstantLocked(stepUtc);
             }
 
             _ = TryDispatchAllDueAtCurrentVirtualUtc();
@@ -743,6 +987,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return;
             InternalIsRunning = true;
             _runRate = rate ?? TimeSpan.FromSeconds(1);
+            _runAnchorStopwatch.Restart();
 
             _runThread = new Thread(RunLoop)
             {
@@ -762,6 +1007,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             if (!InternalIsRunning)
                 return false;
             InternalIsRunning = false;
+            _runAnchorStopwatch.Reset();
+            _runnerWakeEvent.Set();
             runningThread = _runThread;
             _runThread = null;
         }
@@ -781,19 +1028,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return ToLocalOffset(ReadVirtualUtcNowLocked());
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return ToLocalOffset(utcObservation);
         }
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public DateTimeOffset UtcNowDateTimeOffset
     {
-        get
-        {
-            lock (Gate)
-                return ReadVirtualUtcNowLocked();
-        }
+        get => GetObservationVirtualUtcDateTimeOffset();
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
@@ -801,8 +1044,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime;
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return ToLocalOffset(utcObservation).DateTime;
         }
     }
     //----------------------------------------------------------------------------
@@ -811,8 +1054,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return ReadVirtualUtcNowLocked().UtcDateTime;
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return utcObservation.UtcDateTime;
         }
     }
     //----------------------------------------------------------------------------
@@ -829,8 +1072,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return TimeOnly.FromDateTime(ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime);
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return TimeOnly.FromDateTime(ToLocalOffset(utcObservation).DateTime);
         }
     }
     //----------------------------------------------------------------------------
@@ -844,8 +1087,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return TimeOnly.FromDateTime(ReadVirtualUtcNowLocked().UtcDateTime);
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return TimeOnly.FromDateTime(utcObservation.UtcDateTime);
         }
     }
     //----------------------------------------------------------------------------
@@ -859,8 +1102,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return DateOnly.FromDateTime(ToLocalOffset(ReadVirtualUtcNowLocked()).DateTime);
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return DateOnly.FromDateTime(ToLocalOffset(utcObservation).DateTime);
         }
     }
     //----------------------------------------------------------------------------
@@ -874,8 +1117,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         get
         {
-            lock (Gate)
-                return DateOnly.FromDateTime(ReadVirtualUtcNowLocked().UtcDateTime);
+            DateTimeOffset utcObservation = GetObservationVirtualUtcDateTimeOffset();
+            return DateOnly.FromDateTime(utcObservation.UtcDateTime);
         }
     }
     //----------------------------------------------------------------------------
