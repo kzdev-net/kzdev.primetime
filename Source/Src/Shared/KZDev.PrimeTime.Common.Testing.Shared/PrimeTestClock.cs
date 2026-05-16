@@ -37,7 +37,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
     /// <summary>
     ///   Real elapsed time since the last committed virtual instant while <see cref="PrimeTestTimeBase.InternalIsRunning"/>
-    ///   is <c>true</c>, shared with observer projection and (in a later phase) runner wake budgeting.
+    ///   is <c>true</c>, shared with observer projection and deadline-driven runner wake budgeting.
     ///   Monotonic real-time elapsed since the committed virtual instant was established while the automatic runner is
     ///   active.
     /// </summary>

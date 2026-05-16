@@ -67,6 +67,45 @@ public class UsingPrimeTestClock : UnitTestBase
     ///   Virtual-time tolerance when asserting heartbeat <see cref="IPrimeTestClock.ClockEvents"/> times.
     /// </summary>
     private static readonly TimeSpan ClockRunningHeartbeatVirtualTolerance = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    ///   Maximum real wall time for the 15 ms burst-path test: three sub-15 ms virtual delays at 10 virtual seconds
+    ///   per real second should finish well under this budget on CI.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningBurstPathMaxWallDelay = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    ///   Real wall ceiling for slow-rate delay completion: below the old fixed one-second poll interval.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningSlowRateDelayMaxWallDelay = TimeSpan.FromMilliseconds(850);
+
+    /// <summary>
+    ///   Minimum real wall time expected for a 50 ms virtual delay at the minimum run rate (100 ms virtual per real
+    ///   second).
+    /// </summary>
+    private static readonly TimeSpan ClockRunningSlowRateDelayMinWallDelay = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>
+    ///   Real wall ceiling for multiple-delay catch-up completion at 10 virtual seconds per real second.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningCatchUpTestWallDelay = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///   Minimum real wall time before catch-up completes: first due delay is 300 ms virtual (30 ms real at 10:1),
+    ///   which exceeds the 15 ms minimum sleep threshold.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningCatchUpMinWallDelay = TimeSpan.FromMilliseconds(20);
+
+    /// <summary>
+    ///   Real wall delay for heartbeat cadence reset test at 10 virtual seconds per real second.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningHeartbeatResetTestWallDelay = TimeSpan.FromSeconds(12);
+
+    /// <summary>
+    ///   Tolerance when asserting a reset heartbeat <see cref="IPrimeTestClock.ClockEvents"/> time after a substantive
+    ///   timer at 45 virtual seconds.
+    /// </summary>
+    private static readonly TimeSpan ClockRunningResetHeartbeatVirtualTolerance = TimeSpan.FromSeconds(5);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -726,6 +765,146 @@ public class UsingPrimeTestClock : UnitTestBase
         stopElapsed.Stop();
         stopElapsed.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2));
         clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that at the minimum run rate a short virtual delay completes before the old fixed one-second real poll
+    ///   would have advanced virtual time.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_SlowRate_ShortVirtualDelay_CompletesBeforeOneSecondRealPoll ()
+    {
+        DateTimeOffset initial = new(2020, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        Task delayTask = clock.DelayAsync(TimeSpan.FromMilliseconds(50), TestContext.Current.CancellationToken);
+        Stopwatch wall = Stopwatch.StartNew();
+        clock.Start(MinimumAllowedStartRunRate);
+        Task delayOrTimeout = await Task.WhenAny(delayTask,
+            Task.Delay(ClockRunningSlowRateDelayMaxWallDelay, TestContext.Current.CancellationToken));
+        wall.Stop();
+        try
+        {
+            delayOrTimeout.Should().BeSameAs(delayTask);
+            delayTask.Status.Should().Be(TaskStatus.RanToCompletion);
+            wall.Elapsed.Should().BeLessThan(ClockRunningSlowRateDelayMaxWallDelay);
+            wall.Elapsed.Should().BeGreaterThan(ClockRunningSlowRateDelayMinWallDelay);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that when intended real waits are below 15 ms, the runner bursts virtual steps and completes multiple
+    ///   short delays without a large real wall delay.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_SubMinimumRealWaits_BurstCompletesMultipleDelaysQuickly ()
+    {
+        DateTimeOffset initial = new(2020, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        Task delay10Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(10), TestContext.Current.CancellationToken);
+        Task delay20Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(20), TestContext.Current.CancellationToken);
+        Task delay30Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(30), TestContext.Current.CancellationToken);
+        Stopwatch wall = Stopwatch.StartNew();
+        clock.Start(TimeSpan.FromSeconds(10));
+        await Task.WhenAll(delay10Ms, delay20Ms, delay30Ms);
+        wall.Stop();
+        try
+        {
+            wall.Elapsed.Should().BeLessThan(ClockRunningBurstPathMaxWallDelay);
+            clock.UtcNowDateTimeOffset.Should().BeOnOrAfter(initial + TimeSpan.FromMilliseconds(30));
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that after a real elapsed slice the runner catch-up budget completes every due delay up to the
+    ///   measured virtual horizon, not only work due within the first intended real wait.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_MultipleDelays_AfterRealElapsed_CompletesAllFromCatchUpBudget ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2020, 6, 1, 0, 0, 0, TimeSpan.Zero));
+        Task delay300Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(300), TestContext.Current.CancellationToken);
+        Task delay400Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(400), TestContext.Current.CancellationToken);
+        Task delay500Ms = clock.DelayAsync(TimeSpan.FromMilliseconds(500), TestContext.Current.CancellationToken);
+        Stopwatch wall = Stopwatch.StartNew();
+        clock.Start(TimeSpan.FromSeconds(10));
+        Task allDelays = Task.WhenAll(delay300Ms, delay400Ms, delay500Ms);
+        Task completed = await Task.WhenAny(allDelays,
+            Task.Delay(ClockRunningCatchUpTestWallDelay, TestContext.Current.CancellationToken));
+        wall.Stop();
+        try
+        {
+            completed.Should().BeSameAs(allDelays);
+            wall.Elapsed.Should().BeGreaterThan(ClockRunningCatchUpMinWallDelay);
+            wall.Elapsed.Should().BeLessThan(ClockRunningCatchUpTestWallDelay);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a substantive interval timer firing resets the virtual-minute heartbeat window so the first
+    ///   heartbeat <see cref="IPrimeTestClock.ClockEvents"/> is after one quiet virtual minute from that fire, not from
+    ///   clock start.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_SubstantiveTimerMidWindow_ResetsHeartbeatCadence ()
+    {
+        DateTimeOffset initial = new(2020, 6, 1, 0, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        List<DateTimeOffset> eventTimes = [];
+        object sync = new();
+        clock.ClockEvents += (_, e) =>
+        {
+            lock (sync)
+            {
+                eventTimes.Add(e.UtcNowDateTimeOffset);
+            }
+        };
+        int timerFireCount = 0;
+        using IClockIntervalTimer registration = clock.RegisterTimer(TimeSpan.FromSeconds(45),
+            () => Interlocked.Increment(ref timerFireCount),
+            TestContext.Current.CancellationToken);
+        clock.Start(TimeSpan.FromSeconds(10));
+        await Task.Delay(ClockRunningHeartbeatResetTestWallDelay, TestContext.Current.CancellationToken);
+        clock.Stop().Should().BeTrue();
+        timerFireCount.Should().BeGreaterThanOrEqualTo(1);
+        List<DateTimeOffset> copy;
+        lock (sync)
+        {
+            copy = [.. eventTimes];
+        }
+
+        TimeSpan uncanceledHeartbeatWindowStart = TimeSpan.FromSeconds(58);
+        TimeSpan uncanceledHeartbeatWindowEnd = TimeSpan.FromSeconds(62);
+        foreach (DateTimeOffset eventTime in copy)
+        {
+            TimeSpan delta = eventTime - initial;
+            bool inUncanceledHeartbeatWindow = delta >= uncanceledHeartbeatWindowStart
+                && delta <= uncanceledHeartbeatWindowEnd;
+            inUncanceledHeartbeatWindow.Should().BeFalse(
+                "a 45 s substantive timer should reset the heartbeat window so no heartbeat-only raise occurs near T+60 s ({0:o})",
+                eventTime);
+        }
+
+        DateTimeOffset resetHeartbeatLower = initial + TimeSpan.FromSeconds(45) + TimeSpan.FromMinutes(1)
+            - ClockRunningResetHeartbeatVirtualTolerance;
+        DateTimeOffset resetHeartbeatUpper = initial + TimeSpan.FromSeconds(45) + TimeSpan.FromMinutes(1)
+            + ClockRunningResetHeartbeatVirtualTolerance;
+        copy.Should().Contain(eventTime => eventTime >= resetHeartbeatLower && eventTime <= resetHeartbeatUpper);
     }
     //----------------------------------------------------------------------------
 
