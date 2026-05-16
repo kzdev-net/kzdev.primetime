@@ -2,7 +2,6 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Threading;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
@@ -56,6 +55,48 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     ///   Cooperative wake for a future deadline-driven runner wait when scheduling or the committed anchor changes.
     /// </summary>
     private readonly ManualResetEventSlim _runnerWakeEvent = new(initialState: false);
+
+    /// <summary>
+    ///   Virtual UTC instant from which the runner measures the next virtual-minute <see cref="ClockEvents"/> heartbeat.
+    /// </summary>
+    private DateTimeOffset _runnerHeartbeatWindowStartUtc;
+
+    /// <summary>
+    ///   Minimum real time the runner uses as a sleep threshold: shorter intended waits are handled by bursting
+    ///   virtual steps instead of sleeping.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Fifteen milliseconds is the documented contract for the test clock runner (see product specification:
+    ///     do not request a real wait shorter than this; process virtual deadlines in order until the next sleep would
+    ///     be at least this long, or work is idle). Real waits shorter than typical thread and timer scheduling
+    ///     granularity are noisy and often oversleep, which would fight the separate &quot;actual elapsed&quot;
+    ///     catch-up path; skipping those sleeps keeps behavior predictable and avoids a tight sleep spin loop.
+    ///   </para>
+    /// </remarks>
+    private static readonly TimeSpan MinimumRunnerRealWait = TimeSpan.FromMilliseconds(15);
+
+    /// <summary>
+    ///   Virtual elapsed time without a substantive event before the runner raises a heartbeat <see cref="ClockEvents"/>.
+    /// </summary>
+    private static readonly TimeSpan VirtualMinuteHeartbeatInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    ///   Sentinel upper bound passed to timer march helpers when scanning for the next runner deadline with no finite
+    ///   cap.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     This value is not used as a virtual instant to advance the clock to; it is only supplied as
+    ///     <c>targetUtc</c> to
+    ///     <see cref="VirtualIntervalTimerBase.ConsiderEarliestDueUtcStrictlyAfterForMarch"/> and the parallel
+    ///     day-time helper (same signature in <c>PrimeTestClock.VirtualDayTimeTimer</c> when that feature is compiled)
+    ///     so every finite <c>NextDueUtc</c> lies on or before the bound. <see cref="DateTimeOffset.MaxValue"/> is used
+    ///     because it is unambiguous and avoids threading <see langword="null"/> through those helpers for this single
+    ///     call site.
+    ///   </para>
+    /// </remarks>
+    private static readonly DateTimeOffset RunnerDeadlineHorizonUtc = DateTimeOffset.MaxValue;
 
     //----------------------------------------------------------------------------
     /// <summary>
@@ -208,26 +249,252 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     #region Private helpers
 
     //----------------------------------------------------------------------------
+
+    #region Runner loop
+
+    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Background loop: sleeps one real second, then advances virtual time by <see cref="_runRate"/>.
+    ///   Background loop: waits until the next virtual deadline (or real timeout), then marches virtual time using
+    ///   measured real elapsed time on <see cref="_runAnchorStopwatch"/>.
     /// </summary>
     private void RunLoop ()
     {
         while (true)
         {
-            Thread.Sleep(1000);
-            TimeSpan toAdvance;
+            if (!TryPrepareNextRunnerSleep(out DateTimeOffset nextDeadlineUtc, out TimeSpan intendedRealWait))
+            {
+                return;
+            }
+
+            if (intendedRealWait <= TimeSpan.Zero)
+            {
+                MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
+
+                lock (Gate)
+                {
+                    if (!InternalIsRunning)
+                    {
+                        return;
+                    }
+
+                    ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
+                }
+
+                continue;
+            }
+
+            bool rescheduleImmediately;
             lock (Gate)
             {
                 if (!InternalIsRunning)
+                {
                     return;
-                toAdvance = _runRate;
+                }
+
+                // Scheduling signals Set under Gate; observe and clear the latch under the same lock so a wake cannot
+                // arrive between IsSet and Reset and be lost. If a wake is already latched, skip sleeping and recompute.
+                rescheduleImmediately = _runnerWakeEvent.IsSet;
+                _runnerWakeEvent.Reset();
             }
 
-            Advance(toAdvance);
+            if (rescheduleImmediately)
+            {
+                continue;
+            }
+
+            int waitMilliseconds = GetRunnerWaitMilliseconds(intendedRealWait);
+            _ = _runnerWakeEvent.Wait(waitMilliseconds);
+
+            DateTimeOffset marchTargetUtc;
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    return;
+                }
+
+                TimeSpan actualRealElapsed = _runAnchorStopwatch.Elapsed;
+                DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
+                TimeSpan virtualBudget = ScaleRealElapsedToVirtualTime(actualRealElapsed, _runRate);
+                marchTargetUtc = nowUtc + virtualBudget;
+            }
+
+            MarchVirtualUtcForwardToTargetRaisingClockEvents(marchTargetUtc);
+
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    return;
+                }
+
+                ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
+            }
         }
     }
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes the next virtual deadline and intended real wait; when that wait is below
+    ///   <see cref="MinimumRunnerRealWait"/>, marches virtual time in-process until the next slice would sleep at least
+    ///   that long (or work is due with zero virtual delta to the deadline).
+    /// </summary>
+    /// <param name="nextDeadlineUtc">Next virtual UTC instant the runner is targeting for the slice.</param>
+    /// <param name="intendedRealWait">Real time to wait for that virtual delta at <see cref="_runRate"/>.</param>
+    /// <returns>
+    ///   <see langword="false"/> when the automatic runner has stopped; otherwise <see langword="true"/> with outputs
+    ///   describing the next slice.
+    /// </returns>
+    private bool TryPrepareNextRunnerSleep (out DateTimeOffset nextDeadlineUtc, out TimeSpan intendedRealWait)
+    {
+        while (true)
+        {
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    nextDeadlineUtc = default;
+                    intendedRealWait = TimeSpan.Zero;
+                    return false;
+                }
+
+                DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
+                nextDeadlineUtc = GetEarliestRunnerDeadlineUtcLocked(nowUtc);
+                TimeSpan virtualDelta = nextDeadlineUtc - nowUtc;
+                if (virtualDelta <= TimeSpan.Zero)
+                {
+                    intendedRealWait = TimeSpan.Zero;
+                }
+                else
+                {
+                    intendedRealWait = ScaleVirtualDeltaToRealTime(virtualDelta, _runRate);
+                }
+            }
+
+            if (intendedRealWait >= MinimumRunnerRealWait)
+            {
+                return true;
+            }
+
+            MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
+
+            lock (Gate)
+            {
+                if (!InternalIsRunning)
+                {
+                    nextDeadlineUtc = default;
+                    intendedRealWait = TimeSpan.Zero;
+                    return false;
+                }
+
+                ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
+            }
+
+            if (intendedRealWait <= TimeSpan.Zero)
+            {
+                return true;
+            }
+
+            // Sub-minimum real wait: another burst iteration may follow; yield so a pathological schedule cannot spin.
+            Thread.Yield();
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Returns the earliest virtual UTC deadline the runner should reach next: substantive work or the virtual-minute
+    ///   heartbeat, whichever is sooner.
+    /// </summary>
+    /// <param name="nowUtc">Current committed virtual UTC instant.</param>
+    /// <returns>The next deadline strictly after <paramref name="nowUtc"/>, or <paramref name="nowUtc"/> when due now.</returns>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </remarks>
+    private DateTimeOffset GetEarliestRunnerDeadlineUtcLocked (DateTimeOffset nowUtc)
+    {
+        DateTimeOffset? bestUtc = null;
+        foreach (PendingDelay pendingDelay in PendingDelays)
+        {
+            if (pendingDelay.DueUtc <= nowUtc)
+            {
+                return nowUtc;
+            }
+
+            bestUtc = bestUtc is null || pendingDelay.DueUtc < bestUtc ? pendingDelay.DueUtc : bestUtc;
+        }
+
+        foreach (TimeExpiryEntry expiryEntry in TimeExpiryEntries)
+        {
+            if (expiryEntry.ExpireUtc <= nowUtc)
+            {
+                return nowUtc;
+            }
+
+            bestUtc = bestUtc is null || expiryEntry.ExpireUtc < bestUtc ? expiryEntry.ExpireUtc : bestUtc;
+        }
+
+        foreach (VirtualIntervalTimerBase intervalTimer in _intervalTimers)
+        {
+            intervalTimer.ConsiderEarliestDueUtcStrictlyAfterForMarch(ref bestUtc, nowUtc, RunnerDeadlineHorizonUtc);
+        }
+
+#if NET || !SYSTEMCLOCK
+        foreach (VirtualDayTimeTimerBase dayTimeTimer in _dayTimeTimers)
+        {
+            dayTimeTimer.ConsiderEarliestDueUtcStrictlyAfterForMarch(ref bestUtc, nowUtc, RunnerDeadlineHorizonUtc);
+        }
+#endif
+
+        DateTimeOffset heartbeatDeadlineUtc = _runnerHeartbeatWindowStartUtc + VirtualMinuteHeartbeatInterval;
+        if (heartbeatDeadlineUtc <= nowUtc)
+        {
+            return nowUtc;
+        }
+
+        return bestUtc is null || heartbeatDeadlineUtc < bestUtc ? heartbeatDeadlineUtc : bestUtc.Value;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Restarts the virtual-minute heartbeat window from <paramref name="instantUtc"/>.
+    /// </summary>
+    /// <param name="instantUtc">Virtual UTC instant that last drove virtual time or substantive work.</param>
+    /// <remarks>
+    ///   The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </remarks>
+    private void ResetRunnerHeartbeatWindowLocked (DateTimeOffset instantUtc)
+    {
+        _runnerHeartbeatWindowStartUtc = instantUtc;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Converts a runner real-wait duration to whole milliseconds for <see cref="ManualResetEventSlim.Wait(int)"/>.
+    /// </summary>
+    /// <param name="intendedRealWait">Intended real elapsed time before the next wake.</param>
+    /// <returns>Non-negative wait time in milliseconds, capped at <see cref="int.MaxValue"/>.</returns>
+    private static int GetRunnerWaitMilliseconds (TimeSpan intendedRealWait)
+    {
+        if (intendedRealWait <= TimeSpan.Zero)
+        {
+            return 0;
+        }
+
+        double totalMilliseconds = intendedRealWait.TotalMilliseconds;
+        if (totalMilliseconds >= int.MaxValue)
+        {
+            return int.MaxValue;
+        }
+
+        return (int)Math.Ceiling(totalMilliseconds);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Notifies the automatic runner that scheduling changed while <see cref="PrimeTestTimeBase.Gate"/> is held.
+    /// </summary>
+    protected override void OnSchedulingMutatedWhileGateHeld ()
+    {
+        SignalRunnerWakeIfRunningLocked();
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Runner loop
 
     #region Run anchor and persist-on-read
 
@@ -251,16 +518,51 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         long realTicks = realElapsed.Ticks;
         long rateTicks = virtualTimePerRealSecond.Ticks;
-        const long ticksPerSecond = TimeSpan.TicksPerSecond;
         long scaledTicks;
+        // Intermediate product realTicks * rateTicks must fit in long; otherwise use decimal to avoid overflow
+        // before dividing by TicksPerSecond (extreme elapsed × rate combinations).
         if (TicksProductFitsInInt64(realTicks, rateTicks))
         {
             long product = realTicks * rateTicks;
-            scaledTicks = product / ticksPerSecond;
+            scaledTicks = product / TimeSpan.TicksPerSecond;
         }
         else
         {
-            decimal scaledDecimal = (decimal)realTicks * rateTicks / ticksPerSecond;
+            decimal scaledDecimal = (decimal)realTicks * rateTicks / TimeSpan.TicksPerSecond;
+            scaledTicks = (long)scaledDecimal;
+        }
+
+        ThrowIfScaledTicksOutsideTimeSpanRange(scaledTicks);
+        return TimeSpan.FromTicks(scaledTicks);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Maps a virtual-time interval to the corresponding real elapsed time at the configured
+    ///   virtual-time-per-real-second rate.
+    /// </summary>
+    /// <param name="virtualDelta">Virtual elapsed time until the next deadline.</param>
+    /// <param name="virtualTimePerRealSecond">Virtual time that elapses per one real second.</param>
+    /// <returns>Real time to wait before that virtual interval elapses at the run rate.</returns>
+    internal static TimeSpan ScaleVirtualDeltaToRealTime (TimeSpan virtualDelta, TimeSpan virtualTimePerRealSecond)
+    {
+        long virtualTicks = virtualDelta.Ticks;
+        if (virtualTicks == 0)
+        {
+            return TimeSpan.Zero;
+        }
+
+        long rateTicks = virtualTimePerRealSecond.Ticks;
+        long scaledTicks;
+        // Intermediate product virtualTicks * TicksPerSecond must fit in long; otherwise use decimal to avoid
+        // overflow before dividing by rateTicks (very large virtual deltas and/or extremely small run-rate ticks).
+        if (TicksProductFitsInInt64(virtualTicks, TimeSpan.TicksPerSecond))
+        {
+            long product = virtualTicks * TimeSpan.TicksPerSecond;
+            scaledTicks = product / rateTicks;
+        }
+        else
+        {
+            decimal scaledDecimal = (decimal)virtualTicks * TimeSpan.TicksPerSecond / rateTicks;
             scaledTicks = (long)scaledDecimal;
         }
 
@@ -440,7 +742,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         lock (Gate)
         {
-            _intervalTimers.Remove(timer);
+            if (_intervalTimers.Remove(timer))
+            {
+                OnSchedulingMutatedWhileGateHeld();
+            }
         }
     }
     //----------------------------------------------------------------------------
@@ -528,7 +833,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         lock (Gate)
         {
-            _dayTimeTimers.Remove(timer);
+            if (_dayTimeTimers.Remove(timer))
+            {
+                OnSchedulingMutatedWhileGateHeld();
+            }
         }
     }
     //----------------------------------------------------------------------------
@@ -551,6 +859,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         lock (Gate)
         {
             _dayTimeTimers.Add(t);
+            OnSchedulingMutatedWhileGateHeld();
         }
         return t;
     }
@@ -574,6 +883,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         lock (Gate)
         {
             _dayTimeTimers.Add(t);
+            OnSchedulingMutatedWhileGateHeld();
         }
         return t;
     }
@@ -803,6 +1113,17 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
 #endif
 
+        if (didWork)
+        {
+            lock (Gate)
+            {
+                if (InternalIsRunning)
+                {
+                    ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
+                }
+            }
+        }
+
         return didWork;
     }
     //----------------------------------------------------------------------------
@@ -933,6 +1254,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         DateTimeOffset targetUtc;
         lock (Gate)
         {
+            if (InternalIsRunning)
+            {
+                ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
+            }
+
             targetUtc = ReadVirtualUtcNowLocked() + duration;
         }
 
@@ -987,6 +1313,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return;
             InternalIsRunning = true;
             _runRate = rate ?? TimeSpan.FromSeconds(1);
+            _runnerHeartbeatWindowStartUtc = ReadVirtualUtcNowLocked();
             _runAnchorStopwatch.Restart();
 
             _runThread = new Thread(RunLoop)
@@ -1140,7 +1467,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             callbackTime, repeatInterval, TimerCallbackKind.ContextAction,
             callback, state, timerOptions, cancellationToken);
         lock (Gate)
+        {
             _intervalTimers.Add(intervalTimer);
+            OnSchedulingMutatedWhileGateHeld();
+        }
         return intervalTimer;
     }
     //----------------------------------------------------------------------------
@@ -1155,7 +1485,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             callbackTime, repeatInterval, TimerCallbackKind.ContextAsync,
             callback, state, timerOptions, cancellationToken);
         lock (Gate)
+        {
             _intervalTimers.Add(intervalTimer);
+            OnSchedulingMutatedWhileGateHeld();
+        }
         return intervalTimer;
     }
     //----------------------------------------------------------------------------

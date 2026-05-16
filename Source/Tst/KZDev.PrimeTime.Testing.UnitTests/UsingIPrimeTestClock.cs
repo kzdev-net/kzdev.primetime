@@ -64,6 +64,17 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   Short real wall delay used when the runner is stopped to confirm virtual time does not drift with wall time.
     /// </summary>
     private static readonly TimeSpan ClockStoppedNoAdvanceTestWallDelay = TimeSpan.FromMilliseconds(50);
+
+    /// <summary>
+    ///   Real wall delay for virtual-minute heartbeat at 10 virtual seconds per real second (one virtual minute is about
+    ///   six seconds of real time, plus scheduling slack).
+    /// </summary>
+    private static readonly TimeSpan ClockRunningHeartbeatTestWallDelay = TimeSpan.FromSeconds(8);
+
+    /// <summary>
+    ///   Virtual-time tolerance when asserting heartbeat <see cref="IPrimeTestClock.ClockEvents"/> instants.
+    /// </summary>
+    private static readonly Duration ClockRunningHeartbeatVirtualTolerance = Duration.FromSeconds(2);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -854,6 +865,111 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     #endregion Start and Stop
+
+    #region Runner loop
+
+    /// <summary>
+    ///   Verifies that the deadline-driven runner completes a delay registered after automatic virtual-time advancement
+    ///   is started on <see cref="IPrimeTestClock"/>, without requiring a persist-on-read on
+    ///   <see cref="IPrimeTestClock.NowInstant"/>.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Uses a wall-clock ceiling (<see cref="SleepTestRealTimeTimeout"/>) so the delay task races a maximum wait,
+    ///     allowing slow CI to pass when the runner still completes well under that budget.
+    ///   </para>
+    /// </remarks>
+    [Fact]
+    public async Task ClockRunning_DelayRegisteredWhileRunning_RunnerCompletesDelayWithoutPersistOnRead ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 12, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        clock.Start(Duration.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromMilliseconds(50), TestContext.Current.CancellationToken);
+        Task delayTask = clock.DelayAsync(Duration.FromSeconds(5), TestContext.Current.CancellationToken);
+        Task delayOrTimeout = await Task.WhenAny(delayTask,
+            Task.Delay(SleepTestRealTimeTimeout.ToTimeSpan(), TestContext.Current.CancellationToken));
+        try
+        {
+            delayOrTimeout.Should().BeSameAs(delayTask);
+            delayTask.Status.Should().Be(TaskStatus.RanToCompletion);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that cancelling a delay while the runner is active completes the delay task promptly without waiting
+    ///   for the full virtual due horizon.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_CancelDelayWhileRunning_CancelsPromptly ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 12, 0, 0);
+        using CancellationTokenSource cancelSource = new();
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        Task delayTask = clock.DelayAsync(Duration.FromHours(1), cancelSource.Token);
+        clock.Start(Duration.FromSeconds(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(100), TestContext.Current.CancellationToken);
+        cancelSource.Cancel();
+        Func<Task> awaitCanceled = async () => await delayTask;
+        await awaitCanceled.Should().ThrowAsync<OperationCanceledException>();
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that after one quiet virtual minute with no substantive work, the runner raises
+    ///   <see cref="IPrimeTestClock.ClockEvents"/> for the heartbeat instant.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_QuietVirtualMinute_RaisesClockEventsHeartbeat ()
+    {
+        Instant initial = Instant.FromUtc(2020, 6, 1, 0, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        int eventCount = 0;
+        Instant? lastHeartbeatInstant = null;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e is NodaClockTimeChangedEventArgs nodaArgs)
+            {
+                eventCount++;
+                lastHeartbeatInstant = nodaArgs.Instant;
+            }
+        };
+        clock.Start(Duration.FromSeconds(10));
+        await Task.Delay(ClockRunningHeartbeatTestWallDelay, TestContext.Current.CancellationToken);
+        clock.Stop().Should().BeTrue();
+        eventCount.Should().BeGreaterThanOrEqualTo(1);
+        lastHeartbeatInstant.Should().NotBeNull();
+        Instant expectedHeartbeat = initial + Duration.FromMinutes(1);
+        lastHeartbeatInstant!.Value.Should().BeGreaterThanOrEqualTo(expectedHeartbeat - ClockRunningHeartbeatVirtualTolerance)
+            .And.BeLessThanOrEqualTo(expectedHeartbeat + ClockRunningHeartbeatVirtualTolerance);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> returns promptly while the runner would otherwise wait for a
+    ///   virtual-minute heartbeat at a slow run rate.
+    /// </summary>
+    [Fact]
+    public async Task ClockRunning_StopWhileWaitingForHeartbeat_ReturnsPromptly ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2020, 6, 1, 0, 0, 0), DateTimeZone.Utc);
+        clock.Start(Duration.FromSeconds(10));
+        await Task.Delay(TimeSpan.FromMilliseconds(50), TestContext.Current.CancellationToken);
+        Stopwatch stopElapsed = Stopwatch.StartNew();
+        clock.Stop().Should().BeTrue();
+        stopElapsed.Stop();
+        stopElapsed.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(2));
+        clock.IsRunning.Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Runner loop
 
     #region ClockEvents
 

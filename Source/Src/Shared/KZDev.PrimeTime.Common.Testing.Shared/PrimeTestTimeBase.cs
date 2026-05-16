@@ -144,6 +144,14 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
     /// <returns>The current virtual UTC time.</returns>
     internal partial DateTimeOffset ReadVirtualUtcNowLocked ();
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Called while <see cref="Gate"/> is held when pending delays, time expiries, or their lists change in a way
+    ///   that can affect the automatic runner&apos;s next deadline.
+    /// </summary>
+    protected virtual void OnSchedulingMutatedWhileGateHeld ()
+    {
+    }
+    //----------------------------------------------------------------------------
 
     #region Interface Implementations
 
@@ -180,6 +188,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + sleepTime;
             PendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         taskCompletionSource.Task.GetAwaiter().GetResult();
@@ -215,6 +224,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset dueUtc = ReadVirtualUtcNowLocked() + delayTime;
             PendingDelays.Add(new PendingDelay(dueUtc, taskCompletionSource));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         if (!cancellationToken.CanBeCanceled)
@@ -229,7 +239,10 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
             lock (@this.Gate)
             {
                 if (@this.PendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletion) > 0)
+                {
                     taskCompletion.TrySetCanceled(cancellationToken);
+                    @this.OnSchedulingMutatedWhileGateHeld();
+                }
             }
         }, Tuple.Create(this, taskCompletionSource, cancellationToken));
 
@@ -261,6 +274,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             TimeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         return wrapper;
@@ -285,6 +299,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + TimeSpan.FromMilliseconds(cancelMilliseconds);
             TimeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         return wrapper;
@@ -303,6 +318,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             TimeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         return wrapper;
@@ -319,6 +335,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             TimeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         return wrapper;
@@ -345,6 +362,7 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
         {
             DateTimeOffset expireUtc = ReadVirtualUtcNowLocked() + cancelTime;
             TimeExpiryEntries.Add(new TimeExpiryEntry(expireUtc, wrapper, timeCts));
+            OnSchedulingMutatedWhileGateHeld();
         }
 
         return wrapper;
