@@ -5,8 +5,12 @@ namespace KZDev.SystemClock.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>
-///   BCL virtual-time storage and event args for <see cref="PrimeTestClock"/>.
+///   System Clock partial of <see cref="PrimeTestClock"/>: BCL <see cref="DateTimeOffset"/> virtual storage and
+///   <see cref="ClockTimeChangedEventArgs"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
 /// </summary>
+/// <remarks>
+///   Shared march, runner, and persist-on-read behavior live in the common partial; see <see cref="IPrimeTestClock"/>.
+/// </remarks>
 public sealed partial class PrimeTestClock
 {
     #region Constructors/Finalizers

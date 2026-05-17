@@ -15,5 +15,5 @@ These xUnit examples drive interval timers under a virtual **`PrimeTestClock`**.
 ## Related
 
 - [Interval timer (production)](interval-timer-production.md) — wall-clock counterpart in the example app.
-- [Test-clock control APIs](../../concepts/examples/test-clock-control-testing.md) — `Set*`, `Advance`, `RunFor`, `Start`/`Stop` reference for both stacks.
+- [Test-clock control APIs](../../concepts/examples/test-clock-control-testing.md) — `Set*`, `Advance`, `RunFor`, `Start`/`Stop`, marching, and automatic runner semantics for both stacks.
 - **API:** [`IPrimeTestClock`](xref:KZDev.PrimeTime.Testing.IPrimeTestClock) · [`PrimeTestClock`](xref:KZDev.PrimeTime.Testing.PrimeTestClock)

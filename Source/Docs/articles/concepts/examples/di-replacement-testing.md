@@ -19,7 +19,7 @@ The two stacks differ only in the clock construction style and the "now" surface
 
 - **`services.AddPrimeTestClock()`** registers one `PrimeTestClock` as the **singleton** implementation behind the test, production, and "time" abstractions. Calling **`testClock.SetTime(...)`** / **`testClock.SetInstant(...)`** is observed by every consumer that resolved `IPrimeClock`.
 - The sample `*TimestampService` consumer accepts the **production** abstraction (**`IPrimeClock`**) — it is not test-aware. That is the property that lets production code stay unchanged while tests inject virtual time.
-- After **`SetInstant`** / **`SetTime`**, every read of `NowInstant` / `UtcNowDateTimeOffset` returns the marker until the test advances the clock.
+- After **`SetInstant`** / **`SetTime`**, every read of `NowInstant` / `UtcNowDateTimeOffset` returns the set instant until the test advances the clock. While **`Start()`** is active, "now" may **project** between commits and **persist-on-read** may dispatch due work — see [Test-clock control APIs](test-clock-control-testing.md).
 
 ## Related
 

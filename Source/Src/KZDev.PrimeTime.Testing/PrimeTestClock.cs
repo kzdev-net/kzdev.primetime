@@ -9,9 +9,16 @@ namespace KZDev.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>
-///   NodaTime virtual instant storage, zone mapping, and Noda-specific surface for
-///   <see cref="PrimeTestClock"/>.
+///   NodaTime partial of <see cref="PrimeTestClock"/>: <see cref="Instant"/> storage, zone-aware "now" surfaces,
+///   and <see cref="Duration"/> overloads that forward to the shared march and runner implementation.
 /// </summary>
+/// <remarks>
+///   <para>
+///     <see cref="SetInstant"/>, <see cref="SetLocalTime"/>, and Noda "now" members share semantics with the BCL
+///     partial documented on <see cref="IPrimeTestClock"/>. Use a <see cref="DateTimeZone"/> constructor when tests
+///     need explicit zone rules (for example daylight saving).
+///   </para>
+/// </remarks>
 public sealed partial class PrimeTestClock
 {
     #region Constructors/Finalizers
@@ -63,6 +70,11 @@ public sealed partial class PrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   While <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>, uses the same persist-on-read projection and
+    ///   march as <see cref="IPrimeClock.UtcNowDateTimeOffset"/> on this clock. While stopped, returns the persisted
+    ///   instant only.
+    /// </remarks>
     public Instant NowInstant
     {
         get

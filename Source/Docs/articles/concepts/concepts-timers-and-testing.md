@@ -7,7 +7,7 @@ This article applies to **both** [KZDev.SystemClock.PrimeTime](../system-clock/s
 - **`IPrimeClock`** — Application-facing clock: current time projections, interval timers, and (on modern .NET targets) local **time-of-day** registrations.
 - **`IPrimeTime`** — Narrower “time” surface; default DI registers it to the same instance as **`IPrimeClock`**.
 - **`PrimeClock`** — Production implementation wired by **`AddPrimeClock`** unless you replace registrations.
-- **`IPrimeTestClock` / `PrimeTestClock`** — Virtual time for deterministic unit tests (`Advance`, `RunFor`, and related members). See the API reference for constructors (they differ slightly between packages).
+- **`IPrimeTestClock` / `PrimeTestClock`** — Virtual time for deterministic unit tests (`Advance`, `RunFor`, `Start`/`Stop`, setters, and related members). See the API reference for constructors (they differ slightly between packages) and [Test-clock control APIs](examples/test-clock-control-testing.md) for control-verb details.
 
 ## Interval timers
 
@@ -42,10 +42,28 @@ Each track's page covers the time-of-day timer registration, environment-aware s
 
 Both stacks can expose a **`TimeProvider`** that delegates to an **`IPrimeClock`** via **`PrimeClockTimeProviderExtensions.ToTimeProvider`**. That helps integrate with APIs that expect **`TimeProvider`** while keeping PrimeTime as the source of truth (especially under a **`PrimeTestClock`**).
 
+## Test clock runner and marching
+
+**`PrimeTestClock`** can advance time in two ways:
+
+1. **Explicit control** — **`Advance`** / **`RunFor`** and forward **`SetTime`** / **`SetInstant`** / **`SetLocalTime`** march virtual time to each earliest due instant, dispatch delays, time expiries, and timers at that instant, and raise **`ClockEvents`** once per distinct virtual instant visited. Timer callbacks see **`UtcNow`** / **`NowInstant`** at the firing instant, not only the final horizon.
+2. **Automatic runner** — **`Start(rate)`** runs a background loop that waits for the next virtual deadline (including a **virtual one-minute `ClockEvents` heartbeat** when idle), scales wait duration by **`rate`**, and catches up using **measured** real elapsed time after each wait. Run rate must be between **100 ms** and **1 hour** of virtual time per real second (inclusive).
+
+While the runner is active:
+
+- **"Now" projection** — **`UtcNowDateTimeOffset`**, **`LocalNow*`**, and Noda **`NowInstant`** linearly project from a committed virtual instant and a shared **`Stopwatch`** anchor at the run rate.
+- **Persist-on-read** — Reading "now" marches through due work up to the projected instant, commits storage, and restarts the anchor (frequent reads can be costly).
+- **15 ms rule** — Intended real sleeps shorter than 15 ms are handled by bursting virtual steps without sleeping.
+- **Wake on new work** — New delays, timers, or time expiries, cancellations, **`Stop`**, or persist-on-read can wake the runner so sooner deadlines are not missed.
+
+**Backward moves:** forbidden while running; while stopped, forbidden if any **active interval** timer exists; otherwise an instant jump with one **`ClockEvents`** and day-time **`NextDueUtc`** recomputation (at most one callback per discrete time-of-day occurrence).
+
+Full control-verb reference: [Test-clock control APIs](examples/test-clock-control-testing.md). API details: [`IPrimeTestClock`](xref:KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock) (System Clock) · [`IPrimeTestClock`](xref:KZDev.PrimeTime.Testing.IPrimeTestClock) (Noda).
+
 ## Testing tips
 
 1. Replace **`IPrimeClock`** (or **`PrimeClock`**) with **`PrimeTestClock`** in tests.
-2. Drive time with **`Advance`** / **`RunFor`** so timers fire predictably.
+2. Drive time with **`Advance`** / **`RunFor`** when you need synchronous, deterministic steps; use **`Start`** when you want real-time-paced automatic advancement (and **`Stop`** to return to manual control).
 3. For **daylight saving** edge cases around local wall times, the **NodaTime** **`PrimeTestClock`** constructor that accepts a **`DateTimeZone`** is the most direct way to model zone rules in tests. The SystemClock package exposes **`LocalScheduleTimeZone`** on **`IPrimeClock`** for BCL-oriented local scheduling; align that with your test scenario.
 
 Testing examples:

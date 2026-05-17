@@ -13,10 +13,17 @@ namespace KZDev.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>
-///   Shared implementation of <see cref="IPrimeTestClock"/> virtual time, delays,
-///   cancellation entries, and virtual interval/day-time timers. Stack-specific instant
-///   storage and local-time mapping live in partials.
+///   Virtual test clock: event marching on <see cref="Advance(System.TimeSpan)"/> and forward
+///   <see cref="SetTime(System.DateTimeOffset)"/>, optional deadline-driven automatic advancement from
+///   <see cref="Start(System.TimeSpan?)"/>, and persist-on-read "now" projection while running.
 /// </summary>
+/// <remarks>
+///   <para>
+///     See <see cref="IPrimeTestClock"/> for the public contract (run-rate limits, backward-time rules, runner waits,
+///     15 ms burst rule, actual-wait catch-up, <see cref="ClockEvents"/> cadence, and day-time <c>NextDueUtc</c>
+///     behavior). Stack-specific partials supply BCL or NodaTime instant storage and local zone mapping.
+///   </para>
+/// </remarks>
 public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 {
     //----------------------------------------------------------------------------
@@ -1361,6 +1368,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
+    /// <remarks>
+    ///   While <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>, returns projected virtual UTC from the committed
+    ///   instant and run anchor, marching through due work up to that instant (persist-on-read) before returning.
+    ///   While stopped, returns the persisted instant only.
+    /// </remarks>
     public DateTimeOffset UtcNowDateTimeOffset
     {
         get => GetObservationVirtualUtcDateTimeOffset();
