@@ -11,6 +11,15 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\ClockTimeChangedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestClock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockEventType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockNewTimeEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockNewTimeEvent.Bcl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockStartedEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockStartedEvent.Bcl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockStoppedEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Contracts\PrimeTestClockStoppedEvent.Bcl.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Contracts\IPrimeTestTime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.VirtualDayTimeTimer.cs" />

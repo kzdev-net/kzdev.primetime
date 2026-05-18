@@ -1,0 +1,43 @@
+using System.Diagnostics;
+
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime.Testing;
+#else
+namespace KZDev.PrimeTime.Testing;
+#endif
+
+//################################################################################
+/// <summary>
+///   Base type for observability events raised on <see cref="IPrimeTestClock.ClockEvents"/>.
+/// </summary>
+/// <remarks>
+///   Derived types are sealed partial classes; payload properties are supplied by conditional partials
+///   for BCL and Noda builds.
+/// </remarks>
+public abstract class PrimeTestClockEvent
+{
+    #region Constructors/Finalizers
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="PrimeTestClockEvent"/> class.
+    /// </summary>
+    /// <param name="eventType">
+    ///   The kind of clock event.
+    /// </param>
+    protected internal PrimeTestClockEvent (PrimeTestClockEventType eventType)
+    {
+        EventType = eventType;
+    }
+    //----------------------------------------------------------------------------
+
+    #endregion Constructors/Finalizers
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Gets the kind of clock event represented by this instance.
+    /// </summary>
+    public PrimeTestClockEventType EventType { [DebuggerStepThrough] get; }
+    //----------------------------------------------------------------------------
+}
+//################################################################################
