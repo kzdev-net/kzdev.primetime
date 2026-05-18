@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Src\KZDev.SystemClock.PrimeTime.Testing\KZDev.SystemClock.PrimeTime.Testing.csproj" />
+		<ProjectReference Include="..\..\..\Src\Testing\KZDev.SystemClock.PrimeTime.Testing\KZDev.SystemClock.PrimeTime.Testing.csproj" />
 	</ItemGroup>
 
 </Project>

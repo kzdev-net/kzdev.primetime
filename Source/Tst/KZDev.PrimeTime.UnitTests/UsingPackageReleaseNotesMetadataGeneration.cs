@@ -21,8 +21,8 @@ public class UsingPackageReleaseNotesMetadataGeneration
         {
             ["KZDev.PrimeTime"] = Path.Combine("Source", "Src", "KZDev.PrimeTime", "KZDev.PrimeTime.csproj"),
             ["KZDev.SystemClock.PrimeTime"] = Path.Combine("Source", "Src", "KZDev.SystemClock.PrimeTime", "KZDev.SystemClock.PrimeTime.csproj"),
-            ["KZDev.PrimeTime.Testing"] = Path.Combine("Source", "Src", "KZDev.PrimeTime.Testing", "KZDev.PrimeTime.Testing.csproj"),
-            ["KZDev.SystemClock.PrimeTime.Testing"] = Path.Combine("Source", "Src", "KZDev.SystemClock.PrimeTime.Testing", "KZDev.SystemClock.PrimeTime.Testing.csproj")
+            ["KZDev.PrimeTime.Testing"] = Path.Combine("Source", "Src", "Testing", "KZDev.PrimeTime.Testing", "KZDev.PrimeTime.Testing.csproj"),
+            ["KZDev.SystemClock.PrimeTime.Testing"] = Path.Combine("Source", "Src", "Testing", "KZDev.SystemClock.PrimeTime.Testing", "KZDev.SystemClock.PrimeTime.Testing.csproj")
         };
 
     private static readonly IReadOnlyDictionary<string, string> PackageReleaseNotesRelativePaths =

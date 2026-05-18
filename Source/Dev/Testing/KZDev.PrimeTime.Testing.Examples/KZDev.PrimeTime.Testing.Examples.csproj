@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Src\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
+		<ProjectReference Include="..\..\..\Src\Testing\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
 	</ItemGroup>
 
 </Project>

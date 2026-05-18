@@ -132,8 +132,8 @@
     <Project Path="Src/Shared/KZDev.PrimeTime.Common.Testing.Shared/KZDev.PrimeTime.Common.Testing.Shared.shproj" />
   </Folder>
   <Folder Name="/Source/Testing/">
-    <Project Path="Src/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj" />
-    <Project Path="Src/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj" />
+    <Project Path="Src/Testing/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj" />
+    <Project Path="Src/Testing/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <File Path="Tst/Directory.Build.props" />
