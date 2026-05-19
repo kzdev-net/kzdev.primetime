@@ -6,9 +6,9 @@ namespace KZDev.PrimeTime.Testing;
 
 //################################################################################
 /// <summary>
-///   <see cref="PrimeTestClockEvent"/> raised when virtual time advances to a new instant.
+///   <see cref="PrimeTestClockTimedEvent"/> raised when virtual time advances to a new instant.
 /// </summary>
-public sealed partial class PrimeTestClockNewTimeEvent : PrimeTestClockEvent
+public sealed partial class PrimeTestClockNewTimeEvent : PrimeTestClockTimedEvent
 {
 }
 //################################################################################

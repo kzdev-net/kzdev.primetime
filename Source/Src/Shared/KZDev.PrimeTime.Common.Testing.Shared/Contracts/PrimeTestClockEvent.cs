@@ -11,8 +11,8 @@ namespace KZDev.PrimeTime.Testing;
 ///   Base type for observability events raised on <see cref="IPrimeTestClock.ClockEvents"/>.
 /// </summary>
 /// <remarks>
-///   Derived types are sealed partial classes; payload properties are supplied by conditional partials
-///   for BCL and Noda builds.
+///   Timed payloads inherit <see cref="PrimeTestClockTimedEvent"/>. Lifecycle kinds are sealed derivatives that
+///   differ only by <see cref="EventType"/>.
 /// </remarks>
 public abstract class PrimeTestClockEvent
 {
