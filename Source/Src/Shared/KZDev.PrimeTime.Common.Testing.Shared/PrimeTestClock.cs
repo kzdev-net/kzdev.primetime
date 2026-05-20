@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Globalization;
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
@@ -26,47 +27,27 @@ namespace KZDev.PrimeTime.Testing;
 /// </remarks>
 public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 {
-    //----------------------------------------------------------------------------
     /// <summary>
-    ///   Monotonically assigned registration id for virtual timers.
-    /// </summary>
-    private static int _nextTimerId;
-
-    /// <summary>
-    ///   Background thread used when <see cref="PrimeTestTimeBase.InternalIsRunning"/> is <c>true</c>.
-    /// </summary>
-    private Thread? _runThread;
-
-    /// <summary>
-    ///   Virtual time advanced per real second when running automatically.
-    /// </summary>
-    private TimeSpan _runRate = TimeSpan.FromSeconds(1);
-
-    /// <summary>
-    ///   Real elapsed time since the last committed virtual instant while <see cref="PrimeTestTimeBase.InternalIsRunning"/>
-    ///   is <c>true</c>, shared with observer projection and deadline-driven runner wake budgeting.
-    ///   Monotonic real-time elapsed since the committed virtual instant was established while the automatic runner is
-    ///   active.
+    ///   Defensive upper bound on the number of forward-march reconciliation attempts
+    ///   <see cref="SetTime(System.DateTimeOffset)"/> may perform before declaring the march unable
+    ///   to converge on the requested instant.
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     <see cref="Stopwatch"/> is not thread-safe for unsynchronized concurrent use. Every read or write of this
-    ///     instance (including <see cref="Stopwatch.Elapsed"/>, <see cref="Stopwatch.Restart"/>, and
-    ///     <see cref="Stopwatch.Reset"/>) occurs only while the caller holds <see cref="PrimeTestTimeBase.Gate"/>, so
-    ///     only one thread touches it at a time.
+    ///     A single attempt is the steady-state case for single-threaded forward
+    ///     <see cref="SetTime(System.DateTimeOffset)"/>. Additional attempts are needed only when another
+    ///     thread mutates virtual time between the march and the post-march observation under
+    ///     <see cref="PrimeTestTimeBase.Gate"/>, leaving the clock short of the requested target so
+    ///     marching must be retried.
+    ///   </para>
+    ///   <para>
+    ///     The value is intentionally orders of magnitude above any expected concurrent contention so it
+    ///     never trips in normal test runs, while still guaranteeing the loop terminates if a future
+    ///     logic regression caused it to fail to make progress. It is not a published product limit and
+    ///     may be tuned without affecting observable behavior.
     ///   </para>
     /// </remarks>
-    private readonly Stopwatch _runAnchorStopwatch = new();
-
-    /// <summary>
-    ///   Cooperative wake for a future deadline-driven runner wait when scheduling or the committed anchor changes.
-    /// </summary>
-    private readonly ManualResetEventSlim _runnerWakeEvent = new(initialState: false);
-
-    /// <summary>
-    ///   Virtual UTC instant from which the runner measures the next virtual-minute <see cref="ClockEvents"/> heartbeat.
-    /// </summary>
-    private DateTimeOffset _runnerHeartbeatWindowStartUtc;
+    private const int MaximumForwardMarchReconcilePasses = 10_000;
 
     /// <summary>
     ///   Minimum real time the runner uses as a sleep threshold: shorter intended waits are handled by bursting
@@ -105,7 +86,69 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// </remarks>
     private static readonly DateTimeOffset RunnerDeadlineHorizonUtc = DateTimeOffset.MaxValue;
 
+    /// <summary>
+    ///   Minimum amount of virtual time that may elapse per real second when starting the runner
+    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
+    /// </summary>
+    private static readonly TimeSpan MinimumStartRunRate = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>
+    ///   Maximum amount of virtual time that may elapse per real second when starting the runner
+    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
+    /// </summary>
+    private static readonly TimeSpan MaximumStartRunRate = TimeSpan.FromHours(1);
+
+    /// <summary>
+    ///   Maximum real time <see cref="Stop"/> waits for the automatic runner thread to exit.
+    /// </summary>
+    private static readonly TimeSpan StopJoinTimeout = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    ///   Maximum real time <see cref="Start(System.TimeSpan?)"/> waits for an overlapping <see cref="Stop"/> to finish
+    ///   joining the runner (<see cref="StopJoinTimeout"/> plus one second of scheduling slack).
+    /// </summary>
+    private static readonly TimeSpan MaximumWaitForOverlappingRunnerStop = StopJoinTimeout + TimeSpan.FromSeconds(1);
+
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Monotonically assigned registration id for virtual timers.
+    /// </summary>
+    private static int _nextTimerId;
+
+    /// <summary>
+    ///   Signaled when <see cref="_runnerStopInProgress"/> is cleared after <see cref="Stop"/> finishes join handling.
+    ///   Used instead of <see cref="Monitor.Wait(object)"/> so waiters do not nest a second lock with
+    ///   <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </summary>
+    private readonly ManualResetEventSlim _runnerStopCompletedEvent = new(initialState: true);
+
+    /// <summary>
+    ///   Test-only: signaled after <see cref="Stop"/> sets <see cref="_runnerStopInProgress"/> and releases
+    ///   <see cref="PrimeTestTimeBase.Gate"/> before joining the runner thread.
+    /// </summary>
+    internal ManualResetEventSlim TestRunnerStopJoinPhaseEntered { get; } = new(initialState: false);
+
+    /// <summary>
+    ///   Real elapsed time since the last committed virtual instant while <see cref="PrimeTestTimeBase.InternalIsRunning"/>
+    ///   is <c>true</c>, shared with observer projection and deadline-driven runner wake budgeting.
+    ///   Monotonic real-time elapsed since the committed virtual instant was established while the automatic runner is
+    ///   active.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     <see cref="Stopwatch"/> is not thread-safe for unsynchronized concurrent use. Every read or write of this
+    ///     instance (including <see cref="Stopwatch.Elapsed"/>, <see cref="Stopwatch.Restart"/>, and
+    ///     <see cref="Stopwatch.Reset"/>) occurs only while the caller holds <see cref="PrimeTestTimeBase.Gate"/>, so
+    ///     only one thread touches it at a time.
+    ///   </para>
+    /// </remarks>
+    private readonly Stopwatch _runAnchorStopwatch = new();
+
+    /// <summary>
+    ///   Cooperative wake for a future deadline-driven runner wait when scheduling or the committed anchor changes.
+    /// </summary>
+    private readonly ManualResetEventSlim _runnerWakeEvent = new(initialState: false);
+
     /// <summary>
     ///   Counts nested calls from virtual-time march callbacks into observable "now" members within the same
     ///   logical asynchronous execution flow on this clock so persist-on-read does not recurse while
@@ -122,41 +165,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// </remarks>
     private readonly AsyncLocal<int> _observationUtcPersistenceFrameDepth = new();
 
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Minimum amount of virtual time that may elapse per real second when starting the runner
-    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
-    /// </summary>
-    private static readonly TimeSpan MinimumStartRunRate = TimeSpan.FromMilliseconds(100);
-
-    /// <summary>
-    ///   Maximum amount of virtual time that may elapse per real second when starting the runner
-    ///   with an explicit rate (see <see cref="Start(System.TimeSpan?)"/>).
-    /// </summary>
-    private static readonly TimeSpan MaximumStartRunRate = TimeSpan.FromHours(1);
-
-    /// <summary>
-    ///   Defensive upper bound on the number of forward-march reconciliation attempts
-    ///   <see cref="SetTime(System.DateTimeOffset)"/> may perform before declaring the march unable
-    ///   to converge on the requested instant.
-    /// </summary>
-    /// <remarks>
-    ///   <para>
-    ///     A single attempt is the steady-state case for single-threaded forward
-    ///     <see cref="SetTime(System.DateTimeOffset)"/>. Additional attempts are needed only when another
-    ///     thread mutates virtual time between the march and the post-march observation under
-    ///     <see cref="PrimeTestTimeBase.Gate"/>, leaving the clock short of the requested target so
-    ///     marching must be retried.
-    ///   </para>
-    ///   <para>
-    ///     The value is intentionally orders of magnitude above any expected concurrent contention so it
-    ///     never trips in normal test runs, while still guaranteeing the loop terminates if a future
-    ///     logic regression caused it to fail to make progress. It is not a published product limit and
-    ///     may be tuned without affecting observable behavior.
-    ///   </para>
-    /// </remarks>
-    private const int MaximumForwardMarchReconcilePasses = 10_000;
-
     /// <summary>
     ///   Active virtual interval timer registrations.
     /// </summary>
@@ -170,9 +178,71 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #endif
 
     /// <summary>
-    ///   Occurs when the clock's current time has changed.
+    ///   Background thread used when <see cref="PrimeTestTimeBase.InternalIsRunning"/> is <c>true</c>.
     /// </summary>
-    public event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
+    private Thread? _runThread;
+
+    /// <summary>
+    ///   <c>true</c> while <see cref="Stop"/> has cleared <see cref="PrimeTestTimeBase.InternalIsRunning"/> but has
+    ///   not finished joining the runner and raising <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    private bool _runnerStopInProgress;
+
+    /// <summary>
+    ///   <c>true</c> after <see cref="Stop"/> failed to join the automatic runner within the allowed time. While set,
+    ///   <see cref="Start(System.TimeSpan?)"/> fails fast so a second runner cannot be started while the prior thread
+    ///   may still be executing.
+    /// </summary>
+    private bool _runnerStopJoinFailed;
+
+    /// <summary>
+    ///   Virtual time advanced per real second when running automatically.
+    /// </summary>
+    private TimeSpan _runRate = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///   Virtual UTC instant from which the runner measures the next virtual-minute <see cref="ClockEvents"/> heartbeat.
+    /// </summary>
+    private DateTimeOffset _runnerHeartbeatWindowStartUtc;
+
+    /// <summary>
+    ///   Occurs when the clock publishes a discriminated lifecycle or virtual-time event.
+    /// </summary>
+    /// <remarks>
+    ///   Subscriber exceptions propagate to the caller that raised the event (see
+    ///   <see cref="InvokeClockEvents"/>). Multicast invocation stops at the first throwing handler; later handlers
+    ///   are not called. Raises from the automatic runner run on the background runner thread, so an unhandled
+    ///   subscriber exception can abort virtual-time work in progress or terminate the runner while
+    ///   <see cref="IPrimeTestTime.IsRunning"/> is still <c>true</c>.
+    /// </remarks>
+    public event PrimeTestClockEventHandler? ClockEvents;
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Invokes <see cref="ClockEvents"/> subscribers for <paramref name="clockEvent"/>.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Captures the current multicast delegate, returns without allocating when no subscribers are registered,
+    ///     and invokes subscribers with standard .NET event semantics: exceptions thrown by a handler propagate to
+    ///     the caller and prevent remaining handlers from running.
+    ///   </para>
+    ///   <para>
+    ///     Call sites include synchronous API paths (<see cref="SetTime"/>, <see cref="Advance"/>) and the automatic
+    ///     runner (<see cref="RunLoop"/>). Subscribers should avoid throwing unless the test intends to fail the
+    ///     calling thread or operation.
+    ///   </para>
+    /// </remarks>
+    /// <param name="clockEvent">
+    ///   The event payload to deliver.
+    /// </param>
+    private void InvokeClockEvents (PrimeTestClockEvent clockEvent)
+    {
+        PrimeTestClockEventHandler? handler = ClockEvents;
+        if (handler is null)
+            return;
+
+        handler.Invoke(this, clockEvent);
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a virtual UTC instant to local-offset representation used by local-time APIs.
@@ -202,10 +272,24 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private partial void AddVirtualTimeLocked (TimeSpan duration);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Raises <see cref="ClockEvents"/> after the virtual UTC instant changed.
+    ///   Raises <see cref="PrimeTestClockEventType.NewTime"/> on <see cref="ClockEvents"/> after the virtual UTC instant changed.
     /// </summary>
     /// <param name="utcNowDateTimeOffset">The new virtual UTC time to report.</param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset);
+    private partial void RaiseNewTimeEvent (DateTimeOffset utcNowDateTimeOffset);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStarted"/> on <see cref="ClockEvents"/>.
+    /// </summary>
+    /// <param name="startUtc">Committed virtual UTC when the runner started.</param>
+    /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
+    private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStopped"/> on <see cref="ClockEvents"/>.
+    /// </summary>
+    /// <param name="finalUtc">Final committed virtual UTC after the runner stopped.</param>
+    /// <param name="runRateTimeSpan">Runner rate that was active before stop, if any.</param>
+    private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan);
     //----------------------------------------------------------------------------
 
     #region Local time-of-day scheduling
@@ -1161,7 +1245,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             }
 
             _ = TryDispatchAllDueAtCurrentVirtualUtc();
-            RaiseClockEventsAfterVirtualUtcChange(stepUtc);
+            RaiseNewTimeEvent(stepUtc);
         }
     }
     //----------------------------------------------------------------------------
@@ -1179,9 +1263,13 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         bool marchToTarget;
         lock (Gate)
         {
+            ThrowIfVirtualTimeMutationBlockedDuringRunnerStopLocked();
             DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
+            // Is the clock being advanced, or is it already at or beyond the target time?
+            // In either case, we can set directly to the target and raise events once.
             if (utcTime.UtcTicks <= nowUtc.UtcTicks)
             {
+                // Is the clock being moved backward, and if so, would that violate backward-time rules?
                 if (utcTime.UtcTicks < nowUtc.UtcTicks)
                 {
                     ThrowIfBackwardVirtualTimeChangeDisallowedLocked(utcTime, nowUtc);
@@ -1204,7 +1292,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
         if (!marchToTarget)
         {
-            RaiseClockEventsAfterVirtualUtcChange(utcTime);
+            RaiseNewTimeEvent(utcTime);
             return;
         }
 
@@ -1227,7 +1315,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 #if NET || !SYSTEMCLOCK
                     RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked();
 #endif
-                    RaiseClockEventsAfterVirtualUtcChange(utcTime);
+                    RaiseNewTimeEvent(utcTime);
                     return;
                 }
             }
@@ -1261,6 +1349,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         DateTimeOffset targetUtc;
         lock (Gate)
         {
+            ThrowIfVirtualTimeMutationBlockedDuringRunnerStopLocked();
             if (InternalIsRunning)
             {
                 ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
@@ -1279,7 +1368,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 utcNow = ReadVirtualUtcNowLocked();
             }
 
-            RaiseClockEventsAfterVirtualUtcChange(utcNow);
+            RaiseNewTimeEvent(utcNow);
         }
     }
     //----------------------------------------------------------------------------
@@ -1309,45 +1398,193 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
     }
     //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws when a prior <see cref="Stop"/> could not join the automatic runner. The caller must hold
+    ///   <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when <see cref="_runnerStopJoinFailed"/> is set.
+    /// </exception>
+    private void ThrowIfRunnerStopJoinFailedLocked ()
+    {
+        if (_runnerStopJoinFailed)
+        {
+            throw new InvalidOperationException(
+                "A previous Stop() returned false because the automatic runner did not join within "
+                + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                + " seconds, and the runner thread may still be executing. Start(), SetTime, Advance, and RunFor are "
+                + "blocked until that thread exits or this PrimeTestClock instance is discarded. This typically "
+                + "indicates the runner loop is blocked "
+                + "inside a ClockEvents subscriber or virtual-time dispatch callback.");
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws when virtual time must not change while <see cref="Stop"/> is joining the runner or a prior
+    ///   <see cref="Stop"/> could not join the runner. The caller must hold <see cref="PrimeTestTimeBase.Gate"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when <see cref="_runnerStopInProgress"/> or <see cref="_runnerStopJoinFailed"/> is set.
+    /// </exception>
+    private void ThrowIfVirtualTimeMutationBlockedDuringRunnerStopLocked ()
+    {
+        ThrowIfRunnerStopJoinFailedLocked();
+        if (_runnerStopInProgress)
+        {
+            throw new InvalidOperationException(
+                "Virtual time cannot be changed while Stop() is joining the automatic runner. Wait for Stop() to "
+                + "complete before calling SetTime, Advance, or RunFor.");
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Blocks until an overlapping <see cref="Stop"/> clears <see cref="_runnerStopInProgress"/>, or throws when the
+    ///   wait exceeds <see cref="MaximumWaitForOverlappingRunnerStop"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when <see cref="_runnerStopJoinFailed"/> is set, or when <see cref="_runnerStopInProgress"/> remains
+    ///   set longer than <see cref="MaximumWaitForOverlappingRunnerStop"/>.
+    /// </exception>
+    private void WaitForOverlappingRunnerStopCompletion ()
+    {
+        Stopwatch waitStopwatch = Stopwatch.StartNew();
+        while (true)
+        {
+            lock (Gate)
+            {
+                ThrowIfRunnerStopJoinFailedLocked();
+                if (!_runnerStopInProgress)
+                {
+                    return;
+                }
+            }
+
+            TimeSpan remaining = MaximumWaitForOverlappingRunnerStop - waitStopwatch.Elapsed;
+            if (remaining <= TimeSpan.Zero)
+            {
+                throw new InvalidOperationException(
+                    "Start waited for an overlapping Stop to finish joining the automatic runner, "
+                    + "but Stop did not complete within "
+                    + MaximumWaitForOverlappingRunnerStop.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                    + " seconds ("
+                    + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                    + " second join timeout plus scheduling slack). This typically indicates the runner loop "
+                    + "is blocked inside a ClockEvents subscriber or virtual-time dispatch callback.");
+            }
+
+            _runnerStopCompletedEvent.Wait(remaining);
+        }
+    }
+    //----------------------------------------------------------------------------
     /// <inheritdoc />
     public void Start (TimeSpan? rate = null)
     {
-        lock (Gate)
+        DateTimeOffset startUtc;
+        TimeSpan runRateTimeSpan;
+        while (true)
         {
-            if (rate is { } explicitRate)
-                ThrowIfStartRunRateOutOfRange(explicitRate);
-            if (InternalIsRunning)
-                return;
-            InternalIsRunning = true;
-            _runRate = rate ?? TimeSpan.FromSeconds(1);
-            _runnerHeartbeatWindowStartUtc = ReadVirtualUtcNowLocked();
-            _runAnchorStopwatch.Restart();
-
-            _runThread = new Thread(RunLoop)
+            lock (Gate)
             {
-                IsBackground = true
-            };
-            _runThread.Start();
+                if (rate is { } explicitRate)
+                    ThrowIfStartRunRateOutOfRange(explicitRate);
+                ThrowIfRunnerStopJoinFailedLocked();
+                if (InternalIsRunning)
+                    return;
+                if (_runnerStopInProgress)
+                {
+                    // Release Gate and wait for Stop to finish before retrying.
+                }
+                else
+                {
+                    InternalIsRunning = true;
+                    _runRate = rate ?? TimeSpan.FromSeconds(1);
+                    runRateTimeSpan = _runRate;
+                    startUtc = ReadVirtualUtcNowLocked();
+                    _runnerHeartbeatWindowStartUtc = startUtc;
+                    _runAnchorStopwatch.Restart();
+
+                    try
+                    {
+                        _runThread = new Thread(RunLoop)
+                        {
+                            IsBackground = true
+                        };
+                        _runThread.Start();
+                    }
+                    catch
+                    {
+                        InternalIsRunning = false;
+                        _runThread = null;
+                        _runAnchorStopwatch.Reset();
+                        _runnerHeartbeatWindowStartUtc = ReadVirtualUtcNowLocked();
+                        throw;
+                    }
+
+                    break;
+                }
+            }
+
+            WaitForOverlappingRunnerStopCompletion();
         }
+
+        RaiseClockStartedEvent(startUtc, runRateTimeSpan);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
     public bool Stop ()
     {
         Thread? runningThread;
+        TimeSpan? runRateTimeSpan;
+        DateTimeOffset finalUtc;
 
         lock (Gate)
         {
             if (!InternalIsRunning)
                 return false;
+            runRateTimeSpan = _runRate;
+            finalUtc = ComputeProjectedVirtualUtcLocked();
+            SetVirtualUtcNowLocked(finalUtc);
             InternalIsRunning = false;
+            _runnerStopInProgress = true;
+            _runnerStopCompletedEvent.Reset();
             _runAnchorStopwatch.Reset();
             _runnerWakeEvent.Set();
             runningThread = _runThread;
             _runThread = null;
         }
-        runningThread?.Join(TimeSpan.FromSeconds(5));
-        return true;
+
+        TestRunnerStopJoinPhaseEntered.Set();
+
+        try
+        {
+            if (runningThread is not null && !runningThread.Join(StopJoinTimeout))
+            {
+                lock (Gate)
+                {
+                    _runnerStopJoinFailed = true;
+                }
+
+                return false;
+            }
+
+            lock (Gate)
+            {
+                SetVirtualUtcNowLocked(finalUtc);
+            }
+
+            RaiseClockStoppedEvent(finalUtc, runRateTimeSpan);
+            return true;
+        }
+        finally
+        {
+            lock (Gate)
+            {
+                _runnerStopInProgress = false;
+            }
+
+            _runnerStopCompletedEvent.Set();
+            TestRunnerStopJoinPhaseEntered.Reset();
+        }
     }
     //----------------------------------------------------------------------------
 

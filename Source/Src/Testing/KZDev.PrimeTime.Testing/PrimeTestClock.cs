@@ -321,20 +321,51 @@ public sealed partial class PrimeTestClock
         Now += Duration.FromTimeSpan(duration);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> with <see cref="NodaClockTimeChangedEventArgs"/> created from
-    ///   the virtual instant read under the gate lock (expected to correspond to the BCL partial&apos;s
-    ///   <c>utcNowDateTimeOffset</c> argument when callers update virtual time and then raise in sequence).
+    ///   Raises <see cref="PrimeTestClockEventType.NewTime"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
     /// </summary>
     /// <param name="utcNowDateTimeOffset">
-    ///   The virtual UTC time after the change (the BCL partial forwards this value to <see cref="ClockTimeChangedEventArgs"/>).
+    ///   Virtual UTC reported by the shared march path (required for the shared partial signature). The event payload
+    ///   snapshots the persisted virtual instant and run rate under <see cref="PrimeTestTimeBase.Gate"/> instead of
+    ///   converting this value.
     /// </param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset)
+    private partial void RaiseNewTimeEvent (DateTimeOffset utcNowDateTimeOffset)
     {
-        Instant snapshot;
-        lock (Gate)
-            snapshot = Now;
+        // Required by the shared partial signature; payload uses Now under Gate, not this argument.
+        _ = utcNowDateTimeOffset;
 
-        ClockEvents?.Invoke(this, new NodaClockTimeChangedEventArgs(snapshot));
+        Instant clockInstant;
+        Duration? runRateDuration;
+        lock (Gate)
+        {
+            clockInstant = Now;
+            runRateDuration = InternalIsRunning ? Duration.FromTimeSpan(_runRate) : null;
+        }
+
+        InvokeClockEvents(new PrimeTestClockNewTimeEvent(clockInstant, runRateDuration));
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStarted"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="startUtc">Committed virtual UTC when the runner started.</param>
+    /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
+    private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan)
+    {
+        Instant clockInstant = Instant.FromDateTimeUtc(startUtc.UtcDateTime);
+        Duration runRateDuration = Duration.FromTimeSpan(runRateTimeSpan);
+        InvokeClockEvents(new PrimeTestClockStartedEvent(clockInstant, runRateDuration));
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStopped"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="finalUtc">Final committed virtual UTC after the runner stopped.</param>
+    /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
+    private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan)
+    {
+        Instant clockInstant = Instant.FromDateTimeUtc(finalUtc.UtcDateTime);
+        Duration? runRateDuration = runRateTimeSpan is { } rate ? Duration.FromTimeSpan(rate) : null;
+        InvokeClockEvents(new PrimeTestClockStoppedEvent(clockInstant, runRateDuration));
     }
     //----------------------------------------------------------------------------
 

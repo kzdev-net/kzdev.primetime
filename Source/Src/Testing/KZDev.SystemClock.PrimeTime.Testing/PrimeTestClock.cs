@@ -6,7 +6,7 @@ namespace KZDev.SystemClock.PrimeTime.Testing;
 //################################################################################
 /// <summary>
 ///   System Clock partial of <see cref="PrimeTestClock"/>: BCL <see cref="DateTimeOffset"/> virtual storage and
-///   <see cref="ClockTimeChangedEventArgs"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+///   <see cref="PrimeTestClockEvent"/> payloads for <see cref="IPrimeTestClock.ClockEvents"/>.
 /// </summary>
 /// <remarks>
 ///   Shared march, runner, and persist-on-read behavior live in the common partial; see <see cref="IPrimeTestClock"/>.
@@ -68,11 +68,45 @@ public sealed partial class PrimeTestClock
     private partial void AddVirtualTimeLocked (TimeSpan duration) => UtcNow += duration;
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Raises <see cref="IPrimeTestClock.ClockEvents"/> after virtual UTC time changed.
+    ///   Raises <see cref="PrimeTestClockEventType.NewTime"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     The payload is a <see cref="PrimeTestClockNewTimeEvent"/> with
+    ///     <see cref="PrimeTestClockTimedEvent.ClockTime"/> set to <paramref name="utcNowDateTimeOffset"/>.
+    ///   </para>
+    ///   <para>
+    ///     <see cref="PrimeTestClockTimedEvent.RunRateTimeSpan"/> is the active runner rate (virtual time per real
+    ///     second) when <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>, and <see langword="null"/> when the clock
+    ///     is stopped. Subscribers can use that property to tell whether the raise occurred while the automatic runner
+    ///     was advancing virtual time.
+    ///   </para>
+    /// </remarks>
     /// <param name="utcNowDateTimeOffset">The virtual UTC time after the change.</param>
-    private partial void RaiseClockEventsAfterVirtualUtcChange (DateTimeOffset utcNowDateTimeOffset) =>
-        ClockEvents?.Invoke(this, new ClockTimeChangedEventArgs(utcNowDateTimeOffset));
+    private partial void RaiseNewTimeEvent (DateTimeOffset utcNowDateTimeOffset)
+    {
+        TimeSpan? runRateTimeSpan;
+        lock (Gate)
+            runRateTimeSpan = InternalIsRunning ? _runRate : null;
+
+        InvokeClockEvents(new PrimeTestClockNewTimeEvent(utcNowDateTimeOffset, runRateTimeSpan));
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStarted"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="startUtc">Committed virtual UTC when the runner started.</param>
+    /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
+    private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan) =>
+        InvokeClockEvents(new PrimeTestClockStartedEvent(startUtc, runRateTimeSpan));
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Raises <see cref="PrimeTestClockEventType.ClockStopped"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="finalUtc">Final committed virtual UTC after the runner stopped.</param>
+    /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
+    private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan) =>
+        InvokeClockEvents(new PrimeTestClockStoppedEvent(finalUtc, runRateTimeSpan));
     //----------------------------------------------------------------------------
 
     #region IPrimeClock Implementation — Local schedule zone

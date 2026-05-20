@@ -136,30 +136,64 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///   Stops the automatic runner and clears the monotonic run anchor.
     /// </summary>
     /// <remarks>
-    ///   After <see cref="Stop"/>, "now" getters return the persisted virtual instant only (no linear projection).
+    ///   <para>
+    ///     After a successful stop, "now" getters return the persisted virtual instant only (no linear projection).
+    ///   </para>
+    ///   <para>
+    ///     When <c>false</c> is returned because the runner thread did not exit within the join timeout, the clock is
+    ///     logically stopped but the background runner may still be active. Subsequent <see cref="Start(System.TimeSpan?)"/>
+    ///     calls throw <see cref="InvalidOperationException"/> until that thread exits or this clock instance is discarded.
+    ///     This typically indicates the runner loop is blocked inside a <see cref="ClockEvents"/> subscriber or
+    ///     virtual-time dispatch callback.
+    ///   </para>
     /// </remarks>
     /// <returns>
-    ///   <c>true</c> if the clock was running and is now stopped; <c>false</c> if the clock was not running.
+    ///   <c>true</c> if the clock was running and stop completed (runner joined and
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> was raised); <c>false</c> if the clock was not running, or
+    ///   the runner did not join within the allowed time while stopping a running clock.
     /// </returns>
     bool Stop ();
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Occurs when the clock's virtual instant changes after a time adjustment or march step.
+    ///   Occurs when the clock publishes a discriminated lifecycle or virtual-time event.
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     During forward <see cref="Advance(System.TimeSpan)"/>, forward <see cref="SetTime(System.DateTimeOffset)"/>,
-    ///     persist-on-read, or automatic runner marching, this event is raised <b>once per distinct</b> virtual
-    ///     instant visited. While <see cref="Start(System.TimeSpan?)"/> is active, if one full virtual minute passes
-    ///     without another virtual-time-driving event, the runner raises this event for that heartbeat instant and
-    ///     resets the one-minute window when substantive work occurs.
+    ///     Subscribers receive <see cref="PrimeTestClockEvent"/> payloads and distinguish kinds via
+    ///     <see cref="PrimeTestClockEvent.EventType"/> or derived types
+    ///     (<see cref="PrimeTestClockNewTimeEvent"/>, <see cref="PrimeTestClockStartedEvent"/>,
+    ///     <see cref="PrimeTestClockStoppedEvent"/>).
     ///   </para>
     ///   <para>
-    ///     Permitted backward <see cref="SetTime(System.DateTimeOffset)"/> while stopped raises this event once for
-    ///     the new instant without per-instant march raises.
+    ///     <b>New-time cadence.</b> During forward <see cref="Advance(System.TimeSpan)"/>, forward
+    ///     <see cref="SetTime(System.DateTimeOffset)"/>, persist-on-read, or automatic runner marching,
+    ///     <see cref="PrimeTestClockEventType.NewTime"/> is raised <b>once per distinct</b> virtual instant visited.
+    ///     While <see cref="Start(System.TimeSpan?)"/> is active, if one full virtual minute passes without another
+    ///     virtual-time-driving event, the runner raises <see cref="PrimeTestClockEventType.NewTime"/> for that
+    ///     heartbeat instant and resets the one-minute window when substantive work occurs. Permitted backward
+    ///     <see cref="SetTime(System.DateTimeOffset)"/> while stopped raises <see cref="PrimeTestClockEventType.NewTime"/>
+    ///     once for the new instant without per-instant march raises.
+    ///   </para>
+    ///   <para>
+    ///     <b>Lifecycle.</b> <see cref="PrimeTestClockEventType.ClockStarted"/> is raised only on a stopped-to-running
+    ///     transition from <see cref="Start(System.TimeSpan?)"/> (not when already running). <see cref="PrimeTestClockEventType.ClockStopped"/>
+    ///     is raised only when <see cref="Stop"/> stops a running clock, after the runner thread joins and the final
+    ///     virtual instant is committed.
+    ///   </para>
+    ///   <para>
+    ///     <b>Rate on timed events.</b> <see cref="PrimeTestClockTimedEvent.RunRateTimeSpan"/> and, in the Noda package,
+    ///     <c>RunRateDuration</c> on timed event types reflect the active runner rate when
+    ///     <see cref="IPrimeTestTime.IsRunning"/> is <c>true</c>; they are <see langword="null"/> when the clock is stopped
+    ///     (including on <see cref="PrimeTestClockEventType.NewTime"/> while stopped).
+    ///   </para>
+    ///   <para>
+    ///     <b>Subscriber exceptions.</b> Handler exceptions propagate to the code that raised the event. The first
+    ///     throwing handler prevents later handlers from running. Events raised while the automatic runner is active
+    ///     are delivered on the runner thread, so an unhandled exception can abort in-progress virtual-time work or
+    ///     end the runner thread.
     ///   </para>
     /// </remarks>
-    event EventHandler<ClockTimeChangedEventArgs>? ClockEvents;
+    event PrimeTestClockEventHandler? ClockEvents;
     //----------------------------------------------------------------------------
 }
 //################################################################################

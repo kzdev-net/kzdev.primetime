@@ -3,8 +3,6 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
@@ -973,10 +971,10 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant? lastHeartbeatInstant = null;
         clock.ClockEvents += (_, e) =>
         {
-            if (e is NodaClockTimeChangedEventArgs nodaArgs)
+            if (e is PrimeTestClockNewTimeEvent newTime)
             {
                 eventCount++;
-                lastHeartbeatInstant = nodaArgs.Instant;
+                lastHeartbeatInstant = newTime.ClockInstant;
             }
         };
         clock.Start(Duration.FromSeconds(10));
@@ -1109,11 +1107,11 @@ public class UsingIPrimeTestClock : UnitTestBase
         object sync = new();
         clock.ClockEvents += (_, e) =>
         {
-            if (e is NodaClockTimeChangedEventArgs nodaArgs)
+            if (e is PrimeTestClockNewTimeEvent newTime)
             {
                 lock (sync)
                 {
-                    eventInstants.Add(nodaArgs.Instant);
+                    eventInstants.Add(newTime.ClockInstant);
                 }
             }
         };
@@ -1156,50 +1154,591 @@ public class UsingIPrimeTestClock : UnitTestBase
     #region ClockEvents
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when SetInstant is called.
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and retains the most recent event of
+    ///   <typeparamref name="TEvent"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
+    private sealed class ClockEventCapture<TEvent> where TEvent : PrimeTestClockEvent
+    {
+        private readonly object _sync = new();
+        private TEvent? _lastReceived;
+
+        public ClockEventCapture (IPrimeTestClock clock)
+        {
+            clock.ClockEvents += OnClockEvent;
+        }
+
+        public TEvent? LastReceived
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _lastReceived;
+                }
+            }
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            if (e is not TEvent typed)
+            {
+                return;
+            }
+
+            lock (_sync)
+            {
+                _lastReceived = typed;
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and collects all events of
+    ///   <typeparamref name="TEvent"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
+    private sealed class ClockEventListCapture<TEvent> where TEvent : PrimeTestClockEvent
+    {
+        private readonly object _sync = new();
+        private readonly List<TEvent> _received = [];
+
+        public ClockEventListCapture (IPrimeTestClock clock)
+        {
+            clock.ClockEvents += OnClockEvent;
+        }
+
+        public List<TEvent> Snapshot ()
+        {
+            lock (_sync)
+            {
+                return [.. _received];
+            }
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            if (e is not TEvent typed)
+            {
+                return;
+            }
+
+            lock (_sync)
+            {
+                _received.Add(typed);
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and collects every raised event.
+    /// </summary>
+    private sealed class ClockEventCollector
+    {
+        private readonly object _sync = new();
+        private readonly List<PrimeTestClockEvent> _received = [];
+
+        public ClockEventCollector (IPrimeTestClock clock)
+        {
+            clock.ClockEvents += OnClockEvent;
+        }
+
+        public void Clear ()
+        {
+            lock (_sync)
+            {
+                _received.Clear();
+            }
+        }
+
+        public List<PrimeTestClockEvent> Snapshot ()
+        {
+            lock (_sync)
+            {
+                return [.. _received];
+            }
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            lock (_sync)
+            {
+                _received.Add(e);
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and records
+    ///   <see cref="PrimeTestClockEvent.EventType"/> values in raise order.
+    /// </summary>
+    private sealed class ClockEventTypeCollector
+    {
+        private readonly object _sync = new();
+        private readonly List<PrimeTestClockEventType> _eventTypes = [];
+
+        public ClockEventTypeCollector (IPrimeTestClock clock)
+        {
+            clock.ClockEvents += OnClockEvent;
+        }
+
+        public List<PrimeTestClockEventType> Snapshot ()
+        {
+            lock (_sync)
+            {
+                return [.. _eventTypes];
+            }
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            lock (_sync)
+            {
+                _eventTypes.Add(e.EventType);
+            }
+        }
+    }
+
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> with the expected <see cref="PrimeTestClockTimedEvent.ClockInstant"/>
+    ///   when <see cref="IPrimeTestClock.SetInstant"/> is called.
     /// </summary>
     [Fact]
-    public void SetInstant_WhenClockEventsSubscribed_RaisesEventWithNewInstant ()
+    public void SetInstant_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
     {
         Instant setInstant = Instant.FromUtc(2025, 2, 20, 10, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock();
-        Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
+        ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
         clock.SetInstant(setInstant);
+        PrimeTestClockNewTimeEvent? received = capture.LastReceived;
         received.Should().NotBeNull();
-        received!.Value.Should().Be(setInstant);
+        received!.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockInstant.Should().Be(setInstant);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when Advance is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> with the march target instant when
+    ///   <see cref="IPrimeTestClock.Advance"/> is called.
     /// </summary>
     [Fact]
-    public void Advance_WhenClockEventsSubscribed_RaisesEventWithNewInstant ()
+    public void Advance_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant expected = initial + Duration.FromHours(1);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
+        ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
         clock.Advance(Duration.FromHours(1));
+        PrimeTestClockNewTimeEvent? received = capture.LastReceived;
         received.Should().NotBeNull();
-        received!.Value.Should().Be(initial + Duration.FromHours(1));
+        received!.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockInstant.Should().Be(expected);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when RunFor is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> with the run-for target instant when
+    ///   <see cref="IPrimeTestClock.RunFor"/> is called.
     /// </summary>
     [Fact]
-    public void RunFor_WhenClockEventsSubscribed_RaisesEventWithNewInstant ()
+    public void RunFor_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Instant expected = initial + Duration.FromMinutes(15);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        clock.RunFor(Duration.FromMinutes(15));
+        PrimeTestClockNewTimeEvent? received = capture.LastReceived;
+        received.Should().NotBeNull();
+        received!.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockInstant.Should().Be(expected);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="PrimeTestClockEventType.NewTime"/> raised while the clock is stopped exposes
+    ///   <see langword="null"/> <see cref="PrimeTestClockTimedEvent.RunRateDuration"/> and
+    ///   <see cref="PrimeTestClockTimedEvent.RunRateTimeSpan"/>.
+    /// </summary>
+    [Fact]
+    public void SetInstant_WhileStopped_NewTimeHasNullRunRate ()
+    {
+        Instant setInstant = Instant.FromUtc(2025, 2, 20, 10, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0));
+        ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        clock.SetInstant(setInstant);
+        PrimeTestClockNewTimeEvent? received = capture.LastReceived;
+        received.Should().NotBeNull();
+        received!.RunRateDuration.Should().BeNull();
+        received.RunRateTimeSpan.Should().BeNull();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that each <see cref="PrimeTestClockEventType.NewTime"/> raised during
+    ///   <see cref="IPrimeTestClock.Advance"/> while the automatic runner is active includes the current run rate.
+    /// </summary>
+    [Fact]
+    public void Advance_WhileRunning_NewTimeIncludesRunRate ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        ClockEventListCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        clock.Start(runRate);
+        List<PrimeTestClockNewTimeEvent> snapshot = [];
+        try
+        {
+            clock.Advance(Duration.FromMinutes(1));
+            snapshot = capture.Snapshot();
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+
+        snapshot.Should().NotBeEmpty();
+        snapshot.Should().OnlyContain(e => e.EventType == PrimeTestClockEventType.NewTime);
+        foreach (PrimeTestClockNewTimeEvent newTime in snapshot)
+        {
+            newTime.RunRateDuration.Should().Be(runRate);
+            newTime.RunRateTimeSpan.Should().Be(runRate.ToTimeSpan());
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Start"/> raises
+    ///   <see cref="PrimeTestClockEventType.ClockStarted"/> on a stopped-to-running transition.
+    /// </summary>
+    [Fact]
+    public void Start_FromStopped_RaisesClockStartedWithEventType ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        ClockEventCollector collector = new(clock);
+        clock.Start(runRate);
+        try
+        {
+            List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+            PrimeTestClockStartedEvent started = snapshot
+                .OfType<PrimeTestClockStartedEvent>()
+                .Should()
+                .ContainSingle()
+                .Subject;
+            started.EventType.Should().Be(PrimeTestClockEventType.ClockStarted);
+            started.ClockInstant.Should().Be(initial);
+            started.RunRateDuration.Should().Be(runRate);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a second <see cref="IPrimeTestClock.Start"/> while already running does not raise
+    ///   <see cref="PrimeTestClockEventType.ClockStarted"/> again.
+    /// </summary>
+    [Fact]
+    public void Start_WhenAlreadyRunning_DoesNotRaiseClockStarted ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        ClockEventCollector collector = new(clock);
+        clock.Start(runRate);
+        collector.Clear();
+
+        try
+        {
+            clock.Start(runRate);
+            List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+            snapshot.Should().NotContain(e => e.EventType == PrimeTestClockEventType.ClockStarted);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Start"/> does not raise
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> synchronously on the calling thread (the automatic runner may
+    ///   raise <see cref="PrimeTestClockEventType.NewTime"/> later on a background thread).
+    /// </summary>
+    [Fact]
+    public void Start_FromStopped_DoesNotRaiseNewTimeOnCallingThread ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        Instant? received = null;
-        clock.ClockEvents += (_, e) => received = e is NodaClockTimeChangedEventArgs nodaArgs ? nodaArgs.Instant : null;
-        clock.RunFor(Duration.FromMinutes(15));
-        received.Should().NotBeNull();
-        received!.Value.Should().Be(initial + Duration.FromMinutes(15));
+        int startCallerThreadId = Environment.CurrentManagedThreadId;
+        object sync = new();
+        bool newTimeOnStartCallerThread = false;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e.EventType != PrimeTestClockEventType.NewTime)
+                return;
+            if (Environment.CurrentManagedThreadId != startCallerThreadId)
+                return;
+            lock (sync)
+            {
+                newTimeOnStartCallerThread = true;
+            }
+        };
+        try
+        {
+            clock.Start(Duration.FromSeconds(1));
+            lock (sync)
+            {
+                newTimeOnStartCallerThread.Should().BeFalse();
+            }
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> on a stopped clock returns <c>false</c> and does not raise
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    [Fact]
+    public void Stop_WhenNotRunning_DoesNotRaiseClockStopped ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0));
+        ClockEventCollector collector = new(clock);
+        clock.Stop().Should().BeFalse();
+        List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+        snapshot.Should().NotContain(e => e.EventType == PrimeTestClockEventType.ClockStopped);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> raises
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> after the runner joins, with the final committed instant
+    ///   and the rate that was running, and that no <see cref="PrimeTestClockEventType.NewTime"/> follows shutdown.
+    /// </summary>
+    [Fact]
+    public void Stop_WhenRunning_RaisesClockStoppedAsLastEventWithCommittedInstant ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
+        Duration runRate = Duration.FromSeconds(10);
+        PrimeTestClock clock = new(initial);
+        ClockEventCollector collector = new(clock);
+        clock.Start(runRate);
+        clock.Advance(Duration.FromMinutes(1));
+        clock.Stop().Should().BeTrue();
+        List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+        int stoppedAt = snapshot.FindLastIndex(e => e.EventType == PrimeTestClockEventType.ClockStopped);
+        stoppedAt.Should().BeGreaterThanOrEqualTo(0);
+        snapshot[stoppedAt].EventType.Should().Be(PrimeTestClockEventType.ClockStopped);
+        snapshot[snapshot.Count - 1].EventType.Should().Be(PrimeTestClockEventType.ClockStopped);
+        snapshot.Skip(stoppedAt + 1).Should().BeEmpty();
+
+        PrimeTestClockStoppedEvent stopped = (PrimeTestClockStoppedEvent)snapshot[stoppedAt];
+        stopped.RunRateDuration.Should().Be(runRate);
+        stopped.ClockInstant.Should().Be(clock.NowInstant);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a second <see cref="IPrimeTestClock.Start"/> after
+    ///   <see cref="IPrimeTestClock.Stop"/> raises <see cref="PrimeTestClockEventType.ClockStarted"/> only after the
+    ///   prior run's <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    [Fact]
+    public void StartStopStart_SecondClockStartedOccursAfterFirstClockStopped ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(5);
+        PrimeTestClock clock = new(initial);
+        ClockEventTypeCollector eventTypes = new(clock);
+        clock.Start(runRate);
+        clock.Stop().Should().BeTrue();
+        clock.Start(runRate);
+        clock.Stop().Should().BeTrue();
+        List<PrimeTestClockEventType> snapshot = eventTypes.Snapshot();
+
+        int firstClockStoppedIndex = snapshot.IndexOf(PrimeTestClockEventType.ClockStopped);
+        int secondClockStartedIndex = snapshot.LastIndexOf(PrimeTestClockEventType.ClockStarted);
+        firstClockStoppedIndex.Should().BeGreaterThanOrEqualTo(0);
+        secondClockStartedIndex.Should().BeGreaterThan(firstClockStoppedIndex);
+    }
+    /// <summary>
+    ///   Wall-clock guard for tests that wait for <see cref="PrimeTestClock.TestRunnerStopJoinPhaseEntered"/>.
+    /// </summary>
+    private static readonly TimeSpan ConcurrentStopStartCoordinationTimeout = TimeSpan.FromSeconds(5);
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Runs <see cref="IPrimeTestClock.Stop"/> and <see cref="IPrimeTestClock.Start"/> concurrently so
+    ///   <c>Start</c> begins only after <c>Stop</c> has entered the runner-join phase.
+    /// </summary>
+    /// <param name="clock">Clock that is already running.</param>
+    /// <param name="runRate">Run rate for the overlapping <c>Start</c>.</param>
+    /// <param name="cancellationToken">Cancellation token for the test run.</param>
+    /// <returns>The completed <c>Stop</c> task result.</returns>
+    private static async Task<bool> RunStopWithOverlappingStartAfterStopJoinPhaseBeginsAsync (
+        PrimeTestClock clock,
+        Duration runRate,
+        CancellationToken cancellationToken)
+    {
+        Task<bool> stopTask = Task.Run(clock.Stop, cancellationToken);
+        bool stopJoinPhaseEntered = clock.TestRunnerStopJoinPhaseEntered.Wait(
+            ConcurrentStopStartCoordinationTimeout,
+            cancellationToken);
+        stopJoinPhaseEntered.Should().BeTrue(
+            "Stop should enter the runner-join phase before the coordination wait times out.");
+        Task startTask = Task.Run(() => clock.Start(runRate), cancellationToken);
+        await Task.WhenAll(stopTask, startTask);
+        return await stopTask;
+    }
+
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Start"/> invoked while <see cref="IPrimeTestClock.Stop"/> is joining
+    ///   the runner does not raise <see cref="PrimeTestClockEventType.ClockStarted"/> before
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> for the run being stopped.
+    /// </summary>
+    [Fact]
+    public async Task Start_DuringConcurrentStop_DoesNotRaiseClockStartedBeforeClockStopped ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runRate = Duration.FromSeconds(5);
+        PrimeTestClock clock = new(initial);
+        ClockEventTypeCollector eventTypes = new(clock);
+        clock.Start(runRate);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        (await RunStopWithOverlappingStartAfterStopJoinPhaseBeginsAsync(clock, runRate, cancellationToken))
+            .Should().BeTrue();
+        clock.IsRunning.Should().BeTrue();
+        clock.Stop().Should().BeTrue();
+        List<PrimeTestClockEventType> snapshot = eventTypes.Snapshot();
+
+        int firstClockStoppedIndex = snapshot.IndexOf(PrimeTestClockEventType.ClockStopped);
+        int restartClockStartedIndex = snapshot.LastIndexOf(PrimeTestClockEventType.ClockStarted);
+        firstClockStoppedIndex.Should().BeGreaterThanOrEqualTo(0);
+        restartClockStartedIndex.Should().BeGreaterThan(firstClockStoppedIndex);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that overlapping <see cref="IPrimeTestClock.Start"/> and <see cref="IPrimeTestClock.Stop"/> calls
+    ///   leave at most one automatic runner active when the calls complete.
+    /// </summary>
+    [Fact]
+    public async Task Start_DuringConcurrentStop_LeavesSingleRunnerWhenCallsComplete ()
+    {
+        PrimeTestClock clock = new(Instant.FromUtc(2025, 1, 1, 0, 0, 0));
+        Duration runRate = Duration.FromSeconds(5);
+        clock.Start(runRate);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        (await RunStopWithOverlappingStartAfterStopJoinPhaseBeginsAsync(clock, runRate, cancellationToken))
+            .Should().BeTrue();
+        clock.IsRunning.Should().BeTrue();
+        clock.Stop().Should().BeTrue();
+        clock.IsRunning.Should().BeFalse();
+        clock.Stop().Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Real-time guard for tests that wait until the automatic runner enters a blocking timer callback.
+    /// </summary>
+    private static readonly TimeSpan RunnerBlockedInCallbackWaitTimeout = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    ///   Minimum elapsed real time expected when <see cref="IPrimeTestClock.Stop"/> waits for a blocked runner join.
+    /// </summary>
+    private static readonly TimeSpan StopJoinTimeoutLowerBound = TimeSpan.FromSeconds(4);
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Registers an interval timer whose callback blocks until <paramref name="releaseRunner"/> is set, so the
+    ///   automatic runner thread can be held inside virtual-time dispatch.
+    /// </summary>
+    /// <param name="clock">Clock that will run the timer on the runner thread.</param>
+    /// <param name="runnerEnteredBlockingCallback">
+    ///   Signaled when the callback begins waiting on <paramref name="releaseRunner"/>.
+    /// </param>
+    /// <param name="releaseRunner">Set to unblock the runner callback.</param>
+    /// <param name="cancellationToken">Cancellation token for the timer registration and wait.</param>
+    /// <returns>The timer registration to dispose when the test completes.</returns>
+    private static IClockIntervalTimer RegisterRunnerBlockingTimer (
+        IPrimeTestClock clock,
+        ManualResetEventSlim runnerEnteredBlockingCallback,
+        ManualResetEventSlim releaseRunner,
+        CancellationToken cancellationToken)
+    {
+        return clock.RegisterTimer(Duration.FromMilliseconds(50),
+            () =>
+            {
+                runnerEnteredBlockingCallback.Set();
+                releaseRunner.Wait(cancellationToken);
+            },
+            cancellationToken);
+    }
+
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that when <see cref="IPrimeTestClock.Stop"/> cannot join a blocked runner within the join timeout,
+    ///   it returns <c>false</c> and subsequent <see cref="IPrimeTestClock.Start"/>,
+    ///   <see cref="IPrimeTestClock.Advance"/>, and <see cref="IPrimeTestClock.SetInstant"/> throw.
+    /// </summary>
+    [Fact]
+    public void Stop_WhenRunnerJoinTimesOut_ReturnsFalseAndBlocksStartAndMutations ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        PrimeTestClock clock = new(initial);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        using ManualResetEventSlim runnerEnteredBlockingCallback = new(false);
+        using ManualResetEventSlim releaseRunner = new(false);
+        using IClockIntervalTimer blockingTimer = RegisterRunnerBlockingTimer(clock,
+            runnerEnteredBlockingCallback,
+            releaseRunner,
+            cancellationToken);
+        try
+        {
+            clock.Start(Duration.FromSeconds(10));
+            bool runnerBlocked = runnerEnteredBlockingCallback.Wait(
+                RunnerBlockedInCallbackWaitTimeout,
+                cancellationToken);
+            runnerBlocked.Should().BeTrue(
+                "the automatic runner should enter the blocking timer callback before Stop is invoked.");
+            System.Diagnostics.Stopwatch stopElapsed = System.Diagnostics.Stopwatch.StartNew();
+            bool stopResult = clock.Stop();
+            stopElapsed.Stop();
+            stopResult.Should().BeFalse();
+            stopElapsed.Elapsed.Should().BeGreaterThanOrEqualTo(StopJoinTimeoutLowerBound);
+            clock.IsRunning.Should().BeFalse();
+            Action startAct = () => clock.Start(Duration.FromSeconds(1));
+            startAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+            Action advanceAct = () => clock.Advance(Duration.FromSeconds(1));
+            advanceAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+            Action setInstantAct = () => clock.SetInstant(initial + Duration.FromHours(1));
+            setInstantAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+        }
+        finally
+        {
+            releaseRunner.Set();
+        }
     }
     //----------------------------------------------------------------------------
 
