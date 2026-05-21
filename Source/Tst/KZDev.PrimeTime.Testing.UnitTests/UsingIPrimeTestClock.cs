@@ -1532,6 +1532,14 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> after the runner joins, with the final committed instant
     ///   and the rate that was running, and that no <see cref="PrimeTestClockEventType.NewTime"/> follows shutdown.
     /// </summary>
+    /// <remarks>
+    ///   Virtual time is advanced deterministically via <see cref="IPrimeTestClock.Advance"/> while the runner is
+    ///   active (no wall-clock wait). After stop, <see cref="IPrimeTestClock.NowInstant"/> and
+    ///   <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> must match the
+    ///   <see cref="PrimeTestClockStoppedEvent"/> payload (post-join
+    ///   <c>CommitVirtualUtcInstantLocked</c> / <c>ReadVirtualUtcNowLocked</c> path), including UTC normalization on
+    ///   <see cref="PrimeTestClockTimedEvent.ClockTime"/>.
+    /// </remarks>
     [Fact]
     public void Stop_WhenRunning_RaisesClockStoppedAsLastEventWithCommittedInstant ()
     {
@@ -1552,7 +1560,12 @@ public class UsingIPrimeTestClock : UnitTestBase
 
         PrimeTestClockStoppedEvent stopped = (PrimeTestClockStoppedEvent)snapshot[stoppedAt];
         stopped.RunRateDuration.Should().Be(runRate);
-        stopped.ClockInstant.Should().Be(clock.NowInstant);
+
+        Instant committedInstant = clock.NowInstant;
+        DateTimeOffset committedUtc = clock.UtcNowDateTimeOffset;
+        stopped.ClockInstant.Should().Be(committedInstant);
+        stopped.ClockTime.Should().Be(committedUtc);
+        committedUtc.Should().Be(new DateTimeOffset(committedInstant.ToDateTimeUtc(), TimeSpan.Zero));
     }
     //----------------------------------------------------------------------------
 

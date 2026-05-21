@@ -209,40 +209,14 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     ///   Occurs when the clock publishes a discriminated lifecycle or virtual-time event.
     /// </summary>
     /// <remarks>
-    ///   Subscriber exceptions propagate to the caller that raised the event (see
-    ///   <see cref="InvokeClockEvents"/>). Multicast invocation stops at the first throwing handler; later handlers
+    ///   Subscriber exceptions propagate to the caller that raised the event. Raise paths capture this delegate once,
+    ///   skip payload allocation when the snapshot is <see langword="null"/>, then invoke the snapshot. Multicast
+    ///   invocation stops at the first throwing handler; later handlers
     ///   are not called. Raises from the automatic runner run on the background runner thread, so an unhandled
     ///   subscriber exception can abort virtual-time work in progress or terminate the runner while
     ///   <see cref="IPrimeTestTime.IsRunning"/> is still <c>true</c>.
     /// </remarks>
     public event PrimeTestClockEventHandler? ClockEvents;
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Invokes <see cref="ClockEvents"/> subscribers for <paramref name="clockEvent"/>.
-    /// </summary>
-    /// <remarks>
-    ///   <para>
-    ///     Captures the current multicast delegate, returns without allocating when no subscribers are registered,
-    ///     and invokes subscribers with standard .NET event semantics: exceptions thrown by a handler propagate to
-    ///     the caller and prevent remaining handlers from running.
-    ///   </para>
-    ///   <para>
-    ///     Call sites include synchronous API paths (<see cref="SetTime"/>, <see cref="Advance"/>) and the automatic
-    ///     runner (<see cref="RunLoop"/>). Subscribers should avoid throwing unless the test intends to fail the
-    ///     calling thread or operation.
-    ///   </para>
-    /// </remarks>
-    /// <param name="clockEvent">
-    ///   The event payload to deliver.
-    /// </param>
-    private void InvokeClockEvents (PrimeTestClockEvent clockEvent)
-    {
-        PrimeTestClockEventHandler? handler = ClockEvents;
-        if (handler is null)
-            return;
-
-        handler.Invoke(this, clockEvent);
-    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a virtual UTC instant to local-offset representation used by local-time APIs.
@@ -1543,7 +1517,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return false;
             runRateTimeSpan = _runRate;
             finalUtc = ComputeProjectedVirtualUtcLocked();
-            SetVirtualUtcNowLocked(finalUtc);
+            CommitVirtualUtcInstantLocked(finalUtc);
+            finalUtc = ReadVirtualUtcNowLocked();
             InternalIsRunning = false;
             _runnerStopInProgress = true;
             _runnerStopCompletedEvent.Reset();
@@ -1569,7 +1544,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
             lock (Gate)
             {
-                SetVirtualUtcNowLocked(finalUtc);
+                CommitVirtualUtcInstantLocked(finalUtc);
+                finalUtc = ReadVirtualUtcNowLocked();
             }
 
             RaiseClockStoppedEvent(finalUtc, runRateTimeSpan);

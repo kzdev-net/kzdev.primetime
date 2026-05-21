@@ -733,17 +733,22 @@ public class UsingPrimeTestClock : UnitTestBase
     {
         DateTimeOffset initial = new(2020, 6, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        int eventCount = 0;
+        int newTimeEventCount = 0;
         DateTimeOffset? lastHeartbeatUtc = null;
         clock.ClockEvents += (_, e) =>
         {
-            eventCount++;
-            lastHeartbeatUtc = e.UtcNowDateTimeOffset;
+            if (e is not PrimeTestClockNewTimeEvent newTime)
+            {
+                return;
+            }
+
+            newTimeEventCount++;
+            lastHeartbeatUtc = newTime.ClockTime;
         };
         clock.Start(TimeSpan.FromSeconds(10));
         await Task.Delay(ClockRunningHeartbeatTestWallDelay, TestContext.Current.CancellationToken);
         clock.Stop().Should().BeTrue();
-        eventCount.Should().BeGreaterThanOrEqualTo(1);
+        newTimeEventCount.Should().BeGreaterThanOrEqualTo(1);
         lastHeartbeatUtc.Should().NotBeNull();
         DateTimeOffset expectedHeartbeat = initial + TimeSpan.FromMinutes(1);
         lastHeartbeatUtc!.Value.Should().BeCloseTo(expectedHeartbeat, ClockRunningHeartbeatVirtualTolerance);
@@ -869,9 +874,14 @@ public class UsingPrimeTestClock : UnitTestBase
         object sync = new();
         clock.ClockEvents += (_, e) =>
         {
+            if (e is not PrimeTestClockTimedEvent timed)
+            {
+                return;
+            }
+
             lock (sync)
             {
-                eventTimes.Add(e.UtcNowDateTimeOffset);
+                eventTimes.Add(timed.ClockTime);
             }
         };
         int timerFireCount = 0;
@@ -920,11 +930,17 @@ public class UsingPrimeTestClock : UnitTestBase
     {
         DateTimeOffset setTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock();
-        DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
+        PrimeTestClockNewTimeEvent? received = null;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e is PrimeTestClockNewTimeEvent newTime)
+            {
+                received = newTime;
+            }
+        };
         clock.SetTime(setTime);
         received.Should().NotBeNull();
-        received!.Value.Should().Be(setTime);
+        received!.ClockTime.Should().Be(setTime);
     }
     //----------------------------------------------------------------------------
 
@@ -936,11 +952,17 @@ public class UsingPrimeTestClock : UnitTestBase
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
+        PrimeTestClockNewTimeEvent? received = null;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e is PrimeTestClockNewTimeEvent newTime)
+            {
+                received = newTime;
+            }
+        };
         clock.Advance(TimeSpan.FromHours(1));
         received.Should().NotBeNull();
-        received!.Value.Should().Be(initial + TimeSpan.FromHours(1));
+        received!.ClockTime.Should().Be(initial + TimeSpan.FromHours(1));
     }
     //----------------------------------------------------------------------------
 
@@ -952,11 +974,49 @@ public class UsingPrimeTestClock : UnitTestBase
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        DateTimeOffset? received = null;
-        clock.ClockEvents += (_, e) => received = e.UtcNowDateTimeOffset;
+        PrimeTestClockNewTimeEvent? received = null;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e is PrimeTestClockNewTimeEvent newTime)
+            {
+                received = newTime;
+            }
+        };
         clock.RunFor(TimeSpan.FromMinutes(15));
         received.Should().NotBeNull();
-        received!.Value.Should().Be(initial + TimeSpan.FromMinutes(15));
+        received!.ClockTime.Should().Be(initial + TimeSpan.FromMinutes(15));
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that after <see cref="IPrimeTestClock.Stop"/> on a running clock,
+    ///   <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> matches the committed final instant and the
+    ///   <see cref="PrimeTestClockStoppedEvent"/> payload (post-join commit and re-read), including UTC normalization
+    ///   on <see cref="PrimeTestClockTimedEvent.ClockTime"/>.
+    /// </summary>
+    [Fact]
+    public async Task Stop_WhenRunning_UtcNowMatchesCommittedFinalUtcAndClockStoppedPayload ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        TimeSpan runRate = TimeSpan.FromSeconds(10);
+        PrimeTestClock clock = new(initial);
+        PrimeTestClockStoppedEvent? stoppedEvent = null;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e is PrimeTestClockStoppedEvent stopped)
+            {
+                stoppedEvent = stopped;
+            }
+        };
+        clock.Start(runRate);
+        await Task.Delay(ClockRunningProjectionTestWallDelay, TestContext.Current.CancellationToken);
+        clock.Stop().Should().BeTrue();
+        stoppedEvent.Should().NotBeNull();
+        DateTimeOffset committedUtc = clock.UtcNowDateTimeOffset;
+        committedUtc.Offset.Should().Be(TimeSpan.Zero);
+        stoppedEvent!.ClockTime.Should().Be(committedUtc);
+        stoppedEvent.ClockTime.Offset.Should().Be(TimeSpan.Zero);
+        stoppedEvent.RunRateTimeSpan.Should().Be(runRate);
     }
     //----------------------------------------------------------------------------
 

@@ -68,6 +68,33 @@ public sealed partial class PrimeTestClock
     private partial void AddVirtualTimeLocked (TimeSpan duration) => UtcNow += duration;
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Creates a <see cref="PrimeTestClockNewTimeEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockTime">Virtual UTC when the event is raised.</param>
+    /// <param name="runRateTimeSpan">Active runner rate when running; otherwise <see langword="null"/>.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockNewTimeEvent CreateNewTimeEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
+        new(clockTime, runRateTimeSpan);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Creates a <see cref="PrimeTestClockStartedEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockTime">Committed virtual UTC when the runner started.</param>
+    /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockStartedEvent CreateStartedEvent (DateTimeOffset clockTime, TimeSpan runRateTimeSpan) =>
+        new(clockTime, runRateTimeSpan);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Creates a <see cref="PrimeTestClockStoppedEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockTime">Final committed virtual UTC after the runner stopped.</param>
+    /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockStoppedEvent CreateStoppedEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
+        new(clockTime, runRateTimeSpan);
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Raises <see cref="PrimeTestClockEventType.NewTime"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
     /// </summary>
     /// <remarks>
@@ -85,11 +112,15 @@ public sealed partial class PrimeTestClock
     /// <param name="utcNowDateTimeOffset">The virtual UTC time after the change.</param>
     private partial void RaiseNewTimeEvent (DateTimeOffset utcNowDateTimeOffset)
     {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
         TimeSpan? runRateTimeSpan;
         lock (Gate)
             runRateTimeSpan = InternalIsRunning ? _runRate : null;
 
-        InvokeClockEvents(new PrimeTestClockNewTimeEvent(utcNowDateTimeOffset, runRateTimeSpan));
+        handlers.Invoke(this, CreateNewTimeEvent(utcNowDateTimeOffset, runRateTimeSpan));
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -97,16 +128,28 @@ public sealed partial class PrimeTestClock
     /// </summary>
     /// <param name="startUtc">Committed virtual UTC when the runner started.</param>
     /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
-    private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan) =>
-        InvokeClockEvents(new PrimeTestClockStartedEvent(startUtc, runRateTimeSpan));
+    private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan)
+    {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
+        handlers.Invoke(this, CreateStartedEvent(startUtc, runRateTimeSpan));
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Raises <see cref="PrimeTestClockEventType.ClockStopped"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
     /// </summary>
     /// <param name="finalUtc">Final committed virtual UTC after the runner stopped.</param>
     /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
-    private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan) =>
-        InvokeClockEvents(new PrimeTestClockStoppedEvent(finalUtc, runRateTimeSpan));
+    private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan)
+    {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
+        handlers.Invoke(this, CreateStoppedEvent(finalUtc, runRateTimeSpan));
+    }
     //----------------------------------------------------------------------------
 
     #region IPrimeClock Implementation — Local schedule zone

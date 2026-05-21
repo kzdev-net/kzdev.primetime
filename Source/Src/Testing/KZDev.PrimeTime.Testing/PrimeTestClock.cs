@@ -321,6 +321,33 @@ public sealed partial class PrimeTestClock
         Now += Duration.FromTimeSpan(duration);
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Creates a <see cref="PrimeTestClockNewTimeEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockInstant">Virtual instant when the event is raised.</param>
+    /// <param name="runRateDuration">Active runner rate when running; otherwise <see langword="null"/>.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockNewTimeEvent CreateNewTimeEvent (Instant clockInstant, Duration? runRateDuration) =>
+        new(clockInstant, runRateDuration);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Creates a <see cref="PrimeTestClockStartedEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockInstant">Committed virtual instant when the runner started.</param>
+    /// <param name="runRateDuration">Active runner rate for the new run.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockStartedEvent CreateStartedEvent (Instant clockInstant, Duration runRateDuration) =>
+        new(clockInstant, runRateDuration);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Creates a <see cref="PrimeTestClockStoppedEvent"/> for <see cref="IPrimeTestClock.ClockEvents"/>.
+    /// </summary>
+    /// <param name="clockInstant">Final committed virtual instant after the runner stopped.</param>
+    /// <param name="runRateDuration">Runner rate that was active before stop.</param>
+    /// <returns>The event payload.</returns>
+    private PrimeTestClockStoppedEvent CreateStoppedEvent (Instant clockInstant, Duration? runRateDuration) =>
+        new(clockInstant, runRateDuration);
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Raises <see cref="PrimeTestClockEventType.NewTime"/> on <see cref="IPrimeTestClock.ClockEvents"/>.
     /// </summary>
     /// <param name="utcNowDateTimeOffset">
@@ -330,6 +357,10 @@ public sealed partial class PrimeTestClock
     /// </param>
     private partial void RaiseNewTimeEvent (DateTimeOffset utcNowDateTimeOffset)
     {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
         // Required by the shared partial signature; payload uses Now under Gate, not this argument.
         _ = utcNowDateTimeOffset;
 
@@ -341,7 +372,7 @@ public sealed partial class PrimeTestClock
             runRateDuration = InternalIsRunning ? Duration.FromTimeSpan(_runRate) : null;
         }
 
-        InvokeClockEvents(new PrimeTestClockNewTimeEvent(clockInstant, runRateDuration));
+        handlers.Invoke(this, CreateNewTimeEvent(clockInstant, runRateDuration));
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -351,9 +382,13 @@ public sealed partial class PrimeTestClock
     /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
     private partial void RaiseClockStartedEvent (DateTimeOffset startUtc, TimeSpan runRateTimeSpan)
     {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
         Instant clockInstant = Instant.FromDateTimeUtc(startUtc.UtcDateTime);
         Duration runRateDuration = Duration.FromTimeSpan(runRateTimeSpan);
-        InvokeClockEvents(new PrimeTestClockStartedEvent(clockInstant, runRateDuration));
+        handlers.Invoke(this, CreateStartedEvent(clockInstant, runRateDuration));
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -363,9 +398,13 @@ public sealed partial class PrimeTestClock
     /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
     private partial void RaiseClockStoppedEvent (DateTimeOffset finalUtc, TimeSpan? runRateTimeSpan)
     {
+        PrimeTestClockEventHandler? handlers = ClockEvents;
+        if (handlers is null)
+            return;
+
         Instant clockInstant = Instant.FromDateTimeUtc(finalUtc.UtcDateTime);
         Duration? runRateDuration = runRateTimeSpan is { } rate ? Duration.FromTimeSpan(rate) : null;
-        InvokeClockEvents(new PrimeTestClockStoppedEvent(clockInstant, runRateDuration));
+        handlers.Invoke(this, CreateStoppedEvent(clockInstant, runRateDuration));
     }
     //----------------------------------------------------------------------------
 
