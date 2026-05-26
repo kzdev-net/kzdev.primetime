@@ -1614,10 +1614,32 @@ public class UsingIPrimeTestClock : UnitTestBase
         Duration runRate,
         CancellationToken cancellationToken)
     {
+        using ManualResetEventSlim joinPhaseObserverActive = new(initialState: false);
+        Task<bool> observeJoinPhaseTask = Task.Factory.StartNew(
+            () =>
+            {
+                joinPhaseObserverActive.Set();
+                Stopwatch coordinationElapsed = Stopwatch.StartNew();
+                while (coordinationElapsed.Elapsed < ConcurrentStopStartCoordinationTimeout)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (clock.TestRunnerStopJoinPhaseEntered.Wait(0, cancellationToken))
+                        return true;
+
+                    Thread.SpinWait(100);
+                }
+
+                return false;
+            },
+            cancellationToken,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+        while (!joinPhaseObserverActive.Wait(0, cancellationToken))
+            Thread.SpinWait(50);
+
         Task<bool> stopTask = Task.Run(clock.Stop, cancellationToken);
-        bool stopJoinPhaseEntered = clock.TestRunnerStopJoinPhaseEntered.Wait(
-            ConcurrentStopStartCoordinationTimeout,
-            cancellationToken);
+        bool stopJoinPhaseEntered = await observeJoinPhaseTask;
         stopJoinPhaseEntered.Should().BeTrue(
             "Stop should enter the runner-join phase before the coordination wait times out.");
         Task startTask = Task.Run(() => clock.Start(runRate), cancellationToken);
