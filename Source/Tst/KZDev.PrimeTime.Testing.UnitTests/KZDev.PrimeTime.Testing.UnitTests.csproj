@@ -35,4 +35,10 @@
 		<Using Include="Xunit" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<Compile Update="SubsetContractNullNamespaceTypes.cs">
+			<RootNamespace />
+		</Compile>
+	</ItemGroup>
+
 </Project>

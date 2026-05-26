@@ -1381,7 +1381,9 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that each <see cref="PrimeTestClockEventType.NewTime"/> raised during
-    ///   <see cref="IPrimeTestClock.Advance"/> while the automatic runner is active includes the current run rate.
+    ///   <see cref="IPrimeTestClock.Advance"/> while the automatic runner is active includes the current run rate and
+    ///   that Noda <see cref="PrimeTestClockTimedEvent.ClockInstant"/> matches
+    ///   <see cref="PrimeTestClockTimedEvent.ClockTime"/>.
     /// </summary>
     [Fact]
     public void Advance_WhileRunning_NewTimeIncludesRunRate ()
@@ -1408,6 +1410,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         {
             newTime.RunRateDuration.Should().Be(runRate);
             newTime.RunRateTimeSpan.Should().Be(runRate.ToTimeSpan());
+            newTime.ClockInstant.Should().Be(Instant.FromDateTimeOffset(newTime.ClockTime));
         }
     }
     //----------------------------------------------------------------------------

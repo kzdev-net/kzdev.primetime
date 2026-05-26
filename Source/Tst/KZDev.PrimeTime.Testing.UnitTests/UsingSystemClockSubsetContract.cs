@@ -194,6 +194,32 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     }
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Returns whether <paramref name="namespaceName"/> equals <paramref name="rootNamespace"/> or is a
+    ///   descendant namespace under it (root followed by <c>.</c> and one or more segment names).
+    /// </summary>
+    /// <param name="namespaceName">The namespace to test.</param>
+    /// <param name="rootNamespace">The root namespace prefix.</param>
+    /// <returns>
+    ///   <see langword="true"/> when <paramref name="namespaceName"/> is the root or a descendant namespace;
+    ///   otherwise <see langword="false"/>.
+    /// </returns>
+    private static bool IsNamespaceUnderRoot (string namespaceName, string rootNamespace)
+    {
+        if (namespaceName.Equals(rootNamespace, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (!namespaceName.StartsWith(rootNamespace, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return namespaceName.Length > rootNamespace.Length
+            && namespaceName[rootNamespace.Length] == '.';
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Returns whether two types are the same reference or the same logical PrimeTime contract type
     ///   compiled into <c>KZDev.SystemClock.PrimeTime</c> versus <c>KZDev.PrimeTime</c> (shared sources).
     /// </summary>
@@ -218,8 +244,10 @@ public class UsingSystemClockSubsetContract : UnitTestBase
 
         const string systemClockNs = "KZDev.SystemClock.PrimeTime";
         const string fullPackageNs = "KZDev.PrimeTime";
-        bool subsetIsSystemClock = string.Equals(subsetNs, systemClockNs, StringComparison.Ordinal);
-        bool superIsFullPackage = string.Equals(superNs, fullPackageNs, StringComparison.Ordinal);
+        bool subsetIsSystemClock = subsetNs != null
+            && IsNamespaceUnderRoot(subsetNs, systemClockNs);
+        bool superIsFullPackage = superNs != null
+            && IsNamespaceUnderRoot(superNs, fullPackageNs);
         if (subsetIsSystemClock && superIsFullPackage)
         {
             return true;
@@ -244,6 +272,79 @@ public class UsingSystemClockSubsetContract : UnitTestBase
     //----------------------------------------------------------------------------
 
     #endregion Private helpers
+
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="IsNamespaceUnderRoot"/> accepts a namespace equal to the root.
+    /// </summary>
+    [Fact]
+    public void IsNamespaceUnderRoot_WithExactRoot_ReturnsTrue ()
+    {
+        IsNamespaceUnderRoot("KZDev.SystemClock.PrimeTime", "KZDev.SystemClock.PrimeTime").Should().BeTrue();
+        IsNamespaceUnderRoot("KZDev.PrimeTime", "KZDev.PrimeTime").Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="IsNamespaceUnderRoot"/> accepts namespaces nested under the root.
+    /// </summary>
+    [Fact]
+    public void IsNamespaceUnderRoot_WithNestedNamespace_ReturnsTrue ()
+    {
+        IsNamespaceUnderRoot("KZDev.SystemClock.PrimeTime.Testing", "KZDev.SystemClock.PrimeTime")
+            .Should()
+            .BeTrue();
+        IsNamespaceUnderRoot("KZDev.PrimeTime.Testing", "KZDev.PrimeTime").Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="IsNamespaceUnderRoot"/> rejects prefixes that are not followed by a segment
+    ///   boundary (<c>.</c>).
+    /// </summary>
+    [Fact]
+    public void IsNamespaceUnderRoot_WithPrefixWithoutSegmentBoundary_ReturnsFalse ()
+    {
+        IsNamespaceUnderRoot("KZDev.SystemClock.PrimeTimeX", "KZDev.SystemClock.PrimeTime").Should().BeFalse();
+        IsNamespaceUnderRoot("KZDev.PrimeTimeX", "KZDev.PrimeTime").Should().BeFalse();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="TypesMatchAcrossProductAssemblies"/> maps nested shared namespaces across product
+    ///   assemblies.
+    /// </summary>
+    [Fact]
+    public void TypesMatchAcrossProductAssemblies_WithNestedProductNamespaces_ReturnsTrue ()
+    {
+        TypesMatchAcrossProductAssemblies(
+            typeof(KZDev.SystemClock.PrimeTime.Testing.IPrimeTestClock),
+            typeof(IPrimeTestClock)).Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="TypesMatchAcrossProductAssemblies"/> does not treat types with a
+    ///   <see langword="null"/> namespace as SystemClock or full-package contract types.
+    /// </summary>
+    [Fact]
+    public void TypesMatchAcrossProductAssemblies_WhenTypeNamespaceIsNull_DoesNotApplyProductRootMapping ()
+    {
+        typeof(SubsetContractNullNamespaceType).Namespace.Should().BeNull();
+        TypesMatchAcrossProductAssemblies(typeof(SubsetContractNullNamespaceType), typeof(IPrimeTime))
+            .Should()
+            .BeFalse();
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Verifies that <see cref="TypesMatchAcrossProductAssemblies"/> still matches types with the same name when both
+    ///   have a <see langword="null"/> namespace.
+    /// </summary>
+    [Fact]
+    public void TypesMatchAcrossProductAssemblies_WhenBothTypesHaveNullNamespaceAndSameName_ReturnsTrue ()
+    {
+        typeof(SubsetContractNullNamespaceType).Namespace.Should().BeNull();
+        TypesMatchAcrossProductAssemblies(
+            typeof(SubsetContractNullNamespaceType),
+            typeof(SubsetContractNullNamespaceType)).Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     /// <summary>

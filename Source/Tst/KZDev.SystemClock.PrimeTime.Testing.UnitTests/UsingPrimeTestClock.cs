@@ -25,10 +25,10 @@ public class UsingPrimeTestClock : UnitTestBase
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Wall-clock guard for loops that wait for a virtual sleep completion flag while advancing virtual time on
-    ///   another path.
+    ///   Default maximum real wall-clock duration for bounded waits in this fixture (for example
+    ///   <see cref="ClockEventCapture{TEvent}.WaitAfterArmedForNextReceived"/> and sleep-completion polling).
     /// </summary>
-    private static readonly TimeSpan SleepTestRealTimeTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan BoundedRealTimeWaitTimeout = TimeSpan.FromSeconds(5);
 
     /// <summary>
     ///   Minimum virtual time per real second allowed by <see cref="PrimeTestClock.Start(TimeSpan?)"/>.
@@ -679,7 +679,7 @@ public class UsingPrimeTestClock : UnitTestBase
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     Uses a wall-clock ceiling (<see cref="SleepTestRealTimeTimeout"/>) so the delay task races a maximum wait,
+    ///     Uses a wall-clock ceiling (<see cref="BoundedRealTimeWaitTimeout"/>) so the delay task races a maximum wait,
     ///     allowing slow CI to pass when the runner still completes well under that budget.
     ///   </para>
     /// </remarks>
@@ -692,7 +692,7 @@ public class UsingPrimeTestClock : UnitTestBase
         await Task.Delay(TimeSpan.FromMilliseconds(50), TestContext.Current.CancellationToken);
         Task delayTask = clock.DelayAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Task delayOrTimeout = await Task.WhenAny(delayTask,
-            Task.Delay(SleepTestRealTimeTimeout, TestContext.Current.CancellationToken));
+            Task.Delay(BoundedRealTimeWaitTimeout, TestContext.Current.CancellationToken));
         try
         {
             delayOrTimeout.Should().BeSameAs(delayTask);
@@ -923,73 +923,531 @@ public class UsingPrimeTestClock : UnitTestBase
     #region ClockEvents
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when SetTime is called.
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and captures the first matching event of
+    ///   <typeparamref name="TEvent"/> after each <see cref="ArmForNextReceived"/> call.
+    /// </summary>
+    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
+    private sealed class ClockEventCapture<TEvent> : IDisposable where TEvent : PrimeTestClockEvent
+    {
+        private readonly IPrimeTestClock _clock;
+        private readonly PrimeTestClockEventHandler _handler;
+        private readonly object _sync = new();
+        private bool _disposed;
+        private TEvent? _lastReceived;
+        private TaskCompletionSource<TEvent>? _waitForNext;
+
+        public ClockEventCapture (IPrimeTestClock clock)
+        {
+            _clock = clock;
+            _handler = OnClockEvent;
+            _clock.ClockEvents += _handler;
+        }
+
+        public TEvent? LastReceived
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _lastReceived;
+                }
+            }
+        }
+
+        /// <summary>
+        ///   Clears prior captures and starts a new wait so the next matching raise can be observed.
+        /// </summary>
+        /// <remarks>
+        ///   Call before the clock operation that should raise the event, then call
+        ///   <see cref="WaitAfterArmedForNextReceived"/>.
+        /// </remarks>
+        /// <exception cref="ObjectDisposedException">Thrown when the capture has been disposed.</exception>
+        public void ArmForNextReceived ()
+        {
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(nameof(ClockEventCapture<TEvent>));
+                }
+
+                _lastReceived = null;
+                _waitForNext = new TaskCompletionSource<TEvent>(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+        }
+
+        /// <summary>
+        ///   Waits until a matching event is raised after <see cref="ArmForNextReceived"/>, or the timeout elapses.
+        /// </summary>
+        /// <param name="timeout">Maximum real time to wait.</param>
+        /// <param name="cancellationToken">Cancellation token for the wait.</param>
+        /// <returns>The matching event received after arming.</returns>
+        /// <exception cref="TimeoutException">
+        ///   Thrown when no matching event is received before <paramref name="timeout"/> expires.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">
+        ///   Thrown when <paramref name="cancellationToken"/> is canceled during the wait.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   Thrown when the capture is disposed while this method is waiting.
+        /// </exception>
+        public async Task<TEvent> WaitAfterArmedForNextReceived (
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            Task<TEvent> waitTask;
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    throw new ObjectDisposedException(nameof(ClockEventCapture<TEvent>));
+                }
+
+                if (_waitForNext is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Call {nameof(ArmForNextReceived)} before waiting for the next {typeof(TEvent).Name}.");
+                }
+
+                waitTask = _waitForNext.Task;
+            }
+
+            Task delayTask = Task.Delay(timeout, cancellationToken);
+            Task completedTask = await Task.WhenAny(waitTask, delayTask).ConfigureAwait(false);
+            if (completedTask == waitTask)
+            {
+                lock (_sync)
+                {
+                    if (_waitForNext?.Task == waitTask)
+                    {
+                        _waitForNext = null;
+                    }
+                }
+
+                return await waitTask.ConfigureAwait(false);
+            }
+
+            TaskCompletionSource<TEvent>? abandoned;
+            lock (_sync)
+            {
+                abandoned = _waitForNext?.Task == waitTask ? _waitForNext : null;
+                if (abandoned is not null)
+                {
+                    _waitForNext = null;
+                    _lastReceived = null;
+                }
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                abandoned?.TrySetCanceled(cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            abandoned?.TrySetException(new TimeoutException(
+                $"No {typeof(TEvent).Name} was received within {timeout}."));
+            throw new TimeoutException(
+                $"No {typeof(TEvent).Name} was received within {timeout}.");
+        }
+
+        /// <summary>
+        ///   Arms for the next matching event and waits until it is raised or the timeout elapses.
+        /// </summary>
+        /// <param name="timeout">Maximum real time to wait.</param>
+        /// <param name="cancellationToken">Cancellation token for the wait.</param>
+        /// <returns>The matching event received after this call begins waiting.</returns>
+        /// <exception cref="TimeoutException">
+        ///   Thrown when no matching event is received before <paramref name="timeout"/> expires.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">
+        ///   Thrown when <paramref name="cancellationToken"/> is canceled during the wait.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   Thrown when the capture is disposed while this method is waiting.
+        /// </exception>
+        public async Task<TEvent> WaitForNextReceived (TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            ArmForNextReceived();
+            return await WaitAfterArmedForNextReceived(timeout, cancellationToken).ConfigureAwait(false);
+        }
+
+        public void Dispose ()
+        {
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _waitForNext?.TrySetException(new ObjectDisposedException(
+                    nameof(ClockEventCapture<TEvent>),
+                    $"The capture was disposed while waiting for the next {typeof(TEvent).Name}."));
+            }
+
+            _clock.ClockEvents -= _handler;
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            if (e is not TEvent typed)
+            {
+                return;
+            }
+
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                if (_lastReceived is not null)
+                {
+                    return;
+                }
+
+                _lastReceived = typed;
+                _waitForNext?.TrySetResult(typed);
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and collects all raised events of
+    ///   <typeparamref name="TEvent"/>.
+    /// </summary>
+    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
+    private sealed class ClockEventCollector<TEvent> : IDisposable where TEvent : PrimeTestClockEvent
+    {
+        private readonly IPrimeTestClock _clock;
+        private readonly PrimeTestClockEventHandler _handler;
+        private readonly object _sync = new();
+        private bool _disposed;
+        private readonly List<TEvent> _received = [];
+
+        public ClockEventCollector (IPrimeTestClock clock)
+        {
+            _clock = clock;
+            _handler = OnClockEvent;
+            _clock.ClockEvents += _handler;
+        }
+
+        /// <summary>
+        ///   Clears events collected so far.
+        /// </summary>
+        public void Clear ()
+        {
+            lock (_sync)
+            {
+                _received.Clear();
+            }
+        }
+
+        /// <summary>
+        ///   Returns a read-only copy of events collected so far.
+        /// </summary>
+        /// <returns>
+        ///   A snapshot that does not reflect later raises and cannot be used to mutate the collector's buffer.
+        /// </returns>
+        public IReadOnlyList<TEvent> Snapshot ()
+        {
+            lock (_sync)
+            {
+                return [.. _received];
+            }
+        }
+
+        public void Dispose ()
+        {
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+            }
+
+            _clock.ClockEvents -= _handler;
+        }
+
+        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
+        {
+            if (e is not TEvent typed)
+            {
+                return;
+            }
+
+            lock (_sync)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _received.Add(typed);
+            }
+        }
+    }
+
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Arms <paramref name="capture"/>, runs <paramref name="triggerClockAction"/>, and waits for the next
+    ///   matching event (see <see cref="ClockEventCapture{TEvent}.ArmForNextReceived"/>).
+    /// </summary>
+    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
+    /// <param name="capture">The subscribed capture helper.</param>
+    /// <param name="triggerClockAction">The clock operation expected to raise the next event.</param>
+    /// <param name="cancellationToken">Cancellation token for the wait.</param>
+    /// <returns>The matching event raised by <paramref name="triggerClockAction"/>.</returns>
+    private static async Task<TEvent> TriggerAndWaitForNextClockEvent<TEvent> (
+        ClockEventCapture<TEvent> capture,
+        Action triggerClockAction,
+        CancellationToken cancellationToken) where TEvent : PrimeTestClockEvent
+    {
+        capture.ArmForNextReceived();
+        triggerClockAction();
+        return await capture.WaitAfterArmedForNextReceived(BoundedRealTimeWaitTimeout, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> when <see cref="IPrimeTestClock.SetTime"/> is called.
     /// </summary>
     [Fact]
-    public void SetTime_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
+    public async Task SetTime_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset setTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock();
-        PrimeTestClockNewTimeEvent? received = null;
-        clock.ClockEvents += (_, e) =>
-        {
-            if (e is PrimeTestClockNewTimeEvent newTime)
-            {
-                received = newTime;
-            }
-        };
-        clock.SetTime(setTime);
-        received.Should().NotBeNull();
-        received!.ClockTime.Should().Be(setTime);
+        using ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockNewTimeEvent received = await TriggerAndWaitForNextClockEvent(
+            capture,
+            () => clock.SetTime(setTime),
+            cancellationToken);
+        received.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockTime.Should().Be(setTime);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when Advance is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> when <see cref="IPrimeTestClock.Advance"/> is called.
     /// </summary>
     [Fact]
-    public void Advance_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
+    public async Task Advance_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset expected = initial + TimeSpan.FromHours(1);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        PrimeTestClockNewTimeEvent? received = null;
-        clock.ClockEvents += (_, e) =>
-        {
-            if (e is PrimeTestClockNewTimeEvent newTime)
-            {
-                received = newTime;
-            }
-        };
-        clock.Advance(TimeSpan.FromHours(1));
-        received.Should().NotBeNull();
-        received!.ClockTime.Should().Be(initial + TimeSpan.FromHours(1));
+        using ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockNewTimeEvent received = await TriggerAndWaitForNextClockEvent(
+            capture,
+            () => clock.Advance(TimeSpan.FromHours(1)),
+            cancellationToken);
+        received.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockTime.Should().Be(expected);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> is raised when RunFor is called.
+    ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> when <see cref="IPrimeTestClock.RunFor"/> is called.
     /// </summary>
     [Fact]
-    public void RunFor_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
+    public async Task RunFor_WhenClockEventsSubscribed_RaisesEventWithNewTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset expected = initial + TimeSpan.FromMinutes(15);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        PrimeTestClockNewTimeEvent? received = null;
-        clock.ClockEvents += (_, e) =>
-        {
-            if (e is PrimeTestClockNewTimeEvent newTime)
-            {
-                received = newTime;
-            }
-        };
-        clock.RunFor(TimeSpan.FromMinutes(15));
-        received.Should().NotBeNull();
-        received!.ClockTime.Should().Be(initial + TimeSpan.FromMinutes(15));
+        using ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockNewTimeEvent received = await TriggerAndWaitForNextClockEvent(
+            capture,
+            () => clock.RunFor(TimeSpan.FromMinutes(15)),
+            cancellationToken);
+        received.EventType.Should().Be(PrimeTestClockEventType.NewTime);
+        received.ClockTime.Should().Be(expected);
     }
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that after <see cref="IPrimeTestClock.Stop"/> on a running clock,
+    ///   Verifies that <see cref="PrimeTestClockEventType.NewTime"/> raised while the clock is stopped exposes
+    ///   <see langword="null"/> <see cref="PrimeTestClockTimedEvent.RunRateTimeSpan"/>.
+    /// </summary>
+    [Fact]
+    public async Task SetTime_WhileStopped_NewTimeHasNullRunRate ()
+    {
+        DateTimeOffset setTime = new(2025, 2, 20, 10, 0, 0, TimeSpan.Zero);
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockNewTimeEvent received = await TriggerAndWaitForNextClockEvent(
+            capture,
+            () => clock.SetTime(setTime),
+            cancellationToken);
+        received.RunRateTimeSpan.Should().BeNull();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that each <see cref="PrimeTestClockEventType.NewTime"/> raised during
+    ///   <see cref="IPrimeTestClock.Advance"/> while the automatic runner is active includes the current run rate.
+    /// </summary>
+    [Fact]
+    public void Advance_WhileRunning_NewTimeIncludesRunRate ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan runRate = TimeSpan.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector<PrimeTestClockNewTimeEvent> capture = new(clock);
+        clock.Start(runRate);
+        IReadOnlyList<PrimeTestClockNewTimeEvent> snapshot = [];
+        try
+        {
+            clock.Advance(TimeSpan.FromMinutes(1));
+            snapshot = capture.Snapshot();
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+
+        snapshot.Should().NotBeEmpty();
+        snapshot.Should().OnlyContain(e => e.EventType == PrimeTestClockEventType.NewTime);
+        foreach (PrimeTestClockNewTimeEvent newTime in snapshot)
+        {
+            newTime.RunRateTimeSpan.Should().Be(runRate);
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Start"/> raises
+    ///   <see cref="PrimeTestClockEventType.ClockStarted"/> on a stopped-to-running transition.
+    /// </summary>
+    [Fact]
+    public async Task Start_FromStopped_RaisesClockStartedWithEventType ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan runRate = TimeSpan.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCapture<PrimeTestClockStartedEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        try
+        {
+            PrimeTestClockStartedEvent started = await TriggerAndWaitForNextClockEvent(
+                capture,
+                () => clock.Start(runRate),
+                cancellationToken);
+            started.EventType.Should().Be(PrimeTestClockEventType.ClockStarted);
+            started.ClockTime.Should().Be(initial);
+            started.RunRateTimeSpan.Should().Be(runRate);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a second <see cref="IPrimeTestClock.Start"/> while already running does not raise
+    ///   <see cref="PrimeTestClockEventType.ClockStarted"/> again.
+    /// </summary>
+    [Fact]
+    public void Start_WhenAlreadyRunning_DoesNotRaiseClockStarted ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan runRate = TimeSpan.FromSeconds(5);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector<PrimeTestClockEvent> collector = new(clock);
+        clock.Start(runRate);
+        collector.Clear();
+
+        try
+        {
+            clock.Start(runRate);
+            IReadOnlyList<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+            snapshot.Should().NotContain(e => e.EventType == PrimeTestClockEventType.ClockStarted);
+        }
+        finally
+        {
+            clock.Stop().Should().BeTrue();
+        }
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> on a stopped clock returns <c>false</c> and does not raise
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    [Fact]
+    public void Stop_WhenNotRunning_DoesNotRaiseClockStopped ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        using ClockEventCollector<PrimeTestClockEvent> collector = new(clock);
+        clock.Stop().Should().BeFalse();
+        IReadOnlyList<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+        snapshot.Should().NotContain(e => e.EventType == PrimeTestClockEventType.ClockStopped);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Stop"/> raises
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> after the runner joins, with the final committed UTC and
+    ///   the rate that was running, and that no event follows shutdown.
+    /// </summary>
+    [Fact]
+    public void Stop_WhenRunning_RaisesClockStoppedAsLastEventWithCommittedUtc ()
+    {
+        DateTimeOffset initial = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        TimeSpan runRate = TimeSpan.FromSeconds(10);
+        PrimeTestClock clock = new(initial);
+        using ClockEventCollector<PrimeTestClockEvent> collector = new(clock);
+        clock.Start(runRate);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        clock.Stop().Should().BeTrue();
+        IReadOnlyList<PrimeTestClockEvent> snapshot = collector.Snapshot();
+
+        int stoppedAt = -1;
+        for (int i = snapshot.Count - 1; i >= 0; i--)
+        {
+            if (snapshot[i].EventType == PrimeTestClockEventType.ClockStopped)
+            {
+                stoppedAt = i;
+                break;
+            }
+        }
+        stoppedAt.Should().BeGreaterThanOrEqualTo(0);
+        snapshot[stoppedAt].EventType.Should().Be(PrimeTestClockEventType.ClockStopped);
+        snapshot[snapshot.Count - 1].EventType.Should().Be(PrimeTestClockEventType.ClockStopped);
+        snapshot.Skip(stoppedAt + 1).Should().BeEmpty();
+
+        PrimeTestClockStoppedEvent stopped = snapshot[stoppedAt]
+            .Should()
+            .BeOfType<PrimeTestClockStoppedEvent>()
+            .Subject;
+        stopped.RunRateTimeSpan.Should().Be(runRate);
+
+        DateTimeOffset committedUtc = clock.UtcNowDateTimeOffset;
+        committedUtc.Offset.Should().Be(TimeSpan.Zero);
+        stopped.ClockTime.Should().Be(committedUtc);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that after <see cref="IPrimeTestClock.Stop"/> on a running clock with real elapsed time,
     ///   <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> matches the committed final instant and the
     ///   <see cref="PrimeTestClockStoppedEvent"/> payload (post-join commit and re-read), including UTC normalization
     ///   on <see cref="PrimeTestClockTimedEvent.ClockTime"/>.
@@ -1047,7 +1505,7 @@ public class UsingPrimeTestClock : UnitTestBase
             // Advance virtual time until the sleep completes (task may register late under parallel load). Poll with
             // yields so the task gets CPU; cap real time to avoid hanging.
             System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-            while (!sleepCompleted && sw.Elapsed < SleepTestRealTimeTimeout)
+            while (!sleepCompleted && sw.Elapsed < BoundedRealTimeWaitTimeout)
             {
                 clock.Advance(TimeSpan.FromSeconds(5));
                 Thread.Sleep(0);
