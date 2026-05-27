@@ -5,6 +5,7 @@
 		<OutputType>Exe</OutputType>
 		<UseAppHost>true</UseAppHost>
 		<GenerateProgramFile>false</GenerateProgramFile>
+		<DefineConstants>$(DefineConstants);SYSTEMCLOCK</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,6 +31,11 @@
 
 	<ItemGroup>
 		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\Shared\PrimeTestClockEventCaptureHelpers.cs"
+		           Link="PrimeTestClockEventCaptureHelpers.cs" />
 	</ItemGroup>
 
 </Project>

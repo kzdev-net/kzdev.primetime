@@ -39,6 +39,8 @@
 		<Compile Update="SubsetContractNullNamespaceTypes.cs">
 			<RootNamespace />
 		</Compile>
+		<Compile Include="..\Shared\PrimeTestClockEventCaptureHelpers.cs"
+		           Link="PrimeTestClockEventCaptureHelpers.cs" />
 	</ItemGroup>
 
 </Project>

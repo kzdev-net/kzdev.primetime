@@ -107,10 +107,13 @@ public class UsingPrimeClockTimeProviderAdapter : UnitTestBase
     public void GetUtcNow_AfterRunFor_ReturnsAdvancedTime ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        TimeSpan runDuration = TimeSpan.FromMinutes(30);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         TimeProvider provider = clock.ToTimeProvider();
-        clock.RunFor(TimeSpan.FromMinutes(30));
-        provider.GetUtcNow().Should().Be(initial + TimeSpan.FromMinutes(30));
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(runDuration, RunForTestFastPerSecondRate).Should().BeTrue();
+        WaitUntilClockStopped(() => clock.IsRunning, RunForTestWaitTimeout, cancellationToken);
+        provider.GetUtcNow().Should().Be(initial + runDuration);
     }
     //----------------------------------------------------------------------------
 

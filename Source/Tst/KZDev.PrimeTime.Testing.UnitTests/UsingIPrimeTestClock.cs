@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 using AwesomeAssertions;
 
@@ -673,15 +674,109 @@ public class UsingIPrimeTestClock : UnitTestBase
     #region RunFor
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.RunFor(Duration)"/> advances virtual time by the given duration.
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor(Duration)"/> advances virtual time by the given duration
+    ///   when the bounded run completes.
     /// </summary>
     [Fact]
     public void RunFor_WithDuration_AdvancesVirtualTimeByDuration ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runDuration = Duration.FromMinutes(30);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        clock.RunFor(Duration.FromMinutes(30));
-        clock.NowInstant.Should().Be(initial + Duration.FromMinutes(30));
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(runDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        WaitUntilClockStopped(() => clock.IsRunning, RunForTestWaitTimeout, cancellationToken);
+        clock.NowInstant.Should().Be(initial + runDuration);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor(NodaTime.Duration, NodaTime.Duration)"/> returns
+    ///   <c>false</c> when the clock is already running.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenAlreadyRunning_ReturnsFalse ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        clock.Start(Duration.FromTimeSpan(RunForTestFastPerSecondRate));
+        clock.RunFor(Duration.FromMinutes(1), Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeFalse();
+        clock.Stop().Should().BeTrue();
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that zero-duration <see cref="IPrimeTestClock.RunFor"/> raises started and stopped lifecycle
+    ///   events and leaves the clock not running.
+    /// </summary>
+    [Fact]
+    public void RunFor_WithZeroDuration_RaisesStartedAndStoppedAndNotRunning ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        using ClockEventTypeCollector eventTypes = new(clock);
+        clock.RunFor(Duration.Zero).Should().BeTrue();
+        clock.IsRunning.Should().BeFalse();
+        eventTypes.Snapshot().Should().Equal(
+            PrimeTestClockEventType.ClockStarted,
+            PrimeTestClockEventType.ClockStopped);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor(NodaTime.Duration, NodaTime.Duration)"/> rejects an
+    ///   out-of-range per-second rate.
+    /// </summary>
+    [Fact]
+    public void RunFor_WithInvalidPerSecondRate_ThrowsArgumentOutOfRangeException ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        Action act = () => clock.RunFor(Duration.FromMinutes(1), StartRunRateBelowMinimum);
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that negative <see cref="IPrimeTestClock.RunFor"/> duration is treated like zero duration.
+    /// </summary>
+    [Fact]
+    public void RunFor_WithNegativeDuration_TreatedAsZero ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventTypeCollector eventTypes = new(clock);
+        clock.RunFor(Duration.FromMinutes(-5)).Should().BeTrue();
+        clock.IsRunning.Should().BeFalse();
+        clock.NowInstant.Should().Be(initial);
+        eventTypes.Snapshot().Should().Equal(
+            PrimeTestClockEventType.ClockStarted,
+            PrimeTestClockEventType.ClockStopped);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a non-zero <see cref="IPrimeTestClock.RunFor"/> raises
+    ///   <see cref="PrimeTestClockEventType.ClockStarted"/> before
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> when the run completes.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenStarted_RaisesClockStartedThenClockStopped ()
+    {
+        IPrimeTestClock clock = new PrimeTestClock();
+        using ClockEventTypeCollector eventTypes = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(Duration.FromSeconds(10), Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        WaitUntilClockStopped(() => clock.IsRunning, RunForTestWaitTimeout, cancellationToken);
+        WaitUntilCondition(
+            () => eventTypes.ContainsEventType(PrimeTestClockEventType.ClockStopped),
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for ClockStopped after "
+                + RunForTestWaitTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                + " seconds.");
+        List<PrimeTestClockEventType> snapshot = eventTypes.Snapshot();
+        int startedIndex = snapshot.IndexOf(PrimeTestClockEventType.ClockStarted);
+        int stoppedIndex = snapshot.LastIndexOf(PrimeTestClockEventType.ClockStopped);
+        startedIndex.Should().BeGreaterThanOrEqualTo(0);
+        stoppedIndex.Should().BeGreaterThan(startedIndex);
     }
     //----------------------------------------------------------------------------
 
@@ -775,7 +870,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         IPrimeTestClock clock = new PrimeTestClock();
         Action act = () => clock.Start(StartRunRateBelowMinimum);
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
@@ -789,7 +884,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         Duration belowMinimum = MinimumAllowedStartRunRate - Duration.FromTicks(1);
         Action act = () => clock.Start(belowMinimum);
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
@@ -802,7 +897,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         IPrimeTestClock clock = new PrimeTestClock();
         Action act = () => clock.Start(Duration.FromHours(1) + Duration.FromMinutes(1));
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
@@ -816,7 +911,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         Duration aboveMaximum = Duration.FromHours(1) + Duration.FromTicks(1);
         Action act = () => clock.Start(aboveMaximum);
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
@@ -829,7 +924,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         IPrimeTestClock clock = new PrimeTestClock();
         Action act = () => clock.Start(Duration.Zero);
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("rate");
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------
@@ -1194,114 +1289,6 @@ public class UsingIPrimeTestClock : UnitTestBase
     }
 
     /// <summary>
-    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and collects all events of
-    ///   <typeparamref name="TEvent"/>.
-    /// </summary>
-    /// <typeparam name="TEvent">Derived <see cref="PrimeTestClockEvent"/> type to capture.</typeparam>
-    private sealed class ClockEventListCapture<TEvent> where TEvent : PrimeTestClockEvent
-    {
-        private readonly object _sync = new();
-        private readonly List<TEvent> _received = [];
-
-        public ClockEventListCapture (IPrimeTestClock clock)
-        {
-            clock.ClockEvents += OnClockEvent;
-        }
-
-        public List<TEvent> Snapshot ()
-        {
-            lock (_sync)
-            {
-                return [.. _received];
-            }
-        }
-
-        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
-        {
-            if (e is not TEvent typed)
-            {
-                return;
-            }
-
-            lock (_sync)
-            {
-                _received.Add(typed);
-            }
-        }
-    }
-
-    /// <summary>
-    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and collects every raised event.
-    /// </summary>
-    private sealed class ClockEventCollector
-    {
-        private readonly object _sync = new();
-        private readonly List<PrimeTestClockEvent> _received = [];
-
-        public ClockEventCollector (IPrimeTestClock clock)
-        {
-            clock.ClockEvents += OnClockEvent;
-        }
-
-        public void Clear ()
-        {
-            lock (_sync)
-            {
-                _received.Clear();
-            }
-        }
-
-        public List<PrimeTestClockEvent> Snapshot ()
-        {
-            lock (_sync)
-            {
-                return [.. _received];
-            }
-        }
-
-        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
-        {
-            lock (_sync)
-            {
-                _received.Add(e);
-            }
-        }
-    }
-
-    /// <summary>
-    ///   Subscribes to <see cref="IPrimeTestClock.ClockEvents"/> and records
-    ///   <see cref="PrimeTestClockEvent.EventType"/> values in raise order.
-    /// </summary>
-    private sealed class ClockEventTypeCollector
-    {
-        private readonly object _sync = new();
-        private readonly List<PrimeTestClockEventType> _eventTypes = [];
-
-        public ClockEventTypeCollector (IPrimeTestClock clock)
-        {
-            clock.ClockEvents += OnClockEvent;
-        }
-
-        public List<PrimeTestClockEventType> Snapshot ()
-        {
-            lock (_sync)
-            {
-                return [.. _eventTypes];
-            }
-        }
-
-        private void OnClockEvent (object? sender, PrimeTestClockEvent e)
-        {
-            lock (_sync)
-            {
-                _eventTypes.Add(e.EventType);
-            }
-        }
-    }
-
-    //----------------------------------------------------------------------------
-
-    /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
     ///   <see cref="PrimeTestClockEventType.NewTime"/> with the expected <see cref="PrimeTestClockTimedEvent.ClockInstant"/>
     ///   when <see cref="IPrimeTestClock.SetInstant"/> is called.
@@ -1342,8 +1329,8 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
-    ///   <see cref="PrimeTestClockEventType.NewTime"/> with the run-for target instant when
-    ///   <see cref="IPrimeTestClock.RunFor"/> is called.
+    ///   <see cref="PrimeTestClockEventType.NewTime"/> at the bounded run stop instant when
+    ///   <see cref="IPrimeTestClock.RunFor"/> completes.
     /// </summary>
     [Fact]
     public void RunFor_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
@@ -1351,12 +1338,19 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Instant expected = initial + Duration.FromMinutes(15);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        ClockEventCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
-        clock.RunFor(Duration.FromMinutes(15));
-        PrimeTestClockNewTimeEvent? received = capture.LastReceived;
-        received.Should().NotBeNull();
-        received!.EventType.Should().Be(PrimeTestClockEventType.NewTime);
-        received.ClockInstant.Should().Be(expected);
+        using ClockEventListCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(Duration.FromMinutes(15), Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        WaitUntilClockStopped(() => clock.IsRunning, RunForTestWaitTimeout, cancellationToken);
+        WaitUntilCondition(
+            () => capture.Any(e => e.ClockInstant == expected),
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for NewTime at the RunFor stop instant after "
+                + RunForTestWaitTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                + " seconds.");
+        clock.NowInstant.Should().Be(expected);
+        capture.Snapshot().Should().Contain(e => e.ClockInstant == expected);
     }
     //----------------------------------------------------------------------------
 
@@ -1391,7 +1385,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Duration runRate = Duration.FromSeconds(5);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        ClockEventListCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
+        using ClockEventListCapture<PrimeTestClockNewTimeEvent> capture = new(clock);
         clock.Start(runRate);
         List<PrimeTestClockNewTimeEvent> snapshot = [];
         try
@@ -1425,7 +1419,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Duration runRate = Duration.FromSeconds(5);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        ClockEventCollector collector = new(clock);
+        using ClockEventCollector collector = new(clock);
         clock.Start(runRate);
         try
         {
@@ -1457,7 +1451,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Duration runRate = Duration.FromSeconds(5);
         IPrimeTestClock clock = new PrimeTestClock(initial);
-        ClockEventCollector collector = new(clock);
+        using ClockEventCollector collector = new(clock);
         clock.Start(runRate);
         collector.Clear();
 
@@ -1522,7 +1516,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void Stop_WhenNotRunning_DoesNotRaiseClockStopped ()
     {
         IPrimeTestClock clock = new PrimeTestClock(Instant.FromUtc(2025, 1, 1, 0, 0, 0));
-        ClockEventCollector collector = new(clock);
+        using ClockEventCollector collector = new(clock);
         clock.Stop().Should().BeFalse();
         List<PrimeTestClockEvent> snapshot = collector.Snapshot();
 
@@ -1549,7 +1543,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
         Duration runRate = Duration.FromSeconds(10);
         PrimeTestClock clock = new(initial);
-        ClockEventCollector collector = new(clock);
+        using ClockEventCollector collector = new(clock);
         clock.Start(runRate);
         clock.Advance(Duration.FromMinutes(1));
         clock.Stop().Should().BeTrue();
@@ -1583,7 +1577,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Duration runRate = Duration.FromSeconds(5);
         PrimeTestClock clock = new(initial);
-        ClockEventTypeCollector eventTypes = new(clock);
+        using ClockEventTypeCollector eventTypes = new(clock);
         clock.Start(runRate);
         clock.Stop().Should().BeTrue();
         clock.Start(runRate);
@@ -1660,7 +1654,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Duration runRate = Duration.FromSeconds(5);
         PrimeTestClock clock = new(initial);
-        ClockEventTypeCollector eventTypes = new(clock);
+        using ClockEventTypeCollector eventTypes = new(clock);
         clock.Start(runRate);
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
         (await RunStopWithOverlappingStartAfterStopJoinPhaseBeginsAsync(clock, runRate, cancellationToken))

@@ -201,6 +201,17 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     private TimeSpan _runRate = TimeSpan.FromSeconds(1);
 
     /// <summary>
+    ///   <c>true</c> while a <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> bounded run is active.
+    /// </summary>
+    private bool _runForBounded;
+
+    /// <summary>
+    ///   Virtual UTC instant at which an active bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> run
+    ///   commits and stops; set only while <see cref="_runForBounded"/> is <c>true</c>.
+    /// </summary>
+    private DateTimeOffset? _runForStopUtc;
+
+    /// <summary>
     ///   Virtual UTC instant from which the runner measures the next virtual-minute <see cref="ClockEvents"/> heartbeat.
     /// </summary>
     private DateTimeOffset _runnerHeartbeatWindowStartUtc;
@@ -335,6 +346,11 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             {
                 MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
 
+                if (TryCompleteBoundedRunFromRunnerLoop())
+                {
+                    return;
+                }
+
                 lock (Gate)
                 {
                     if (!InternalIsRunning)
@@ -382,9 +398,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
                 TimeSpan virtualBudget = ScaleRealElapsedToVirtualTime(actualRealElapsed, _runRate);
                 marchTargetUtc = nowUtc + virtualBudget;
+                marchTargetUtc = CapMarchTargetUtcAtBoundedRunStopHorizonLocked(marchTargetUtc);
             }
 
             MarchVirtualUtcForwardToTargetRaisingClockEvents(marchTargetUtc);
+
+            if (TryCompleteBoundedRunFromRunnerLoop())
+            {
+                return;
+            }
 
             lock (Gate)
             {
@@ -441,6 +463,13 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             }
 
             MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
+
+            if (TryCompleteBoundedRunFromRunnerLoop())
+            {
+                nextDeadlineUtc = default;
+                intendedRealWait = TimeSpan.Zero;
+                return false;
+            }
 
             lock (Gate)
             {
@@ -514,7 +543,21 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             return nowUtc;
         }
 
-        return bestUtc is null || heartbeatDeadlineUtc < bestUtc ? heartbeatDeadlineUtc : bestUtc.Value;
+        DateTimeOffset earliestUtc = bestUtc is null || heartbeatDeadlineUtc < bestUtc ? heartbeatDeadlineUtc : bestUtc.Value;
+        if (_runForBounded && _runForStopUtc is { } runForStopUtc)
+        {
+            if (runForStopUtc <= nowUtc)
+            {
+                return nowUtc;
+            }
+
+            if (runForStopUtc < earliestUtc)
+            {
+                earliestUtc = runForStopUtc;
+            }
+        }
+
+        return earliestUtc;
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -1347,27 +1390,211 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public void RunFor (TimeSpan duration)
+    public bool RunFor (TimeSpan duration) =>
+        RunFor(duration, TimeSpan.FromSeconds(1));
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public bool RunFor (TimeSpan duration, TimeSpan perSecondRate)
     {
-        Advance(duration);
+        if (duration < TimeSpan.Zero)
+        {
+            duration = TimeSpan.Zero;
+        }
+
+        ThrowIfStartRunRateOutOfRange(perSecondRate);
+
+        DateTimeOffset startUtc;
+        TimeSpan runRateTimeSpan = perSecondRate;
+        bool zeroDuration;
+        while (true)
+        {
+            lock (Gate)
+            {
+                ThrowIfRunnerStopJoinFailedLocked();
+                if (InternalIsRunning)
+                {
+                    return false;
+                }
+
+                if (_runnerStopInProgress)
+                {
+                    // Release Gate and wait for Stop to finish before retrying.
+                }
+                else
+                {
+                    startUtc = ReadVirtualUtcNowLocked();
+                    _runForStopUtc = startUtc + duration;
+                    _runForBounded = true;
+                    _runRate = perSecondRate;
+                    zeroDuration = duration == TimeSpan.Zero;
+                    InternalIsRunning = true;
+                    _runnerHeartbeatWindowStartUtc = startUtc;
+                    _runAnchorStopwatch.Restart();
+                    break;
+                }
+            }
+
+            WaitForOverlappingRunnerStopCompletion();
+        }
+
+        RaiseClockStartedEvent(startUtc, runRateTimeSpan);
+
+        if (zeroDuration)
+        {
+            CompleteBoundedRunFor(calledFromRunnerLoop: false);
+        }
+        else
+        {
+            lock (Gate)
+            {
+                try
+                {
+                    _runThread = new Thread(RunLoop)
+                    {
+                        IsBackground = true
+                    };
+                    _runThread.Start();
+                }
+                catch
+                {
+                    InternalIsRunning = false;
+                    _runForBounded = false;
+                    _runForStopUtc = null;
+                    _runThread = null;
+                    _runAnchorStopwatch.Reset();
+                    _runnerHeartbeatWindowStartUtc = ReadVirtualUtcNowLocked();
+                    throw;
+                }
+            }
+        }
+
+        return true;
     }
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Throws if <paramref name="rate"/> is outside the inclusive range allowed for
+    ///   When the caller holds <see cref="PrimeTestTimeBase.Gate"/>, caps a runner march target at the bounded
+    ///   <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> stop horizon when one is active.
+    /// </summary>
+    /// <param name="marchTargetUtc">Proposed virtual UTC march target.</param>
+    /// <returns>
+    ///   <paramref name="marchTargetUtc"/>, or the bounded stop horizon when it is sooner.
+    /// </returns>
+    private DateTimeOffset CapMarchTargetUtcAtBoundedRunStopHorizonLocked (DateTimeOffset marchTargetUtc)
+    {
+        if (_runForBounded && _runForStopUtc is { } stopUtc && marchTargetUtc > stopUtc)
+        {
+            return stopUtc;
+        }
+
+        return marchTargetUtc;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   When virtual time has reached the bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> stop
+    ///   horizon on the runner thread, commits at that horizon, stops the runner, and raises
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    /// <returns>
+    ///   <see langword="true"/> when the bounded run was completed and the runner loop should exit.
+    /// </returns>
+    private bool TryCompleteBoundedRunFromRunnerLoop ()
+    {
+        lock (Gate)
+        {
+            if (!InternalIsRunning || !_runForBounded || _runForStopUtc is not { } stopUtc)
+            {
+                return false;
+            }
+
+            if (ReadVirtualUtcNowLocked() < stopUtc)
+            {
+                return false;
+            }
+        }
+
+        CompleteBoundedRunFor(calledFromRunnerLoop: true);
+        return true;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Ends an active bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> run at
+    ///   <see cref="_runForStopUtc"/>, commits virtual time, optionally joins the runner thread, and raises
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/>.
+    /// </summary>
+    /// <param name="calledFromRunnerLoop">
+    ///   <see langword="true"/> when invoked from <see cref="RunLoop"/> on the runner thread (no self-join).
+    /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///   Thrown when the automatic runner thread could not be joined within <see cref="StopJoinTimeout"/>.
+    /// </exception>
+    private void CompleteBoundedRunFor (bool calledFromRunnerLoop)
+    {
+        Thread? runningThread;
+        TimeSpan? runRateTimeSpan;
+        DateTimeOffset finalUtc;
+
+        lock (Gate)
+        {
+            if (!_runForBounded)
+            {
+                return;
+            }
+
+            runRateTimeSpan = _runRate;
+            finalUtc = _runForStopUtc ?? ReadVirtualUtcNowLocked();
+            InternalIsRunning = false;
+            _runForBounded = false;
+            _runForStopUtc = null;
+            _runAnchorStopwatch.Reset();
+            _runnerWakeEvent.Set();
+            runningThread = calledFromRunnerLoop ? null : _runThread;
+            _runThread = null;
+        }
+
+        if (!calledFromRunnerLoop && runningThread is not null && !runningThread.Join(StopJoinTimeout))
+        {
+            lock (Gate)
+            {
+                _runnerStopJoinFailed = true;
+            }
+
+            InvalidOperationException joinTimeoutException = new(
+                "Timed out stopping the automatic runner after "
+                + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
+                + " seconds.");
+            joinTimeoutException.Data["BlockedOperations"] =
+                "Start(), SetTime, Advance, and RunFor";
+            joinTimeoutException.Data["LikelyCause"] =
+                "The runner thread may still be executing and is typically blocked inside a ClockEvents subscriber "
+                + "or virtual-time dispatch callback.";
+            throw joinTimeoutException;
+        }
+
+        lock (Gate)
+        {
+            CommitVirtualUtcInstantLocked(finalUtc);
+            finalUtc = ReadVirtualUtcNowLocked();
+        }
+
+        RaiseClockStoppedEvent(finalUtc, runRateTimeSpan);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Throws if <paramref name="perSecondRate"/> is outside the inclusive range allowed for
     ///   <see cref="Start(System.TimeSpan?)"/>.
     /// </summary>
-    /// <param name="rate">
+    /// <param name="perSecondRate">
     ///   Virtual time that should elapse per one real second.
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///   Thrown when <paramref name="rate"/> is less than 100 milliseconds or greater than 1 hour.
+    ///   Thrown when <paramref name="perSecondRate"/> is less than 100 milliseconds or greater than 1 hour.
     /// </exception>
-    private static void ThrowIfStartRunRateOutOfRange (TimeSpan rate)
+    private static void ThrowIfStartRunRateOutOfRange (TimeSpan perSecondRate)
     {
-        if (rate < MinimumStartRunRate || rate > MaximumStartRunRate)
+        if (perSecondRate < MinimumStartRunRate || perSecondRate > MaximumStartRunRate)
         {
-            throw new ArgumentOutOfRangeException(nameof(rate),
-                rate,
+            throw new ArgumentOutOfRangeException(nameof(perSecondRate),
+                perSecondRate,
                 "Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive.");
         }
     }
@@ -1451,7 +1678,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public void Start (TimeSpan? rate = null)
+    public void Start (TimeSpan? perSecondRate = null)
     {
         DateTimeOffset startUtc;
         TimeSpan runRateTimeSpan;
@@ -1459,8 +1686,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         {
             lock (Gate)
             {
-                if (rate is { } explicitRate)
-                    ThrowIfStartRunRateOutOfRange(explicitRate);
+                if (perSecondRate is { } explicitPerSecondRate)
+                    ThrowIfStartRunRateOutOfRange(explicitPerSecondRate);
                 ThrowIfRunnerStopJoinFailedLocked();
                 if (InternalIsRunning)
                     return;
@@ -1470,8 +1697,10 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 }
                 else
                 {
+                    _runForBounded = false;
+                    _runForStopUtc = null;
                     InternalIsRunning = true;
-                    _runRate = rate ?? TimeSpan.FromSeconds(1);
+                    _runRate = perSecondRate ?? TimeSpan.FromSeconds(1);
                     runRateTimeSpan = _runRate;
                     startUtc = ReadVirtualUtcNowLocked();
                     _runnerHeartbeatWindowStartUtc = startUtc;
@@ -1520,6 +1749,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             CommitVirtualUtcInstantLocked(finalUtc);
             finalUtc = ReadVirtualUtcNowLocked();
             InternalIsRunning = false;
+            _runForBounded = false;
+            _runForStopUtc = null;
             _runnerStopInProgress = true;
             _runnerStopCompletedEvent.Reset();
             _runAnchorStopwatch.Reset();

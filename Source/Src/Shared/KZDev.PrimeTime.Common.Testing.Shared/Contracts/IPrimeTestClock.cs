@@ -97,14 +97,59 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     void Advance (TimeSpan duration);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Advances the clock's virtual time by the specified duration, processing all
-    ///   due delays, time cancellations, and timer callbacks. Equivalent to
-    ///   <see cref="Advance(System.TimeSpan)"/> for a single step of the given duration.
+    ///   Starts a bounded automatic run that advances virtual time by <paramref name="duration"/> at a 1:1
+    ///   real-time pace (one second of virtual time per real second), then stops when that virtual elapsed time
+    ///   is reached.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Returns immediately; wait for completion via <see cref="IPrimeTestTime.IsRunning"/> and/or
+    ///     <see cref="PrimeTestClockEventType.ClockStopped"/>. Only starts when the clock is not already running.
+    ///     Negative <paramref name="duration"/> is treated as zero. Zero duration raises
+    ///     <see cref="PrimeTestClockEventType.ClockStarted"/> and <see cref="PrimeTestClockEventType.ClockStopped"/>
+    ///     synchronously before returning.
+    ///   </para>
+    ///   <para>
+    ///     For a faster or slower pace, use <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/>.
+    ///     For synchronous deterministic marching, use <see cref="Advance(System.TimeSpan)"/>.
+    ///   </para>
+    /// </remarks>
     /// <param name="duration">
-    ///   The amount of virtual time to advance.
+    ///   Virtual elapsed time after which the bounded run stops.
     /// </param>
-    void RunFor (TimeSpan duration);
+    /// <returns>
+    ///   <c>true</c> if the bounded run started; <c>false</c> if the clock was already running.
+    /// </returns>
+    bool RunFor (TimeSpan duration);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Starts a bounded automatic run that advances virtual time by <paramref name="duration"/> at
+    ///   <paramref name="perSecondRate"/> (virtual time per one real second), then stops when that virtual elapsed
+    ///   time is reached.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Returns immediately; wait for completion via <see cref="IPrimeTestTime.IsRunning"/> and/or
+    ///     <see cref="PrimeTestClockEventType.ClockStopped"/>. Only starts when the clock is not already running.
+    ///     Negative <paramref name="duration"/> is treated as zero. Zero duration raises
+    ///     <see cref="PrimeTestClockEventType.ClockStarted"/> and <see cref="PrimeTestClockEventType.ClockStopped"/>
+    ///     synchronously before returning.
+    ///   </para>
+    /// </remarks>
+    /// <param name="duration">
+    ///   Virtual elapsed time after which the bounded run stops.
+    /// </param>
+    /// <param name="perSecondRate">
+    ///   Virtual time that elapses per one real second.
+    /// </param>
+    /// <returns>
+    ///   <c>true</c> if the bounded run started; <c>false</c> if the clock was already running.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="perSecondRate"/> is outside the inclusive range allowed for
+    ///   <see cref="Start(System.TimeSpan?)"/> (100 milliseconds to 1 hour of virtual time per real second).
+    /// </exception>
+    bool RunFor (TimeSpan duration, TimeSpan perSecondRate);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Starts a background runner that advances virtual time toward the next delay, time-expiry, timer due
@@ -123,14 +168,14 @@ public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
     ///     elapsed time (oversleep catch-up).
     ///   </para>
     /// </remarks>
-    /// <param name="rate">
+    /// <param name="perSecondRate">
     ///   Virtual time that elapses per one real second, or <c>null</c> for 1 second of virtual time per real second.
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///   Thrown when <paramref name="rate"/> is not <c>null</c> and is less than 100 milliseconds or greater than
-    ///   1 hour of virtual time per real second (no clamping).
+    ///   Thrown when <paramref name="perSecondRate"/> is not <c>null</c> and is less than 100 milliseconds or
+    ///   greater than 1 hour of virtual time per real second (no clamping).
     /// </exception>
-    void Start (TimeSpan? rate = null);
+    void Start (TimeSpan? perSecondRate = null);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Stops the automatic runner and clears the monotonic run anchor.

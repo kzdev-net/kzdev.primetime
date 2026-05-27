@@ -62,30 +62,76 @@ public partial interface IPrimeTestClock
     void Advance (Duration duration);
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Advances the clock's virtual time by the specified duration, processing all
-    ///   due delays, time cancellations, and timer callbacks. Equivalent to
-    ///   <see cref="Advance(NodaTime.Duration)"/> for a single step of the given duration.
+    ///   Starts a bounded automatic run that advances virtual time by <paramref name="duration"/> at a 1:1
+    ///   real-time pace (one second of virtual time per real second), then stops when that virtual elapsed time
+    ///   is reached.
     /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Returns immediately; wait for completion via <see cref="IPrimeTestTime.IsRunning"/> and/or
+    ///     <see cref="PrimeTestClockEventType.ClockStopped"/>. Only starts when the clock is not already running.
+    ///     Negative <paramref name="duration"/> is treated as zero. Zero duration raises
+    ///     <see cref="PrimeTestClockEventType.ClockStarted"/> and <see cref="PrimeTestClockEventType.ClockStopped"/>
+    ///     synchronously before returning.
+    ///   </para>
+    ///   <para>
+    ///     For a faster or slower pace, use <see cref="RunFor(NodaTime.Duration, NodaTime.Duration)"/>.
+    ///     For synchronous deterministic marching, use <see cref="Advance(NodaTime.Duration)"/>.
+    ///   </para>
+    /// </remarks>
     /// <param name="duration">
-    ///   The amount of virtual time to advance.
+    ///   Virtual elapsed time after which the bounded run stops.
     /// </param>
-    void RunFor (Duration duration);
+    /// <returns>
+    ///   <c>true</c> if the bounded run started; <c>false</c> if the clock was already running.
+    /// </returns>
+    bool RunFor (Duration duration);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Starts a bounded automatic run that advances virtual time by <paramref name="duration"/> at
+    ///   <paramref name="perSecondRate"/> (virtual time per one real second), then stops when that virtual elapsed
+    ///   time is reached.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Returns immediately; wait for completion via <see cref="IPrimeTestTime.IsRunning"/> and/or
+    ///     <see cref="PrimeTestClockEventType.ClockStopped"/>. Only starts when the clock is not already running.
+    ///     Negative <paramref name="duration"/> is treated as zero. Zero duration raises
+    ///     <see cref="PrimeTestClockEventType.ClockStarted"/> and <see cref="PrimeTestClockEventType.ClockStopped"/>
+    ///     synchronously before returning.
+    ///   </para>
+    /// </remarks>
+    /// <param name="duration">
+    ///   Virtual elapsed time after which the bounded run stops.
+    /// </param>
+    /// <param name="perSecondRate">
+    ///   Virtual time that elapses per one real second.
+    /// </param>
+    /// <returns>
+    ///   <c>true</c> if the bounded run started; <c>false</c> if the clock was already running.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="perSecondRate"/> is outside the inclusive range allowed for
+    ///   <see cref="Start(NodaTime.Duration?)"/>.
+    /// </exception>
+    bool RunFor (Duration duration, Duration perSecondRate);
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Starts the deadline-driven automatic runner at the given virtual-time-per-real-second rate.
     /// </summary>
     /// <remarks>
-    ///   Forwards to <see cref="IPrimeTestClock.Start(System.TimeSpan?)"/> after converting <paramref name="rate"/>.
-    ///   See that member for runner semantics, rate bounds, projection, and persist-on-read.
+    ///   Forwards to <see cref="IPrimeTestClock.Start(System.TimeSpan?)"/> after converting
+    ///   <paramref name="perSecondRate"/>. See that member for runner semantics, rate bounds, projection, and
+    ///   persist-on-read.
     /// </remarks>
-    /// <param name="rate">
+    /// <param name="perSecondRate">
     ///   Virtual time that elapses per one real second, or <c>null</c> for 1:1.
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
-    ///   Thrown when <paramref name="rate"/> is not <c>null</c> and its BCL conversion is outside 100 milliseconds
-    ///   to 1 hour of virtual time per real second (inclusive).
+    ///   Thrown when <paramref name="perSecondRate"/> is not <c>null</c> and its BCL conversion is outside
+    ///   100 milliseconds to 1 hour of virtual time per real second (inclusive).
     /// </exception>
-    void Start (Duration? rate = null);
+    void Start (Duration? perSecondRate = null);
     //----------------------------------------------------------------------------
 }
 //################################################################################

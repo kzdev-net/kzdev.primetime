@@ -433,12 +433,19 @@ public sealed partial class PrimeTestClock
         Advance(NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public void RunFor (Duration duration) =>
+    public bool RunFor (Duration duration) =>
         RunFor(NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration));
     //----------------------------------------------------------------------------
     /// <inheritdoc />
-    public void Start (Duration? rate = null) =>
-        Start(rate is { } duration ? NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration) : null);
+    public bool RunFor (Duration duration, Duration perSecondRate) =>
+        RunFor(NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration),
+            NodaDurationBclConversion.ToTimeSpanForTimerInterval(perSecondRate));
+    //----------------------------------------------------------------------------
+    /// <inheritdoc />
+    public void Start (Duration? perSecondRate = null) =>
+        Start(perSecondRate is { } duration
+            ? NodaDurationBclConversion.ToTimeSpanForTimerInterval(duration)
+            : null);
     //----------------------------------------------------------------------------
 
     #endregion IPrimeTestClock Implementation — Noda
