@@ -152,7 +152,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// <summary>
     ///   Counts nested calls from virtual-time march callbacks into observable "now" members within the same
     ///   logical asynchronous execution flow on this clock so persist-on-read does not recurse while
-    ///   <see cref="MarchVirtualUtcForwardToTargetRaisingClockEvents"/> is in progress.
+    ///   a virtual-time march is in progress.
     /// </summary>
     /// <remarks>
     ///   <para>
@@ -210,6 +210,12 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     ///   commits and stops; set only while <see cref="_runForBounded"/> is <c>true</c>.
     /// </summary>
     private DateTimeOffset? _runForStopUtc;
+
+    /// <summary>
+    ///   Monotonically assigned when a bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> run starts;
+    ///   identifies the active bounded run when completing at a stop horizon after a virtual-time march.
+    /// </summary>
+    private ulong _runForBoundedGeneration;
 
     /// <summary>
     ///   Virtual UTC instant from which the runner measures the next virtual-minute <see cref="ClockEvents"/> heartbeat.
@@ -344,7 +350,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
             if (intendedRealWait <= TimeSpan.Zero)
             {
-                MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
+                MarchVirtualUtcForwardToTargetRaisingClockEventsFromRunnerLoop(nextDeadlineUtc);
 
                 if (TryCompleteBoundedRunFromRunnerLoop())
                 {
@@ -401,7 +407,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 marchTargetUtc = CapMarchTargetUtcAtBoundedRunStopHorizonLocked(marchTargetUtc);
             }
 
-            MarchVirtualUtcForwardToTargetRaisingClockEvents(marchTargetUtc);
+            MarchVirtualUtcForwardToTargetRaisingClockEventsFromRunnerLoop(marchTargetUtc);
 
             if (TryCompleteBoundedRunFromRunnerLoop())
             {
@@ -462,7 +468,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 return true;
             }
 
-            MarchVirtualUtcForwardToTargetRaisingClockEvents(nextDeadlineUtc);
+            MarchVirtualUtcForwardToTargetRaisingClockEventsFromRunnerLoop(nextDeadlineUtc);
 
             if (TryCompleteBoundedRunFromRunnerLoop())
             {
@@ -816,7 +822,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 targetUtc = ComputeProjectedVirtualUtcLocked();
             }
 
-            MarchVirtualUtcForwardToTargetRaisingClockEvents(targetUtc);
+            MarchVirtualUtcForwardToTargetRaisingClockEventsFromExternalCaller(targetUtc);
 
             lock (Gate)
             {
@@ -1236,11 +1242,83 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     }
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Marches virtual UTC forward to <paramref name="targetUtc"/> from the automatic runner loop, completing an
+    ///   active bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> at the stop horizon without joining the
+    ///   runner thread.
+    /// </summary>
+    /// <param name="targetUtc">Virtual UTC instant to reach.</param>
+    private void MarchVirtualUtcForwardToTargetRaisingClockEventsFromRunnerLoop (DateTimeOffset targetUtc) =>
+        MarchVirtualUtcForwardToTargetRaisingClockEventsBody(targetUtc, calledFromRunnerLoop: true);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Marches virtual UTC forward to <paramref name="targetUtc"/> from an external caller (for example
+    ///   <see cref="Advance(TimeSpan)"/> or <see cref="SetTime(DateTimeOffset)"/>), joining the runner thread when a
+    ///   bounded <see cref="RunFor(System.TimeSpan, System.TimeSpan)"/> completes at the stop horizon.
+    /// </summary>
+    /// <param name="targetUtc">Virtual UTC instant to reach.</param>
+    private void MarchVirtualUtcForwardToTargetRaisingClockEventsFromExternalCaller (DateTimeOffset targetUtc) =>
+        MarchVirtualUtcForwardToTargetRaisingClockEventsBody(targetUtc, calledFromRunnerLoop: false);
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Marches virtual UTC forward to <paramref name="targetUtc"/> along pending deadlines, dispatching work at each
     ///   distinct instant and raising <see cref="ClockEvents"/> once per marched instant where virtual time changes.
     /// </summary>
     /// <param name="targetUtc">Virtual UTC instant to reach.</param>
-    private void MarchVirtualUtcForwardToTargetRaisingClockEvents (DateTimeOffset targetUtc)
+    /// <param name="calledFromRunnerLoop">
+    ///   <see langword="true"/> when invoked from <see cref="RunLoop"/> on the runner thread (bounded completion must not
+    ///   self-join).
+    /// </param>
+    private void MarchVirtualUtcForwardToTargetRaisingClockEventsBody (DateTimeOffset targetUtc, bool calledFromRunnerLoop)
+    {
+        // When targetUtc reaches or passes an active RunFor stop horizon, march in two phases: first to the horizon
+        // (complete the bounded run and raise ClockStopped), then continue from committed virtual now to targetUtc.
+        while (true)
+        {
+            DateTimeOffset marchTargetUtc;
+            bool crossedBoundedStopHorizon;
+            ulong boundedRunGeneration = 0;
+            DateTimeOffset boundedStopHorizonUtc = default;
+            lock (Gate)
+            {
+                if (ReadVirtualUtcNowLocked() >= targetUtc)
+                {
+                    return;
+                }
+
+                marchTargetUtc = CapMarchTargetUtcAtBoundedRunStopHorizonLocked(targetUtc);
+                crossedBoundedStopHorizon = _runForBounded
+                    && _runForStopUtc is { } stopUtc
+                    && targetUtc >= stopUtc
+                    && marchTargetUtc == stopUtc;
+                if (crossedBoundedStopHorizon)
+                {
+                    boundedRunGeneration = _runForBoundedGeneration;
+                    boundedStopHorizonUtc = marchTargetUtc;
+                }
+            }
+
+            MarchVirtualUtcForwardToTargetRaisingClockEventsCore(marchTargetUtc);
+
+            if (!crossedBoundedStopHorizon)
+            {
+                return;
+            }
+
+            if (!CompleteBoundedRunFor(
+                    calledFromRunnerLoop,
+                    expectedBoundedRunGeneration: boundedRunGeneration,
+                    expectedStopHorizonUtc: boundedStopHorizonUtc))
+            {
+                continue;
+            }
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Marches virtual UTC forward to <paramref name="targetUtc"/> without bounded-run horizon handling.
+    /// </summary>
+    /// <param name="targetUtc">Virtual UTC instant to reach.</param>
+    private void MarchVirtualUtcForwardToTargetRaisingClockEventsCore (DateTimeOffset targetUtc)
     {
         while (true)
         {
@@ -1315,7 +1393,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
         for (int attemptNumber = 1; attemptNumber <= MaximumForwardMarchReconcilePasses; attemptNumber++)
         {
-            MarchVirtualUtcForwardToTargetRaisingClockEvents(utcTime);
+            MarchVirtualUtcForwardToTargetRaisingClockEventsFromExternalCaller(utcTime);
 
             lock (Gate)
             {
@@ -1375,7 +1453,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             targetUtc = ReadVirtualUtcNowLocked() + duration;
         }
 
-        MarchVirtualUtcForwardToTargetRaisingClockEvents(targetUtc);
+        MarchVirtualUtcForwardToTargetRaisingClockEventsFromExternalCaller(targetUtc);
 
         if (duration == TimeSpan.Zero)
         {
@@ -1423,6 +1501,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 else
                 {
                     startUtc = ReadVirtualUtcNowLocked();
+                    _runForBoundedGeneration++;
                     _runForStopUtc = startUtc + duration;
                     _runForBounded = true;
                     _runRate = perSecondRate;
@@ -1441,7 +1520,18 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
         if (zeroDuration)
         {
-            CompleteBoundedRunFor(calledFromRunnerLoop: false);
+            ulong boundedRunGeneration;
+            DateTimeOffset stopHorizonUtc;
+            lock (Gate)
+            {
+                boundedRunGeneration = _runForBoundedGeneration;
+                stopHorizonUtc = _runForStopUtc ?? ReadVirtualUtcNowLocked();
+            }
+
+            CompleteBoundedRunFor(
+                calledFromRunnerLoop: false,
+                expectedBoundedRunGeneration: boundedRunGeneration,
+                expectedStopHorizonUtc: stopHorizonUtc);
         }
         else
         {
@@ -1499,6 +1589,8 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// </returns>
     private bool TryCompleteBoundedRunFromRunnerLoop ()
     {
+        ulong boundedRunGeneration;
+        DateTimeOffset stopHorizonUtc;
         lock (Gate)
         {
             if (!InternalIsRunning || !_runForBounded || _runForStopUtc is not { } stopUtc)
@@ -1510,10 +1602,15 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             {
                 return false;
             }
+
+            boundedRunGeneration = _runForBoundedGeneration;
+            stopHorizonUtc = stopUtc;
         }
 
-        CompleteBoundedRunFor(calledFromRunnerLoop: true);
-        return true;
+        return CompleteBoundedRunFor(
+            calledFromRunnerLoop: true,
+            expectedBoundedRunGeneration: boundedRunGeneration,
+            expectedStopHorizonUtc: stopHorizonUtc);
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -1522,14 +1619,27 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/>.
     /// </summary>
     /// <param name="calledFromRunnerLoop">
-    ///   <see langword="true"/> when invoked from <see cref="RunLoop"/> on the runner thread (no self-join).
+    ///   <see langword="true"/> when invoked from <see cref="RunLoop"/> on the runner thread.
+    ///   Thread identity is also validated to prevent self-join if this hint is wrong.
     /// </param>
+    /// <param name="expectedBoundedRunGeneration">
+    ///   When set, completion proceeds only when <see cref="_runForBoundedGeneration"/> still matches this value.
+    /// </param>
+    /// <param name="expectedStopHorizonUtc">
+    ///   When <paramref name="expectedBoundedRunGeneration"/> is set, completion proceeds only when
+    ///   <see cref="_runForStopUtc"/> still equals this horizon and virtual time has reached it.
+    /// </param>
+    /// <returns>
+    ///   <see langword="true"/> when the bounded run was completed; otherwise <see langword="false"/>.
+    /// </returns>
     /// <exception cref="InvalidOperationException">
     ///   Thrown when the automatic runner thread could not be joined within <see cref="StopJoinTimeout"/>.
     /// </exception>
-    private void CompleteBoundedRunFor (bool calledFromRunnerLoop)
+    private bool CompleteBoundedRunFor (bool calledFromRunnerLoop, ulong? expectedBoundedRunGeneration = null,
+        DateTimeOffset? expectedStopHorizonUtc = null)
     {
         Thread? runningThread;
+        bool shouldJoinRunnerThread;
         TimeSpan? runRateTimeSpan;
         DateTimeOffset finalUtc;
 
@@ -1537,7 +1647,19 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         {
             if (!_runForBounded)
             {
-                return;
+                return false;
+            }
+
+            if (expectedBoundedRunGeneration is ulong expectedGeneration)
+            {
+                if (expectedStopHorizonUtc is not DateTimeOffset expectedStopHorizon
+                    || _runForBoundedGeneration != expectedGeneration
+                    || _runForStopUtc is not { } stopUtc
+                    || stopUtc != expectedStopHorizon
+                    || ReadVirtualUtcNowLocked() < expectedStopHorizon)
+                {
+                    return false;
+                }
             }
 
             runRateTimeSpan = _runRate;
@@ -1547,11 +1669,14 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             _runForStopUtc = null;
             _runAnchorStopwatch.Reset();
             _runnerWakeEvent.Set();
-            runningThread = calledFromRunnerLoop ? null : _runThread;
+            runningThread = _runThread;
+            shouldJoinRunnerThread = !calledFromRunnerLoop
+                && runningThread is not null
+                && !ReferenceEquals(Thread.CurrentThread, runningThread);
             _runThread = null;
         }
 
-        if (!calledFromRunnerLoop && runningThread is not null && !runningThread.Join(StopJoinTimeout))
+        if (shouldJoinRunnerThread && runningThread is not null && !runningThread.Join(StopJoinTimeout))
         {
             lock (Gate)
             {
@@ -1577,6 +1702,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
 
         RaiseClockStoppedEvent(finalUtc, runRateTimeSpan);
+        return true;
     }
     //----------------------------------------------------------------------------
     /// <summary>

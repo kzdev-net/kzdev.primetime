@@ -780,6 +780,370 @@ public class UsingIPrimeTestClock : UnitTestBase
     }
     //----------------------------------------------------------------------------
 
+    /// <summary>
+    ///   Verifies that when a bounded <see cref="IPrimeTestClock.RunFor"/> completes naturally on the automatic
+    ///   runner thread (without external <see cref="IPrimeTestClock.Advance"/> or set-time mutations), the clock stops
+    ///   cleanly and raises exactly one <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenRunnerLoopReachesStopHorizon_CompletesWithSingleClockStoppedAtHorizon ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromSeconds(10);
+        Instant runForStopInstant = initial + runForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            runForStopInstant,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for ClockStopped after runner-loop bounded completion.");
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that completing an active bounded <see cref="IPrimeTestClock.RunFor"/> via the external march path
+    ///   while executing on the automatic runner thread (for example <see cref="IPrimeTestClock.Advance"/> from a
+    ///   <see cref="IPrimeTestClock.ClockEvents"/> handler) does not self-join deadlock and raises exactly one
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenAdvanceFromClockEventsOnRunnerThread_CompletesWithSingleClockStoppedAtHorizon ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromMinutes(10);
+        Duration advanceDuration = Duration.FromMinutes(30);
+        Instant runForStopInstant = initial + runForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        object advanceFromRunnerCallbackSync = new();
+        bool advancedFromRunnerCallback = false;
+        Instant advanceTargetInstant = initial;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e.EventType != PrimeTestClockEventType.NewTime)
+            {
+                return;
+            }
+
+            lock (advanceFromRunnerCallbackSync)
+            {
+                if (advancedFromRunnerCallback)
+                {
+                    return;
+                }
+
+                advancedFromRunnerCallback = true;
+                advanceTargetInstant = clock.NowInstant + advanceDuration;
+            }
+
+            clock.Advance(advanceDuration);
+        };
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        WaitUntilCondition(
+            () =>
+            {
+                lock (advanceFromRunnerCallbackSync)
+                {
+                    return advancedFromRunnerCallback;
+                }
+            },
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for Advance from a ClockEvents handler on the runner thread.");
+        Instant expectedAdvanceTargetInstant;
+        lock (advanceFromRunnerCallbackSync)
+        {
+            expectedAdvanceTargetInstant = advanceTargetInstant;
+        }
+
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            expectedAdvanceTargetInstant,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for ClockStopped after bounded completion from a runner-thread ClockEvents callback.");
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that a second <see cref="IPrimeTestClock.RunFor"/> while the first bounded run is still active
+    ///   returns <c>false</c> and does not complete the first run at the wrong horizon when the first run is
+    ///   finished via <see cref="IPrimeTestClock.Advance"/>.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenSecondRunForWhileFirstActive_ReturnsFalseAndCompletesFirstRunAtHorizon ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration firstRunForDuration = Duration.FromMinutes(10);
+        Duration secondRunForDuration = Duration.FromMinutes(5);
+        Duration advancePastHorizon = Duration.FromMinutes(30);
+        Instant firstRunForStopInstant = initial + firstRunForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        object overlappingRunForSync = new();
+        bool attemptedOverlappingRunForFromHandler = false;
+        clock.ClockEvents += (_, e) =>
+        {
+            if (e.EventType != PrimeTestClockEventType.NewTime)
+            {
+                return;
+            }
+
+            lock (overlappingRunForSync)
+            {
+                if (attemptedOverlappingRunForFromHandler)
+                {
+                    return;
+                }
+
+                attemptedOverlappingRunForFromHandler = true;
+            }
+
+            clock.RunFor(
+                    secondRunForDuration,
+                    Duration.FromTimeSpan(RunForTestFastPerSecondRate))
+                .Should()
+                .BeFalse();
+        };
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(firstRunForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.RunFor(secondRunForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeFalse();
+        WaitUntilCondition(
+            () =>
+            {
+                lock (overlappingRunForSync)
+                {
+                    return attemptedOverlappingRunForFromHandler;
+                }
+            },
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for overlapping RunFor attempt from a ClockEvents handler.");
+        clock.Advance(advancePastHorizon);
+        Instant advanceTargetInstant = clock.NowInstant;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            advanceTargetInstant,
+            firstRunForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that two sequential bounded <see cref="IPrimeTestClock.RunFor"/> runs each raise exactly one
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at that run's stop horizon and do not complete the other
+    ///   run's generation.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenTwoSequentialBoundedRuns_EachRaisesClockStoppedAtOwnHorizon ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration firstRunForDuration = Duration.FromMinutes(10);
+        Duration secondRunForDuration = Duration.FromMinutes(5);
+        Duration advancePastHorizon = Duration.FromMinutes(30);
+        Instant firstRunForStopInstant = initial + firstRunForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(firstRunForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.Advance(advancePastHorizon);
+        Instant afterFirstRunCommittedInstant = clock.NowInstant;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            afterFirstRunCommittedInstant,
+            firstRunForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+        Instant secondRunStartInstant = clock.NowInstant;
+        Instant secondRunForStopInstant = secondRunStartInstant + secondRunForDuration;
+        clock.RunFor(secondRunForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.Advance(advancePastHorizon);
+        Instant afterSecondRunCommittedInstant = clock.NowInstant;
+        WaitUntilCondition(
+            () => collector.Snapshot().Count(e => e.EventType == PrimeTestClockEventType.ClockStopped) == 2,
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for ClockStopped from the second bounded RunFor.");
+        clock.IsRunning.Should().BeFalse();
+        clock.NowInstant.Should().Be(afterSecondRunCommittedInstant);
+        List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+        snapshot.Count(e => e.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(2);
+        PrimeTestClockStoppedEvent[] stoppedEvents = [.. snapshot.OfType<PrimeTestClockStoppedEvent>()];
+        stoppedEvents[0].ClockInstant.Should().Be(firstRunForStopInstant);
+        stoppedEvents[1].ClockInstant.Should().Be(secondRunForStopInstant);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that when two concurrent <see cref="IPrimeTestClock.Advance"/> calls both cross an active
+    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon, bounded completion is committed exactly once, one competing
+    ///   completion path safely returns without duplicating <see cref="PrimeTestClockEventType.ClockStopped"/>, and both
+    ///   callers make forward progress.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenConcurrentAdvanceCallsRaceAcrossStopHorizon_RaisesSingleClockStoppedAndMakesProgress ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromHours(6);
+        Duration advanceDuration = Duration.FromHours(12);
+        Instant runForStopInstant = initial + runForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        using ManualResetEventSlim releaseConcurrentAdvances = new(false);
+        int readyAdvanceCallers = 0;
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        Task advanceCallerOne = Task.Run(() =>
+        {
+            Interlocked.Increment(ref readyAdvanceCallers);
+            releaseConcurrentAdvances.Wait(cancellationToken);
+            clock.Advance(advanceDuration);
+        }, cancellationToken);
+        Task advanceCallerTwo = Task.Run(() =>
+        {
+            Interlocked.Increment(ref readyAdvanceCallers);
+            releaseConcurrentAdvances.Wait(cancellationToken);
+            clock.Advance(advanceDuration);
+        }, cancellationToken);
+        WaitUntilCondition(
+            () => Volatile.Read(ref readyAdvanceCallers) == 2,
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for concurrent Advance callers to be ready.");
+        releaseConcurrentAdvances.Set();
+        Task.WaitAll([advanceCallerOne, advanceCallerTwo], cancellationToken);
+        WaitUntilCondition(
+            () => collector.Snapshot().Count(e => e.EventType == PrimeTestClockEventType.ClockStopped) == 1,
+            RunForTestWaitTimeout,
+            cancellationToken,
+            "Timed out waiting for bounded completion after concurrent Advance calls.");
+        clock.IsRunning.Should().BeFalse();
+        clock.NowInstant.Should().BeGreaterThan(initial);
+        List<PrimeTestClockEvent> snapshot = collector.Snapshot();
+        snapshot.Count(e => e.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(1);
+        PrimeTestClockStoppedEvent stoppedEvent = snapshot.OfType<PrimeTestClockStoppedEvent>().Should().ContainSingle().Subject;
+        stoppedEvent.ClockInstant.Should().Be(runForStopInstant);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> past an active <see cref="IPrimeTestClock.RunFor"/>
+    ///   stop horizon raises <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock
+    ///   stopped, and commits the <see cref="IPrimeTestClock.Advance"/> target instant.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenAdvancePassesStopHorizon_StopsAtHorizonAndReachesAdvanceTarget ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromMinutes(10);
+        Duration advanceDuration = Duration.FromMinutes(30);
+        Instant runForStopInstant = initial + runForDuration;
+        Instant advanceTargetInstant = initial + advanceDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.Advance(advanceDuration);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            advanceTargetInstant,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> to exactly the active
+    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenAdvanceReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromMinutes(10);
+        Instant runForStopInstant = initial + runForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.Advance(runForDuration);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            runForStopInstant,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that forward <see cref="IPrimeTestClock.SetInstant"/> past an active
+    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon raises
+    ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock stopped, and commits the
+    ///   requested instant.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenSetInstantPassesStopHorizon_StopsAtHorizonAndReachesSetInstantTarget ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromMinutes(10);
+        Instant runForStopInstant = initial + runForDuration;
+        Instant setInstantTarget = initial + Duration.FromMinutes(45);
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.SetInstant(setInstantTarget);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            setInstantTarget,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that forward <see cref="IPrimeTestClock.SetInstant"/> to exactly the active
+    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    /// </summary>
+    [Fact]
+    public void RunFor_WhenSetInstantReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
+    {
+        Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
+        Duration runForDuration = Duration.FromMinutes(10);
+        Instant runForStopInstant = initial + runForDuration;
+        IPrimeTestClock clock = new PrimeTestClock(initial);
+        using ClockEventCollector collector = new(clock);
+        clock.RunFor(runForDuration, Duration.FromTimeSpan(RunForTestFastPerSecondRate)).Should().BeTrue();
+        clock.SetInstant(runForStopInstant);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
+            clock,
+            collector,
+            runForStopInstant,
+            runForStopInstant,
+            RunForTestWaitTimeout,
+            cancellationToken);
+    }
+    //----------------------------------------------------------------------------
+
     #endregion RunFor
 
     #region Start and Stop
