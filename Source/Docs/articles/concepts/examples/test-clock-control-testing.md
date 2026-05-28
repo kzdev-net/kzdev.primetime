@@ -7,7 +7,7 @@
 | **`SetTime`** / **`SetInstant`** | Set virtual UTC time; **forward** targets march through due delays, expiries, and timers; **backward** targets follow the rules below. |
 | **`SetLocalTime`** | Set virtual time from a local wall-clock value (lenient DST mapping); same forward/backward semantics as **`SetTime`** after resolving to UTC. |
 | **`Advance`** | Step virtual time forward by marching to each due instant; callbacks see that instant in **`UtcNow`** / **`NowInstant`**. |
-| **`RunFor`** | Same effect as a single **`Advance`** step of the same length. |
+| **`RunFor`** | Start a bounded automatic runner that advances virtual time until a stop horizon, then stops and raises lifecycle events. |
 | **`Start`** / **`Stop`** | Toggle the deadline-driven automatic runner; **`IsRunning`** reflects the state. |
 
 ## System Clock stack
@@ -25,14 +25,18 @@
 - **`ClockEvents`** fires **once per distinct** virtual instant visited during the march.
 - Negative **`Advance`** duration is treated as zero (no backward move).
 
-## Automatic runner (`Start` / `Stop`)
+## Automatic runner (`Start` / `Stop` / `RunFor`)
 
-- **`Start(rate)`** runs a background loop that waits for the **next virtual deadline** among pending delays, time expiries, timers, and a **virtual one-minute `ClockEvents` heartbeat** when no other work is due. Virtual delay is mapped to real time using **`rate`** (virtual time per real second).
+- **`Start(perSecondRate)`** runs a background loop that waits for the **next virtual deadline** among pending delays, time expiries, timers, and a **virtual one-minute `ClockEvents` heartbeat** when no other work is due. Virtual delay is mapped to real time using **`perSecondRate`** (virtual time per real second).
 - **Run rate** must be between **100 ms** and **1 hour** of virtual time per real second (inclusive), or **`ArgumentOutOfRangeException`** is thrown. **`null`** means 1:1.
 - The runner does **not** poll every real second. Intended real sleeps **shorter than 15 ms** are skipped in favor of in-process virtual bursts until the next sleep would be at least 15 ms.
 - After a real wait, virtual catch-up uses **measured** anchor elapsed time × rate (oversleep produces extra virtual progress), not only the intended timeout.
 - Registering new delays, timers, or time expiries, cancelling work, **`Stop`**, or a **persist-on-read** from a "now" getter can **wake** the runner so sooner deadlines are not missed.
 - **`Stop()`** stops the runner, clears the anchor, and returns **`true`** if the clock was running. "Now" getters then return the **persisted** instant only (no projection).
+- **`RunFor(duration)`** starts a bounded run at a default 1:1 rate and returns immediately.
+- **`RunFor(duration, perSecondRate)`** starts a bounded run at the supplied rate and returns **`true`** when the run starts, or **`false`** when the clock is already running.
+- `RunFor` uses **virtual** duration (negative treated as zero); completion raises **`ClockStopped`** when the stop horizon is reached.
+- To wait for bounded completion in tests, observe **`IsRunning`** and/or subscribe to **`ClockStopped`**.
 
 ## "Now" while running (projection and persist-on-read)
 
@@ -52,7 +56,7 @@
 
 - Use **`Advance`** or forward **`SetTime`** when you need intermediate timer and delay callbacks on the path to a target instant.
 - **`SetLocalTime`** maps a local wall time in the clock's zone; spring-forward gaps and fall-back overlaps use lenient mapping consistent with production day-time scheduling.
-- **`RunFor`** is a synonym for **`Advance`** on the same time argument.
+- **`Advance`** is a synchronous deterministic march, while **`RunFor`** is a non-blocking bounded automatic runner.
 
 ## Related
 

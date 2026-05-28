@@ -46,19 +46,37 @@ public sealed class UsingPrimeTestClockControlExamples
     }
 
     /// <summary>
-    /// Verifies <see cref="IPrimeTestClock.RunFor"/> advances virtual time the same way as a single
-    /// <see cref="IPrimeTestClock.Advance(NodaTime.Duration)"/> step of the same length.
+    /// Verifies <see cref="IPrimeTestClock.RunFor"/> starts a bounded automatic run and
+    /// returns immediately, with the caller waiting for completion by observing
+    /// <see cref="IPrimeTestClock.ClockEvents"/> for <see cref="PrimeTestClockEventType.ClockStopped"/>.
     /// </summary>
     [Fact]
-    public void TestClock_RunFor_Duration_MatchesAdvanceStep ()
+    public void TestClock_RunFor_Duration_WaitsForBoundedCompletion ()
     {
         Instant start = Instant.FromUtc(2025, 2, 1, 0, 0, 0);
-        IPrimeTestClock clockA = new PrimeTestClock(start);
-        IPrimeTestClock clockB = new PrimeTestClock(start);
+        IPrimeTestClock clock = new PrimeTestClock(start);
         Duration step = Duration.FromMinutes(40);
-        clockA.Advance(step);
-        clockB.RunFor(step);
-        clockA.NowInstant.Should().Be(clockB.NowInstant);
+        using ManualResetEventSlim stoppedSignal = new(initialState: false);
+        clock.ClockEvents += OnClockEvent;
+        try
+        {
+            bool started = clock.RunFor(step, Duration.FromHours(1));
+            started.Should().BeTrue();
+            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5));
+            stopped.Should().BeTrue();
+        }
+        finally
+        {
+            clock.ClockEvents -= OnClockEvent;
+        }
+
+        clock.NowInstant.Should().Be(start + step);
+
+        void OnClockEvent (object? _, PrimeTestClockEvent clockEvent)
+        {
+            if (clockEvent.EventType == PrimeTestClockEventType.ClockStopped)
+                stoppedSignal.Set();
+        }
     }
 
     /// <summary>

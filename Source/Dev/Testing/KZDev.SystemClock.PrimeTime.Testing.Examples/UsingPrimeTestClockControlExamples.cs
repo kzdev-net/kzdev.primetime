@@ -28,19 +28,38 @@ public sealed class UsingPrimeTestClockControlExamples
     }
 
     /// <summary>
-    /// Verifies <see cref="IPrimeTestClock.RunFor(System.TimeSpan)"/> advances virtual time the same
-    /// way as a single <see cref="IPrimeTestClock.Advance(System.TimeSpan)"/> step of the same length.
+    /// Verifies <see cref="IPrimeTestClock.RunFor(System.TimeSpan,System.TimeSpan)"/> starts a bounded
+    /// automatic run and returns immediately, with the caller waiting for completion by observing
+    /// <see cref="IPrimeTestClock.ClockEvents"/> for <see cref="PrimeTestClockEventType.ClockStopped"/>.
     /// </summary>
     [Fact]
-    public void TestClock_RunFor_TimeSpan_MatchesAdvanceStep ()
+    public void TestClock_RunFor_TimeSpan_WaitsForBoundedCompletion ()
     {
         DateTimeOffset start = new DateTimeOffset(2025, 2, 1, 0, 0, 0, TimeSpan.Zero);
-        IPrimeTestClock clockA = new PrimeTestClock(start);
-        IPrimeTestClock clockB = new PrimeTestClock(start);
+        IPrimeTestClock clock = new PrimeTestClock(start);
         TimeSpan step = TimeSpan.FromMinutes(40);
-        clockA.Advance(step);
-        clockB.RunFor(step);
-        clockA.UtcNowDateTimeOffset.Should().Be(clockB.UtcNowDateTimeOffset);
+        using ManualResetEventSlim stoppedSignal = new(initialState: false);
+        clock.ClockEvents += OnClockEvent;
+        try
+        {
+            bool started = clock.RunFor(step, TimeSpan.FromHours(1));
+            started.Should().BeTrue();
+            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5));
+            stopped.Should().BeTrue("bounded RunFor should publish ClockStopped before timeout");
+            clock.IsRunning.Should().BeFalse("clock should not remain running after ClockStopped");
+        }
+        finally
+        {
+            clock.ClockEvents -= OnClockEvent;
+        }
+
+        clock.UtcNowDateTimeOffset.Should().Be(start + step);
+
+        void OnClockEvent (object? _, PrimeTestClockEvent clockEvent)
+        {
+            if (clockEvent.EventType == PrimeTestClockEventType.ClockStopped)
+                stoppedSignal.Set();
+        }
     }
 
     /// <summary>

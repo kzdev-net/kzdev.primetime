@@ -44,10 +44,11 @@ Both stacks can expose a **`TimeProvider`** that delegates to an **`IPrimeClock`
 
 ## Test clock runner and marching
 
-**`PrimeTestClock`** can advance time in two ways:
+**`PrimeTestClock`** can advance time in three ways:
 
-1. **Explicit control** — **`Advance`** / **`RunFor`** and forward **`SetTime`** / **`SetInstant`** / **`SetLocalTime`** march virtual time to each earliest due instant, dispatch delays, time expiries, and timers at that instant, and raise **`ClockEvents`** once per distinct virtual instant visited. Timer callbacks see **`UtcNow`** / **`NowInstant`** at the firing instant, not only the final horizon.
-2. **Automatic runner** — **`Start(rate)`** runs a background loop that waits for the next virtual deadline (including a **virtual one-minute `ClockEvents` heartbeat** when idle), scales wait duration by **`rate`**, and catches up using **measured** real elapsed time after each wait. Run rate must be between **100 ms** and **1 hour** of virtual time per real second (inclusive).
+1. **Explicit control** — **`Advance`** and forward **`SetTime`** / **`SetInstant`** / **`SetLocalTime`** synchronously march virtual time to each earliest due instant, dispatch delays, time expiries, and timers at that instant, and raise **`ClockEvents`** once per distinct virtual instant visited. Timer callbacks see **`UtcNow`** / **`NowInstant`** at the firing instant, not only the final horizon.
+2. **Automatic runner** — **`Start(perSecondRate)`** runs an unbounded background loop that waits for the next virtual deadline (including a **virtual one-minute `ClockEvents` heartbeat** when idle), scales wait duration by **`perSecondRate`**, and catches up using **measured** real elapsed time after each wait. Run rate must be between **100 ms** and **1 hour** of virtual time per real second (inclusive).
+3. **Bounded automatic runner** — **`RunFor(duration)`** and **`RunFor(duration, perSecondRate)`** start automatic progression immediately and return without blocking. The run stops when virtual time reaches the stop horizon and raises **`ClockStopped`**.
 
 While the runner is active:
 

@@ -9,7 +9,7 @@ namespace KZDev.SystemClock.PrimeTime;
 ///   components depending on <see cref="TimeProvider"/> (e.g. <see cref="TimeProvider.GetUtcNow"/>,
 ///   <see cref="TimeProvider.CreateTimer"/>) use the PrimeTime clock. When the clock is a
 ///   test clock from the KZDev.SystemClock.PrimeTime.Testing package, time and timers are
-///   driven by virtual-time operations (SetTime, Advance, and RunFor) for deterministic tests.
+///   driven by virtual-time control operations (SetTime, Advance, Start/Stop, and RunFor) for deterministic tests.
 /// </summary>
 internal sealed class PrimeClockTimeProviderAdapter : TimeProvider
 {
