@@ -44,7 +44,7 @@ public sealed class UsingPrimeTestClockControlExamples
         {
             bool started = clock.RunFor(step, TimeSpan.FromHours(1));
             started.Should().BeTrue();
-            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5));
+            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             stopped.Should().BeTrue("bounded RunFor should publish ClockStopped before timeout");
             clock.IsRunning.Should().BeFalse("clock should not remain running after ClockStopped");
         }

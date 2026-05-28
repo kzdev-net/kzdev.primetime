@@ -62,7 +62,7 @@ public sealed class UsingPrimeTestClockControlExamples
         {
             bool started = clock.RunFor(step, Duration.FromHours(1));
             started.Should().BeTrue();
-            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5));
+            bool stopped = stoppedSignal.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             stopped.Should().BeTrue();
         }
         finally
