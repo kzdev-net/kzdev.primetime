@@ -57,8 +57,8 @@ public class UsingSystemClockSubsetContract : UnitTestBase
             ? null
             :
             [.. excludeSubsetPropertyAccessorNames.Select(static n => "get_" + n)];
-        const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-        MethodInfo[] subsetMethods = subsetInterface.GetMethods(flags);
+        const BindingFlags Flags = BindingFlags.Public | BindingFlags.Instance;
+        MethodInfo[] subsetMethods = subsetInterface.GetMethods(Flags);
         foreach (MethodInfo subsetMethod in subsetMethods)
         {
             if (excludeAccessorMethodNames != null && subsetMethod.IsSpecialName
@@ -67,7 +67,7 @@ public class UsingSystemClockSubsetContract : UnitTestBase
                 continue;
             }
 
-            MethodInfo? match = FindMatchingMethod(supersetInterface, subsetMethod, flags);
+            MethodInfo? match = FindMatchingMethod(supersetInterface, subsetMethod, Flags);
             match.Should().NotBeNull(
                 $"Full package {supersetInterface.Name} should declare a method matching SystemClock {subsetInterface.Name}.{DescribeMethod(subsetMethod)}");
         }
@@ -89,8 +89,8 @@ public class UsingSystemClockSubsetContract : UnitTestBase
             ? null
             :
             [.. excludeSubsetPropertyNames];
-        const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-        foreach (PropertyInfo subsetProp in subsetInterface.GetProperties(flags))
+        const BindingFlags Flags = BindingFlags.Public | BindingFlags.Instance;
+        foreach (PropertyInfo subsetProp in subsetInterface.GetProperties(Flags))
         {
             ParameterInfo[] indexParameters = subsetProp.GetIndexParameters();
             if (indexParameters.Length > 0)
@@ -103,10 +103,10 @@ public class UsingSystemClockSubsetContract : UnitTestBase
                 continue;
             }
 
-            PropertyInfo? superProp = supersetInterface.GetProperty(subsetProp.Name, flags);
+            PropertyInfo? superProp = supersetInterface.GetProperty(subsetProp.Name, Flags);
             superProp.Should().NotBeNull(
                 $"Full package {supersetInterface.Name} should declare property {subsetProp.Name} present on SystemClock {subsetInterface.Name}");
-            TypesMatchAcrossProductAssemblies(subsetProp.PropertyType, superProp!.PropertyType).Should().BeTrue(
+            TypesMatchAcrossProductAssemblies(subsetProp.PropertyType, superProp.PropertyType).Should().BeTrue(
                 $"property {subsetProp.Name} type should match between SystemClock and full-package contracts");
         }
     }
@@ -242,12 +242,12 @@ public class UsingSystemClockSubsetContract : UnitTestBase
             return false;
         }
 
-        const string systemClockNs = "KZDev.SystemClock.PrimeTime";
-        const string fullPackageNs = "KZDev.PrimeTime";
+        const string SystemClockNs = "KZDev.SystemClock.PrimeTime";
+        const string FullPackageNs = "KZDev.PrimeTime";
         bool subsetIsSystemClock = subsetNs != null
-            && IsNamespaceUnderRoot(subsetNs, systemClockNs);
+            && IsNamespaceUnderRoot(subsetNs, SystemClockNs);
         bool superIsFullPackage = superNs != null
-            && IsNamespaceUnderRoot(superNs, fullPackageNs);
+            && IsNamespaceUnderRoot(superNs, FullPackageNs);
         if (subsetIsSystemClock && superIsFullPackage)
         {
             return true;

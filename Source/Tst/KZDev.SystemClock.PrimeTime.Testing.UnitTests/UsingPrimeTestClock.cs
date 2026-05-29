@@ -48,10 +48,12 @@ public class UsingPrimeTestClock : UnitTestBase
     private static readonly TimeSpan ClockRunningProjectionTestWallDelay = TimeSpan.FromMilliseconds(250);
 
     /// <summary>
-    ///   Virtual-time assertion margin for runner projection tests: separate stopwatch instances,
-    ///   imprecise <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, and reads after wall stop.
+    ///   Virtual-time assertion margin for runner projection tests: the run anchor starts inside
+    ///   <see cref="PrimeTestClock.Start(TimeSpan?)"/> before the wall <see cref="Stopwatch"/> begins, separate
+    ///   stopwatch instances, imprecise <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, and persist-on-read
+    ///   work while the runner is active under parallel scheduling.
     /// </summary>
-    private static readonly TimeSpan ClockRunningProjectionVirtualTolerance = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan ClockRunningProjectionVirtualTolerance = TimeSpan.FromMilliseconds(150);
 
     /// <summary>
     ///   Real wall delay before persist-on-read in delay-due tests: slightly exceeds the ~500 ms real time
@@ -1073,9 +1075,10 @@ public class UsingPrimeTestClock : UnitTestBase
     ///     Expected virtual time is computed from a wall <see cref="Stopwatch"/> around the same real delay, using the
     ///     same virtual-per-real-second scaling as the clock (not a fixed nominal delay), so slow or parallel test
     ///     scheduling does not skew the assertion. A small fixed virtual tolerance remains for residual skew: the
-    ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch, <see cref="Task.Delay"/> does
-    ///     not guarantee exact wall duration, and the clock may advance slightly between <c>Stop()</c> on the wall
-    ///     timer and the <see cref="IPrimeClock.UtcNowDateTimeOffset"/> read.
+    ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch and starts before the wall
+    ///     timer begins, <see cref="Task.Delay"/> does not guarantee exact wall duration, and persist-on-read on
+    ///     <see cref="IPrimeClock.UtcNowDateTimeOffset"/> is measured before the wall timer stops so post-read
+    ///     scheduling does not inflate the observed instant.
     ///   </para>
     /// </remarks>
     [Fact]
@@ -1087,8 +1090,8 @@ public class UsingPrimeTestClock : UnitTestBase
         clock.Start(runRate);
         Stopwatch wall = Stopwatch.StartNew();
         await Task.Delay(ClockRunningProjectionTestWallDelay, TestContext.Current.CancellationToken);
-        wall.Stop();
         DateTimeOffset observed = clock.UtcNowDateTimeOffset;
+        wall.Stop();
         clock.Stop().Should().BeTrue();
         TimeSpan virtualElapsedFromWall = PrimeTestClock.ScaleRealElapsedToVirtualTime(wall.Elapsed, runRate);
         DateTimeOffset expectedFromWall = initial + virtualElapsedFromWall;

@@ -48,10 +48,12 @@ public class UsingIPrimeTestClock : UnitTestBase
     private static readonly TimeSpan ClockRunningProjectionTestWallDelay = TimeSpan.FromMilliseconds(250);
 
     /// <summary>
-    ///   Virtual-time assertion margin for runner projection tests: separate stopwatch instances,
-    ///   imprecise <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, and reads after wall stop.
+    ///   Virtual-time assertion margin for runner projection tests: the run anchor starts inside
+    ///   <see cref="PrimeTestClock.Start(NodaTime.Duration?)"/> before the wall <see cref="Stopwatch"/> begins,
+    ///   separate stopwatch instances, imprecise <see cref="Task.Delay(TimeSpan, CancellationToken)"/>, and
+    ///   persist-on-read work while the runner is active under parallel scheduling.
     /// </summary>
-    private static readonly Duration ClockRunningProjectionVirtualTolerance = Duration.FromMilliseconds(100);
+    private static readonly Duration ClockRunningProjectionVirtualTolerance = Duration.FromMilliseconds(150);
 
     /// <summary>
     ///   Real wall delay before persist-on-read in delay-due tests: slightly exceeds the ~500 ms real time
@@ -1302,10 +1304,10 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///     Expected virtual time is computed from a wall <see cref="Stopwatch"/> around the same real delay, using the
     ///     same virtual-per-real-second scaling as the clock (not a fixed nominal delay), so slow or parallel test
     ///     scheduling does not skew the assertion. A small fixed virtual tolerance remains for residual skew: the
-    ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch,
-    ///     <see cref="Task.Delay(TimeSpan, CancellationToken)"/> does not guarantee exact wall duration, 
-    ///     and the clock may advance slightly between <c>Stop()</c> on the wall
-    ///     timer and the <see cref="IPrimeTestClock.NowInstant"/> read.
+    ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch and starts before the wall
+    ///     timer begins, <see cref="Task.Delay(TimeSpan, CancellationToken)"/> does not guarantee exact wall duration,
+    ///     and persist-on-read on <see cref="IPrimeTestClock.NowInstant"/> is measured before the wall timer stops so
+    ///     post-read scheduling does not inflate the observed instant.
     ///   </para>
     /// </remarks>
     [Fact]
@@ -1317,8 +1319,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         clock.Start(runRate);
         Stopwatch wall = Stopwatch.StartNew();
         await Task.Delay(ClockRunningProjectionTestWallDelay, TestContext.Current.CancellationToken);
-        wall.Stop();
         Instant observed = clock.NowInstant;
+        wall.Stop();
         clock.Stop().Should().BeTrue();
         TimeSpan virtualElapsedFromWall =
             PrimeTestClock.ScaleRealElapsedToVirtualTime(wall.Elapsed, runRate.ToTimeSpan());
@@ -1963,6 +1965,11 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   Runs <see cref="IPrimeTestClock.Stop"/> and <see cref="IPrimeTestClock.Start"/> concurrently so
     ///   <c>Start</c> begins only after <c>Stop</c> has entered the runner-join phase.
     /// </summary>
+    /// <remarks>
+    ///   Holds the automatic runner inside a blocking timer callback before <c>Stop</c> is invoked so
+    ///   <see cref="PrimeTestClock.TestRunnerStopJoinPhaseEntered"/> remains set for the duration of the join
+    ///   (polling with <c>Wait(0)</c> can miss the brief set/reset window under parallel test scheduling).
+    /// </remarks>
     /// <param name="clock">Clock that is already running.</param>
     /// <param name="runRate">Run rate for the overlapping <c>Start</c>.</param>
     /// <param name="cancellationToken">Cancellation token for the test run.</param>
@@ -1972,37 +1979,35 @@ public class UsingIPrimeTestClock : UnitTestBase
         Duration runRate,
         CancellationToken cancellationToken)
     {
-        using ManualResetEventSlim joinPhaseObserverActive = new(initialState: false);
-        Task<bool> observeJoinPhaseTask = Task.Factory.StartNew(
-            () =>
-            {
-                joinPhaseObserverActive.Set();
-                Stopwatch coordinationElapsed = Stopwatch.StartNew();
-                while (coordinationElapsed.Elapsed < ConcurrentStopStartCoordinationTimeout)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (clock.TestRunnerStopJoinPhaseEntered.Wait(0, cancellationToken))
-                        return true;
+        using ManualResetEventSlim runnerEnteredBlockingCallback = new(initialState: false);
+        using ManualResetEventSlim releaseRunner = new(initialState: false);
+        using IClockIntervalTimer blockingTimer = RegisterRunnerBlockingTimer(clock,
+            runnerEnteredBlockingCallback,
+            releaseRunner,
+            cancellationToken);
+        try
+        {
+            bool runnerBlockedInCallback = runnerEnteredBlockingCallback.Wait(
+                RunnerBlockedInCallbackWaitTimeout,
+                cancellationToken);
+            runnerBlockedInCallback.Should().BeTrue(
+                "the automatic runner should enter the blocking timer callback before Stop is invoked.");
 
-                    Thread.SpinWait(100);
-                }
-
-                return false;
-            },
-            cancellationToken,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default);
-
-        while (!joinPhaseObserverActive.Wait(0, cancellationToken))
-            Thread.SpinWait(50);
-
-        Task<bool> stopTask = Task.Run(clock.Stop, cancellationToken);
-        bool stopJoinPhaseEntered = await observeJoinPhaseTask;
-        stopJoinPhaseEntered.Should().BeTrue(
-            "Stop should enter the runner-join phase before the coordination wait times out.");
-        Task startTask = Task.Run(() => clock.Start(runRate), cancellationToken);
-        await Task.WhenAll(stopTask, startTask);
-        return await stopTask;
+            Task<bool> stopTask = Task.Run(clock.Stop, cancellationToken);
+            bool stopJoinPhaseEntered = clock.TestRunnerStopJoinPhaseEntered.Wait(
+                ConcurrentStopStartCoordinationTimeout,
+                cancellationToken);
+            stopJoinPhaseEntered.Should().BeTrue(
+                "Stop should enter the runner-join phase before the coordination wait times out.");
+            Task startTask = Task.Run(() => clock.Start(runRate), cancellationToken);
+            releaseRunner.Set();
+            await Task.WhenAll(stopTask, startTask);
+            return await stopTask;
+        }
+        finally
+        {
+            releaseRunner.Set();
+        }
     }
 
     //----------------------------------------------------------------------------

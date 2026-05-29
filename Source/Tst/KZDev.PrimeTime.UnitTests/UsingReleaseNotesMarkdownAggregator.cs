@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+#if NET10_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -83,9 +84,9 @@ public class UsingReleaseNotesMarkdownAggregator
     [Fact]
     public void ExtractVersionSection_WhenVersionMissing_ThrowsReleaseNotesAggregationException ()
     {
-        const string fileContent = "## Version 1.0.0\n\n### Added\n- x\n";
+        const string FileContent = "## Version 1.0.0\n\n### Added\n- x\n";
         Action act = () => ReleaseNotesMarkdownAggregator.ExtractVersionSection(
-            fileContent,
+            FileContent,
             "2.0.0",
             "TestPackage",
             "test.md");
@@ -143,3 +144,4 @@ public class UsingReleaseNotesMarkdownAggregator
     }
 }
 //################################################################################
+#endif

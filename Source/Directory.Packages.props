@@ -4,7 +4,7 @@
    -->
   <ItemGroup Label="PackageVersions">
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
   </ItemGroup>
   <ItemGroup>
@@ -16,10 +16,10 @@
     net481 test targets and any consumer that references the package explicitly.
   -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.8" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 </Project>

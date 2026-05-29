@@ -1,18 +1,15 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
-using System.Threading;
-using System.Threading.Tasks;
 
 using AwesomeAssertions;
+
 using KZDev.PrimeTime.Observability;
 using KZDev.PrimeTime.Tests;
-
-using Xunit;
 // ReSharper disable AccessToDisposedClosure
+
 
 namespace KZDev.PrimeTime.UnitTests;
 
@@ -38,8 +35,8 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     /// </summary>
     private sealed class PrimeTimeTestEventListener : EventListener
     {
-        private const int EventId_ClockTimerUseAfterDispose = 3;
-        private const int EventId_ClockTimerCallbackException = 6;
+        private const int EventIdClockTimerUseAfterDispose = 3;
+        private const int EventIdClockTimerCallbackException = 6;
 
         private readonly string _providerName;
 
@@ -120,7 +117,7 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                 return;
             }
 
-            if (eventData.EventId == EventId_ClockTimerUseAfterDispose)
+            if (eventData.EventId == EventIdClockTimerUseAfterDispose)
             {
                 if (_clockTimerUseAfterDisposeOperation is not null)
                 {
@@ -138,7 +135,7 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
 
                 Interlocked.Increment(ref ClockTimerUseAfterDisposeCount);
             }
-            else if (eventData.EventId == EventId_ClockTimerCallbackException)
+            else if (eventData.EventId == EventIdClockTimerCallbackException)
             {
                 if (_clockTimerCallbackExceptionTimerCategory is not null)
                 {
@@ -227,10 +224,10 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     [Fact]
     public void ClockTimerCallbackException_DirectCall_IsObservedByListener ()
     {
-        const string exceptionMarker = "ClockTimerCallbackException_DirectCall_IsObservedByListener probe";
+        const string ExceptionMarker = "ClockTimerCallbackException_DirectCall_IsObservedByListener probe";
         using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval",
-            clockTimerCallbackExceptionDetailContains: exceptionMarker);
-        PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", new InvalidOperationException(exceptionMarker));
+            clockTimerCallbackExceptionDetailContains: ExceptionMarker);
+        PrimeTimeEventSource.Log.ClockTimerCallbackException("Interval", new InvalidOperationException(ExceptionMarker));
         listener.ClockTimerCallbackExceptionCount.Should().Be(1);
     }
     //----------------------------------------------------------------------------
@@ -240,10 +237,10 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     [Fact]
     public void IntervalTimer_CallbackThrows_RecordsClockTimerCallbackExceptionEvent ()
     {
-        const string exceptionMarker = "IntervalTimer_CallbackThrows_RecordsClockTimerCallbackExceptionEvent";
+        const string ExceptionMarker = "IntervalTimer_CallbackThrows_RecordsClockTimerCallbackExceptionEvent";
         using ManualResetEventSlim callbackEntered = new(false);
         using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval",
-            clockTimerCallbackExceptionDetailContains: exceptionMarker);
+            clockTimerCallbackExceptionDetailContains: ExceptionMarker);
         IPrimeClock clock = new PrimeClock();
         using (IClockIntervalTimer registration = clock.RegisterTimer(
                    TimeSpan.FromMilliseconds(1),
@@ -251,7 +248,7 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                    _ =>
                    {
                        callbackEntered.Set();
-                       throw new InvalidOperationException(exceptionMarker);
+                       throw new InvalidOperationException(ExceptionMarker);
                    },
                    TestContext.Current.CancellationToken))
         {
@@ -268,10 +265,10 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
     [Fact]
     public void IntervalTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent ()
     {
-        const string exceptionMarker = "IntervalTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent";
+        const string ExceptionMarker = "IntervalTimer_AsyncCallbackFaultsAsync_RecordsClockTimerCallbackExceptionEvent";
         using ManualResetEventSlim callbackEntered = new(false);
         using PrimeTimeTestEventListener listener = new("KZDev.PrimeTime", "Interval",
-            clockTimerCallbackExceptionDetailContains: exceptionMarker);
+            clockTimerCallbackExceptionDetailContains: ExceptionMarker);
         IPrimeClock clock = new PrimeClock();
         using (IClockIntervalTimer registration = clock.RegisterAsyncTimer(
                    TimeSpan.FromMilliseconds(1),
@@ -279,7 +276,7 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                    {
                        callbackEntered.Set();
                        await Task.Yield();
-                       throw new InvalidOperationException(exceptionMarker);
+                       throw new InvalidOperationException(ExceptionMarker);
                    },
                    TestContext.Current.CancellationToken))
         {
