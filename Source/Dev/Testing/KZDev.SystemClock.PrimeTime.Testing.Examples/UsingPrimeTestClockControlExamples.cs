@@ -54,6 +54,7 @@ public sealed class UsingPrimeTestClockControlExamples
         }
 
         clock.UtcNowDateTimeOffset.Should().Be(start + step);
+        return;
 
         void OnClockEvent (object? _, PrimeTestClockEvent clockEvent)
         {

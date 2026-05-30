@@ -71,6 +71,7 @@ public sealed class UsingPrimeTestClockControlExamples
         }
 
         clock.NowInstant.Should().Be(start + step);
+        return;
 
         void OnClockEvent (object? _, PrimeTestClockEvent clockEvent)
         {
