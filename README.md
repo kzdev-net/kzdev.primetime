@@ -11,8 +11,10 @@ This repository builds **four NuGet packages**. It ships two production packages
 |---------|-----------|--------|--------|
 | **KZDev.PrimeTime** | `KZDev.PrimeTime` | **NodaTime superset** — `Instant`, `Duration`, `LocalTime`, zoned “now”, NodaTime timer overloads on `IPrimeClock`. | [![NuGet](https://img.shields.io/nuget/v/KZDev.PrimeTime.svg)](https://www.nuget.org/packages/KZDev.PrimeTime) |
 | **KZDev.SystemClock.PrimeTime** | `KZDev.SystemClock.PrimeTime` | **BCL subset** — `TimeProvider`, `DateTimeOffset` / `TimeSpan`, no NodaTime. | [![NuGet](https://img.shields.io/nuget/v/KZDev.SystemClock.PrimeTime.svg)](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime) |
+| **KZDev.PrimeTime.Testing** | `KZDev.PrimeTime` | **Testing** — `IPrimeTestClock` / `PrimeTestClock` for deterministic tests; pair with **KZDev.PrimeTime**. | [![NuGet](https://img.shields.io/nuget/v/KZDev.PrimeTime.Testing.svg)](https://www.nuget.org/packages/KZDev.PrimeTime.Testing) |
+| **KZDev.SystemClock.PrimeTime.Testing** | `KZDev.SystemClock.PrimeTime` | **Testing** — virtual time for tests; pair with **KZDev.SystemClock.PrimeTime**. | [![NuGet](https://img.shields.io/nuget/v/KZDev.SystemClock.PrimeTime.Testing.svg)](https://www.nuget.org/packages/KZDev.SystemClock.PrimeTime.Testing) |
 
-**Do not reference both packages** in the same app.
+**Do not reference both production packages** in the same app. Use one testing package per test project, matched to your production package. See [Testing packages](Source/Docs/articles/testing-packages.md) for install, DI, and examples.
 
 ### Quick install
 
@@ -26,7 +28,7 @@ dotnet add package KZDev.SystemClock.PrimeTime
 
 ### Target frameworks
 
-Both libraries target **`net10.0`**, **`net8.0`**, and **`netstandard2.0`** (with BCL polyfills on `netstandard2.0` where required).
+All four packages target **`net10.0`**, **`net8.0`**, and **`netstandard2.0`** (with BCL polyfills on `netstandard2.0` where required).
 
 ### Dependency injection (same entry point name, different assembly)
 
