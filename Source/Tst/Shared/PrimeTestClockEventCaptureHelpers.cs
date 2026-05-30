@@ -8,10 +8,12 @@ using AwesomeAssertions;
 
 #if SYSTEMCLOCK
 using KZDev.SystemClock.PrimeTime.Testing;
+// ReSharper disable ChangeFieldTypeToSystemThreadingLock
 #else
 using KZDev.PrimeTime.Testing;
 
 using NodaTime;
+// ReSharper disable ChangeFieldTypeToSystemThreadingLock
 #endif
 
 namespace KZDev.PrimeTime.Tests;

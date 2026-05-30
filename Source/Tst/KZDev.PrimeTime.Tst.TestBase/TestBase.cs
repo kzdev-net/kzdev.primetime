@@ -26,6 +26,7 @@ public abstract class TestBase
     /// <summary>
     ///   The test output helper that can be used to output test messages.
     /// </summary>
+    // ReSharper disable once MemberCanBePrivate.Global
     protected ITestOutputHelper XUnitTestOutputHelper { [DebuggerStepThrough] get; }
     //----------------------------------------------------------------------------
 

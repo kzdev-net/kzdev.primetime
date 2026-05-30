@@ -54,15 +54,10 @@ public static class ClockTimerRegistrationTestReflection
     /// <exception cref="InvalidOperationException">
     ///   No matching <c>OnTimerTick</c> method was found on <paramref name="clockDayTimeTimerRegistrationType"/>.
     /// </exception>
-    public static MethodInfo GetDayTimeOnTimerTickMethod (Type clockDayTimeTimerRegistrationType)
-    {
-        if (clockDayTimeTimerRegistrationType is null)
-        {
-            throw new ArgumentNullException(nameof(clockDayTimeTimerRegistrationType));
-        }
-
-        return GetOnTimerTickMethod(clockDayTimeTimerRegistrationType);
-    }
+    public static MethodInfo GetDayTimeOnTimerTickMethod (Type clockDayTimeTimerRegistrationType) =>
+        clockDayTimeTimerRegistrationType is null ? 
+            throw new ArgumentNullException(nameof(clockDayTimeTimerRegistrationType)) : 
+            GetOnTimerTickMethod(clockDayTimeTimerRegistrationType);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -80,15 +75,10 @@ public static class ClockTimerRegistrationTestReflection
     /// <exception cref="InvalidOperationException">
     ///   No matching <c>OnTimerTick</c> method was found on <paramref name="clockIntervalTimerRegistrationType"/>.
     /// </exception>
-    public static MethodInfo GetIntervalOnTimerTickMethod (Type clockIntervalTimerRegistrationType)
-    {
-        if (clockIntervalTimerRegistrationType is null)
-        {
-            throw new ArgumentNullException(nameof(clockIntervalTimerRegistrationType));
-        }
-
-        return GetOnTimerTickMethod(clockIntervalTimerRegistrationType);
-    }
+    public static MethodInfo GetIntervalOnTimerTickMethod (Type clockIntervalTimerRegistrationType) =>
+        clockIntervalTimerRegistrationType is null ? 
+            throw new ArgumentNullException(nameof(clockIntervalTimerRegistrationType)) : 
+            GetOnTimerTickMethod(clockIntervalTimerRegistrationType);
     //----------------------------------------------------------------------------
 }
 //################################################################################

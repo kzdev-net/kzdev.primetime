@@ -9,6 +9,7 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.Tests;
 // ReSharper disable AccessToDisposedClosure
+// ReSharper disable ChangeFieldTypeToSystemThreadingLock
 
 namespace KZDev.SystemClock.PrimeTime.Testing.UnitTests;
 

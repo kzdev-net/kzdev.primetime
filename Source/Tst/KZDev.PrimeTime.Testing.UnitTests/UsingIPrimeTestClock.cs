@@ -11,6 +11,7 @@ using KZDev.PrimeTime.Tests;
 
 using NodaTime;
 // ReSharper disable AccessToDisposedClosure
+// ReSharper disable ChangeFieldTypeToSystemThreadingLock
 
 namespace KZDev.PrimeTime.Testing.UnitTests;
 
@@ -1994,8 +1995,7 @@ public class UsingIPrimeTestClock : UnitTestBase
                 "the automatic runner should enter the blocking timer callback before Stop is invoked.");
 
             Task<bool> stopTask = Task.Run(clock.Stop, cancellationToken);
-            bool stopJoinPhaseEntered = clock.TestRunnerStopJoinPhaseEntered.Wait(
-                ConcurrentStopStartCoordinationTimeout,
+            bool stopJoinPhaseEntered = clock.TestRunnerStopJoinPhaseEntered.Wait(ConcurrentStopStartCoordinationTimeout,
                 cancellationToken);
             stopJoinPhaseEntered.Should().BeTrue(
                 "Stop should enter the runner-join phase before the coordination wait times out.");

@@ -37,8 +37,39 @@ public abstract class UnitTestBase : TestBase
     ///   Real time between cooperative poll attempts in test-clock wait helpers.
     /// </summary>
     private static readonly TimeSpan TestClockPollInterval = TimeSpan.FromMilliseconds(25);
-    //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Asynchronously polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses.
+    /// </summary>
+    /// <param name="conditionMet">Returns whether the wait condition is satisfied.</param>
+    /// <param name="timeout">Maximum real time to wait.</param>
+    /// <param name="cancellationToken">Cancellation token for the test run.</param>
+    /// <param name="timeoutMessage">Message for the thrown <see cref="TimeoutException"/>.</param>
+    /// <returns>A task that completes when the condition is met.</returns>
+    /// <exception cref="TimeoutException">
+    ///   Thrown when <paramref name="conditionMet"/> remains <c>false</c> until the timeout elapses.
+    /// </exception>
+    private static async Task WaitUntilConditionAsync (Func<bool> conditionMet,
+        TimeSpan timeout, CancellationToken cancellationToken, string timeoutMessage)
+    {
+        Stopwatch elapsed = Stopwatch.StartNew();
+        while (!conditionMet())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (elapsed.Elapsed >= timeout)
+            {
+                throw new TimeoutException(timeoutMessage);
+            }
+
+            TimeSpan remaining = timeout - elapsed.Elapsed;
+            TimeSpan pollDelay = remaining < TestClockPollInterval ? remaining : TestClockPollInterval;
+            if (pollDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(pollDelay, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Converts a wall-clock timeout to milliseconds for
@@ -50,12 +81,10 @@ public abstract class UnitTestBase : TestBase
     /// <returns>
     ///   A non-negative millisecond count suitable for <see cref="SemaphoreSlim.WaitAsync(int, CancellationToken)"/>.
     /// </returns>
-    protected static int GetSemaphoreWaitTimeoutMilliseconds (TimeSpan timeout)
+    private static int GetSemaphoreWaitTimeoutMilliseconds (TimeSpan timeout)
     {
         return (int)Math.Min(int.MaxValue, timeout.TotalMilliseconds);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Millisecond timeout for interval-timer tests that keep an async callback alive until
@@ -126,41 +155,6 @@ public abstract class UnitTestBase : TestBase
         if (signaled)
         {
             cancellationToken.ThrowIfCancellationRequested();
-        }
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Asynchronously polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses.
-    /// </summary>
-    /// <param name="conditionMet">Returns whether the wait condition is satisfied.</param>
-    /// <param name="timeout">Maximum real time to wait.</param>
-    /// <param name="cancellationToken">Cancellation token for the test run.</param>
-    /// <param name="timeoutMessage">Message for the thrown <see cref="TimeoutException"/>.</param>
-    /// <returns>A task that completes when the condition is met.</returns>
-    /// <exception cref="TimeoutException">
-    ///   Thrown when <paramref name="conditionMet"/> remains <c>false</c> until the timeout elapses.
-    /// </exception>
-    protected static async Task WaitUntilConditionAsync (
-        Func<bool> conditionMet,
-        TimeSpan timeout,
-        CancellationToken cancellationToken,
-        string timeoutMessage)
-    {
-        Stopwatch elapsed = Stopwatch.StartNew();
-        while (!conditionMet())
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (elapsed.Elapsed >= timeout)
-            {
-                throw new TimeoutException(timeoutMessage);
-            }
-
-            TimeSpan remaining = timeout - elapsed.Elapsed;
-            TimeSpan pollDelay = remaining < TestClockPollInterval ? remaining : TestClockPollInterval;
-            if (pollDelay > TimeSpan.Zero)
-            {
-                await Task.Delay(pollDelay, cancellationToken).ConfigureAwait(false);
-            }
         }
     }
     //----------------------------------------------------------------------------

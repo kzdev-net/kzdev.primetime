@@ -462,19 +462,19 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     [Fact]
     public void RegisterTimer_Repeating_ChangeNextAndRepeatInterval_NextFiresAtNewIntervals ()
     {
+        const int TargetCount = 3;
         IPrimeClock clock = new PrimeClock();
         Duration newFirst = Duration.FromMilliseconds(70);
         Duration newRepeat = Duration.FromMilliseconds(55);
         ManualResetEventSlim signal = new(false);
         List<Instant> times = [];
-        int targetCount = 3;
 
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(1),
             RepeatInterval,
             () =>
             {
                 times.Add(clock.NowInstant);
-                if (times.Count >= targetCount)
+                if (times.Count >= TargetCount)
                     signal.Set();
             },
             cancellationToken: TestContext.Current.CancellationToken);
@@ -483,7 +483,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         Instant start = clock.NowInstant;
         signal.Wait((WaitMargin + newFirst + newRepeat + newRepeat + WaitMargin).ToTimeSpan(),
             TestContext.Current.CancellationToken).Should().BeTrue();
-        times.Count.Should().BeGreaterThan(targetCount - 1);
+        times.Count.Should().BeGreaterThan(TargetCount - 1);
         (times[0] - start).Should().BeGreaterThanOrEqualTo(newFirst.Minus(TimingTolerance));
         if (times.Count >= 2)
             (times[1] - times[0]).Should().BeGreaterThanOrEqualTo(newRepeat.Minus(TimingTolerance));
