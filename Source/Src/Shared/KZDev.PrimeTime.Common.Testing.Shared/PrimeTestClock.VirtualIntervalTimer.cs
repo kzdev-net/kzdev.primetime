@@ -25,7 +25,11 @@ public sealed partial class PrimeTestClock
     /// <summary>
     ///   Base type for virtual interval timers scheduled against <see cref="PrimeTestClock"/> time.
     /// </summary>
+#if SYSTEMCLOCK
+    private abstract class VirtualIntervalTimerBase : IClockIntervalTimer
+#else
     private abstract partial class VirtualIntervalTimerBase : IClockIntervalTimer
+#endif
     {
         //------------------------------------------------------------------------
         /// <summary>
@@ -493,7 +497,7 @@ public sealed partial class PrimeTestClock
     /// <summary>
     ///   Virtual interval timer implementation that invokes the user callback when due.
     /// </summary>
-    private sealed partial class VirtualIntervalTimer : VirtualIntervalTimerBase
+    private sealed class VirtualIntervalTimer : VirtualIntervalTimerBase
     {
         //------------------------------------------------------------------------
         /// <summary>

@@ -17,7 +17,11 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="PrimeTimeEventSource"/> ETW emission on critical paths (SystemClock assembly).
 /// </summary>
 [ExcludeFromCodeCoverage]
+#if NET
 public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
+#else
+public sealed class UsingPrimeTimeEventSource : UnitTestBase
+#endif
 {
     /// <summary>
     ///   Upper bound for waiting on <see cref="System.Threading.Timer"/> / thread-pool timer paths in these tests.

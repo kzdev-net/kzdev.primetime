@@ -3,23 +3,23 @@
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
-#else
-namespace KZDev.PrimeTime;
-#endif
 
-#if SYSTEMCLOCK
+//################################################################################
 /// <content>
 ///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeTime"/>
 ///   in <c>KZDev.SystemClock.PrimeTime</c> (TimeProvider-based).
 /// </content>
+internal abstract class PrimeTimeBase : IPrimeTime
 #else
+namespace KZDev.PrimeTime;
+
 //################################################################################
 /// <content>
 ///   BCL <see cref="IPrimeTime"/> and timer registration members for <see cref="PrimeTime"/>
 ///   in <c>KZDev.PrimeTime</c> (NodaTime-based).
 /// </content>
-#endif
 internal abstract partial class PrimeTimeBase : IPrimeTime
+#endif
 {
     #region Interface Implementations
 

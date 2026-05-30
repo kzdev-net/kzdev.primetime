@@ -5,6 +5,7 @@
 		<OutputType>Exe</OutputType>
 		<UseAppHost>true</UseAppHost>
 		<GenerateProgramFile>false</GenerateProgramFile>
+		<RootNamespace>KZDev.SystemClock.PrimeTime.UnitTests</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -1,5 +1,6 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
+#if NET || !SYSTEMCLOCK
 
 using System.Diagnostics;
 
@@ -19,7 +20,6 @@ namespace KZDev.PrimeTime.Testing;
 /// </summary>
 public sealed partial class PrimeTestClock
 {
-#if NET || !SYSTEMCLOCK
     #region Nested types — Virtual day-time timer
 
     //============================================================================
@@ -692,7 +692,7 @@ public sealed partial class PrimeTestClock
     /// <summary>
     ///   Virtual day-time timer that invokes the user callback when the scheduled time-of-day is reached.
     /// </summary>
-    private sealed partial class VirtualDayTimeTimer : VirtualDayTimeTimerBase
+    private sealed class VirtualDayTimeTimer : VirtualDayTimeTimerBase
     {
         //------------------------------------------------------------------------
         /// <summary>
@@ -788,8 +788,7 @@ public sealed partial class PrimeTestClock
     //============================================================================
 
     #endregion Nested types — Virtual day-time timer
-#endif
 }
 //################################################################################
 
-
+#endif

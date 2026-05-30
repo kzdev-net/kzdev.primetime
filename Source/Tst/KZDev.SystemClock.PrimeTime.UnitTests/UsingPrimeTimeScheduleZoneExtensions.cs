@@ -16,7 +16,7 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Validates schedule-zone projection extensions for <see cref="IPrimeTime"/> in the System Clock stack.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed partial class UsingPrimeTimeScheduleZoneExtensions
+public sealed class UsingPrimeTimeScheduleZoneExtensions
 {
     /// <summary>
     ///   Minimal <see cref="IPrimeTime"/> that does not implement <see cref="IPrimeClock"/>.

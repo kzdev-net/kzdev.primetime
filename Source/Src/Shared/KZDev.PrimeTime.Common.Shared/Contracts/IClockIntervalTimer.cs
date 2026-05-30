@@ -1,3 +1,6 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -17,7 +20,11 @@ namespace KZDev.PrimeTime;
 ///     <c>Microsoft.Bcl.TimeProvider</c> package referenced by this library.
 ///   </para>
 /// </remarks>
+#if SYSTEMCLOCK
+public interface IClockIntervalTimer : IIntervalTimer, ITimer
+#else
 public partial interface IClockIntervalTimer : IIntervalTimer, ITimer
+#endif
 {
     /// <summary>
     ///   Changes the interval of this registration.

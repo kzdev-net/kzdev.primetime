@@ -1,3 +1,6 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
 #else
@@ -47,7 +50,11 @@ namespace KZDev.PrimeTime.Testing;
 ///     at <see cref="Start(System.TimeSpan?)"/> with no clamping.
 ///   </para>
 /// </remarks>
+#if SYSTEMCLOCK
+public interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
+#else
 public partial interface IPrimeTestClock : IPrimeTestTime, IPrimeClock
+#endif
 {
     //----------------------------------------------------------------------------
     /// <summary>

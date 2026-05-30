@@ -18,7 +18,11 @@ namespace KZDev.PrimeTime;
 ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
 ///   </para>
 /// </remarks>
+#if SYSTEMCLOCK
+public interface IClockDayTimeTimer : IDayTimeTimer
+#else
 public partial interface IClockDayTimeTimer : IDayTimeTimer
+#endif
 {
 #if NET
     /// <summary>

@@ -11,7 +11,11 @@ namespace KZDev.PrimeTime;
 /// <summary>
 ///   Extension methods for obtaining a <see cref="TimeProvider"/> from PrimeTime clocks.
 /// </summary>
+#if SYSTEMCLOCK
+public static class PrimeClockTimeProviderExtensions
+#else
 public static partial class PrimeClockTimeProviderExtensions
+#endif
 {
     //----------------------------------------------------------------------------
     /// <summary>

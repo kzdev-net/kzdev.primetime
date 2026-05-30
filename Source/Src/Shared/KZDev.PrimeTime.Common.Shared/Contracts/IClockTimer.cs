@@ -1,3 +1,6 @@
+// Copyright (c) Kevin Zehrer
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime;
 #else
@@ -9,7 +12,11 @@ namespace KZDev.PrimeTime;
 ///   Registration for a timer created from a clock's timer registration API (BCL "now"
 ///   subset or full NodaTime-capable clock).
 /// </summary>
+#if SYSTEMCLOCK
+public interface IClockTimer : IDisposable, IAsyncDisposable
+#else
 public partial interface IClockTimer : IDisposable, IAsyncDisposable
+#endif
 {
     //----------------------------------------------------------------------------
     /// <summary>

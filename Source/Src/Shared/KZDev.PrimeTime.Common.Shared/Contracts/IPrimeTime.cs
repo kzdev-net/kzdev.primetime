@@ -15,7 +15,11 @@ namespace KZDev.PrimeTime;
 ///   delegate to the BCL may throw the same exceptions as the corresponding
 ///   <see cref="Thread"/>, <see cref="Task"/>, or <see cref="CancellationTokenSource"/> APIs.
 /// </summary>
+#if SYSTEMCLOCK
+public interface IPrimeTime
+#else
 public partial interface IPrimeTime
+#endif
 {
     #region IPrimeTime — Delays (TimeSpan)
 
