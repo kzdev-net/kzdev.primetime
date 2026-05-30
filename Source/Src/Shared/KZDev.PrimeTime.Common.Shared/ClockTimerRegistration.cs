@@ -33,6 +33,16 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
     /// </summary>
     private CancellationTokenRegistration _cancelRegistration;
 
+    /// <summary>
+    ///   When <c>true</c>, callbacks capture execution context.
+    /// </summary>
+    private bool CaptureContext { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
+    /// <summary>
+    ///   When <c>true</c>, external cancellation was requested.
+    /// </summary>
+    private bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+
 #if NET10_OR_GREATER
     /// <summary>
     ///   Protects mutable registration and timer fields.
@@ -49,11 +59,6 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
     ///   Clock used for scheduling and reading "now".
     /// </summary>
     internal IPrimeClock Clock { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = null!;
-
-    /// <summary>
-    ///   When <c>true</c>, callbacks capture execution context.
-    /// </summary>
-    internal bool CaptureContext { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
 
     /// <summary>
     ///   External cancellation token for this registration.
@@ -88,12 +93,7 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
     /// <summary>
     ///   When <c>true</c>, this registration has been disposed.
     /// </summary>
-    internal bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-
-    /// <summary>
-    ///   When <c>true</c>, external cancellation was requested.
-    /// </summary>
-    internal bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+    internal bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
 
     /// <summary>
     ///   Underlying BCL one-shot timer used between callbacks.

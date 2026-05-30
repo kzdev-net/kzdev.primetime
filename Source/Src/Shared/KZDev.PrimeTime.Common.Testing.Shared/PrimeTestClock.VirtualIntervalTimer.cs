@@ -43,6 +43,11 @@ public sealed partial class PrimeTestClock
         private readonly bool _resetBeforeCallback;
         //------------------------------------------------------------------------
         /// <summary>
+        ///   Gets or sets the delay until the first or next rescheduled callback.
+        /// </summary>
+        private TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        //------------------------------------------------------------------------
+        /// <summary>
         ///   Gets the owning test clock.
         /// </summary>
         protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
@@ -106,12 +111,12 @@ public sealed partial class PrimeTestClock
         /// <summary>
         ///   Gets or sets whether this registration has been disposed.
         /// </summary>
-        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether external cancellation was requested.
         /// </summary>
-        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets how many callbacks are currently in flight.
@@ -119,14 +124,26 @@ public sealed partial class PrimeTestClock
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         //------------------------------------------------------------------------
         /// <summary>
-        ///   Gets or sets the delay until the first or next rescheduled callback.
-        /// </summary>
-        protected TimeSpan InitialCallbackTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        //------------------------------------------------------------------------
-        /// <summary>
         ///   Gets or sets the repeat interval, or <see cref="Timeout.InfiniteTimeSpan"/> for one-shot.
         /// </summary>
-        protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected TimeSpan RepeatInterval { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
+        //------------------------------------------------------------------------
+        /// <summary>
+        ///   Handles cancellation token registration: marks cancelled and removes from the clock.
+        /// </summary>
+        private void OnCancelRequested ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                IntervalTimerEnabled = false;
+            }
+
+            Clock.RemoveIntervalTimer(this);
+        }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Initializes base state for a virtual interval timer registration.
@@ -314,7 +331,7 @@ public sealed partial class PrimeTestClock
         /// <param name="bestUtc">The best (minimum) candidate instant discovered so far, or <c>null</c> if none.</param>
         /// <param name="nowUtc">Current virtual UTC instant.</param>
         /// <param name="targetUtc">Inclusive upper bound for the next march instant.</param>
-        internal void ConsiderEarliestDueUtcStrictlyAfterForMarch(ref DateTimeOffset? bestUtc, DateTimeOffset nowUtc,
+        internal void ConsiderEarliestDueUtcStrictlyAfterForMarch (ref DateTimeOffset? bestUtc, DateTimeOffset nowUtc,
             DateTimeOffset targetUtc)
         {
             lock (Gate)
@@ -348,23 +365,6 @@ public sealed partial class PrimeTestClock
         /// </summary>
         /// <param name="now">Virtual UTC instant passed from <see cref="PrimeTestClock.Advance(System.TimeSpan)"/>.</param>
         public abstract void RunDueCallback (DateTimeOffset now);
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Handles cancellation token registration: marks cancelled and removes from the clock.
-        /// </summary>
-        protected void OnCancelRequested ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                IntervalTimerEnabled = false;
-            }
-
-            Clock.RemoveIntervalTimer(this);
-        }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Applies a new due time and repeat interval to this registration.

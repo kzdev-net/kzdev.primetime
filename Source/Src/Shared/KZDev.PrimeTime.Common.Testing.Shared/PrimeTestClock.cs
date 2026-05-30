@@ -453,14 +453,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 DateTimeOffset nowUtc = ReadVirtualUtcNowLocked();
                 nextDeadlineUtc = GetEarliestRunnerDeadlineUtcLocked(nowUtc);
                 TimeSpan virtualDelta = nextDeadlineUtc - nowUtc;
-                if (virtualDelta <= TimeSpan.Zero)
-                {
-                    intendedRealWait = TimeSpan.Zero;
-                }
-                else
-                {
-                    intendedRealWait = ScaleVirtualDeltaToRealTime(virtualDelta, _runRate);
-                }
+                intendedRealWait = virtualDelta <= TimeSpan.Zero ? TimeSpan.Zero : ScaleVirtualDeltaToRealTime(virtualDelta, _runRate);
             }
 
             if (intendedRealWait >= MinimumRunnerRealWait)
@@ -614,6 +607,40 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Maps a virtual-time interval to the corresponding real elapsed time at the configured
+    ///   virtual-time-per-real-second rate.
+    /// </summary>
+    /// <param name="virtualDelta">Virtual elapsed time until the next deadline.</param>
+    /// <param name="virtualTimePerRealSecond">Virtual time that elapses per one real second.</param>
+    /// <returns>Real time to wait before that virtual interval elapses at the run rate.</returns>
+    private static TimeSpan ScaleVirtualDeltaToRealTime (TimeSpan virtualDelta, TimeSpan virtualTimePerRealSecond)
+    {
+        long virtualTicks = virtualDelta.Ticks;
+        if (virtualTicks == 0)
+        {
+            return TimeSpan.Zero;
+        }
+
+        long rateTicks = virtualTimePerRealSecond.Ticks;
+        long scaledTicks;
+        // Intermediate product virtualTicks * TicksPerSecond must fit in long; otherwise use decimal to avoid
+        // overflow before dividing by rateTicks (very large virtual deltas and/or extremely small run-rate ticks).
+        if (TicksProductFitsInInt64(virtualTicks, TimeSpan.TicksPerSecond))
+        {
+            long product = virtualTicks * TimeSpan.TicksPerSecond;
+            scaledTicks = product / rateTicks;
+        }
+        else
+        {
+            decimal scaledDecimal = (decimal)virtualTicks * TimeSpan.TicksPerSecond / rateTicks;
+            scaledTicks = (long)scaledDecimal;
+        }
+
+        ThrowIfScaledTicksOutsideTimeSpanRange(scaledTicks);
+        return TimeSpan.FromTicks(scaledTicks);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Maps a real-time elapsed interval to virtual elapsed using the configured virtual-time-per-real-second rate.
     /// </summary>
     /// <param name="realElapsed">Elapsed real time on the anchor stopwatch.</param>
@@ -643,40 +670,6 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         else
         {
             decimal scaledDecimal = (decimal)realTicks * rateTicks / TimeSpan.TicksPerSecond;
-            scaledTicks = (long)scaledDecimal;
-        }
-
-        ThrowIfScaledTicksOutsideTimeSpanRange(scaledTicks);
-        return TimeSpan.FromTicks(scaledTicks);
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Maps a virtual-time interval to the corresponding real elapsed time at the configured
-    ///   virtual-time-per-real-second rate.
-    /// </summary>
-    /// <param name="virtualDelta">Virtual elapsed time until the next deadline.</param>
-    /// <param name="virtualTimePerRealSecond">Virtual time that elapses per one real second.</param>
-    /// <returns>Real time to wait before that virtual interval elapses at the run rate.</returns>
-    internal static TimeSpan ScaleVirtualDeltaToRealTime (TimeSpan virtualDelta, TimeSpan virtualTimePerRealSecond)
-    {
-        long virtualTicks = virtualDelta.Ticks;
-        if (virtualTicks == 0)
-        {
-            return TimeSpan.Zero;
-        }
-
-        long rateTicks = virtualTimePerRealSecond.Ticks;
-        long scaledTicks;
-        // Intermediate product virtualTicks * TicksPerSecond must fit in long; otherwise use decimal to avoid
-        // overflow before dividing by rateTicks (very large virtual deltas and/or extremely small run-rate ticks).
-        if (TicksProductFitsInInt64(virtualTicks, TimeSpan.TicksPerSecond))
-        {
-            long product = virtualTicks * TimeSpan.TicksPerSecond;
-            scaledTicks = product / rateTicks;
-        }
-        else
-        {
-            decimal scaledDecimal = (decimal)virtualTicks * TimeSpan.TicksPerSecond / rateTicks;
             scaledTicks = (long)scaledDecimal;
         }
 

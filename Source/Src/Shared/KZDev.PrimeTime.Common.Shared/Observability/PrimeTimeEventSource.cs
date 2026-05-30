@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.Tracing;
+// ReSharper disable MemberCanBePrivate.Global
 
 // ReSharper disable InconsistentNaming
 
@@ -28,7 +29,7 @@ internal sealed class PrimeTimeEventSource : EventSource
     /// <summary>
     ///   Event source keywords for filtering.
     /// </summary>
-    public class Keywords
+    public static class Keywords
     {
         /// <summary>
         ///   Day-time and time-zone scheduling resolution.
@@ -49,7 +50,7 @@ internal sealed class PrimeTimeEventSource : EventSource
     /// <summary>
     ///   Event tasks for grouping.
     /// </summary>
-    public class Tasks
+    public static class Tasks
     {
         /// <summary>
         ///   Local wall clock day-time scheduling.

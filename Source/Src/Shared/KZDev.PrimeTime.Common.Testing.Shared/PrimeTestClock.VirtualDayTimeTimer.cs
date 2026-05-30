@@ -34,42 +34,35 @@ public sealed partial class PrimeTestClock
         /// </summary>
         private static readonly TimeSpan OneDay = TimeSpan.FromDays(1);
         //------------------------------------------------------------------------
-
+        /// <summary>
+        ///   Time of day since local or UTC midnight (depending on <see cref="IsLocal"/>).
+        /// </summary>
+        private TimeSpan TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets the owning test clock.
         /// </summary>
-        protected PrimeTestClock Clock { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
+        private PrimeTestClock Clock { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets whether this registration uses local time-of-day versus UTC time-of-day.
         /// </summary>
-        protected bool IsLocal { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
+        private bool IsLocal { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets the callback delegate shape for this registration.
         /// </summary>
         protected TimerCallbackKind CallbackKind { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Gets the user callback delegate.
         /// </summary>
         protected Delegate Callback { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Gets optional state passed to context-based callbacks.
         /// </summary>
         protected object? CallbackState { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets the cancellation token associated with this registration.
@@ -96,8 +89,6 @@ public sealed partial class PrimeTestClock
         ///   Gets or sets the next scheduled callback instant in UTC.
         /// </summary>
         protected DateTimeOffset? NextDueUtc { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   The instant of the last callback.
@@ -148,49 +139,30 @@ public sealed partial class PrimeTestClock
         /// </remarks>
         protected DateTimeOffset? LastCallbackAt { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets the logical timer state.
         /// </summary>
         protected TimerState State { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = TimerState.Active;
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether day-time callbacks are enabled.
         /// </summary>
         protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether this registration has been disposed.
         /// </summary>
         protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether external cancellation was requested.
         /// </summary>
         protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets how many callbacks are currently in flight.
         /// </summary>
         protected int CallbacksRunning { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Time of day since local or UTC midnight (depending on <see cref="IsLocal"/>).
-        /// </summary>
-        protected TimeSpan TargetTimeOfDay { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   Concurrent invocation policy copied from registration options.
@@ -212,6 +184,23 @@ public sealed partial class PrimeTestClock
 
         //------------------------------------------------------------------------
         /// <summary>
+        ///   Handles cancellation: marks the registration cancelled and removes it from the clock.
+        /// </summary>
+        private void OnCancelRequested ()
+        {
+            lock (Gate)
+            {
+                if (Disposed || State == TimerState.Cancelled)
+                    return;
+                CancelRequested = true;
+                State = TimerState.Cancelled;
+                EnabledDayTime = false;
+            }
+
+            Clock.RemoveDayTimeTimer(this);
+        }
+        //------------------------------------------------------------------------
+        /// <summary>
         ///   Initializes base state for a virtual day-time timer registration.
         /// </summary>
         /// <param name="clock">The owning test clock.</param>
@@ -222,14 +211,9 @@ public sealed partial class PrimeTestClock
         /// <param name="callbackState">Optional callback state.</param>
         /// <param name="options">Day-time options, or <c>null</c> for defaults.</param>
         /// <param name="cancellationToken">Token that cancels this registration.</param>
-        protected VirtualDayTimeTimerBase (PrimeTestClock clock,
-            bool isLocal,
-            TimeSpan targetTimeOfDay,
-            TimerCallbackKind callbackKind,
-            Delegate callback,
-            object? callbackState,
-            DayTimeTimerOptions? options,
-            CancellationToken cancellationToken)
+        protected VirtualDayTimeTimerBase (PrimeTestClock clock, bool isLocal,
+            TimeSpan targetTimeOfDay, TimerCallbackKind callbackKind, Delegate callback,
+            object? callbackState, DayTimeTimerOptions? options, CancellationToken cancellationToken)
         {
             Clock = clock;
             IsLocal = isLocal;
@@ -252,25 +236,21 @@ public sealed partial class PrimeTestClock
             }
 
             cancellationToken.Register(OnCancelRequested);
-            if (cancellationToken.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                EnabledDayTime = false;
+                return;
             }
-        }
-        //------------------------------------------------------------------------
 
+            CancelRequested = true;
+            State = TimerState.Cancelled;
+            EnabledDayTime = false;
+        }
         //------------------------------------------------------------------------
         /// <inheritdoc />
         public int Id { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <inheritdoc />
         public DateTimeOffset RegisteredTime { [DebuggerStepThrough] get; }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <inheritdoc />
         public bool IsTimeOfDay => true;
@@ -431,7 +411,7 @@ public sealed partial class PrimeTestClock
         /// <param name="bestUtc">The best (minimum) candidate instant discovered so far, or <c>null</c> if none.</param>
         /// <param name="nowUtc">Current virtual UTC instant.</param>
         /// <param name="targetUtc">Inclusive upper bound for the next march instant.</param>
-        internal void ConsiderEarliestDueUtcStrictlyAfterForMarch(ref DateTimeOffset? bestUtc, DateTimeOffset nowUtc,
+        internal void ConsiderEarliestDueUtcStrictlyAfterForMarch (ref DateTimeOffset? bestUtc, DateTimeOffset nowUtc,
             DateTimeOffset targetUtc)
         {
             lock (Gate)
@@ -548,23 +528,6 @@ public sealed partial class PrimeTestClock
                     nextDt = nextDt.AddDays(1);
                 return new DateTimeOffset(DateTime.SpecifyKind(nextDt, DateTimeKind.Utc), TimeSpan.Zero);
             }
-        }
-        //------------------------------------------------------------------------
-        /// <summary>
-        ///   Handles cancellation: marks the registration cancelled and removes it from the clock.
-        /// </summary>
-        protected void OnCancelRequested ()
-        {
-            lock (Gate)
-            {
-                if (Disposed || State == TimerState.Cancelled)
-                    return;
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                EnabledDayTime = false;
-            }
-
-            Clock.RemoveDayTimeTimer(this);
         }
         //------------------------------------------------------------------------
 

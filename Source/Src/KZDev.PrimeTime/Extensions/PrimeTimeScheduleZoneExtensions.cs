@@ -25,6 +25,27 @@ public static class PrimeTimeScheduleZoneExtensions
 
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Maps an <see cref="Instant"/> to the local wall-clock <see cref="LocalDateTime"/> in the receiver's
+    ///   <see cref="IPrimeClock.LocalScheduleDateTimeZone"/>.
+    /// </summary>
+    /// <param name="time">The time service used as context for the schedule zone.</param>
+    /// <param name="instant">The absolute instant on the UTC timeline.</param>
+    /// <returns>
+    ///   Local date and time in the schedule zone (no zone id on the value).
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///   <paramref name="time"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
+    /// </exception>
+    private static LocalDateTime ToScheduleLocalDateTime (this IPrimeTime time, Instant instant)
+    {
+        ZonedDateTime zoned = time.ToScheduleZonedDateTime(instant);
+        return zoned.LocalDateTime;
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Maps an <see cref="Instant"/> to a <see cref="ZonedDateTime"/> in the receiver's
     ///   <see cref="IPrimeClock.LocalScheduleDateTimeZone"/>.
     /// </summary>
@@ -45,27 +66,6 @@ public static class PrimeTimeScheduleZoneExtensions
             throw new ArgumentNullException(nameof(time));
         IPrimeClock clock = RequirePrimeClock(time, nameof(time));
         return instant.InZone(clock.LocalScheduleDateTimeZone);
-    }
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Maps an <see cref="Instant"/> to the local wall-clock <see cref="LocalDateTime"/> in the receiver's
-    ///   <see cref="IPrimeClock.LocalScheduleDateTimeZone"/>.
-    /// </summary>
-    /// <param name="time">The time service used as context for the schedule zone.</param>
-    /// <param name="instant">The absolute instant on the UTC timeline.</param>
-    /// <returns>
-    ///   Local date and time in the schedule zone (no zone id on the value).
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    ///   <paramref name="time"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="ArgumentException">
-    ///   <paramref name="time"/> is not an <see cref="IPrimeClock"/> and the schedule zone cannot be resolved.
-    /// </exception>
-    public static LocalDateTime ToScheduleLocalDateTime (this IPrimeTime time, Instant instant)
-    {
-        ZonedDateTime zoned = time.ToScheduleZonedDateTime(instant);
-        return zoned.LocalDateTime;
     }
     //----------------------------------------------------------------------------
     /// <summary>
