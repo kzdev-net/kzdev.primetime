@@ -141,13 +141,13 @@
   <Folder Name="/Tests/">
     <File Path="Tst/Directory.Build.props" />
     <File Path="Tst/Directory.Packages.props" />
-    <Project Path="Tst/KZDev.PrimeTime.Tst.TestBase/KZDev.PrimeTime.Tst.TestBase.csproj">
+    <Project Path="Tst/KZDev.PrimeTime.TestBase/KZDev.PrimeTime.TestBase.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
-    <Project Path="Tst/KZDev.PrimeTime.Tst.TestPrep/KZDev.PrimeTime.Tst.TestPrep.csproj">
+    <Project Path="Tst/KZDev.PrimeTime.TestPrep/KZDev.PrimeTime.TestPrep.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
-    <Project Path="Tst/KZDev.PrimeTime.Tst.UnitTestBase/KZDev.PrimeTime.Tst.UnitTestBase.csproj">
+    <Project Path="Tst/KZDev.PrimeTime.UnitTestBase/KZDev.PrimeTime.UnitTestBase.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>
   </Folder>

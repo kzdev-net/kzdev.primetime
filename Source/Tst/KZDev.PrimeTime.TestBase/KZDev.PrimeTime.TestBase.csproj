@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <ProjectReference Include="..\KZDev.PrimeTime.Tst.TestPrep\KZDev.PrimeTime.Tst.TestPrep.csproj" />
+        <ProjectReference Include="..\KZDev.PrimeTime.TestPrep\KZDev.PrimeTime.TestPrep.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="xunit.v3.extensibility.core" />

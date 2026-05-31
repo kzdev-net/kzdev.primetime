@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
         <ProjectReference Include="..\..\Src\Testing\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
-        <ProjectReference Include="..\KZDev.PrimeTime.Tst.TestBase\KZDev.PrimeTime.Tst.TestBase.csproj" />
+        <ProjectReference Include="..\KZDev.PrimeTime.TestBase\KZDev.PrimeTime.TestBase.csproj" />
     </ItemGroup>
 </Project>

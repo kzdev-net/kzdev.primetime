@@ -27,7 +27,7 @@
 		<ProjectReference Include="..\..\Src\KZDev.SystemClock.PrimeTime\KZDev.SystemClock.PrimeTime.csproj" />
 		<ProjectReference Include="..\..\Src\Testing\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
 		<ProjectReference Include="..\..\Src\Testing\KZDev.SystemClock.PrimeTime.Testing\KZDev.SystemClock.PrimeTime.Testing.csproj" />
-		<ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
+		<ProjectReference Include="..\KZDev.PrimeTime.UnitTestBase\KZDev.PrimeTime.UnitTestBase.csproj" />
 	</ItemGroup>
 
 
@@ -39,8 +39,7 @@
 		<Compile Update="SubsetContractNullNamespaceTypes.cs">
 			<RootNamespace />
 		</Compile>
-		<Compile Include="..\Shared\PrimeTestClockEventCaptureHelpers.cs"
-		           Link="PrimeTestClockEventCaptureHelpers.cs" />
+		<Compile Include="..\Shared\PrimeTestClockEventCaptureHelpers.cs" Link="PrimeTestClockEventCaptureHelpers.cs" />
 	</ItemGroup>
 
 </Project>
