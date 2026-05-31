@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 using AwesomeAssertions;
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Tools.UnitTests;
 
 //################################################################################
 /// <summary>

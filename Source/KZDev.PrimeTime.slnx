@@ -107,6 +107,9 @@
     <Project Path="Tst/KZDev.PrimeTime.Testing.UnitTests/KZDev.PrimeTime.Testing.UnitTests.csproj" Id="438dd806-21e0-4461-aaee-5407bc92f899">
       <BuildType Solution="Package|*" Project="Debug" />
     </Project>
+    <Project Path="Tst/KZDev.PrimeTime.Tools.UnitTests/KZDev.PrimeTime.Tools.UnitTests.csproj" Id="cdaa00e5-c60b-46e3-bde5-a409c5bc1e49">
+      <BuildType Solution="Package|*" Project="Debug" />
+    </Project>
     <Project Path="Tst/KZDev.PrimeTime.UnitTests/KZDev.PrimeTime.UnitTests.csproj">
       <BuildType Solution="Package|*" Project="Release" />
     </Project>

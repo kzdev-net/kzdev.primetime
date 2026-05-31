@@ -7,7 +7,7 @@ using AwesomeAssertions;
 
 using KZDev.PrimeTime.ReleaseAggregation;
 
-namespace KZDev.PrimeTime.UnitTests;
+namespace KZDev.PrimeTime.Tools.UnitTests;
 
 //################################################################################
 /// <summary>
