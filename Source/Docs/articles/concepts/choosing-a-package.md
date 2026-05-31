@@ -1,6 +1,6 @@
 # Choosing a PrimeTime package
 
-PrimeTime ships as **two NuGet packages**. They share one **design** (clock abstraction, timers, test clock) but differ in **namespace**, **time stack**, and **API surface**.
+PrimeTime ships as **two production NuGet packages** (and two matching **testing** packages — four package IDs in total). They share one **design** (clock abstraction, timers, test clock) but differ in **namespace**, **time stack**, and **API surface**. For virtual time in tests, see [Testing packages](../testing-packages.md).
 
 ## Rules
 

@@ -2,6 +2,8 @@
 
 **PrimeTime** is a pair of .NET libraries for **testable clocks**, **virtual time**, and **timer** registration (interval and, on modern targets, **time-of-day** with explicit **daylight-saving** policy).
 
+**Four NuGet packages** are published: two **production** clocks (below) and two **testing** packages for deterministic test time. Use one production package per app and the matching testing package in test projects. See [Testing packages](testing-packages.md).
+
 ## Two packages, one design
 
 | Package | Namespace | Role |
