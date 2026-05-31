@@ -115,6 +115,106 @@ public class UsingReleaseNotesMarkdownAggregator
     }
 
     /// <summary>
+    ///   Verifies nested bold and inline code in one span is stripped for NuGet plain-text release notes.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithBoldAndBackticks_StripsInlineMarkdown ()
+    {
+        const string MarkdownSection = "- adds **`LocalScheduleDateTimeZone`**, and `Bar`.";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- adds LocalScheduleDateTimeZone, and Bar.");
+    }
+
+    /// <summary>
+    ///   Verifies bold markers alone are removed while surrounding text is preserved.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithBoldOnly_StripsBoldMarkers ()
+    {
+        const string MarkdownSection = "- adds **LocalScheduleDateTimeZone** support.";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- adds LocalScheduleDateTimeZone support.");
+    }
+
+    /// <summary>
+    ///   Verifies inline code backticks alone are removed while surrounding text is preserved.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithBackticksOnly_StripsInlineCodeMarkers ()
+    {
+        const string MarkdownSection = "- baseline entry for version `0.0.5`.";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- baseline entry for version 0.0.5.");
+    }
+
+    /// <summary>
+    ///   Verifies multiple bold and code spans on one line are all stripped.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithMultipleSpansOnOneLine_StripsAllSpans ()
+    {
+        const string MarkdownSection = "- **A** plus **B** and `C`.";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- A plus B and C.");
+    }
+
+    /// <summary>
+    ///   Verifies line breaks are preserved when stripping inline Markdown across multiple lines.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithMultiLineInput_PreservesLineBreaksAndStripsMarkdown ()
+    {
+        const string MarkdownSection = "- first **line**\n- second `line`";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- first line\n- second line");
+    }
+
+    /// <summary>
+    ///   Verifies Windows-style <c>\r\n</c> line endings are normalized and inline Markdown is still stripped.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithCrlfLineEndings_NormalizesAndStripsMarkdown ()
+    {
+        const string MarkdownSection = "- first **line**\r\n- second `line`";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- first line\n- second line");
+    }
+
+    /// <summary>
+    ///   Verifies classic Mac-style <c>\r</c> line endings are normalized and inline Markdown is still stripped.
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithBareCrLineEndings_NormalizesAndStripsMarkdown ()
+    {
+        const string MarkdownSection = "- first **line**\r- second `line`";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        plainText.Should().Be("- first line\n- second line");
+    }
+
+    /// <summary>
+    ///   Verifies text that contains no inline Markdown is returned unchanged (idempotent).
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WithAlreadyPlainText_ReturnsUnchanged ()
+    {
+        const string PlainSection = "- KZDev.PrimeTime v0.0.6 adds public conversion helpers.";
+        string plainText = PackageReleaseNotesPlainTextFormatter.ToPlainText(PlainSection);
+        plainText.Should().Be(PlainSection);
+    }
+
+    /// <summary>
+    ///   Verifies applying plain-text conversion twice yields the same result (idempotent).
+    /// </summary>
+    [Fact]
+    public void PlainTextFormatter_WhenAppliedTwice_ReturnsSameResultAsOnce ()
+    {
+        const string MarkdownSection = "- adds **`LocalScheduleDateTimeZone`**, and `Bar`.";
+        string once = PackageReleaseNotesPlainTextFormatter.ToPlainText(MarkdownSection);
+        string twice = PackageReleaseNotesPlainTextFormatter.ToPlainText(once);
+        twice.Should().Be(once);
+    }
+
+    /// <summary>
     ///   Verifies validation fails when a configured source does not contain the requested version heading.
     /// </summary>
     [Fact]

@@ -9,6 +9,7 @@
   - `### Notes`
   - `### Package`
 - Use `- None.` for categories without entries.
+- In `### Package`, inline Markdown (bold, code) is allowed; NuGet pack strips it to plain text for the nuspec `releaseNotes` field. GitHub release bodies and DocFX keep full Markdown from these files.
 
 ## Version 0.0.6
 

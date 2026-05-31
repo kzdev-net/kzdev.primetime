@@ -1,6 +1,6 @@
 # Release assist: validate, pack, aggregate release notes, optionally create a draft GitHub release, then (after
-# manual environment approval) publish the release. Configure repository Environment "primetime-release" with
-# required reviewers before relying on the finalize job.
+# manual environment approval) publish the release. Does not push to nuget.org — see Source/Reference/release-assist.md
+# (Manual NuGet.org publish checklist). Configure Environment "primetime-release" with required reviewers before finalize.
 name: Release assist
 
 on:

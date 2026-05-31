@@ -29,7 +29,7 @@
         <ProjectReference Include="..\KZDev.PrimeTime.Tst.UnitTestBase\KZDev.PrimeTime.Tst.UnitTestBase.csproj" />
     </ItemGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <ItemGroup>
         <ProjectReference Include="..\..\Tools\KZDev.PrimeTime.ReleaseAggregation\KZDev.PrimeTime.ReleaseAggregation.csproj" />
     </ItemGroup>
 

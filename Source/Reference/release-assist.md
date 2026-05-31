@@ -15,7 +15,98 @@ The workflow definition lives at [.github/workflows/release-assist.yml](https://
 7. **Draft GitHub release** — Only when **dry run** is off: creates a **draft** release with tag `v{version}`, attaches all `.nupkg` and `.snupkg` files from `artifacts/package/release/`, and uses `release-body.md` as the release notes.
 8. **Finalize publish** — Only when **dry run** is off: a second job, gated by the **`primetime-release`** GitHub Environment, runs `gh release edit … --draft=false --latest` so a human approves before the release stops being a draft.
 
-The workflow does **not** push packages to nuget.org. Publishing to a package registry remains a separate, manual or separately automated step if you use one.
+The workflow does **not** push packages to nuget.org. A published GitHub release with `.nupkg` assets is **not** a completed public release until the steps in [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) are done.
+
+## Manual NuGet.org publish checklist
+
+Complete this **after** Release assist has produced packages and (if applicable) the GitHub release is no longer a draft. Skipping these steps leaves consumers without the new version on [nuget.org](https://www.nuget.org/).
+
+### One-time NuGet.org setup
+
+1. **Account and ownership** — Sign in at [nuget.org](https://www.nuget.org/). Confirm your account is an **owner** (or has push rights via a trusted publisher) on all four package IDs:
+   - `KZDev.PrimeTime`
+   - `KZDev.SystemClock.PrimeTime`
+   - `KZDev.PrimeTime.Testing`
+   - `KZDev.SystemClock.PrimeTime.Testing`
+2. **API key** — Create a key at [nuget.org/account/apikeys](https://www.nuget.org/account/apikeys):
+   - **Glob pattern:** limit to `KZDev.*` (or list each package id).
+   - **Scopes:** at minimum **Push** existing package versions; for a **first-ever** publish of a new package id, include **Push new package and package version**.
+   - **Expiry:** set explicitly; rotate before expiry.
+3. **Store the key securely** — Use a password manager or OS secret store. **Never** commit the key, paste it into Issues, or log it in CI output.
+
+### Before you push
+
+- [ ] Release assist **Pack** succeeded and you have **eight** files for the release version: four `.nupkg` and four `.snupkg` (from the workflow artifact `release-assist-{version}`, GitHub release assets, or a local pack to `artifacts/package/release/`).
+- [ ] The **version** in the filenames matches `Source/Src/Directory.Build.props` and the GitHub tag `v{version}`.
+- [ ] You are pushing the **same build** you validated in CI (prefer CI artifacts over an uncommitted local pack).
+- [ ] That version is **not already listed** on nuget.org for any of the four packages (NuGet rejects duplicate version uploads).
+
+### Push packages and symbol packages
+
+Set the API key in your shell (substitute your key; do not commit this value):
+
+**PowerShell (Windows):**
+
+```powershell
+$env:NUGET_API_KEY = '<paste-api-key-here>'
+$nugetSource = 'https://api.nuget.org/v3/index.json'
+$packageDir = 'artifacts/package/release'
+```
+
+**bash (Linux/macOS):**
+
+```bash
+export NUGET_API_KEY='<paste-api-key-here>'
+nugetSource='https://api.nuget.org/v3/index.json'
+packageDir='artifacts/package/release'
+```
+
+If packages came from a downloaded GitHub Actions artifact, unzip them into `artifacts/package/release/` at the repository root (or set `packageDir` to that folder).
+
+Push **all four** `.nupkg` files, then **all four** `.snupkg` symbol packages (same ids/versions; required for debugging because projects set `SymbolPackageFormat` to `snupkg`):
+
+**PowerShell:**
+
+```powershell
+Get-ChildItem -Path $packageDir -Filter '*.nupkg' | ForEach-Object {
+  dotnet nuget push $_.FullName --api-key $env:NUGET_API_KEY --source $nugetSource --skip-duplicate
+}
+Get-ChildItem -Path $packageDir -Filter '*.snupkg' | ForEach-Object {
+  dotnet nuget push $_.FullName --api-key $env:NUGET_API_KEY --source $nugetSource --skip-duplicate
+}
+```
+
+**bash:**
+
+```bash
+set -euo pipefail
+for f in "$packageDir"/*.nupkg; do
+  dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source "$nugetSource" --skip-duplicate
+done
+for f in "$packageDir"/*.snupkg; do
+  dotnet nuget push "$f" --api-key "$NUGET_API_KEY" --source "$nugetSource" --skip-duplicate
+done
+```
+
+`--skip-duplicate` allows safe re-runs if one package already uploaded; remove it when you need a hard failure on duplicates.
+
+**Alternative (nuget.exe):** `nuget push <path> -ApiKey %NUGET_API_KEY% -Source https://api.nuget.org/v3/index.json` for each `.nupkg` and `.snupkg`. Prefer `dotnet nuget push` when the .NET SDK is already installed.
+
+### After push — verify
+
+- [ ] Each package page on nuget.org shows the new **{version}** (allow a few minutes for indexing).
+- [ ] **Manage package** → **Manage owners** still lists the expected accounts.
+- [ ] Optional smoke test: `dotnet add package KZDev.PrimeTime --version <version>` (and one testing package if desired).
+- [ ] GitHub release notes and [hosted release notes](https://kzdev-net.github.io/kzdev.primetime/) match what you intended (DocFX updates via the doc publish workflow, not this push).
+
+### Common failures
+
+| Symptom | Likely cause |
+|---------|----------------|
+| **403 Forbidden** | API key expired, wrong scope, or account lacks ownership on the package id. |
+| **409 Conflict** / “already exists” | That version was already pushed; bump version and re-run Release assist, or confirm you meant to push a new build. |
+| **400** on `.snupkg` | Symbol package id/version does not match the `.nupkg`, or the main package was not pushed first. Push `.nupkg` before `.snupkg`. |
+| Push succeeds but version missing on gallery | CDN delay; refresh after a few minutes. |
 
 ## One-time repository setup
 
@@ -58,6 +149,7 @@ Confirm all of the following to avoid a failed run or a misleading draft:
 - `SECURITY.md`, `CONTRIBUTING.md`, and `SUPPORT.md` are present at repository root.
 - The **`primetime-release`** environment is configured if you want the second job to require approval.
 - The tag **`v{version}`** does not already point to a different release you care about; `gh release create` will fail if the release or tag already exists in a conflicting way.
+- You have planned the [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) for **after** the GitHub release is finalized (API key, ownership, `.nupkg` + `.snupkg` push).
 
 ## Local parity (optional)
 
@@ -82,7 +174,7 @@ Packing locally matches `Source/Src/package.cmd` patterns: `dotnet pack` on each
 ## Related sources
 
 - Per-package release notes: `Source/Docs/Notes/`
-- Version and pack-time note extraction: `Source/Src/Directory.Build.props`
+- Version and pack-time note extraction: `Source/Src/Directory.Build.props` (MSBuild task in `KZDev.PrimeTime.ReleaseAggregation`)
 - Aggregation tests: `Source/Tst/KZDev.PrimeTime.UnitTests/UsingReleaseNotesMarkdownAggregator.cs`
 - GitHub Pages (`.github/workflows/docfx-publish.yml`): runs the **same** `validate` and `aggregate` steps as
   this workflow, writing `Source/Docs/articles/release-notes.md` before `docfx build`, so hosted release notes
