@@ -20,7 +20,6 @@ Testing-focused contracts and implementations are delivered via the testing pack
 - `IPrimeTestClock`
 - `IPrimeTestTime`
 - `PrimeTestClock`
-- `PrimeTestTimeBase`
 
 ## System Clock stack (BCL / TimeProvider) {#system-clock-stack}
 
