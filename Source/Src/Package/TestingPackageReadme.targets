@@ -1,0 +1,80 @@
+<Project>
+    <PropertyGroup>
+        <TestingReadmePwshPath Condition="'$(TestingReadmePwshPath)' == ''">pwsh</TestingReadmePwshPath>
+        <!-- Default off on Debug/Dev (local dev); on for Release, Package, and other configurations. Set ComposeTestingPackageReadme=true to force. -->
+        <ComposeTestingPackageReadme Condition="'$(ComposeTestingPackageReadme)' == '' AND '$(Configuration)' != 'Debug' AND '$(Configuration)' != 'Dev'">true</ComposeTestingPackageReadme>
+        <ComposeTestingPackageReadme Condition="'$(ComposeTestingPackageReadme)' == ''">false</ComposeTestingPackageReadme>
+        <!-- Multi-target projects: compose once on Pack (outer) or on the first inner TFM below—not per inner build in parallel. -->
+        <TestingReadmeComposeTargetFramework Condition="'$(TestingReadmeComposeTargetFramework)' == ''">net10.0</TestingReadmeComposeTargetFramework>
+        <ComposeTestingPackageReadmeOnThisBuild>false</ComposeTestingPackageReadmeOnThisBuild>
+        <ComposeTestingPackageReadmeOnThisBuild Condition="'$(IsCrossTargetingBuild)' == 'true' AND '$(TargetFramework)' == ''">true</ComposeTestingPackageReadmeOnThisBuild>
+        <ComposeTestingPackageReadmeOnThisBuild Condition="'$(TargetFramework)' == '$(TestingReadmeComposeTargetFramework)'">true</ComposeTestingPackageReadmeOnThisBuild>
+    </PropertyGroup>
+    <Target
+        Name="_ResolveAndValidateTestingReadmeCompose"
+        Condition="'$(TestingReadmeSourceFile)' != '' AND '$(ComposeTestingPackageReadme)' == 'true' AND '$(ComposeTestingPackageReadmeOnThisBuild)' == 'true'">
+        <Error
+            Condition="'$(TestingReadmeOutputFile)' == ''"
+            Text="TestingReadmeOutputFile is required when TestingReadmeSourceFile is set for project '$(MSBuildProjectName)'." />
+        <Error
+            Condition="'$(TestingReadmeDirectDependenciesFile)' == ''"
+            Text="TestingReadmeDirectDependenciesFile is required when TestingReadmeSourceFile is set for project '$(MSBuildProjectName)'." />
+        <Error
+            Condition="'$(TestingReadmeProductionPackageId)' == ''"
+            Text="TestingReadmeProductionPackageId is required when TestingReadmeSourceFile is set for project '$(MSBuildProjectName)'." />
+        <Error
+            Condition="'$(TestingReadmeTestingPackageId)' == ''"
+            Text="TestingReadmeTestingPackageId is required when TestingReadmeSourceFile is set for project '$(MSBuildProjectName)'." />
+        <PropertyGroup>
+            <_TestingReadmeComposeScript>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'ComposeTestingPackageReadme.ps1'))</_TestingReadmeComposeScript>
+            <_ResolvedTestingReadmeSourceFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TestingReadmeSourceFile)'))</_ResolvedTestingReadmeSourceFile>
+            <_ResolvedTestingReadmeOutputFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TestingReadmeOutputFile)'))</_ResolvedTestingReadmeOutputFile>
+            <_ResolvedTestingReadmeDirectDependenciesFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TestingReadmeDirectDependenciesFile)'))</_ResolvedTestingReadmeDirectDependenciesFile>
+            <_TestingReadmePwshPathRequiresFileExists>false</_TestingReadmePwshPathRequiresFileExists>
+            <_TestingReadmePwshPathRequiresFileExists Condition="$([System.IO.Path]::IsPathRooted('$(TestingReadmePwshPath)'))">true</_TestingReadmePwshPathRequiresFileExists>
+            <_TestingReadmePwshPathRequiresFileExists Condition="$(TestingReadmePwshPath.Contains('\'))">true</_TestingReadmePwshPathRequiresFileExists>
+            <_TestingReadmePwshPathRequiresFileExists Condition="$(TestingReadmePwshPath.Contains('/'))">true</_TestingReadmePwshPathRequiresFileExists>
+        </PropertyGroup>
+        <Error
+            Condition="!Exists('$(_TestingReadmeComposeScript)')"
+            Text="Testing package readme compose script was not found: '$(_TestingReadmeComposeScript)'." />
+        <Error
+            Condition="!Exists('$(_ResolvedTestingReadmeSourceFile)')"
+            Text="Testing package readme source was not found: '$(_ResolvedTestingReadmeSourceFile)'." />
+        <Error
+            Condition="!Exists('$(_ResolvedTestingReadmeDirectDependenciesFile)')"
+            Text="Testing package readme direct-dependencies file was not found: '$(_ResolvedTestingReadmeDirectDependenciesFile)'." />
+        <Error
+            Condition="'$(_TestingReadmePwshPathRequiresFileExists)' == 'true' AND !Exists('$(TestingReadmePwshPath)')"
+            Text="TestingReadmePwshPath is set to an explicit path '$(TestingReadmePwshPath)' but the file was not found. Use a PATH command name (for example pwsh or pwsh.exe) or a full path to pwsh.exe." />
+        <ItemGroup>
+            <_TestingReadmeComposeInput Include="$(_ResolvedTestingReadmeSourceFile)" />
+            <_TestingReadmeComposeInput Include="$(_ResolvedTestingReadmeDirectDependenciesFile)" />
+            <_TestingReadmeComposeInput Include="$(_TestingReadmeComposeScript)" />
+            <_TestingReadmeComposeInput Include="$(MSBuildThisFileDirectory)fragments\testing-readme-target-frameworks.md" />
+            <_TestingReadmeComposeInput Include="$(MSBuildThisFileDirectory)fragments\testing-readme-version-pairing.template.md" />
+            <_TestingReadmeComposeInput Include="$(MSBuildThisFileDirectory)fragments\testing-readme-netstandard2-polyfills.md" />
+        </ItemGroup>
+    </Target>
+    <Target
+        Name="ComposeTestingPackageReadme"
+        DependsOnTargets="_ResolveAndValidateTestingReadmeCompose"
+        BeforeTargets="PrepareForBuild;Pack"
+        Condition="'$(TestingReadmeSourceFile)' != '' AND '$(ComposeTestingPackageReadme)' == 'true' AND '$(ComposeTestingPackageReadmeOnThisBuild)' == 'true'"
+        Inputs="@(_TestingReadmeComposeInput)"
+        Outputs="$(_ResolvedTestingReadmeOutputFile)">
+        <Exec
+            Command="&quot;$(TestingReadmePwshPath)&quot; -NoProfile -Command &quot;exit 0&quot;"
+            IgnoreExitCode="true"
+            StandardOutputImportance="Low"
+            StandardErrorImportance="Low">
+            <Output TaskParameter="ExitCode" PropertyName="_TestingReadmePwshProbeExitCode" />
+        </Exec>
+        <Error
+            Condition="'$(_TestingReadmePwshProbeExitCode)' != '0'"
+            Text="PowerShell (pwsh) is required to compose testing package readmes for '$(MSBuildProjectName)'. Install PowerShell 7+ and ensure it is on PATH, or set TestingReadmePwshPath to the full path of pwsh (or pwsh.exe)." />
+        <!-- Requires a host execution policy that permits this repo-local script (for example RemoteSigned on Windows). Override TestingReadmePwshPath when pwsh is not on PATH. -->
+        <Exec
+            Command="&quot;$(TestingReadmePwshPath)&quot; -NoProfile -File &quot;$(_TestingReadmeComposeScript)&quot; -SourceReadmePath &quot;$(_ResolvedTestingReadmeSourceFile)&quot; -OutputReadmePath &quot;$(_ResolvedTestingReadmeOutputFile)&quot; -ProductionPackageId &quot;$(TestingReadmeProductionPackageId)&quot; -TestingPackageId &quot;$(TestingReadmeTestingPackageId)&quot; -DirectDependenciesPath &quot;$(_ResolvedTestingReadmeDirectDependenciesFile)&quot;" />
+    </Target>
+</Project>

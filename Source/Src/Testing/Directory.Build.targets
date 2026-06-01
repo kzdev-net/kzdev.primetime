@@ -1,0 +1,13 @@
+<Project>
+    <PropertyGroup>
+        <_TestingPackageReadmePropsFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Package\TestingPackageReadme.props'))</_TestingPackageReadmePropsFile>
+    </PropertyGroup>
+    <Import Project="$(_TestingPackageReadmePropsFile)" Condition="Exists('$(_TestingPackageReadmePropsFile)')" />
+    <Target
+        Name="_RequireTestingPackageReadmeProps"
+        BeforeTargets="PrepareForBuild">
+        <Error
+            Condition="!Exists('$(_TestingPackageReadmePropsFile)') AND ('$(IsPacking)' == 'true' OR '$(ComposeTestingPackageReadme)' == 'true')"
+            Text="Testing package readme props were not found at '$(_TestingPackageReadmePropsFile)'. Build from the full kzdev.primetime repository (Source/Src layout) so Source/Src/Package is present, or disable packaging/readme compose for this build." />
+    </Target>
+</Project>

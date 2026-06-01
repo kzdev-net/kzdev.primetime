@@ -1,0 +1,1 @@
+- **Target frameworks:** `net10.0`, `net8.0`, and `netstandard2.0`.

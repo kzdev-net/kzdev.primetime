@@ -1,0 +1,1 @@
+- **Pair with `{{ProductionPackageId}}`:** Pin the **same NuGet version** on both packages—the same `Version` on each `PackageReference`, or the same version in both `dotnet add package` commands (for example `1.2.3` on `{{ProductionPackageId}}` and `1.2.3` on `{{TestingPackageId}}`). Mismatched versions are unsupported.

@@ -1,0 +1,1 @@
+- **`netstandard2.0` polyfills:** `Microsoft.Bcl.AsyncInterfaces`, `Microsoft.Bcl.TimeProvider`, and `System.Threading.Tasks.Extensions`. NuGet restores these only when your project targets `netstandard2.0`; they are not used on `net10.0` or `net8.0`.

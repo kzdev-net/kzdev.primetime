@@ -1,0 +1,39 @@
+<Project>
+    <!--
+    Import after PackageId is set. Paths follow Package/{PackageId}.* conventions.
+    Override TestingReadme* properties before this import when a package deviates.
+    -->
+    <PropertyGroup Condition="'$(PackageId)' != ''">
+        <_TestingPackageReadmeTargetsFile>$(MSBuildThisFileDirectory)TestingPackageReadme.targets</_TestingPackageReadmeTargetsFile>
+        <TestingReadmeSourceFile Condition="'$(TestingReadmeSourceFile)' == ''">..\..\Package\$(PackageId).readme.src.md</TestingReadmeSourceFile>
+        <TestingReadmeOutputFile Condition="'$(TestingReadmeOutputFile)' == ''">..\..\Package\$(PackageId).readme.md</TestingReadmeOutputFile>
+        <TestingReadmeDirectDependenciesFile Condition="'$(TestingReadmeDirectDependenciesFile)' == ''">..\..\Package\$(PackageId).requirements.direct-dependencies.md</TestingReadmeDirectDependenciesFile>
+        <TestingReadmeTestingPackageId Condition="'$(TestingReadmeTestingPackageId)' == ''">$(PackageId)</TestingReadmeTestingPackageId>
+        <TestingReadmeProductionPackageId Condition="'$(TestingReadmeProductionPackageId)' == ''">$([System.String]::Copy('$(PackageId)').Replace('.Testing', ''))</TestingReadmeProductionPackageId>
+    </PropertyGroup>
+    <Target
+        Name="_ValidateTestingPackageReadmeLayout"
+        BeforeTargets="PrepareForBuild"
+        Condition="'$(TestingReadmeSourceFile)' != ''">
+        <PropertyGroup>
+            <_ResolvedTestingReadmeSourceFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TestingReadmeSourceFile)'))</_ResolvedTestingReadmeSourceFile>
+            <_ResolvedTestingReadmeDirectDependenciesFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(TestingReadmeDirectDependenciesFile)'))</_ResolvedTestingReadmeDirectDependenciesFile>
+        </PropertyGroup>
+        <Error
+            Condition="!Exists('$(_TestingPackageReadmeTargetsFile)')"
+            Text="Testing package readme targets were not found at '$(_TestingPackageReadmeTargetsFile)'. Build from the full kzdev.primetime repository (Source/Src layout) so Source/Src/Package is present." />
+        <Error
+            Condition="!Exists('$(MSBuildThisFileDirectory)ComposeTestingPackageReadme.ps1')"
+            Text="Testing package readme compose script was not found at '$(MSBuildThisFileDirectory)ComposeTestingPackageReadme.ps1'." />
+        <Error
+            Condition="!Exists('$(MSBuildThisFileDirectory)fragments\testing-readme-target-frameworks.md')"
+            Text="Testing package readme fragments were not found under '$(MSBuildThisFileDirectory)fragments'." />
+        <Error
+            Condition="!Exists('$(_ResolvedTestingReadmeSourceFile)')"
+            Text="Testing package readme source was not found at '$(_ResolvedTestingReadmeSourceFile)'." />
+        <Error
+            Condition="!Exists('$(_ResolvedTestingReadmeDirectDependenciesFile)')"
+            Text="Testing package readme direct-dependencies file was not found at '$(_ResolvedTestingReadmeDirectDependenciesFile)'." />
+    </Target>
+    <Import Project="$(_TestingPackageReadmeTargetsFile)" Condition="Exists('$(_TestingPackageReadmeTargetsFile)')" />
+</Project>
