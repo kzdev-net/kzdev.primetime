@@ -48,7 +48,8 @@
         <MSBuild
             Projects="$(_PrimeTimeReleaseAggregationProject)"
             Targets="Build"
-            Properties="Configuration=$(_PrimeTimeReleaseAggregationBuildConfiguration)" />
+            Properties="Configuration=$(_PrimeTimeReleaseAggregationBuildConfiguration)"
+            RemoveProperties="TargetFramework;TargetFrameworks" />
         <Error
             Condition="!Exists('$(_PrimeTimeReleaseAggregationDll)')"
             Text="Release aggregation task assembly was not built: '$(_PrimeTimeReleaseAggregationDll)'." />
