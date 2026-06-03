@@ -245,20 +245,18 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
         using PrimeTimeTestEventListener listener = new("KZDev.SystemClock.PrimeTime", "Interval",
             clockTimerCallbackExceptionDetailContains: ExceptionMarker);
         IPrimeClock clock = new PrimeClock();
-        using (IClockIntervalTimer registration = clock.RegisterTimer(
-                   TimeSpan.FromMilliseconds(1),
-                   Timeout.InfiniteTimeSpan,
-                   _ =>
-                   {
-                       callbackEntered.Set();
-                       throw new InvalidOperationException(ExceptionMarker);
-                   },
-                   TestContext.Current.CancellationToken))
-        {
-            callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
-            listener.ClockTimerCallbackExceptionCount.Should().Be(1);
-        }
+        using IClockIntervalTimer registration = clock.RegisterTimer(
+            TimeSpan.FromMilliseconds(1),
+            Timeout.InfiniteTimeSpan,
+            _ =>
+            {
+                callbackEntered.Set();
+                throw new InvalidOperationException(ExceptionMarker);
+            },
+            TestContext.Current.CancellationToken);
+        callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+        SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
+        listener.ClockTimerCallbackExceptionCount.Should().Be(1);
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -273,20 +271,18 @@ public sealed class UsingPrimeTimeEventSource : UnitTestBase
         using PrimeTimeTestEventListener listener = new("KZDev.SystemClock.PrimeTime", "Interval",
             clockTimerCallbackExceptionDetailContains: ExceptionMarker);
         IPrimeClock clock = new PrimeClock();
-        using (IClockIntervalTimer registration = clock.RegisterAsyncTimer(
-                   TimeSpan.FromMilliseconds(1),
-                   async cancellationToken =>
-                   {
-                       callbackEntered.Set();
-                       await Task.Yield();
-                       throw new InvalidOperationException(ExceptionMarker);
-                   },
-                   TestContext.Current.CancellationToken))
-        {
-            callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-            SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
-            listener.ClockTimerCallbackExceptionCount.Should().Be(1);
-        }
+        using IClockIntervalTimer registration = clock.RegisterAsyncTimer(
+            TimeSpan.FromMilliseconds(1),
+            async _ =>
+            {
+                callbackEntered.Set();
+                await Task.Yield();
+                throw new InvalidOperationException(ExceptionMarker);
+            },
+            TestContext.Current.CancellationToken);
+        callbackEntered.Wait(ThreadPoolTimerTestWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+        SpinWait.SpinUntil(() => listener.ClockTimerCallbackExceptionCount > 0, ThreadPoolTimerTestWaitTimeout).Should().BeTrue();
+        listener.ClockTimerCallbackExceptionCount.Should().Be(1);
     }
     //----------------------------------------------------------------------------
 

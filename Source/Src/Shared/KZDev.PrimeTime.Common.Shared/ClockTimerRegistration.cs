@@ -278,7 +278,7 @@ internal abstract partial class ClockTimerRegistration : IClockTimer
     ///   Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.
     /// </param>
     /// <param name="cancellationToken">Token that cancels the registration.</param>
-    internal virtual void FinishConstruction (IPrimeClock clock, bool captureContext,
+    internal void FinishConstruction (IPrimeClock clock, bool captureContext,
         bool utcTimeOfDaySchedule, TimerCallbackKind callbackKind, Delegate callback, 
         object? callbackState, CancellationToken cancellationToken)
     {

@@ -82,7 +82,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
     /// <returns>
     ///   <c>true</c> when <paramref name="delay"/> is a finite, non-negative interval; otherwise <c>false</c>.
     /// </returns>
-    private bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
+    private static bool TryGetTimerMillisecondsForSchedule (TimeSpan delay, out int milliseconds)
     {
         if (delay < TimeSpan.Zero || delay == Timeout.InfiniteTimeSpan)
         {

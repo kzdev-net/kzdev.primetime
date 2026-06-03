@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 // ReSharper disable UnusedType.Global : MSBuild task types must be public and are instantiated via reflection by MSBuild, so they may appear unused in the codebase.
 // ReSharper disable MemberCanBePrivate.Global : MSBuild task properties must be public for MSBuild to set them, so they may appear to be able to be private in the codebase.
 // ReSharper disable UnusedAutoPropertyAccessor.Global : MSBuild task properties must have public getters and setters for MSBuild to set them, so they may appear to have unused accessors in the codebase.
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global : MSBuild task properties must have public setters for MSBuild to set them, so they may appear to be able to be get-only in the codebase.
 
 namespace KZDev.PrimeTime.ReleaseAggregation;
 

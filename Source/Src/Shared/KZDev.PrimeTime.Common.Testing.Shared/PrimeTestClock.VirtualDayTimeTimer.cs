@@ -147,17 +147,17 @@ public sealed partial class PrimeTestClock
         /// <summary>
         ///   Gets or sets whether day-time callbacks are enabled.
         /// </summary>
-        protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] set; } = true;
+        protected bool EnabledDayTime { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; } = true;
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether this registration has been disposed.
         /// </summary>
-        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool Disposed { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets whether external cancellation was requested.
         /// </summary>
-        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] set; }
+        protected bool CancelRequested { [DebuggerStepThrough] get; [DebuggerStepThrough] private set; }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets how many callbacks are currently in flight.

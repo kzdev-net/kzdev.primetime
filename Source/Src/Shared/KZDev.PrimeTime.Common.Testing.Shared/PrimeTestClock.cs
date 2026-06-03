@@ -126,7 +126,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     ///   Test-only: signaled after <see cref="Stop"/> sets <see cref="_runnerStopInProgress"/> and releases
     ///   <see cref="PrimeTestTimeBase.Gate"/> before joining the runner thread.
     /// </summary>
-    internal ManualResetEventSlim TestRunnerStopJoinPhaseEntered { get; } = new(initialState: false);
+    internal ManualResetEventSlim TestRunnerStopJoinPhaseEntered { [DebuggerStepThrough] get; } = new(initialState: false);
 
     /// <summary>
     ///   Real elapsed time since the last committed virtual instant while <see cref="PrimeTestTimeBase.InternalIsRunning"/>
@@ -136,7 +136,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     /// </summary>
     /// <remarks>
     ///   <para>
-    ///     <see cref="Stopwatch"/> is not thread-safe for unsynchronized concurrent use. Every read or write of this
+    ///     <see cref="Stopwatch"/> is not thread-safe for un-synchronized concurrent use. Every read or write of this
     ///     instance (including <see cref="Stopwatch.Elapsed"/>, <see cref="Stopwatch.Restart"/>, and
     ///     <see cref="Stopwatch.Reset"/>) occurs only while the caller holds <see cref="PrimeTestTimeBase.Gate"/>, so
     ///     only one thread touches it at a time.

@@ -73,7 +73,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockTime">Virtual UTC when the event is raised.</param>
     /// <param name="runRateTimeSpan">Active runner rate when running; otherwise <see langword="null"/>.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockNewTimeEvent CreateNewTimeEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
+    private static PrimeTestClockNewTimeEvent CreateNewTimeEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
         new(clockTime, runRateTimeSpan);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -82,7 +82,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockTime">Committed virtual UTC when the runner started.</param>
     /// <param name="runRateTimeSpan">Active runner rate for the new run.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockStartedEvent CreateStartedEvent (DateTimeOffset clockTime, TimeSpan runRateTimeSpan) =>
+    private static PrimeTestClockStartedEvent CreateStartedEvent (DateTimeOffset clockTime, TimeSpan runRateTimeSpan) =>
         new(clockTime, runRateTimeSpan);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -91,7 +91,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockTime">Final committed virtual UTC after the runner stopped.</param>
     /// <param name="runRateTimeSpan">Runner rate that was active before stop.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockStoppedEvent CreateStoppedEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
+    private static PrimeTestClockStoppedEvent CreateStoppedEvent (DateTimeOffset clockTime, TimeSpan? runRateTimeSpan) =>
         new(clockTime, runRateTimeSpan);
     //----------------------------------------------------------------------------
     /// <summary>

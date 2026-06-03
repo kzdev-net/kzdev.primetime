@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
 using KZDev.PrimeTime.Testing;
 using KZDev.PrimeTime.Tests;
+// ReSharper disable MethodHasAsyncOverload
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
 

@@ -326,7 +326,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockInstant">Virtual instant when the event is raised.</param>
     /// <param name="runRateDuration">Active runner rate when running; otherwise <see langword="null"/>.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockNewTimeEvent CreateNewTimeEvent (Instant clockInstant, Duration? runRateDuration) =>
+    private static PrimeTestClockNewTimeEvent CreateNewTimeEvent (Instant clockInstant, Duration? runRateDuration) =>
         new(clockInstant, runRateDuration);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -335,7 +335,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockInstant">Committed virtual instant when the runner started.</param>
     /// <param name="runRateDuration">Active runner rate for the new run.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockStartedEvent CreateStartedEvent (Instant clockInstant, Duration runRateDuration) =>
+    private static PrimeTestClockStartedEvent CreateStartedEvent (Instant clockInstant, Duration runRateDuration) =>
         new(clockInstant, runRateDuration);
     //----------------------------------------------------------------------------
     /// <summary>
@@ -344,7 +344,7 @@ public sealed partial class PrimeTestClock
     /// <param name="clockInstant">Final committed virtual instant after the runner stopped.</param>
     /// <param name="runRateDuration">Runner rate that was active before stop.</param>
     /// <returns>The event payload.</returns>
-    private PrimeTestClockStoppedEvent CreateStoppedEvent (Instant clockInstant, Duration? runRateDuration) =>
+    private static PrimeTestClockStoppedEvent CreateStoppedEvent (Instant clockInstant, Duration? runRateDuration) =>
         new(clockInstant, runRateDuration);
     //----------------------------------------------------------------------------
     /// <summary>
