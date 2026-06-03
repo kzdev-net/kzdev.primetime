@@ -416,7 +416,7 @@ public sealed partial class PrimeTestClock
     /// <inheritdoc />
     public void SetInstant (Instant instant)
     {
-        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset utc = new(instant.ToDateTimeUtc(), TimeSpan.Zero);
         SetTime(utc);
     }
     //----------------------------------------------------------------------------
@@ -424,7 +424,7 @@ public sealed partial class PrimeTestClock
     public void SetLocalTime (LocalDateTime localDateTime)
     {
         Instant instant = localDateTime.InZoneLeniently(TimeZone).ToInstant();
-        DateTimeOffset utc = new DateTimeOffset(instant.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset utc = new(instant.ToDateTimeUtc(), TimeSpan.Zero);
         SetTime(utc);
     }
     //----------------------------------------------------------------------------

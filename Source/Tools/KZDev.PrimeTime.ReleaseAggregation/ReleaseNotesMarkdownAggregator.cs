@@ -63,13 +63,13 @@ public static class ReleaseNotesMarkdownAggregator
     public static IReadOnlyList<PackageReleaseNotesSource> PrimeTimePackageReleaseNotesSources { get; } =
         new List<PackageReleaseNotesSource>
         {
-            new PackageReleaseNotesSource("KZDev.PrimeTime",
+            new("KZDev.PrimeTime",
                 Path.Combine("Source", "Docs", "Notes", "KZDev.PrimeTime.release-notes.md")),
-            new PackageReleaseNotesSource("KZDev.SystemClock.PrimeTime",
+            new("KZDev.SystemClock.PrimeTime",
                 Path.Combine("Source", "Docs", "Notes", "KZDev.SystemClock.PrimeTime.release-notes.md")),
-            new PackageReleaseNotesSource("KZDev.PrimeTime.Testing",
+            new("KZDev.PrimeTime.Testing",
                 Path.Combine("Source", "Docs", "Notes", "KZDev.PrimeTime.Testing.release-notes.md")),
-            new PackageReleaseNotesSource("KZDev.SystemClock.PrimeTime.Testing",
+            new("KZDev.SystemClock.PrimeTime.Testing",
                 Path.Combine("Source", "Docs", "Notes", "KZDev.SystemClock.PrimeTime.Testing.release-notes.md"))
         }.AsReadOnly();
 

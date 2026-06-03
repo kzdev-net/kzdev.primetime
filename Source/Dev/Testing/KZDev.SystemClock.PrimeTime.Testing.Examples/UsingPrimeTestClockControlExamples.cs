@@ -20,7 +20,7 @@ public sealed class UsingPrimeTestClockControlExamples
     [Fact]
     public void TestClock_SetTime_Advance_UpdatesUtcNow ()
     {
-        DateTimeOffset start = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        DateTimeOffset start = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(start);
         clock.SetTime(new DateTimeOffset(2025, 6, 1, 8, 0, 0, TimeSpan.Zero));
         clock.Advance(TimeSpan.FromHours(3));
@@ -35,7 +35,7 @@ public sealed class UsingPrimeTestClockControlExamples
     [Fact]
     public void TestClock_RunFor_TimeSpan_WaitsForBoundedCompletion ()
     {
-        DateTimeOffset start = new DateTimeOffset(2025, 2, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset start = new(2025, 2, 1, 0, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(start);
         TimeSpan step = TimeSpan.FromMinutes(40);
         using ManualResetEventSlim stoppedSignal = new(initialState: false);

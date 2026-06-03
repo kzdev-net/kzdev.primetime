@@ -22,7 +22,7 @@ public static class ScenarioCatalog
             "Deterministic interval timers (sync and async callbacks)",
             "DI replacement via AddPrimeTestClock",
             "DST (fixed TZDB zone plus optional local machine probe)",
-            "Persistence and schedule-zone conversions (instant projections, time-of-day storage)",
+            "Persistence and schedule-zone conversions (instant projections, time-of-day storage)"
         ];
     }
 }

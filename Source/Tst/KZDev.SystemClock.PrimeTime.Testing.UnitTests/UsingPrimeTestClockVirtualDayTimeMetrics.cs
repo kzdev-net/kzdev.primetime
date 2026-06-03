@@ -57,7 +57,7 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
         DayTimeTimerOptions defaults = new();
         TimeSpan delay = DayTimeBclLocalWallTimeScheduling.GetDelayUntilNextLocalDayTime(clock.LocalNowDateTimeOffset,
             clock.LocalScheduleTimeZone, targetTimeOfDay, defaults.SkippedTimeBehavior, defaults.DuplicateTimeBehavior);
-        DateTimeOffset nextDueUtc = new DateTimeOffset((clock.LocalNowDateTimeOffset + delay).UtcDateTime, TimeSpan.Zero);
+        DateTimeOffset nextDueUtc = new((clock.LocalNowDateTimeOffset + delay).UtcDateTime, TimeSpan.Zero);
         return (long)(nextDueUtc - clock.UtcNowDateTimeOffset).TotalMilliseconds;
     }
 
@@ -68,10 +68,10 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_BeforeDue_ElapsedTimeNegativeOne_TimeUntilNextMatchesVirtualSchedule ()
     {
-        DateTimeOffset utcStart = new DateTimeOffset(2025, 1, 1, 1, 0, 0, TimeSpan.Zero);
+        DateTimeOffset utcStart = new(2025, 1, 1, 1, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(utcStart);
-        TimeOnly threeAm = new TimeOnly(3, 0);
-        LocalTimeOfDay target = new LocalTimeOfDay(threeAm);
+        TimeOnly threeAm = new(3, 0);
+        LocalTimeOfDay target = new(threeAm);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.ElapsedTime.Should().Be(-1);
@@ -88,10 +88,10 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Local_AfterFirstFire_Advance_ElapsedTimeTracksVirtualLocalClock ()
     {
-        DateTimeOffset utcStart = new DateTimeOffset(2025, 3, 10, 8, 30, 0, TimeSpan.Zero);
+        DateTimeOffset utcStart = new(2025, 3, 10, 8, 30, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(utcStart);
-        TimeOnly targetTime = new TimeOnly(4, 15);
-        LocalTimeOfDay target = new LocalTimeOfDay(targetTime);
+        TimeOnly targetTime = new(4, 15);
+        LocalTimeOfDay target = new(targetTime);
         int fireCount = 0;
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => fireCount++,
             cancellationToken: TestContext.Current.CancellationToken);
@@ -113,9 +113,9 @@ public class UsingPrimeTestClockVirtualDayTimeMetrics : UnitTestBase
     [Fact]
     public void RegisterTimeOfDay_Utc_BeforeDue_TimeUntilNextCallbackUsesUtcDayBoundary ()
     {
-        DateTimeOffset utcStart = new DateTimeOffset(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
+        DateTimeOffset utcStart = new(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(utcStart);
-        UtcTimeOfDay twoPmUtc = new UtcTimeOfDay(new TimeOnly(14, 0));
+        UtcTimeOfDay twoPmUtc = new(new TimeOnly(14, 0));
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(twoPmUtc, () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.IsLocalTimeRepresentation.Should().BeFalse();

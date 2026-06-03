@@ -194,8 +194,8 @@ public class UsingIPrimeClock : UnitTestBase
         DateTimeZone utc = DateTimeZone.Utc;
         IPrimeClock clock = new PrimeClock(new FakeClock(instant), utc);
 
-        clock.UtcNowTime.Should().Be(new(12, 30, 45));
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new LocalTime(12, 30, 45));
+        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
         clock.LocalNowTime.Should().Be(clock.UtcNowTime);
         clock.LocalNowDate.Should().Be(clock.UtcNowDate);
     }
@@ -216,15 +216,15 @@ public class UsingIPrimeClock : UnitTestBase
         IPrimeClock clock = new PrimeClock(fakeClock, utc);
 
         clock.NowInstant.Should().Be(initial);
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new(10, 0, 0));
+        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new LocalTime(10, 0, 0));
 
         fakeClock.Advance(advanceBy);
 
         clock.NowInstant.Should().Be(expectedAfter);
         clock.UtcNowInstant.ToInstant().Should().Be(expectedAfter);
-        clock.UtcNowDate.Should().Be(new(2025, 3, 7));
-        clock.UtcNowTime.Should().Be(new(12, 30, 0));
+        clock.UtcNowDate.Should().Be(new LocalDate(2025, 3, 7));
+        clock.UtcNowTime.Should().Be(new LocalTime(12, 30, 0));
         clock.LocalZonedNowInstant.ToInstant().Should().Be(expectedAfter);
     }
     //----------------------------------------------------------------------------

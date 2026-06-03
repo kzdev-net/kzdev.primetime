@@ -16,5 +16,5 @@ public enum DemoRunMode
     /// <summary>
     /// Longer runtime profile intended for deeper walkthrough sessions.
     /// </summary>
-    Long,
+    Long
 }

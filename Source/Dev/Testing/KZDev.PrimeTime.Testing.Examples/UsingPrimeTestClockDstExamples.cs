@@ -40,7 +40,7 @@ public sealed class UsingPrimeTestClockDstExamples
     public void DstFallAmbiguous_SetLocalTime_LenientMappingIsStable ()
     {
         DateTimeZone eastern = NodaDstScenarioFixture.UsEastern;
-        LocalDateTime ambiguousWall = new LocalDateTime(2024, 11, 3, 1, 30);
+        LocalDateTime ambiguousWall = new(2024, 11, 3, 1, 30);
         ZonedDateTime lenient = eastern.AtLeniently(ambiguousWall);
         IPrimeTestClock clock = new PrimeTestClock(lenient.ToInstant(), eastern);
         clock.SetLocalTime(ambiguousWall);

@@ -25,7 +25,7 @@ public enum PrimeTestClockEventType
     /// <summary>
     ///   The automatic runner stopped after joining the background thread and committing the final instant.
     /// </summary>
-    ClockStopped,
+    ClockStopped
     //----------------------------------------------------------------------------
 }
 //################################################################################

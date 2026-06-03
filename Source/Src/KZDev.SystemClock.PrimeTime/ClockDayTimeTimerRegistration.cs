@@ -119,8 +119,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
             // within a narrow window), advance to the next UTC calendar day instead.
             if (IsEarlyTickOnSameDay(scheduleNowOffset, nextFireDateTimeOffset, delayUntilNextFire))
             {
-                DateTimeOffset nextDayFireOffset =
-                    new DateTimeOffset(scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay), TimeSpan.Zero);
+                DateTimeOffset nextDayFireOffset = new(scheduleCalendarDate.AddDays(1).ToDateTime(_targetTimeOfDay), TimeSpan.Zero);
                 delayUntilNextFire = nextDayFireOffset - scheduleNowOffset;
             }
         }

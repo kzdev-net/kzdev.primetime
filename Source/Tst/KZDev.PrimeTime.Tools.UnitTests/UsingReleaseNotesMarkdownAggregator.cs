@@ -229,7 +229,7 @@ public class UsingReleaseNotesMarkdownAggregator
             File.WriteAllText(releaseNotesPath, "## Version 1.0.0\n\n### Added\n- sample\n");
             IReadOnlyList<PackageReleaseNotesSource> sources =
             [
-                new PackageReleaseNotesSource("Test.Package", "pkg.release-notes.md")
+                new("Test.Package", "pkg.release-notes.md")
             ];
             Action act = () => ReleaseNotesMarkdownAggregator.ValidateReleaseNotesForVersion(temporaryDirectoryPath, "2.0.0", sources);
             act.Should().Throw<ReleaseNotesAggregationException>();

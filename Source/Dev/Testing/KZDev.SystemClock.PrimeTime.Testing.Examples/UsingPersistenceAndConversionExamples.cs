@@ -22,7 +22,7 @@ public sealed class UsingPersistenceAndConversionExamples
     [Fact]
     public void PersistedUtc_ToScheduleZone_MatchesTimeZoneInfoConvertTime ()
     {
-        DateTimeOffset persistedUtc = new DateTimeOffset(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
+        DateTimeOffset persistedUtc = new(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(persistedUtc);
         IPrimeTime time = clock;
 
@@ -38,7 +38,7 @@ public sealed class UsingPersistenceAndConversionExamples
     [Fact]
     public void PersistedUtc_ToScheduleDateAndTime_RecombinesToWallDateTime ()
     {
-        DateTimeOffset persistedUtc = new DateTimeOffset(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
+        DateTimeOffset persistedUtc = new(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(persistedUtc);
         IPrimeTime time = clock;
 

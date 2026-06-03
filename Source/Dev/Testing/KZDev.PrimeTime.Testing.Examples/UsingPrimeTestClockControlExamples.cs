@@ -38,7 +38,7 @@ public sealed class UsingPrimeTestClockControlExamples
     public void TestClock_SetLocalTime_LenientSpringGap_ResolvesToValidZonedTime ()
     {
         DateTimeZone eastern = NodaDstScenarioFixture.UsEastern;
-        LocalDateTime gapWall = new LocalDateTime(2024, 3, 10, 2, 30);
+        LocalDateTime gapWall = new(2024, 3, 10, 2, 30);
         ZonedDateTime lenient = eastern.AtLeniently(gapWall);
         IPrimeTestClock clock = new PrimeTestClock(lenient.ToInstant(), eastern);
         clock.SetLocalTime(gapWall);

@@ -25,7 +25,7 @@ public sealed class PersistenceAndConversionScenario : IExampleScenario
         IPrimeClock primeClock = serviceProvider.GetRequiredService<IPrimeClock>();
         IPrimeTime time = primeClock;
 
-        DateTimeOffset persistedUtc = new DateTimeOffset(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
+        DateTimeOffset persistedUtc = new(2025, 7, 4, 15, 30, 0, TimeSpan.Zero);
 
         DateTimeOffset inScheduleZone = time.ToScheduleDateTimeOffset(persistedUtc);
         ScenarioConsole.WriteLine($"Schedule DateTimeOffset: {inScheduleZone:O}");

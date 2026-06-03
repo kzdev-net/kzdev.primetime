@@ -103,7 +103,7 @@ public static class LocalDstTransitionFinder
                 DateTimeKind.Unspecified);
         }
 
-        DateTime firstDayOfMonth = new DateTime(year, transitionTime.Month, 1);
+        DateTime firstDayOfMonth = new(year, transitionTime.Month, 1);
         int daysToTargetDay = ((int)transitionTime.DayOfWeek - (int)firstDayOfMonth.DayOfWeek + 7) % 7;
         DateTime firstTargetDay = firstDayOfMonth.AddDays(daysToTargetDay);
         DateTime transitionDate = firstTargetDay.AddDays((transitionTime.Week - 1) * 7);

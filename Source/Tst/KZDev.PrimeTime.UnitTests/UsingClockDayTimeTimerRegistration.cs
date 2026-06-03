@@ -412,7 +412,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         LocalTime targetUtc = new(18, 0, 0);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.Skip,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.Skip
         };
         using ManualResetEventSlim enteredFirstCallback = new(false);
         using ManualResetEventSlim releaseFirstCallback = new(false);
@@ -466,7 +466,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         LocalTime targetUtc = new(18, 0, 0);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim enteredFirstCallback = new(false);
         using ManualResetEventSlim releaseFirstCallback = new(false);
@@ -517,7 +517,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         LocalTime targetUtc = new(18, 0, 0);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim innerStarted = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
@@ -572,7 +572,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         LocalTime targetUtc = new(18, 0, 0);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim enteredAsyncBody = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);

@@ -137,7 +137,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowDateTimeOffset + ShortDelay).UtcDateTime);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim enteredFirstCallback = new(false);
         using ManualResetEventSlim releaseFirstCallback = new(false);
@@ -175,7 +175,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowDateTimeOffset + ShortDelay).UtcDateTime);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim innerStarted = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
@@ -215,7 +215,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         TimeOnly target = TimeOnly.FromDateTime((clock.UtcNowDateTimeOffset + ShortDelay).UtcDateTime);
         DayTimeTimerOptions options = new()
         {
-            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially,
+            ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
         using ManualResetEventSlim enteredAsyncBody = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);

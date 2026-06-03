@@ -368,7 +368,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Instant targetInstant = initial + Duration.FromSeconds(30);
-        DateTimeOffset targetUtc = new DateTimeOffset(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset targetUtc = new(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         List<Instant> observedNow = [];
         using (clock.RegisterTimer(Duration.FromSeconds(10),
@@ -395,7 +395,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 0, 0, 0);
         Instant targetInstant = initial + Duration.FromSeconds(30);
-        DateTimeOffset targetUtc = new DateTimeOffset(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset targetUtc = new(targetInstant.ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int eventCount = 0;
         clock.ClockEvents += (_, _) => eventCount++;
@@ -525,7 +525,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void ClockRunning_SetTimeToPastValue_ThrowsInvalidOperationException ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
-        DateTimeOffset earlier = new DateTimeOffset((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset earlier = new((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Start((Duration?)null);
         Action act = () => clock.SetTime(earlier);
@@ -557,7 +557,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void ClockRunning_SetLocalTimeBackward_ThrowsInvalidOperationException ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 2, 12, 0, 0);
-        LocalDateTime earlierLocal = new LocalDateTime(2025, 1, 1, 0, 0, 0);
+        LocalDateTime earlierLocal = new(2025, 1, 1, 0, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         clock.Start((Duration?)null);
         Action act = () => clock.SetLocalTime(earlierLocal);
@@ -574,7 +574,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void ClockStopped_ActiveIntervalTimer_SetTimeBackward_ThrowsInvalidOperationException ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
-        DateTimeOffset earlier = new DateTimeOffset((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset earlier = new((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         using (clock.RegisterTimer(Duration.FromMinutes(1), Duration.FromMinutes(1), _ => { },
                    TestContext.Current.CancellationToken))
@@ -593,7 +593,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void ClockStopped_DisposedIntervalTimer_SetTimeBackward_UpdatesNowInstant ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
-        DateTimeOffset earlier = new DateTimeOffset((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset earlier = new((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         IClockIntervalTimer timer = clock.RegisterTimer(Duration.FromMinutes(1), Duration.FromMinutes(1), _ => { },
             TestContext.Current.CancellationToken);
@@ -611,7 +611,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     public void ClockStopped_PermittedBackwardSetTime_RaisesClockEventsOnce ()
     {
         Instant initial = Instant.FromUtc(2025, 1, 1, 12, 0, 0);
-        DateTimeOffset earlier = new DateTimeOffset((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset earlier = new((initial - Duration.FromHours(1)).ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(initial);
         int eventCount = 0;
         clock.ClockEvents += (_, _) => eventCount++;
@@ -629,8 +629,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant morning = Instant.FromUtc(2025, 1, 1, 10, 0, 0);
         Instant evening = Instant.FromUtc(2025, 1, 1, 18, 0, 0);
-        DateTimeOffset eveningOffset = new DateTimeOffset(evening.ToDateTimeUtc(), TimeSpan.Zero);
-        DateTimeOffset morningOffset = new DateTimeOffset(morning.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset eveningOffset = new(evening.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset morningOffset = new(morning.ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(morning, DateTimeZone.Utc);
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(new LocalTime(12, 0),
             _ => { },
@@ -652,8 +652,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant morning = Instant.FromUtc(2025, 1, 1, 10, 0, 0);
         Instant evening = Instant.FromUtc(2025, 1, 1, 18, 0, 0);
-        DateTimeOffset eveningOffset = new DateTimeOffset(evening.ToDateTimeUtc(), TimeSpan.Zero);
-        DateTimeOffset morningOffset = new DateTimeOffset(morning.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset eveningOffset = new(evening.ToDateTimeUtc(), TimeSpan.Zero);
+        DateTimeOffset morningOffset = new(morning.ToDateTimeUtc(), TimeSpan.Zero);
         IPrimeTestClock clock = new PrimeTestClock(morning, DateTimeZone.Utc);
         int fireCount = 0;
         using (clock.RegisterTimeOfDay(new LocalTime(12, 0),
@@ -2475,7 +2475,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     {
         Instant initial = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
-        UtcTimeOfDay twoPmUtc = new UtcTimeOfDay(new TimeOnly(14, 0));
+        UtcTimeOfDay twoPmUtc = new(new TimeOnly(14, 0));
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(twoPmUtc, () => { },
             cancellationToken: TestContext.Current.CancellationToken);
         timer.IsLocalTimeRepresentation.Should().BeFalse();

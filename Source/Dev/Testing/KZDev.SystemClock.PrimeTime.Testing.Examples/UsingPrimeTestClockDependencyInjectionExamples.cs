@@ -33,7 +33,7 @@ public sealed class UsingPrimeTestClockDependencyInjectionExamples
         IPrimeTestClock testClock = provider.GetRequiredService<IPrimeTestClock>();
         IPrimeClock clock = provider.GetRequiredService<IPrimeClock>();
 
-        DateTimeOffset marker = new DateTimeOffset(2025, 4, 1, 15, 0, 0, TimeSpan.Zero);
+        DateTimeOffset marker = new(2025, 4, 1, 15, 0, 0, TimeSpan.Zero);
         testClock.SetTime(marker);
         consumer.ReadUtc().Should().Be(marker);
         clock.UtcNowDateTimeOffset.Should().Be(marker);

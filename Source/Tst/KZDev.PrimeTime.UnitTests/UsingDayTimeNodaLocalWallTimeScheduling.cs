@@ -236,7 +236,7 @@ public class UsingDayTimeNodaLocalWallTimeScheduling : UnitTestBase
         {
             ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunConcurrently,
             SkippedTimeBehavior = skippedTimeBehavior,
-            DuplicateTimeBehavior = duplicateTimeBehavior,
+            DuplicateTimeBehavior = duplicateTimeBehavior
         };
 
     /// <summary>

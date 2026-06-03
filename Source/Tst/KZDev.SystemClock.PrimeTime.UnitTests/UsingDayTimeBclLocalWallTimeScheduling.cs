@@ -151,11 +151,11 @@ public class UsingDayTimeBclLocalWallTimeScheduling : UnitTestBase
     /// <returns>Options for <c>IPrimeClock.RegisterTimeOfDay</c>.</returns>
     private static DayTimeTimerOptions CreateLocalDayTimeTimerOptions (SkippedTimeBehavior skippedTimeBehavior,
         DuplicateTimeBehavior duplicateTimeBehavior) =>
-        new DayTimeTimerOptions
+        new()
         {
             ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunConcurrently,
             SkippedTimeBehavior = skippedTimeBehavior,
-            DuplicateTimeBehavior = duplicateTimeBehavior,
+            DuplicateTimeBehavior = duplicateTimeBehavior
         };
 
     /// <summary>

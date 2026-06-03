@@ -38,7 +38,7 @@ public static class ScenarioCatalog
             new TimeOfDayTimerScenario(runMode),
             new TimeProviderBridgeScenario(),
             new DstScenario(),
-            new EnvironmentAwareDstScenario(context),
+            new EnvironmentAwareDstScenario(context)
         ];
 
         return scenarios;

@@ -553,7 +553,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             ShortDelay,
             Timeout.InfiniteTimeSpan,
             TimerCallbackKind.SimpleAction,
-            (Action)(callbackInvoked.Set),
+            (Action)callbackInvoked.Set,
             null,
             null,
             TestContext.Current.CancellationToken);
