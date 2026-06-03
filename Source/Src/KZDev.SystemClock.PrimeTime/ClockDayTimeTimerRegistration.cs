@@ -69,9 +69,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return false;
         if (scheduleNowOffset >= nextFireDateTimeOffset)
             return false;
-        if (delayUntilNextFire >= TimeSpan.FromMilliseconds(MaxEarlyTickDelayMilliseconds))
-            return false;
-        return true;
+        return delayUntilNextFire < TimeSpan.FromMilliseconds(MaxEarlyTickDelayMilliseconds);
     }
     //----------------------------------------------------------------------------
 

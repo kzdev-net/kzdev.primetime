@@ -100,9 +100,7 @@ internal sealed partial class ClockDayTimeTimerRegistration
             return false;
         if (naiveDelay <= Duration.Zero)
             return false;
-        if (naiveDelay >= Duration.FromMilliseconds(MaxEarlyTickDelayMilliseconds))
-            return false;
-        return true;
+        return naiveDelay < Duration.FromMilliseconds(MaxEarlyTickDelayMilliseconds);
     }
     //----------------------------------------------------------------------------
 

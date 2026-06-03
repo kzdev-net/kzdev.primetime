@@ -98,7 +98,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
             TestContext.Current.CancellationToken,
             new DayTimeTimerOptions
             {
@@ -223,7 +223,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             .LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
         signal.Wait((ShortDelay + CallbackSettle).ToTimeSpan(), TestContext.Current.CancellationToken)
@@ -245,7 +245,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
             TestContext.Current.CancellationToken, timerOptions: null);
         IDayTimeTimer dayTimer = (IDayTimeTimer)timer;
         dayTimer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);

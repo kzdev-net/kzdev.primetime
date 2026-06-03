@@ -170,7 +170,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using CancellationTokenSource cts = new();
         cts.Cancel();
 
-        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, signal.Set,
             cts.Token, timerOptions: null);
         signal.Wait((ShortDelay + CallbackSettle).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
@@ -188,7 +188,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromMilliseconds(200),
-            () => signal.Set(),
+            signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
         signal.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeFalse();
@@ -520,7 +520,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay + Duration.FromSeconds(2),
-            () => signal.Set(),
+            signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         clock.Sleep(ShortDelay);
         timer.Stop().Should().BeTrue();
@@ -577,7 +577,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             ShortDelay.ToTimeSpan(),
             Timeout.InfiniteTimeSpan,
             TimerCallbackKind.SimpleAction,
-            () => callbackInvoked.Set(),
+            callbackInvoked.Set,
             null,
             null,
             TestContext.Current.CancellationToken);
@@ -850,7 +850,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
 
-        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, signal.Set,
             TestContext.Current.CancellationToken,
             timerOptions: new IntervalTimerOptions { CallbackExecutionContext = TimerCallbackExecutionContext.Unsafe });
         bool fired = signal.Wait((WaitMargin + ShortDelay + Duration.FromSeconds(1)).ToTimeSpan(),
@@ -875,7 +875,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         ManualResetEventSlim signal = new(false);
-        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, () => signal.Set(),
+        using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Id.Should().BeGreaterThan(0);
         timer.IsTimeOfDay.Should().BeFalse();

@@ -72,12 +72,7 @@ public sealed class TimeCancellationTokenSource : IDisposable
     /// </exception>
     public CancellationToken Token
     {
-        get
-        {
-            if (Volatile.Read(ref _disposed) != 0)
-                throw new ObjectDisposedException(nameof(TimeCancellationTokenSource));
-            return _primary.Token;
-        }
+        get => Volatile.Read(ref _disposed) != 0 ? throw new ObjectDisposedException(nameof(TimeCancellationTokenSource)) : _primary.Token;
     }
     //----------------------------------------------------------------------------
 
@@ -90,12 +85,7 @@ public sealed class TimeCancellationTokenSource : IDisposable
     /// </exception>
     public bool IsCancellationRequested
     {
-        get
-        {
-            if (Volatile.Read(ref _disposed) != 0)
-                throw new ObjectDisposedException(nameof(TimeCancellationTokenSource));
-            return _primary.IsCancellationRequested;
-        }
+        get => Volatile.Read(ref _disposed) != 0 ? throw new ObjectDisposedException(nameof(TimeCancellationTokenSource)) : _primary.IsCancellationRequested;
     }
     //----------------------------------------------------------------------------
 

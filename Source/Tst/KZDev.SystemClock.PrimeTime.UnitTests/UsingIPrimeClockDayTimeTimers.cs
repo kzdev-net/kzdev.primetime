@@ -94,7 +94,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             TestContext.Current.CancellationToken,
             new DayTimeTimerOptions
             {
@@ -153,7 +153,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.IsLocalTimeRepresentation.Should().BeFalse();
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
@@ -253,7 +253,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Change(new UtcTimeOfDay(new TimeOnly(0, 0, 0))).Should().BeFalse();
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
@@ -271,7 +271,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Change(new LocalTimeOfDay(new TimeOnly(0, 0, 0))).Should().BeFalse();
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
@@ -293,7 +293,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
         signal.Wait(ShortDelay + CallbackSettle, TestContext.Current.CancellationToken).Should().BeFalse();
@@ -313,7 +313,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         UtcTimeOfDay timeOfDay = new(target);
         ManualResetEventSlim signal = new(false);
 
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             TestContext.Current.CancellationToken, timerOptions: null);
         timer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);
         timer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);

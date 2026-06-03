@@ -49,12 +49,7 @@ public static class NodaDurationBclConversion
             return TimeSpan.Zero;
         }
 
-        if (duration >= MaxDurationForDelay)
-        {
-            return TimeSpan.MaxValue;
-        }
-
-        return duration.ToTimeSpan();
+        return duration >= MaxDurationForDelay ? TimeSpan.MaxValue : duration.ToTimeSpan();
     }
     //----------------------------------------------------------------------------
 
@@ -81,12 +76,7 @@ public static class NodaDurationBclConversion
             return TimeSpan.Zero;
         }
 
-        if (duration >= MaxDurationForCancellationToken)
-        {
-            return TimeSpan.FromMilliseconds(int.MaxValue);
-        }
-
-        return duration.ToTimeSpan();
+        return duration >= MaxDurationForCancellationToken ? TimeSpan.FromMilliseconds(int.MaxValue) : duration.ToTimeSpan();
     }
     //----------------------------------------------------------------------------
 

@@ -44,8 +44,6 @@ public static class PrimeClockNodaTimerExtensions
             timerOptions);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and state.
     /// </summary>
@@ -71,8 +69,6 @@ public static class PrimeClockNodaTimerExtensions
         Duration repeatInterval = repeat ? callbackTime : NoRepeatDuration;
         return clock.RegisterTimer(callbackTime, repeatInterval, callback, cancellationToken, state, timerOptions);
     }
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with a synchronous callback that receives context and cancellation token.
@@ -104,8 +100,6 @@ public static class PrimeClockNodaTimerExtensions
             timerOptions);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with an asynchronous callback.
     /// </summary>
@@ -134,8 +128,6 @@ public static class PrimeClockNodaTimerExtensions
             timerOptions);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a one-shot or repeating interval timer with an asynchronous callback that receives context and cancellation token.
     /// </summary>
@@ -162,8 +154,6 @@ public static class PrimeClockNodaTimerExtensions
         return clock.RegisterAsyncTimer(callbackTime, repeatInterval, callback, cancellationToken, state, timerOptions);
     }
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback).
     /// </summary>
@@ -188,8 +178,6 @@ public static class PrimeClockNodaTimerExtensions
             cancellationToken,
             null,
             timerOptions);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (sync callback with context and token).
@@ -217,8 +205,6 @@ public static class PrimeClockNodaTimerExtensions
             cancellationToken,
             state,
             timerOptions);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers an interval timer with an initial delay and a separate repeat interval (async callback).
@@ -274,8 +260,6 @@ public static class PrimeClockNodaTimerExtensions
             null,
             timerOptions);
     //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
@@ -300,8 +284,6 @@ public static class PrimeClockNodaTimerExtensions
             cancellationToken,
             state,
             timerOptions);
-    //----------------------------------------------------------------------------
-
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Registers a time-of-day timer with an asynchronous callback.

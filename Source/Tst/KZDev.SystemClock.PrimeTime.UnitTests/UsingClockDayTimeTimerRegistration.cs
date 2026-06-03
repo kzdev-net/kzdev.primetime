@@ -62,7 +62,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         IPrimeClock clock = new PrimeClock(fake);
         using ManualResetEventSlim entered = new(false);
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
-            TimerCallbackKind.SimpleAction, () => entered.Set(), null, null, TestContext.Current.CancellationToken);
+            TimerCallbackKind.SimpleAction, entered.Set, null, null, TestContext.Current.CancellationToken);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(
             typeof(ClockDayTimeTimerRegistration));
         onTimerTick.Invoke(registration, [null]);
@@ -339,7 +339,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         IPrimeClock clock = new PrimeClock();
         TimeOnly farTarget = TimeOnly.FromDateTime((clock.UtcNowDateTimeOffset + TimeSpan.FromSeconds(6)).UtcDateTime);
         using ManualResetEventSlim signal = new(false);
-        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(new UtcTimeOfDay(farTarget), () => signal.Set(),
+        using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(new UtcTimeOfDay(farTarget), signal.Set,
             TestContext.Current.CancellationToken);
         timer.ElapsedTime.Should().Be(-1);
         TimeOnly nearTarget = TimeOnly.FromDateTime((clock.UtcNowDateTimeOffset + ShortDelay).UtcDateTime);
