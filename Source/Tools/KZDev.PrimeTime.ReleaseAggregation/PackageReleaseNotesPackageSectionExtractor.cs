@@ -141,11 +141,13 @@ public static class PackageReleaseNotesPackageSectionExtractor
         int packageContentEndIndex = versionLines.Length;
         for (int index = packageContentStartIndex; index < versionLines.Length; index++)
         {
-            if (versionLines[index].StartsWith("### ", StringComparison.Ordinal))
+            if (!versionLines[index].StartsWith("### ", StringComparison.Ordinal))
             {
-                packageContentEndIndex = index;
-                break;
+                continue;
             }
+
+            packageContentEndIndex = index;
+            break;
         }
 
         string packageSectionText = string.Join(

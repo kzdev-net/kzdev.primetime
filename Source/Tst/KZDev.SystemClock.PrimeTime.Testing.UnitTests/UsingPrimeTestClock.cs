@@ -1894,11 +1894,13 @@ public class UsingPrimeTestClock : UnitTestBase
         int stoppedAt = -1;
         for (int i = snapshot.Count - 1; i >= 0; i--)
         {
-            if (snapshot[i].EventType == PrimeTestClockEventType.ClockStopped)
+            if (snapshot[i].EventType != PrimeTestClockEventType.ClockStopped)
             {
-                stoppedAt = i;
-                break;
+                continue;
             }
+
+            stoppedAt = i;
+            break;
         }
         stoppedAt.Should().BeGreaterThanOrEqualTo(0);
         snapshot[stoppedAt].EventType.Should().Be(PrimeTestClockEventType.ClockStopped);

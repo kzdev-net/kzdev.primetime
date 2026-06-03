@@ -543,17 +543,19 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
 
         DateTimeOffset earliestUtc = bestUtc is null || heartbeatDeadlineUtc < bestUtc ? heartbeatDeadlineUtc : bestUtc.Value;
-        if (_runForBounded && _runForStopUtc is { } runForStopUtc)
+        if (!_runForBounded || _runForStopUtc is not { } runForStopUtc)
         {
-            if (runForStopUtc <= nowUtc)
-            {
-                return nowUtc;
-            }
+            return earliestUtc;
+        }
 
-            if (runForStopUtc < earliestUtc)
-            {
-                earliestUtc = runForStopUtc;
-            }
+        if (runForStopUtc <= nowUtc)
+        {
+            return nowUtc;
+        }
+
+        if (runForStopUtc < earliestUtc)
+        {
+            earliestUtc = runForStopUtc;
         }
 
         return earliestUtc;
@@ -1220,14 +1222,16 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         }
 #endif
 
-        if (didWork)
+        if (!didWork)
         {
-            lock (Gate)
+            return didWork;
+        }
+
+        lock (Gate)
+        {
+            if (InternalIsRunning)
             {
-                if (InternalIsRunning)
-                {
-                    ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
-                }
+                ResetRunnerHeartbeatWindowLocked(ReadVirtualUtcNowLocked());
             }
         }
 
@@ -1396,16 +1400,18 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                     return;
                 }
 
-                if (afterMarchUtc.UtcTicks > utcTime.UtcTicks)
+                if (afterMarchUtc.UtcTicks <= utcTime.UtcTicks)
                 {
-                    ThrowIfBackwardVirtualTimeChangeDisallowedLocked(utcTime, afterMarchUtc);
-                    SetVirtualUtcNowLocked(utcTime);
-#if NET || !SYSTEMCLOCK
-                    RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked();
-#endif
-                    RaiseNewTimeEvent(utcTime);
-                    return;
+                    continue;
                 }
+
+                ThrowIfBackwardVirtualTimeChangeDisallowedLocked(utcTime, afterMarchUtc);
+                SetVirtualUtcNowLocked(utcTime);
+#if NET || !SYSTEMCLOCK
+                RecomputeDayTimeTimersAfterPermittedBackwardJumpLocked();
+#endif
+                RaiseNewTimeEvent(utcTime);
+                return;
             }
         }
 
@@ -1448,16 +1454,18 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
         MarchVirtualUtcForwardToTargetRaisingClockEventsFromExternalCaller(targetUtc);
 
-        if (duration == TimeSpan.Zero)
+        if (duration != TimeSpan.Zero)
         {
-            DateTimeOffset utcNow;
-            lock (Gate)
-            {
-                utcNow = ReadVirtualUtcNowLocked();
-            }
-
-            RaiseNewTimeEvent(utcNow);
+            return;
         }
+
+        DateTimeOffset utcNow;
+        lock (Gate)
+        {
+            utcNow = ReadVirtualUtcNowLocked();
+        }
+
+        RaiseNewTimeEvent(utcNow);
     }
     //----------------------------------------------------------------------------
     /// <inheritdoc />

@@ -90,8 +90,7 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
 
         if (transitionTime.IsFixedDateRule)
         {
-            return new DateTime(
-                year,
+            return new DateTime(year,
                 transitionTime.Month,
                 transitionTime.Day,
                 transitionBase.Hour,
@@ -100,24 +99,31 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
                 DateTimeKind.Unspecified);
         }
 
-        DateTime firstDayOfMonth = new DateTime(year, transitionTime.Month, 1);
+        DateTime firstDayOfMonth = new(year, transitionTime.Month, 1);
         int daysToTargetDay = ((int)transitionTime.DayOfWeek - (int)firstDayOfMonth.DayOfWeek + 7) % 7;
         DateTime firstTargetDay = firstDayOfMonth.AddDays(daysToTargetDay);
         DateTime transitionDate = firstTargetDay.AddDays((transitionTime.Week - 1) * 7);
 
-        if (transitionTime.Week == 5)
+        if (transitionTime.Week != 5)
         {
-            DateTime monthEnd = firstDayOfMonth.AddMonths(1).AddDays(-1);
-            while (monthEnd.DayOfWeek != transitionTime.DayOfWeek)
-            {
-                monthEnd = monthEnd.AddDays(-1);
-            }
-
-            transitionDate = monthEnd;
+            return new DateTime(transitionDate.Year,
+                transitionDate.Month,
+                transitionDate.Day,
+                transitionBase.Hour,
+                transitionBase.Minute,
+                transitionBase.Second,
+                DateTimeKind.Unspecified);
         }
 
-        return new DateTime(
-            transitionDate.Year,
+        DateTime monthEnd = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        while (monthEnd.DayOfWeek != transitionTime.DayOfWeek)
+        {
+            monthEnd = monthEnd.AddDays(-1);
+        }
+
+        transitionDate = monthEnd;
+
+        return new DateTime(transitionDate.Year,
             transitionDate.Month,
             transitionDate.Day,
             transitionBase.Hour,

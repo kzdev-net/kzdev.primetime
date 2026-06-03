@@ -238,11 +238,13 @@ public abstract partial class PrimeTestTimeBase : IPrimeTestTime
                 (Tuple<PrimeTestTimeBase, TaskCompletionSource<bool>, CancellationToken>)args!;
             lock (@this.Gate)
             {
-                if (@this.PendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletion) > 0)
+                if (@this.PendingDelays.RemoveAll(pendingDelay => pendingDelay.TaskCompletionSource == taskCompletion) <= 0)
                 {
-                    taskCompletion.TrySetCanceled(cancellationToken);
-                    @this.OnSchedulingMutatedWhileGateHeld();
+                    return;
                 }
+
+                taskCompletion.TrySetCanceled(cancellationToken);
+                @this.OnSchedulingMutatedWhileGateHeld();
             }
         }, Tuple.Create(this, taskCompletionSource, cancellationToken));
 

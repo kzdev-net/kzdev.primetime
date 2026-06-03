@@ -45,11 +45,13 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
             TimeZoneInfo.AdjustmentRule? applicableRule = null;
             foreach (TimeZoneInfo.AdjustmentRule rule in rules)
             {
-                if (year >= rule.DateStart.Year && year <= rule.DateEnd.Year)
+                if (year < rule.DateStart.Year || year > rule.DateEnd.Year)
                 {
-                    applicableRule = rule;
-                    break;
+                    continue;
                 }
+
+                applicableRule = rule;
+                break;
             }
 
             if (applicableRule is null)
@@ -67,14 +69,16 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
                 }
             }
 
-            if (ambiguous is null)
+            if (ambiguous is not null)
             {
-                DateTime daylightEnd = BuildTransitionDate(year, applicableRule.DaylightTransitionEnd);
-                DateTime candidateAmbiguous = daylightEnd.AddMinutes(-30);
-                if (timeZone.IsAmbiguousTime(candidateAmbiguous))
-                {
-                    ambiguous = candidateAmbiguous;
-                }
+                continue;
+            }
+
+            DateTime daylightEnd = BuildTransitionDate(year, applicableRule.DaylightTransitionEnd);
+            DateTime candidateAmbiguous = daylightEnd.AddMinutes(-30);
+            if (timeZone.IsAmbiguousTime(candidateAmbiguous))
+            {
+                ambiguous = candidateAmbiguous;
             }
         }
 
@@ -87,8 +91,7 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
 
         if (transitionTime.IsFixedDateRule)
         {
-            return new DateTime(
-                year,
+            return new DateTime(year,
                 transitionTime.Month,
                 transitionTime.Day,
                 transitionBase.Hour,
@@ -102,19 +105,26 @@ public sealed class LocalTimeZoneScenarioContextFactory : ITimeZoneScenarioConte
         DateTime firstTargetDay = firstDayOfMonth.AddDays(daysToTargetDay);
         DateTime transitionDate = firstTargetDay.AddDays((transitionTime.Week - 1) * 7);
 
-        if (transitionTime.Week == 5)
+        if (transitionTime.Week != 5)
         {
-            DateTime monthEnd = firstDayOfMonth.AddMonths(1).AddDays(-1);
-            while (monthEnd.DayOfWeek != transitionTime.DayOfWeek)
-            {
-                monthEnd = monthEnd.AddDays(-1);
-            }
-
-            transitionDate = monthEnd;
+            return new DateTime(transitionDate.Year,
+                transitionDate.Month,
+                transitionDate.Day,
+                transitionBase.Hour,
+                transitionBase.Minute,
+                transitionBase.Second,
+                DateTimeKind.Unspecified);
         }
 
-        return new DateTime(
-            transitionDate.Year,
+        DateTime monthEnd = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        while (monthEnd.DayOfWeek != transitionTime.DayOfWeek)
+        {
+            monthEnd = monthEnd.AddDays(-1);
+        }
+
+        transitionDate = monthEnd;
+
+        return new DateTime(transitionDate.Year,
             transitionDate.Month,
             transitionDate.Day,
             transitionBase.Hour,

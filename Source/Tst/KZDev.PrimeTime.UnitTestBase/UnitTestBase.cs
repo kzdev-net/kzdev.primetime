@@ -24,12 +24,12 @@ public abstract class UnitTestBase : TestBase
     protected const int VirtualClockTimerAssertionToleranceMilliseconds = 2500;
 
     /// <summary>
-    ///   Fast virtual-time-per-real-second rate for bounded <see cref="IPrimeTestClock.RunFor"/> tests.
+    ///   Fast virtual-time-per-real-second rate for bounded IPrimeTestClock.RunFor tests.
     /// </summary>
     protected static readonly TimeSpan RunForTestFastPerSecondRate = TimeSpan.FromHours(1);
 
     /// <summary>
-    ///   Wall-clock guard while polling for a bounded <see cref="IPrimeTestClock.RunFor"/> run to finish.
+    ///   Wall-clock guard while polling for a bounded IPrimeTestClock.RunFor run to finish.
     /// </summary>
     protected static readonly TimeSpan RunForTestWaitTimeout = TimeSpan.FromSeconds(5);
 

@@ -13,6 +13,7 @@ namespace KZDev.PrimeTime.Tools.UnitTests;
 ///   Validates package release-note metadata generation for all publishable PrimeTime packages.
 /// </summary>
 [ExcludeFromCodeCoverage]
+[Collection(PackageReleaseNotesMetadataGenerationCollection.Name)]
 public class UsingPackageReleaseNotesMetadataGeneration
 {
     private static readonly IReadOnlyDictionary<string, string> PackageProjectRelativePaths =
@@ -79,7 +80,12 @@ public class UsingPackageReleaseNotesMetadataGeneration
 
         using Process? process = Process.Start(processStartInfo);
         process.Should().NotBeNull("expected dotnet process to start");
-        process!.WaitForExit();
+        if (process is null)
+        {
+            throw new InvalidOperationException("Expected dotnet process to start.");
+        }
+
+        process.WaitForExit();
 
         string standardOutput = process.StandardOutput.ReadToEnd();
         string standardError = process.StandardError.ReadToEnd();
@@ -114,5 +120,11 @@ public class UsingPackageReleaseNotesMetadataGeneration
                 $"expected PackageReleaseNotes value for package '{packageProject.Key}'");
         }
     }
+}
+
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class PackageReleaseNotesMetadataGenerationCollection
+{
+    internal const string Name = nameof(PackageReleaseNotesMetadataGenerationCollection);
 }
 //################################################################################

@@ -2,6 +2,9 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Framework;
+// ReSharper disable UnusedType.Global : MSBuild task types must be public and are instantiated via reflection by MSBuild, so they may appear unused in the codebase.
+// ReSharper disable MemberCanBePrivate.Global : MSBuild task properties must be public for MSBuild to set them, so they may appear to be able to be private in the codebase.
+// ReSharper disable UnusedAutoPropertyAccessor.Global : MSBuild task properties must have public getters and setters for MSBuild to set them, so they may appear to have unused accessors in the codebase.
 
 namespace KZDev.PrimeTime.ReleaseAggregation;
 
@@ -48,11 +51,7 @@ public sealed class ExtractPackageReleaseNotesTask : Microsoft.Build.Utilities.T
         }
         catch (Exception exception)
         {
-            Log.LogError(
-                "Failed to extract PackageReleaseNotes for package '{0}' version '{1}' from '{2}'.",
-                PackageId,
-                PackageVersion,
-                ReleaseNotesFilePath);
+            Log.LogError($"Failed to extract PackageReleaseNotes for package '{PackageId}' version '{PackageVersion}' from '{ReleaseNotesFilePath}'.");
             Log.LogErrorFromException(exception, showStackTrace: true);
             return false;
         }

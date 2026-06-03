@@ -180,12 +180,14 @@ public sealed partial class PrimeTestClock
             }
 
             cancellationToken.Register(OnCancelRequested);
-            if (cancellationToken.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                CancelRequested = true;
-                State = TimerState.Cancelled;
-                IntervalTimerEnabled = false;
+                return;
             }
+
+            CancelRequested = true;
+            State = TimerState.Cancelled;
+            IntervalTimerEnabled = false;
         }
         //------------------------------------------------------------------------
 

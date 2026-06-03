@@ -1431,13 +1431,15 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         int eventCount = 0;
         Instant? lastHeartbeatInstant = null;
-        clock.ClockEvents += (_, e) =>
+        clock.ClockEvents += (_, timeEvent) =>
         {
-            if (e is PrimeTestClockNewTimeEvent newTime)
+            if (timeEvent is not PrimeTestClockNewTimeEvent newTime)
             {
-                eventCount++;
-                lastHeartbeatInstant = newTime.ClockInstant;
+                return;
             }
+
+            eventCount++;
+            lastHeartbeatInstant = newTime.ClockInstant;
         };
         clock.Start(Duration.FromSeconds(10));
         await Task.Delay(ClockRunningHeartbeatTestWallDelay, TestContext.Current.CancellationToken);
@@ -1567,14 +1569,16 @@ public class UsingIPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
         List<Instant> eventInstants = [];
         object sync = new();
-        clock.ClockEvents += (_, e) =>
+        clock.ClockEvents += (_, timeEvent) =>
         {
-            if (e is PrimeTestClockNewTimeEvent newTime)
+            if (timeEvent is not PrimeTestClockNewTimeEvent newTime)
             {
-                lock (sync)
-                {
-                    eventInstants.Add(newTime.ClockInstant);
-                }
+                return;
+            }
+
+            lock (sync)
+            {
+                eventInstants.Add(newTime.ClockInstant);
             }
         };
         int timerFireCount = 0;

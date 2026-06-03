@@ -519,11 +519,13 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         Func<CancellationToken, ValueTask> run = _ =>
         {
             int n = Interlocked.Increment(ref callCount);
-            if (n == 1)
+            if (n != 1)
             {
-                innerStarted.Set();
-                allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+                return default;
             }
+
+            innerStarted.Set();
+            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
 
             return default;
         };

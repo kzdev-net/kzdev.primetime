@@ -51,11 +51,13 @@ public sealed class EnvironmentAwareDstScenario : IExampleScenario
         {
             bool isAmbiguous = localZone.IsAmbiguousTime(ambiguousLocalTime);
             ScenarioConsole.WriteLine($"Ambiguous local time sample: {ambiguousLocalTime:yyyy-MM-dd HH:mm:ss} (IsAmbiguousTime={isAmbiguous})");
-            if (isAmbiguous)
+            if (!isAmbiguous)
             {
-                TimeSpan[] offsets = localZone.GetAmbiguousTimeOffsets(ambiguousLocalTime);
-                ScenarioConsole.WriteLine($"Ambiguous offsets: {string.Join(", ", offsets)}");
+                return Task.CompletedTask;
             }
+
+            TimeSpan[] offsets = localZone.GetAmbiguousTimeOffsets(ambiguousLocalTime);
+            ScenarioConsole.WriteLine($"Ambiguous offsets: {string.Join(", ", offsets)}");
         }
         else
         {
