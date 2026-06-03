@@ -190,8 +190,6 @@ public sealed partial class PrimeTestClock
             IntervalTimerEnabled = false;
         }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <inheritdoc />
         public int Id { [DebuggerStepThrough] get; }
         //------------------------------------------------------------------------
@@ -525,8 +523,6 @@ public sealed partial class PrimeTestClock
         {
         }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <inheritdoc />
         public override void RunDueCallback (DateTimeOffset now)
         {
@@ -562,8 +558,6 @@ public sealed partial class PrimeTestClock
             }
         }
         //------------------------------------------------------------------------
-
-        //------------------------------------------------------------------------
         /// <summary>
         ///   Invokes the registered callback synchronously or schedules async completion.
         /// </summary>
@@ -576,11 +570,6 @@ public sealed partial class PrimeTestClock
         /// </exception>
         private void RunCallback (bool resetBefore, bool isRepeating)
         {
-            void InvokeSync (Action run)
-            {
-                run();
-            }
-
             switch (CallbackKind)
             {
                 case TimerCallbackKind.SimpleAction:
@@ -609,9 +598,13 @@ public sealed partial class PrimeTestClock
             }
 
             OnSyncCallbackCompleted(resetBefore, isRepeating);
-        }
-        //------------------------------------------------------------------------
+            return;
 
+            void InvokeSync (Action run)
+            {
+                run();
+            }
+        }
         //------------------------------------------------------------------------
         /// <summary>
         ///   Runs an async callback and continues on the thread pool when it does not complete synchronously.
@@ -623,10 +616,10 @@ public sealed partial class PrimeTestClock
         /// <param name="isRepeating">Whether this is a repeating timer.</param>
         private void RunAsyncAndScheduleAfter (Func<ValueTask> run, bool resetBefore, bool isRepeating)
         {
-            ValueTask vt;
+            ValueTask resultTask;
             try
             {
-                vt = run();
+                resultTask = run();
             }
             catch
             {
@@ -634,13 +627,13 @@ public sealed partial class PrimeTestClock
                 return;
             }
 
-            if (vt.IsCompletedSuccessfully)
+            if (resultTask.IsCompletedSuccessfully)
             {
                 OnAsyncCallbackCompleted(resetBefore, isRepeating);
                 return;
             }
 
-            vt.AsTask().ContinueWith((_, state) =>
+            resultTask.AsTask().ContinueWith((_, state) =>
                 {
                     (VirtualIntervalTimer reg, bool rb, bool rep) =
                         ((VirtualIntervalTimer, bool, bool))state!;
@@ -651,8 +644,6 @@ public sealed partial class PrimeTestClock
                 TaskContinuationOptions.None,
                 TaskScheduler.Default);
         }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   After a synchronous callback, completes one-shot timers or schedules the next repeat.
@@ -678,8 +669,6 @@ public sealed partial class PrimeTestClock
                     NextDueUtc = Clock.UtcNowDateTimeOffset + RepeatInterval;
             }
         }
-        //------------------------------------------------------------------------
-
         //------------------------------------------------------------------------
         /// <summary>
         ///   After an asynchronous callback completes, completes one-shot timers or schedules the next repeat.

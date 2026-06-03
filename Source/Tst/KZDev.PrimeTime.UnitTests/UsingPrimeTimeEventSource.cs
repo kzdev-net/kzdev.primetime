@@ -117,55 +117,61 @@ public sealed partial class UsingPrimeTimeEventSource : UnitTestBase
                 return;
             }
 
-            if (eventData.EventId == EventIdClockTimerUseAfterDispose)
+            switch (eventData.EventId)
             {
-                if (_clockTimerUseAfterDisposeOperation is not null)
+                case EventIdClockTimerUseAfterDispose:
                 {
-                    if (eventData.Payload is null || eventData.Payload.Count < 1)
+                    if (_clockTimerUseAfterDisposeOperation is not null)
                     {
-                        return;
+                        if (eventData.Payload is null || eventData.Payload.Count < 1)
+                        {
+                            return;
+                        }
+
+                        if (eventData.Payload[0] is not string operation ||
+                            !string.Equals(operation, _clockTimerUseAfterDisposeOperation, StringComparison.Ordinal))
+                        {
+                            return;
+                        }
                     }
 
-                    if (eventData.Payload[0] is not string operation ||
-                        !string.Equals(operation, _clockTimerUseAfterDisposeOperation, StringComparison.Ordinal))
-                    {
-                        return;
-                    }
+                    Interlocked.Increment(ref ClockTimerUseAfterDisposeCount);
+                    break;
                 }
 
-                Interlocked.Increment(ref ClockTimerUseAfterDisposeCount);
-            }
-            else if (eventData.EventId == EventIdClockTimerCallbackException)
-            {
-                if (_clockTimerCallbackExceptionTimerCategory is not null)
+                case EventIdClockTimerCallbackException:
                 {
-                    if (eventData.Payload is null || eventData.Payload.Count < 1)
+                    if (_clockTimerCallbackExceptionTimerCategory is not null)
                     {
-                        return;
+                        if (eventData.Payload is null || eventData.Payload.Count < 1)
+                        {
+                            return;
+                        }
+
+                        if (eventData.Payload[0] is not string category ||
+                            !string.Equals(category, _clockTimerCallbackExceptionTimerCategory, StringComparison.Ordinal))
+                        {
+                            return;
+                        }
                     }
 
-                    if (eventData.Payload[0] is not string category ||
-                        !string.Equals(category, _clockTimerCallbackExceptionTimerCategory, StringComparison.Ordinal))
+                    if (_clockTimerCallbackExceptionDetailContains is not null)
                     {
-                        return;
+                        if (eventData.Payload is null || eventData.Payload.Count < 3)
+                        {
+                            return;
+                        }
+
+                        if (eventData.Payload[2] is not string detail ||
+                            !detail.Contains(_clockTimerCallbackExceptionDetailContains, StringComparison.Ordinal))
+                        {
+                            return;
+                        }
                     }
+
+                    Interlocked.Increment(ref ClockTimerCallbackExceptionCount);
+                    break;
                 }
-
-                if (_clockTimerCallbackExceptionDetailContains is not null)
-                {
-                    if (eventData.Payload is null || eventData.Payload.Count < 3)
-                    {
-                        return;
-                    }
-
-                    if (eventData.Payload[2] is not string detail ||
-                        !detail.Contains(_clockTimerCallbackExceptionDetailContains, StringComparison.Ordinal))
-                    {
-                        return;
-                    }
-                }
-
-                Interlocked.Increment(ref ClockTimerCallbackExceptionCount);
             }
         }
     }

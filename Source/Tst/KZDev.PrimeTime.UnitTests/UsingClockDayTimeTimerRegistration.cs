@@ -418,22 +418,12 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using ManualResetEventSlim releaseFirstCallback = new(false);
         using ManualResetEventSlim firstCallbackExited = new(false);
         int invokeCount = 0;
-        Action userCallback = () =>
-        {
-            if (Interlocked.Increment(ref invokeCount) != 1)
-            {
-                return;
-            }
 
-            enteredFirstCallback.Set();
-            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-            firstCallbackExited.Set();
-        };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
             utcTimeOfDaySchedule: true,
             targetUtc,
             TimerCallbackKind.SimpleAction,
-            userCallback,
+            (Action)CallbackAction,
             null,
             options,
             TestContext.Current.CancellationToken);
@@ -447,6 +437,19 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         firstCallbackExited.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
         Volatile.Read(ref invokeCount).Should().Be(1);
+        return;
+
+        void CallbackAction ()
+        {
+            if (Interlocked.Increment(ref invokeCount) != 1)
+            {
+                return;
+            }
+
+            enteredFirstCallback.Set();
+            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+            firstCallbackExited.Set();
+        }
     }
 
     /// <summary>
@@ -468,21 +471,12 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using ManualResetEventSlim enteredFirstCallback = new(false);
         using ManualResetEventSlim releaseFirstCallback = new(false);
         int invokeCount = 0;
-        Action userCallback = () =>
-        {
-            if (Interlocked.Increment(ref invokeCount) != 1)
-            {
-                return;
-            }
 
-            enteredFirstCallback.Set();
-            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-        };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
             utcTimeOfDaySchedule: true,
             targetUtc,
             TimerCallbackKind.SimpleAction,
-            userCallback,
+            (Action)CallbackAction,
             null,
             options,
             TestContext.Current.CancellationToken);
@@ -495,6 +489,18 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         releaseFirstCallback.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+        return;
+
+        void CallbackAction ()
+        {
+            if (Interlocked.Increment(ref invokeCount) != 1)
+            {
+                return;
+            }
+
+            enteredFirstCallback.Set();
+            releaseFirstCallback.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+        }
     }
 
     /// <summary>
@@ -516,24 +522,12 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using ManualResetEventSlim innerStarted = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
         int callCount = 0;
-        Func<CancellationToken, ValueTask> run = _ =>
-        {
-            int n = Interlocked.Increment(ref callCount);
-            if (n != 1)
-            {
-                return default;
-            }
 
-            innerStarted.Set();
-            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-
-            return default;
-        };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
             utcTimeOfDaySchedule: true,
             targetUtc,
             TimerCallbackKind.SimpleAsync,
-            run,
+            (Func<CancellationToken, ValueTask>)CallbackFunc,
             null,
             options,
             TestContext.Current.CancellationToken);
@@ -546,6 +540,21 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+        return;
+
+        ValueTask CallbackFunc (CancellationToken _)
+        {
+            int newCount = Interlocked.Increment(ref callCount);
+            if (newCount != 1)
+            {
+                return default;
+            }
+
+            innerStarted.Set();
+            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+
+            return default;
+        }
     }
 
     /// <summary>
@@ -568,22 +577,12 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         using ManualResetEventSlim enteredAsyncBody = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
         int enteredCount = 0;
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback = async (_, ct) =>
-        {
-            if (Interlocked.Increment(ref enteredCount) != 1)
-            {
-                return;
-            }
 
-            enteredAsyncBody.Set();
-            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
-            await Task.Delay(50, ct).ConfigureAwait(false);
-        };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock,
             utcTimeOfDaySchedule: true,
             targetUtc,
             TimerCallbackKind.ContextAsync,
-            callback,
+            (Func<ClockTimerCallbackContext, CancellationToken, ValueTask>)CallbackFunc,
             null,
             options,
             TestContext.Current.CancellationToken);
@@ -596,6 +595,19 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, ThreadSyncWaitMargin).Should().BeTrue();
         firstTickWork.Wait(ThreadSyncWaitMargin).Should().BeTrue();
+        return;
+
+        async ValueTask CallbackFunc (ClockTimerCallbackContext _, CancellationToken ct)
+        {
+            if (Interlocked.Increment(ref enteredCount) != 1)
+            {
+                return;
+            }
+
+            enteredAsyncBody.Set();
+            allowSecondTick.Wait(ThreadSyncWaitMargin, CancellationToken.None).Should().BeTrue();
+            await Task.Delay(50, ct).ConfigureAwait(false);
+        }
     }
 
 #pragma warning restore xUnit1051

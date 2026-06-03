@@ -238,221 +238,204 @@ public static class PrimeClockNodaTimerExtensions
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
+    ///   Extension methods for registering time-of-day timers based on <see cref="LocalTime"/>. 
+    ///   These are provided for convenience and to avoid requiring callers to reference NodaTime 
+    ///   in order to use time-of-day timers. If you are using NodaTime, 
+    ///   you can also use the base <see cref="IPrimeClock.RegisterTimeOfDay(LocalTime, Action{ClockTimerCallbackContext}, CancellationToken, object?, DayTimeTimerOptions?)"/> method directly.
     /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
-        LocalTime timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(timeOfDay,
-            _ => callback(),
-            cancellationToken,
-            null,
-            timerOptions);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
-        LocalTime timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(timeOfDay,
-            context => callback(context, cancellationToken),
-            cancellationToken,
-            state,
-            timerOptions);
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    public static IClockDayTimeTimer RegisterAsyncTimeOfDay (this IPrimeClock clock,
-        LocalTime timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterAsyncTimeOfDay(timeOfDay,
-            (innerContext, innerCancellationToken) => callback(innerCancellationToken),
-            cancellationToken,
-            null,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
+    /// /// <param name="clock">The clock on which to register the timer.</param>
+    extension(IPrimeClock clock)
+    {
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer that fires at the given local time each day (sync callback).
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+        ///   no external cancellation is required.
+        /// </param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+            Action callback, CancellationToken cancellationToken, DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterTimeOfDay(timeOfDay,
+                _ => callback(),
+                cancellationToken,
+                null,
+                timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and cancellation token.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+        ///   no external cancellation is required.
+        /// </param>
+        /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTime timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            CancellationToken cancellationToken,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterTimeOfDay(timeOfDay,
+                context => callback(context, cancellationToken),
+                cancellationToken,
+                state,
+                timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+        ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+        /// </param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTime timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            CancellationToken cancellationToken,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterAsyncTimeOfDay(timeOfDay,
+                (innerContext, innerCancellationToken) => callback(innerCancellationToken),
+                cancellationToken,
+                null,
+                timerOptions);
 #if NET
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and state, using BCL <see cref="LocalTimeOfDay"/>.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    /// <remarks>
-    ///   <para>
-    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
-    ///   </para>
-    /// </remarks>
-    public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with a callback that receives context and cancellation token, using BCL
-    ///   <see cref="LocalTimeOfDay"/>.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    /// <remarks>
-    ///   <para>
-    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
-    ///   </para>
-    /// </remarks>
-    public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
-        Action<ClockTimerCallbackContext, CancellationToken> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token, using BCL
-    ///   <see cref="LocalTimeOfDay"/>.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    /// <remarks>
-    ///   <para>
-    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
-    ///   </para>
-    /// </remarks>
-    public static IClockDayTimeTimer RegisterAsyncTimeOfDay (this IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
-        Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        object? state = null,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
-            timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer that fires at the given local time each day (sync callback), using BCL
-    ///   <see cref="LocalTimeOfDay"/>.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The callback to run when the timer fires.</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
-    ///   no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    /// <remarks>
-    ///   <para>
-    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
-    ///   </para>
-    /// </remarks>
-    public static IClockDayTimeTimer RegisterTimeOfDay (this IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
-        Action callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, timerOptions);
-    //----------------------------------------------------------------------------
-
-    //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Registers a time-of-day timer with an asynchronous callback, using BCL <see cref="LocalTimeOfDay"/>.
-    /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
-    /// <param name="timeOfDay">The local time of day at which to fire.</param>
-    /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
-    /// <param name="cancellationToken">
-    ///   Token that participates in cancelling the timer registration and is passed to the callback; use
-    ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
-    /// </param>
-    /// <param name="timerOptions">Optional day-time timer options.</param>
-    /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
-    /// <remarks>
-    ///   <para>
-    ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
-    ///   </para>
-    /// </remarks>
-    public static IClockDayTimeTimer RegisterAsyncTimeOfDay (this IPrimeClock clock,
-        LocalTimeOfDay timeOfDay,
-        Func<CancellationToken, ValueTask> callback,
-        CancellationToken cancellationToken,
-        DayTimeTimerOptions? timerOptions = null) =>
-        clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken,
-            timerOptions);
-    //----------------------------------------------------------------------------
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and state, using BCL <see cref="LocalTimeOfDay"/>.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback invoked when the timer fires; receives timer context.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+        ///   no external cancellation is required.
+        /// </param>
+        /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+        ///   </para>
+        /// </remarks>
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext> callback,
+            CancellationToken cancellationToken,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
+                timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with a callback that receives context and cancellation token, using BCL
+        ///   <see cref="LocalTimeOfDay"/>.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback invoked when the timer fires; receives timer context and a cancellation token.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+        ///   no external cancellation is required.
+        /// </param>
+        /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+        ///   </para>
+        /// </remarks>
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action<ClockTimerCallbackContext, CancellationToken> callback,
+            CancellationToken cancellationToken,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
+                timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback that receives context and cancellation token, using BCL
+        ///   <see cref="LocalTimeOfDay"/>.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The async callback; receives timer context and a cancellation token.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+        ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+        /// </param>
+        /// <param name="state">Optional state passed to the callback via <see cref="ClockTimerCallbackContext"/>.</param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+        ///   </para>
+        /// </remarks>
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<ClockTimerCallbackContext, CancellationToken, ValueTask> callback,
+            CancellationToken cancellationToken,
+            object? state = null,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, state,
+                timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer that fires at the given local time each day (sync callback), using BCL
+        ///   <see cref="LocalTimeOfDay"/>.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The callback to run when the timer fires.</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration; pass <see cref="CancellationToken.None"/> when
+        ///   no external cancellation is required.
+        /// </param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+        ///   </para>
+        /// </remarks>
+        public IClockDayTimeTimer RegisterTimeOfDay (LocalTimeOfDay timeOfDay,
+            Action callback,
+            CancellationToken cancellationToken,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken, timerOptions);
+        //----------------------------------------------------------------------------
+        /// <summary>
+        ///   Registers a time-of-day timer with an asynchronous callback, using BCL <see cref="LocalTimeOfDay"/>.
+        /// </summary>
+        /// <param name="timeOfDay">The local time of day at which to fire.</param>
+        /// <param name="callback">The async callback (returns <see cref="ValueTask"/>).</param>
+        /// <param name="cancellationToken">
+        ///   Token that participates in cancelling the timer registration and is passed to the callback; use
+        ///   <see cref="CancellationToken.None"/> when no external cancellation is required.
+        /// </param>
+        /// <param name="timerOptions">Optional day-time timer options.</param>
+        /// <returns>An <see cref="IClockDayTimeTimer"/> to monitor or change the timer.</returns>
+        /// <remarks>
+        ///   <para>
+        ///     Only supported in .NET 8+. Not supported in NetStandard 2.0.
+        ///   </para>
+        /// </remarks>
+        public IClockDayTimeTimer RegisterAsyncTimeOfDay (LocalTimeOfDay timeOfDay,
+            Func<CancellationToken, ValueTask> callback,
+            CancellationToken cancellationToken,
+            DayTimeTimerOptions? timerOptions = null) =>
+            clock.RegisterAsyncTimeOfDay(PrimeTimeOfDayConversion.ToLocalTime(timeOfDay), callback, cancellationToken,
+                timerOptions);
 #endif
+    }
+    //----------------------------------------------------------------------------
 
     #endregion IPrimeClock — Time-of-day timers (LocalTime)
 }

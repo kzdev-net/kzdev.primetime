@@ -12,6 +12,7 @@ using KZDev.PrimeTime.Observability;
 
 namespace KZDev.PrimeTime;
 #endif
+// ReSharper disable MemberCanBeMadeStatic.Local : Non-implemented partial methods alone are not candidates for static.
 
 //################################################################################
 /// <summary>

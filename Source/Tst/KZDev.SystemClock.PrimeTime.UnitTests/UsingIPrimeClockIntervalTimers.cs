@@ -191,12 +191,16 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay, RepeatInterval, () =>
         {
             count++;
-            if (count == 1)
-                firstCallbackTime = clock.UtcNowDateTimeOffset;
-            else if (count == 2)
+            switch (count)
             {
-                secondCallbackTime = clock.UtcNowDateTimeOffset;
-                signal.Set();
+                case 1:
+                    firstCallbackTime = clock.UtcNowDateTimeOffset;
+                    break;
+
+                case 2:
+                    secondCallbackTime = clock.UtcNowDateTimeOffset;
+                    signal.Set();
+                    break;
             }
         }, cancellationToken: TestContext.Current.CancellationToken);
         DateTimeOffset start = clock.UtcNowDateTimeOffset;

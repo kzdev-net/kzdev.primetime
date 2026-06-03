@@ -755,6 +755,24 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         int inFlight = 0;
         int maxInFlight = 0;
 
+        using IClockIntervalTimer timer1 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
+            ct => Callback(firstEntered, ct),
+            TestContext.Current.CancellationToken);
+        using IClockIntervalTimer timer2 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
+            ct => Callback(secondEntered, ct),
+            TestContext.Current.CancellationToken);
+
+        TimeSpan waitTimeout = (WaitMargin + Duration.FromMilliseconds(200)).ToTimeSpan();
+        firstEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+            .Should().BeTrue();
+        secondEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+            .Should().BeTrue();
+        overlapObserved.Wait(Duration.FromSeconds(1).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        maxInFlight.Should().BeGreaterThan(1);
+
+        allowExit.Release(2);
+        return;
+
         ValueTask Callback (ManualResetEventSlim enteredSignal, CancellationToken ct)
         {
             enteredSignal.Set();
@@ -789,23 +807,6 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 }
             }
         }
-
-        using IClockIntervalTimer timer1 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
-            ct => Callback(firstEntered, ct),
-            TestContext.Current.CancellationToken);
-        using IClockIntervalTimer timer2 = clock.RegisterAsyncTimer(Duration.FromMilliseconds(30),
-            ct => Callback(secondEntered, ct),
-            TestContext.Current.CancellationToken);
-
-        TimeSpan waitTimeout = (WaitMargin + Duration.FromMilliseconds(200)).ToTimeSpan();
-        firstEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
-            .Should().BeTrue();
-        secondEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
-            .Should().BeTrue();
-        overlapObserved.Wait(Duration.FromSeconds(1).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-        maxInFlight.Should().BeGreaterThan(1);
-
-        allowExit.Release(2);
     }
     //----------------------------------------------------------------------------
 
