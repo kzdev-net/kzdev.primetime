@@ -622,7 +622,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that after a forward march fires a local day-time timer (UTC zone) and a permitted backward jump,
-    ///   <see cref="IClockTimer.TimeUntilNextCallback"/> reflects the next same-calendar occurrence.
+    ///   <see cref="IClockDayTimeTimer.TimeUntilNextCallback"/> reflects the next same-calendar occurrence.
     /// </summary>
     [Fact]
     public void ClockStopped_LocalDayTimeUtcZone_AfterForwardFireAndBackwardJump_TimeUntilNextCallback_MatchesNextSameDayOccurrence ()
@@ -708,7 +708,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that zero-duration <see cref="IPrimeTestClock.RunFor"/> raises started and stopped lifecycle
+    ///   Verifies that zero-duration <see cref="IPrimeTestClock.RunFor(NodaTime.Duration, NodaTime.Duration)"/> raises started and stopped lifecycle
     ///   events and leaves the clock not running.
     /// </summary>
     [Fact]
@@ -738,7 +738,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that negative <see cref="IPrimeTestClock.RunFor"/> duration is treated like zero duration.
+    ///   Verifies that negative <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> duration is treated like zero duration.
     /// </summary>
     [Fact]
     public void RunFor_WithNegativeDuration_TreatedAsZero ()
@@ -756,7 +756,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a non-zero <see cref="IPrimeTestClock.RunFor"/> raises
+    ///   Verifies that a non-zero <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> raises
     ///   <see cref="PrimeTestClockEventType.ClockStarted"/> before
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> when the run completes.
     /// </summary>
@@ -784,8 +784,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that when a bounded <see cref="IPrimeTestClock.RunFor"/> completes naturally on the automatic
-    ///   runner thread (without external <see cref="IPrimeTestClock.Advance"/> or set-time mutations), the clock stops
+    ///   Verifies that when a bounded <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> completes naturally on the automatic
+    ///   runner thread (without external <see cref="IPrimeTestClock.Advance(Duration)"/> or set-time mutations), the clock stops
     ///   cleanly and raises exactly one <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
     /// </summary>
     [Fact]
@@ -810,8 +810,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that completing an active bounded <see cref="IPrimeTestClock.RunFor"/> via the external march path
-    ///   while executing on the automatic runner thread (for example <see cref="IPrimeTestClock.Advance"/> from a
+    ///   Verifies that completing an active bounded <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> via the external march path
+    ///   while executing on the automatic runner thread (for example <see cref="IPrimeTestClock.Advance(Duration)"/> from a
     ///   <see cref="IPrimeTestClock.ClockEvents"/> handler) does not self-join deadlock and raises exactly one
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
     /// </summary>
@@ -878,9 +878,9 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a second <see cref="IPrimeTestClock.RunFor"/> while the first bounded run is still active
+    ///   Verifies that a second <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> while the first bounded run is still active
     ///   returns <c>false</c> and does not complete the first run at the wrong horizon when the first run is
-    ///   finished via <see cref="IPrimeTestClock.Advance"/>.
+    ///   finished via <see cref="IPrimeTestClock.Advance(Duration)"/>.
     /// </summary>
     [Fact]
     public void RunFor_WhenSecondRunForWhileFirstActive_ReturnsFalseAndCompletesFirstRunAtHorizon ()
@@ -944,7 +944,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that two sequential bounded <see cref="IPrimeTestClock.RunFor"/> runs each raise exactly one
+    ///   Verifies that two sequential bounded <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> runs each raise exactly one
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at that run's stop horizon and do not complete the other
     ///   run's generation.
     /// </summary>
@@ -990,8 +990,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that when two concurrent <see cref="IPrimeTestClock.Advance"/> calls both cross an active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon, bounded completion is committed exactly once, one competing
+    ///   Verifies that when two concurrent <see cref="IPrimeTestClock.Advance(Duration)"/> calls both cross an active
+    ///   <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> stop horizon, bounded completion is committed exactly once, one competing
     ///   completion path safely returns without duplicating <see cref="PrimeTestClockEventType.ClockStopped"/>, and both
     ///   callers make forward progress.
     /// </summary>
@@ -1042,9 +1042,9 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> past an active <see cref="IPrimeTestClock.RunFor"/>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> past an active <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/>
     ///   stop horizon raises <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock
-    ///   stopped, and commits the <see cref="IPrimeTestClock.Advance"/> target instant.
+    ///   stopped, and commits the <see cref="IPrimeTestClock.Advance(Duration)"/> target instant.
     /// </summary>
     [Fact]
     public void RunFor_WhenAdvancePassesStopHorizon_StopsAtHorizonAndReachesAdvanceTarget ()
@@ -1070,8 +1070,8 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> to exactly the active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    ///   Verifies that <see cref="IPrimeTestClock.Advance(Duration)"/> to exactly the active
+    ///   <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> stop horizon completes the bounded run at that instant.
     /// </summary>
     [Fact]
     public void RunFor_WhenAdvanceReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
@@ -1096,7 +1096,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that forward <see cref="IPrimeTestClock.SetInstant"/> past an active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon raises
+    ///   <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> stop horizon raises
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock stopped, and commits the
     ///   requested instant.
     /// </summary>
@@ -1124,7 +1124,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that forward <see cref="IPrimeTestClock.SetInstant"/> to exactly the active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    ///   <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> stop horizon completes the bounded run at that instant.
     /// </summary>
     [Fact]
     public void RunFor_WhenSetInstantReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
@@ -1681,7 +1681,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
     ///   <see cref="PrimeTestClockEventType.NewTime"/> with the march target instant when
-    ///   <see cref="IPrimeTestClock.Advance"/> is called.
+    ///   <see cref="IPrimeTestClock.Advance(Duration)"/> is called.
     /// </summary>
     [Fact]
     public void Advance_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
@@ -1701,7 +1701,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
     ///   <see cref="PrimeTestClockEventType.NewTime"/> at the bounded run stop instant when
-    ///   <see cref="IPrimeTestClock.RunFor"/> completes.
+    ///   <see cref="IPrimeTestClock.RunFor(Duration, Duration)"/> completes.
     /// </summary>
     [Fact]
     public void RunFor_WhenClockEventsSubscribed_RaisesNewTimeWithExpectedInstant ()
@@ -1746,7 +1746,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that each <see cref="PrimeTestClockEventType.NewTime"/> raised during
-    ///   <see cref="IPrimeTestClock.Advance"/> while the automatic runner is active includes the current run rate and
+    ///   <see cref="IPrimeTestClock.Advance(Duration)"/> while the automatic runner is active includes the current run rate and
     ///   that Noda <see cref="PrimeTestClockTimedEvent.ClockInstant"/> matches
     ///   <see cref="PrimeTestClockTimedEvent.ClockTime"/>.
     /// </summary>
@@ -1781,7 +1781,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Start"/> raises
+    ///   Verifies that <see cref="IPrimeTestClock.Start(Duration?)"/> raises
     ///   <see cref="PrimeTestClockEventType.ClockStarted"/> on a stopped-to-running transition.
     /// </summary>
     [Fact]
@@ -1813,7 +1813,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a second <see cref="IPrimeTestClock.Start"/> while already running does not raise
+    ///   Verifies that a second <see cref="IPrimeTestClock.Start(Duration?)"/> while already running does not raise
     ///   <see cref="PrimeTestClockEventType.ClockStarted"/> again.
     /// </summary>
     [Fact]
@@ -1841,7 +1841,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Start"/> does not raise
+    ///   Verifies that <see cref="IPrimeTestClock.Start(Duration?)"/> does not raise
     ///   <see cref="PrimeTestClockEventType.NewTime"/> synchronously on the calling thread (the automatic runner may
     ///   raise <see cref="PrimeTestClockEventType.NewTime"/> later on a background thread).
     /// </summary>
@@ -1901,7 +1901,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     ///   and the rate that was running, and that no <see cref="PrimeTestClockEventType.NewTime"/> follows shutdown.
     /// </summary>
     /// <remarks>
-    ///   Virtual time is advanced deterministically via <see cref="IPrimeTestClock.Advance"/> while the runner is
+    ///   Virtual time is advanced deterministically via <see cref="IPrimeTestClock.Advance(Duration)"/> while the runner is
     ///   active (no wall-clock wait). After stop, <see cref="IPrimeTestClock.NowInstant"/> and
     ///   <see cref="IPrimeTestClock.UtcNowDateTimeOffset"/> must match the
     ///   <see cref="PrimeTestClockStoppedEvent"/> payload (post-join
@@ -1938,7 +1938,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a second <see cref="IPrimeTestClock.Start"/> after
+    ///   Verifies that a second <see cref="IPrimeTestClock.Start(Duration?)"/> after
     ///   <see cref="IPrimeTestClock.Stop"/> raises <see cref="PrimeTestClockEventType.ClockStarted"/> only after the
     ///   prior run's <see cref="PrimeTestClockEventType.ClockStopped"/>.
     /// </summary>
@@ -1967,7 +1967,7 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Runs <see cref="IPrimeTestClock.Stop"/> and <see cref="IPrimeTestClock.Start"/> concurrently so
+    ///   Runs <see cref="IPrimeTestClock.Stop"/> and <see cref="IPrimeTestClock.Start(Duration?)"/> concurrently so
     ///   <c>Start</c> begins only after <c>Stop</c> has entered the runner-join phase.
     /// </summary>
     /// <remarks>
@@ -2017,7 +2017,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Start"/> invoked while <see cref="IPrimeTestClock.Stop"/> is joining
+    ///   Verifies that <see cref="IPrimeTestClock.Start(Duration?)"/> invoked while <see cref="IPrimeTestClock.Stop"/> is joining
     ///   the runner does not raise <see cref="PrimeTestClockEventType.ClockStarted"/> before
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> for the run being stopped.
     /// </summary>
@@ -2044,7 +2044,7 @@ public class UsingIPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that overlapping <see cref="IPrimeTestClock.Start"/> and <see cref="IPrimeTestClock.Stop"/> calls
+    ///   Verifies that overlapping <see cref="IPrimeTestClock.Start(Duration?"/> and <see cref="IPrimeTestClock.Stop"/> calls
     ///   leave at most one automatic runner active when the calls complete.
     /// </summary>
     [Fact]
@@ -2104,8 +2104,8 @@ public class UsingIPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that when <see cref="IPrimeTestClock.Stop"/> cannot join a blocked runner within the join timeout,
-    ///   it returns <c>false</c> and subsequent <see cref="IPrimeTestClock.Start"/>,
-    ///   <see cref="IPrimeTestClock.Advance"/>, and <see cref="IPrimeTestClock.SetInstant"/> throw.
+    ///   it returns <c>false</c> and subsequent <see cref="IPrimeTestClock.Start(Duration?)"/>,
+    ///   <see cref="IPrimeTestClock.Advance(Duration)"/>, and <see cref="IPrimeTestClock.SetInstant"/> throw.
     /// </summary>
     [Fact]
     public void Stop_WhenRunnerJoinTimesOut_ReturnsFalseAndBlocksStartAndMutations ()

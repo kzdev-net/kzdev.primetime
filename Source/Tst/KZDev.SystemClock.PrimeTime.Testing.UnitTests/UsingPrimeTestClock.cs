@@ -19,7 +19,7 @@ namespace KZDev.SystemClock.PrimeTime.Testing.UnitTests;
 /// </summary>
 /// <remarks>
 ///   Covers <see cref="IPrimeTestClock.SetTime"/>, <see cref="IPrimeTestClock.Advance"/>,
-///   <see cref="IPrimeTestClock.RunFor"/>, start/stop, <see cref="IPrimeTestClock.ClockEvents"/>, and
+///   <see cref="IPrimeTestClock.RunFor(System.TimeSpan, System.TimeSpan)"/>, start/stop, <see cref="IPrimeTestClock.ClockEvents"/>, and
 ///   virtual-time-driven sleep, delay, time cancellation, and timers.
 /// </remarks>
 [ExcludeFromCodeCoverage]
@@ -477,7 +477,7 @@ public class UsingPrimeTestClock : UnitTestBase
     #region RunFor
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.RunFor"/> advances virtual time by the given duration when the
+    ///   Verifies that <see cref="IPrimeTestClock.RunFor(System.TimeSpan, System.TimeSpan)"/> advances virtual time by the given duration when the
     ///   bounded run completes.
     /// </summary>
     [Fact]
@@ -508,7 +508,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that zero-duration <see cref="IPrimeTestClock.RunFor"/> raises started and stopped lifecycle
+    ///   Verifies that zero-duration <see cref="IPrimeTestClock.RunFor(System.TimeSpan, System.TimeSpan)"/> raises started and stopped lifecycle
     ///   events and leaves the clock not running.
     /// </summary>
     [Fact]
@@ -538,7 +538,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that negative <see cref="IPrimeTestClock.RunFor"/> duration is treated like zero duration.
+    ///   Verifies that negative <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> duration is treated like zero duration.
     /// </summary>
     [Fact]
     public void RunFor_WithNegativeDuration_TreatedAsZero ()
@@ -556,7 +556,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a non-zero <see cref="IPrimeTestClock.RunFor"/> raises
+    ///   Verifies that a non-zero <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> raises
     ///   <see cref="PrimeTestClockEventType.ClockStarted"/> before
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> when the run completes.
     /// </summary>
@@ -584,7 +584,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that when a bounded <see cref="IPrimeTestClock.RunFor"/> completes naturally on the automatic
+    ///   Verifies that when a bounded <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> completes naturally on the automatic
     ///   runner thread (without external <see cref="IPrimeTestClock.Advance"/> or <see cref="IPrimeTestClock.SetTime"/>
     ///   mutations), the clock stops cleanly and raises exactly one
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
@@ -611,7 +611,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that completing an active bounded <see cref="IPrimeTestClock.RunFor"/> via the external march path
+    ///   Verifies that completing an active bounded <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> via the external march path
     ///   while executing on the automatic runner thread (for example <see cref="IPrimeTestClock.Advance"/> from a
     ///   <see cref="IPrimeTestClock.ClockEvents"/> handler) does not self-join deadlock and raises exactly one
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the stop horizon.
@@ -679,7 +679,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that a second <see cref="IPrimeTestClock.RunFor"/> while the first bounded run is still active
+    ///   Verifies that a second <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> while the first bounded run is still active
     ///   returns <c>false</c> and does not complete the first run at the wrong horizon when the first run is
     ///   finished via <see cref="IPrimeTestClock.Advance"/>.
     /// </summary>
@@ -741,7 +741,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that two sequential bounded <see cref="IPrimeTestClock.RunFor"/> runs each raise exactly one
+    ///   Verifies that two sequential bounded <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> runs each raise exactly one
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at that run's stop horizon and do not complete the other
     ///   run's generation.
     /// </summary>
@@ -788,7 +788,7 @@ public class UsingPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that when two concurrent <see cref="IPrimeTestClock.Advance"/> calls both cross an active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon, bounded completion is committed exactly once, one competing
+    ///   <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> stop horizon, bounded completion is committed exactly once, one competing
     ///   completion path safely returns without duplicating <see cref="PrimeTestClockEventType.ClockStopped"/>, and both
     ///   callers make forward progress.
     /// </summary>
@@ -839,7 +839,7 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> past an active <see cref="IPrimeTestClock.RunFor"/>
+    ///   Verifies that <see cref="IPrimeTestClock.Advance"/> past an active <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/>
     ///   stop horizon raises <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock
     ///   stopped, and commits the <see cref="IPrimeTestClock.Advance"/> target instant.
     /// </summary>
@@ -868,7 +868,7 @@ public class UsingPrimeTestClock : UnitTestBase
 
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.Advance"/> to exactly the active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    ///   <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> stop horizon completes the bounded run at that instant.
     /// </summary>
     [Fact]
     public void RunFor_WhenAdvanceReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
@@ -892,8 +892,8 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that forward <see cref="IPrimeTestClock.SetTime"/> past an active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon raises
+    ///   Verifies that forward <see cref="IPrimeTestClock.SetTime(DateTimeOffset)"/> past an active
+    ///   <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> stop horizon raises
     ///   <see cref="PrimeTestClockEventType.ClockStopped"/> at the horizon, leaves the clock stopped, and commits the
     ///   requested instant.
     /// </summary>
@@ -920,8 +920,8 @@ public class UsingPrimeTestClock : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that forward <see cref="IPrimeTestClock.SetTime"/> to exactly the active
-    ///   <see cref="IPrimeTestClock.RunFor"/> stop horizon completes the bounded run at that instant.
+    ///   Verifies that forward <see cref="IPrimeTestClock.SetTime(DateTimeOffset)"/> to exactly the active
+    ///   <see cref="IPrimeTestClock.RunFor(TimeSpan, TimeSpan)"/> stop horizon completes the bounded run at that instant.
     /// </summary>
     [Fact]
     public void RunFor_WhenSetTimeReachesStopHorizonExactly_StopsAtHorizonAndNotRunning ()
@@ -1077,7 +1077,7 @@ public class UsingPrimeTestClock : UnitTestBase
     ///     same virtual-per-real-second scaling as the clock (not a fixed nominal delay), so slow or parallel test
     ///     scheduling does not skew the assertion. A small fixed virtual tolerance remains for residual skew: the
     ///     clock&apos;s anchor stopwatch is a different instance than the test stopwatch and starts before the wall
-    ///     timer begins, <see cref="Task.Delay"/> does not guarantee exact wall duration, and persist-on-read on
+    ///     timer begins, <see cref="Task.Delay(TimeSpan, CancellationToken)"/> does not guarantee exact wall duration, and persist-on-read on
     ///     <see cref="IPrimeClock.UtcNowDateTimeOffset"/> is measured before the wall timer stops so post-read
     ///     scheduling does not inflate the observed instant.
     ///   </para>
@@ -1726,7 +1726,7 @@ public class UsingPrimeTestClock : UnitTestBase
     /// <summary>
     ///   Verifies that <see cref="IPrimeTestClock.ClockEvents"/> raises
     ///   <see cref="PrimeTestClockEventType.NewTime"/> at the bounded run stop instant when
-    ///   <see cref="IPrimeTestClock.RunFor"/> completes.
+    ///   <see cref="IPrimeTestClock.RunFor(TimeSpan)"/> completes.
     /// </summary>
     [Fact]
     public void RunFor_WhenClockEventsSubscribed_RaisesEventWithNewTime ()

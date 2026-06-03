@@ -46,7 +46,7 @@ public sealed class UsingPrimeTestClockControlExamples
     }
 
     /// <summary>
-    /// Verifies <see cref="IPrimeTestClock.RunFor"/> starts a bounded automatic run and
+    /// Verifies <see cref="IPrimeTestClock.RunFor(Duration,Duration)"/> starts a bounded automatic run and
     /// returns immediately, with the caller waiting for completion by observing
     /// <see cref="IPrimeTestClock.ClockEvents"/> for <see cref="PrimeTestClockEventType.ClockStopped"/>.
     /// </summary>

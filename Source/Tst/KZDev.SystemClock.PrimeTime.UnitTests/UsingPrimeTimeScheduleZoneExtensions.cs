@@ -201,7 +201,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleDateOnly"/> matches wall date in the schedule zone.
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleDateOnly(IPrimeTime, DateTimeOffset)"/> matches wall date in the schedule zone.
     /// </summary>
     [Fact]
     public void PrimeClock_FakeProvider_ToScheduleDateOnly_MatchesWallDate ()
@@ -218,7 +218,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleTimeOnly"/> matches wall time in the schedule zone.
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleTimeOnly(IPrimeTime, DateTimeOffset)"/> matches wall time in the schedule zone.
     /// </summary>
     [Fact]
     public void PrimeClock_FakeProvider_ToScheduleTimeOnly_MatchesWallTime ()

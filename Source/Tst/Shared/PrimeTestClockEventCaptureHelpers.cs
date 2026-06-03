@@ -389,7 +389,7 @@ public sealed class ClockEventListCapture<TEvent> : IDisposable where TEvent : P
 
 //################################################################################
 /// <summary>
-///   Shared wait and assertion helpers for bounded <see cref="IPrimeTestClock.RunFor"/> lifecycle tests.
+///   Shared wait and assertion helpers for bounded <see cref="IPrimeTestClock.RunFor(NodaTime.Duration, NodaTime.Duration)"/> lifecycle tests.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class PrimeTestClockBoundedRunAssertionHelpers
@@ -429,7 +429,7 @@ public static class PrimeTestClockBoundedRunAssertionHelpers
         clock.IsRunning.Should().BeFalse();
         clock.UtcNowDateTimeOffset.Should().Be(expectedCommittedUtc);
         List<PrimeTestClockEvent> snapshot = collector.Snapshot();
-        snapshot.Count(e => e.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(1);
+        snapshot.Count(clockEvent => clockEvent.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(1);
         PrimeTestClockStoppedEvent stopped = snapshot
             .OfType<PrimeTestClockStoppedEvent>()
             .Should()
@@ -471,7 +471,7 @@ public static class PrimeTestClockBoundedRunAssertionHelpers
         clock.IsRunning.Should().BeFalse();
         clock.NowInstant.Should().Be(expectedCommittedInstant);
         List<PrimeTestClockEvent> snapshot = collector.Snapshot();
-        snapshot.Count(e => e.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(1);
+        snapshot.Count(clockEvent => clockEvent.EventType == PrimeTestClockEventType.ClockStopped).Should().Be(1);
         PrimeTestClockStoppedEvent stopped = snapshot
             .OfType<PrimeTestClockStoppedEvent>()
             .Should()
@@ -504,11 +504,7 @@ public static class PrimeTestClockBoundedRunAssertionHelpers
         {
             cancellationToken.ThrowIfCancellationRequested();
             TimeSpan remaining = timeout - elapsed.Elapsed;
-            if (remaining <= TimeSpan.Zero)
-            {
-                throw new TimeoutException(timeoutMessage);
-            }
-            if (!collector.WaitForEvent(remaining, cancellationToken))
+            if (remaining <= TimeSpan.Zero || !collector.WaitForEvent(remaining, cancellationToken))
             {
                 throw new TimeoutException(timeoutMessage);
             }

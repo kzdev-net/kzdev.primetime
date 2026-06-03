@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading;
 
 using AwesomeAssertions;
-
+using KZDev.PrimeTime.Testing;
 using KZDev.PrimeTime.Tests;
 
 using Microsoft.Extensions.Time.Testing;

@@ -137,9 +137,9 @@ public partial class UsingIPrimeClock
         fake.SetLocalTimeZone(plusTwo);
 
         IPrimeClock clock = new PrimeClock(fake);
-        DateTimeOffset LocalNowDateTimeOffset = clock.LocalNowDateTimeOffset;
-        LocalNowDateTimeOffset.Offset.Should().Be(TimeSpan.FromHours(2));
-        LocalNowDateTimeOffset.UtcDateTime.Should().Be(fixedUtc.UtcDateTime);
+        DateTimeOffset localNowDateTimeOffset = clock.LocalNowDateTimeOffset;
+        localNowDateTimeOffset.Offset.Should().Be(TimeSpan.FromHours(2));
+        localNowDateTimeOffset.UtcDateTime.Should().Be(fixedUtc.UtcDateTime);
         clock.LocalNowDateTime.Kind.Should().Be(DateTimeKind.Local);
     }
 

@@ -99,8 +99,8 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleZonedDateTime"/> for an
-    ///   <see cref="Instant"/> matches Noda <see cref="Instant.InZone"/> for the clock's zone.
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleZonedDateTime(IPrimeTime, Instant)"/> for an
+    ///   <see cref="Instant"/> matches Noda <see cref="Instant.InZone(DateTimeZone)"/> for the clock's zone.
     /// </summary>
     [Fact]
     public void PrimeTestClock_Instant_ToScheduleZonedDateTime_MatchesInZoneOfClock ()
@@ -129,7 +129,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleDateTimeOffset"/> for an
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleDateTimeOffset(IPrimeTime, Instant)"/> for an
     ///   <see cref="Instant"/> matches <see cref="ZonedDateTime.ToDateTimeOffset"/>.
     /// </summary>
     [Fact]
@@ -144,7 +144,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate"/> matches the calendar date in the
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate(IPrimeTime, Instant)"/> matches the calendar date in the
     ///   schedule zone.
     /// </summary>
     [Fact]
@@ -159,7 +159,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalTime"/> matches wall time in the schedule
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalTime(IPrimeTime, Instant)"/> matches wall time in the schedule
     ///   zone.
     /// </summary>
     [Fact]
@@ -174,7 +174,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalWallDateTime"/> matches Noda local wall
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalWallDateTime(IPrimeTime, Instant)"/> matches Noda local wall
     ///   projection.
     /// </summary>
     [Fact]
@@ -190,7 +190,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleZonedDateTime(ZonedDateTime)"/> ignores the
+    ///   Verifies <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleZonedDateTime(IPrimeTime, ZonedDateTime)"/> ignores the
     ///   source zone and uses only the instant.
     /// </summary>
     [Fact]
@@ -231,7 +231,7 @@ public sealed class UsingPrimeTimeScheduleZoneExtensions
     }
 
     /// <summary>
-    ///   Verifies non-clock receivers fail for <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate"/>.
+    ///   Verifies non-clock receivers fail for <see cref="PrimeTimeScheduleZoneExtensions.ToScheduleLocalDate(IPrimeTime, Instant)"/>.
     /// </summary>
     [Fact]
     public void NonClock_ToScheduleLocalDate_ThrowsArgumentException ()

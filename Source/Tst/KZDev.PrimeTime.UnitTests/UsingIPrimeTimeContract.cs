@@ -3,8 +3,10 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+
 using AwesomeAssertions;
-using KZDev.PrimeTime;
+
+using KZDev.PrimeTime.Testing.UnitTests;
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.PrimeTime.UnitTests;

@@ -4,7 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AwesomeAssertions;
-
+using KZDev.PrimeTime.Testing;
 using KZDev.PrimeTime.Tests;
 
 namespace KZDev.SystemClock.PrimeTime.UnitTests;
@@ -90,11 +90,11 @@ public class UsingPrimeClock : UnitTestBase
     public void Sleep_Milliseconds_SuspendsForAtLeastDuration ()
     {
         IPrimeClock clock = new PrimeClock();
-        const int sleepMs = 30;
+        const int SleepMs = 30;
         DateTimeOffset before = DateTimeOffset.UtcNow;
-        clock.Sleep(sleepMs);
+        clock.Sleep(SleepMs);
         DateTimeOffset after = DateTimeOffset.UtcNow;
-        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(sleepMs - 20);
+        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(SleepMs - 20);
     }
     //----------------------------------------------------------------------------
 
@@ -152,11 +152,11 @@ public class UsingPrimeClock : UnitTestBase
     public async Task DelayAsync_Milliseconds_CompletesAfterDuration ()
     {
         IPrimeClock clock = new PrimeClock();
-        const int delayMs = 40;
+        const int DelayMs = 40;
         DateTimeOffset before = DateTimeOffset.UtcNow;
-        await clock.DelayAsync(delayMs, TestContext.Current.CancellationToken);
+        await clock.DelayAsync(DelayMs, TestContext.Current.CancellationToken);
         DateTimeOffset after = DateTimeOffset.UtcNow;
-        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(delayMs - 25);
+        (after - before).TotalMilliseconds.Should().BeGreaterThanOrEqualTo(DelayMs - 25);
     }
     //----------------------------------------------------------------------------
 
@@ -231,8 +231,8 @@ public class UsingPrimeClock : UnitTestBase
     public async Task GetTimeCancellationToken_Milliseconds_ExpiresAfterTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        const int cancelAfterMs = 50;
-        using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(cancelAfterMs);
+        const int CancelAfterMs = 50;
+        using TimeCancellationTokenSource timeCts = clock.GetTimeCancellationToken(CancelAfterMs);
         timeCts.Token.IsCancellationRequested.Should().BeFalse();
         TaskCompletionSource<bool> cancellationObserved =
             new(TaskCreationOptions.RunContinuationsAsynchronously);

@@ -87,7 +87,7 @@ public class UsingLocalTimeOfDay : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="LocalTimeOfDay.ToString"/> returns a non-empty string.
+    ///   Verifies that <see cref="LocalTimeOfDay.ToString()"/> returns a non-empty string.
     /// </summary>
     [Fact]
     public void LocalTimeOfDay_ToString_ReturnsNonEmpty ()

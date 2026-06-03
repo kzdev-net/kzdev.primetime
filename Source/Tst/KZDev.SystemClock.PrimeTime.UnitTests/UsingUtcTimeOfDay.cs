@@ -87,7 +87,7 @@ public class UsingUtcTimeOfDay : UnitTestBase
     }
 
     /// <summary>
-    ///   Verifies that <see cref="UtcTimeOfDay.ToString"/> returns a non-empty string.
+    ///   Verifies that <see cref="UtcTimeOfDay.ToString()"/> returns a non-empty string.
     /// </summary>
     [Fact]
     public void UtcTimeOfDay_ToString_ReturnsNonEmpty ()
