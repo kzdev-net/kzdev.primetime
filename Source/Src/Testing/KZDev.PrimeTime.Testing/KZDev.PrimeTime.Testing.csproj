@@ -48,6 +48,19 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="KZDev.PrimeTime.Testing.UnitTests" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="Resources\TestingStrings.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TestingStrings.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\TestingStrings.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>TestingStrings.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
 	<Import Project="..\..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 
 </Project>

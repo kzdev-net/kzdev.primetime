@@ -47,6 +47,19 @@
 		<InternalsVisibleTo Include="KZDev.PrimeTime.UnitTests" />
 		<InternalsVisibleTo Include="KZDev.PrimeTime.Testing.UnitTests" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="Resources\ProductionStrings.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>ProductionStrings.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\ProductionStrings.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>ProductionStrings.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
 
 	<Import Project="..\Shared\KZDev.PrimeTime.Common.Shared\KZDev.PrimeTime.Common.Shared.projitems" Label="Shared" />
 

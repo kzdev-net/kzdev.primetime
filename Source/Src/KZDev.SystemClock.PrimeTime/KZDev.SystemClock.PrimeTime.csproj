@@ -30,6 +30,12 @@
 		<DefineConstants>$(DefineConstants);NOT_PACKAGING</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\KZDev.PrimeTime\Resources\ProductionStrings.Designer.cs" Link="Resources\ProductionStrings.Designer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="..\KZDev.PrimeTime\Resources\ProductionStrings.resx" Link="Resources\ProductionStrings.resx" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	</ItemGroup>
 
@@ -48,6 +54,10 @@
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing" />
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.UnitTests" />
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing.UnitTests" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Resources\" />
 	</ItemGroup>
 
 </Project>

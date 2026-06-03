@@ -31,6 +31,12 @@
 		<DefineConstants>$(DefineConstants);NOT_PACKAGING</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\KZDev.PrimeTime.Testing\Resources\TestingStrings.Designer.cs" Link="Resources\TestingStrings.Designer.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="..\KZDev.PrimeTime.Testing\Resources\TestingStrings.resx" Link="Resources\TestingStrings.resx" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -48,6 +54,9 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="KZDev.SystemClock.PrimeTime.Testing.UnitTests" />
 		<InternalsVisibleTo Include="KZDev.PrimeTime.Testing.UnitTests" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Resources\" />
 	</ItemGroup>
 	<Import Project="..\..\Shared\KZDev.PrimeTime.Common.Testing.Shared\KZDev.PrimeTime.Common.Testing.Shared.projitems" Label="Testing" />
 
