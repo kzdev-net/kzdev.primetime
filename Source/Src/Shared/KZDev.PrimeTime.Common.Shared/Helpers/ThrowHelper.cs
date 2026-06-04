@@ -3,7 +3,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 
+#if SYSTEMCLOCK
+namespace KZDev.SystemClock.PrimeTime.Helpers;
+#else
 namespace KZDev.PrimeTime.Helpers;
+#endif
 
 //################################################################################
 /// <summary>

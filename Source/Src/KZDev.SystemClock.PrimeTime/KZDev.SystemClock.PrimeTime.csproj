@@ -30,6 +30,7 @@
 		<DefineConstants>$(DefineConstants);NOT_PACKAGING</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Include="..\KZDev.PrimeTime\Helpers\ThrowHelper.cs" Link="Helpers\ThrowHelper.cs" />
 	  <Compile Include="..\KZDev.PrimeTime\Resources\ProductionStrings.Designer.cs" Link="Resources\ProductionStrings.Designer.cs" />
 	</ItemGroup>
 	<ItemGroup>
