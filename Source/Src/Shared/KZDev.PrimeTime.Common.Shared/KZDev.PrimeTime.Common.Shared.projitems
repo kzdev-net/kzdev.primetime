@@ -39,5 +39,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Observability\PrimeTimeEventSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\PrimeClockTimerExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\PrimeClockTimeProviderExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThrowHelper.cs" />
   </ItemGroup>
 </Project>
