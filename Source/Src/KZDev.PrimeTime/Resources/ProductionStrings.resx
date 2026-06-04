@@ -98,4 +98,31 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
+	<data name="InvalidOperation_UnsupportedTimerCallbackKind" xml:space="preserve">
+		<value>Unsupported callback kind: {0}</value>
+	</data>
+	<data name="InvalidOperation_TimerNonRepeatingToRepeating" xml:space="preserve">
+		<value>Cannot change a non-repeating timer to a repeating timer.</value>
+	</data>
+	<data name="InvalidOperation_ExpectedInvalidLocalTimeWindow" xml:space="preserve">
+		<value>Expected an invalid local time window on the calendar date for {0}.</value>
+	</data>
+	<data name="InvalidOperation_RunAfterSpringForwardGapUnresolved" xml:space="preserve">
+		<value>Could not resolve RunAfter instant after a spring-forward gap.</value>
+	</data>
+	<data name="InvalidOperation_RunBeforeSpringForwardGapUnresolved" xml:space="preserve">
+		<value>Could not resolve RunBefore instant before a spring-forward gap.</value>
+	</data>
+	<data name="InvalidOperation_LocalDayTimeFireInstantNotFound" xml:space="preserve">
+		<value>Unable to find a valid local day-time fire instant within {0} calendar days for time zone '{1}' and target time of day '{2}'.</value>
+	</data>
+	<data name="Argument_ScheduleZoneRequiresIPrimeClock" xml:space="preserve">
+		<value>Schedule-zone projection requires IPrimeClock so the local schedule time zone can be resolved. Use a clock implementation such as PrimeClock or PrimeTestClock; IPrimeTime-only contexts are not supported.</value>
+	</data>
+	<data name="Argument_UtcDateTimeMustBeUtcKind" xml:space="preserve">
+		<value>The value must use DateTimeKind.Utc so it represents an unambiguous absolute instant on the UTC timeline.</value>
+	</data>
+	<data name="InvalidOperation_UnexpectedZoneLocalMappingCount" xml:space="preserve">
+		<value>Unexpected ZoneLocalMapping.Count: {0}.</value>
+	</data>
 </root>

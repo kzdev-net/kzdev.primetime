@@ -59,5 +59,86 @@ namespace KZDev.PrimeTime.Resources {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Schedule-zone projection requires IPrimeClock so the local schedule time zone can be resolved. Use a clock implementation such as PrimeClock or PrimeTestClock; IPrimeTime-only contexts are not supported..
+        /// </summary>
+        internal static string Argument_ScheduleZoneRequiresIPrimeClock {
+            get {
+                return ResourceManager.GetString("Argument_ScheduleZoneRequiresIPrimeClock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value must use DateTimeKind.Utc so it represents an unambiguous absolute instant on the UTC timeline..
+        /// </summary>
+        internal static string Argument_UtcDateTimeMustBeUtcKind {
+            get {
+                return ResourceManager.GetString("Argument_UtcDateTimeMustBeUtcKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected an invalid local time window on the calendar date for {0}..
+        /// </summary>
+        internal static string InvalidOperation_ExpectedInvalidLocalTimeWindow {
+            get {
+                return ResourceManager.GetString("InvalidOperation_ExpectedInvalidLocalTimeWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find a valid local day-time fire instant within {0} calendar days for time zone &apos;{1}&apos; and target time of day &apos;{2}&apos;..
+        /// </summary>
+        internal static string InvalidOperation_LocalDayTimeFireInstantNotFound {
+            get {
+                return ResourceManager.GetString("InvalidOperation_LocalDayTimeFireInstantNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve RunAfter instant after a spring-forward gap..
+        /// </summary>
+        internal static string InvalidOperation_RunAfterSpringForwardGapUnresolved {
+            get {
+                return ResourceManager.GetString("InvalidOperation_RunAfterSpringForwardGapUnresolved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve RunBefore instant before a spring-forward gap..
+        /// </summary>
+        internal static string InvalidOperation_RunBeforeSpringForwardGapUnresolved {
+            get {
+                return ResourceManager.GetString("InvalidOperation_RunBeforeSpringForwardGapUnresolved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot change a non-repeating timer to a repeating timer..
+        /// </summary>
+        internal static string InvalidOperation_TimerNonRepeatingToRepeating {
+            get {
+                return ResourceManager.GetString("InvalidOperation_TimerNonRepeatingToRepeating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected ZoneLocalMapping.Count: {0}..
+        /// </summary>
+        internal static string InvalidOperation_UnexpectedZoneLocalMappingCount {
+            get {
+                return ResourceManager.GetString("InvalidOperation_UnexpectedZoneLocalMappingCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported callback kind: {0}.
+        /// </summary>
+        internal static string InvalidOperation_UnsupportedTimerCallbackKind {
+            get {
+                return ResourceManager.GetString("InvalidOperation_UnsupportedTimerCallbackKind", resourceCulture);
+            }
+        }
     }
 }
