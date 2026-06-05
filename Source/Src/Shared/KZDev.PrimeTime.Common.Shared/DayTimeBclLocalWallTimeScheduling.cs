@@ -4,10 +4,12 @@
 #if NET
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Helpers;
 using KZDev.SystemClock.PrimeTime.Observability;
 
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Helpers;
 using KZDev.PrimeTime.Observability;
 
 namespace KZDev.PrimeTime;
@@ -116,8 +118,8 @@ internal static class DayTimeBclLocalWallTimeScheduling
         PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
             PrimeTimeEventSource.FaultCode_ExpectedInvalidWindowMissing,
             $"{calendarDate:O} {missingInvalidWindowMessageSuffix}");
-        throw new InvalidOperationException(
-            $"Expected an invalid local time window on the calendar date for {missingInvalidWindowMessageSuffix}.");
+        ThrowHelper.ThrowInvalidOperation_ExpectedInvalidLocalTimeWindow(missingInvalidWindowMessageSuffix);
+        return 0;
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -144,7 +146,7 @@ internal static class DayTimeBclLocalWallTimeScheduling
             PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
                 PrimeTimeEventSource.FaultCode_RunAfterResolutionFailed,
                 calendarDate.ToString("O"));
-            throw new InvalidOperationException("Could not resolve RunAfter instant after a spring-forward gap.");
+            ThrowHelper.ThrowInvalidOperation_RunAfterSpringForwardGapUnresolved();
         }
 
         TimeSpan offset = zone.GetUtcOffset(probe);
@@ -172,7 +174,7 @@ internal static class DayTimeBclLocalWallTimeScheduling
             PrimeTimeEventSource.Log.DayTimeSchedulingResolutionFault(zone.Id,
                 PrimeTimeEventSource.FaultCode_RunBeforeResolutionFailed,
                 calendarDate.ToString("O"));
-            throw new InvalidOperationException("Could not resolve RunBefore instant before a spring-forward gap.");
+            ThrowHelper.ThrowInvalidOperation_RunBeforeSpringForwardGapUnresolved();
         }
 
         TimeSpan offset = zone.GetUtcOffset(probe);
@@ -256,8 +258,9 @@ internal static class DayTimeBclLocalWallTimeScheduling
 
         PrimeTimeEventSource.Log.DayTimeSchedulingFireInstantNotFound(zone.Id, targetTimeOfDay.ToString("O"),
             MaxDaySearchWindow);
-        throw new InvalidOperationException($"Unable to find a valid local day-time fire instant within {MaxDaySearchWindow} calendar days " +
-            $"for time zone '{zone.Id}' and target time of day '{targetTimeOfDay}'.");
+        ThrowHelper.ThrowInvalidOperation_LocalDayTimeFireInstantNotFound(
+            MaxDaySearchWindow, zone.Id, targetTimeOfDay.ToString("O"));
+        return default;
     }
     //----------------------------------------------------------------------------
 }
