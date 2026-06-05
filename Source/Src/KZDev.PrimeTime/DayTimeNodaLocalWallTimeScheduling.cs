@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using KZDev.PrimeTime.Helpers;
 using NodaTime;
 using NodaTime.TimeZones;
 
@@ -94,7 +95,9 @@ internal static class DayTimeNodaLocalWallTimeScheduling
             case 0:
                 return TryResolveGapMapping(mapping, skippedTimeBehavior, out fireInstant);
             default:
-                throw new InvalidOperationException($"Unexpected ZoneLocalMapping.Count: {mapping.Count}.");
+                ThrowHelper.ThrowInvalidOperation_UnexpectedZoneLocalMappingCount(mapping.Count);
+                fireInstant = default;
+                return false;
         }
     }
     //----------------------------------------------------------------------------
@@ -136,9 +139,9 @@ internal static class DayTimeNodaLocalWallTimeScheduling
             }
         }
 
-        throw new InvalidOperationException(
-            $"Unable to find a valid local day-time fire instant within {MaxDaySearchWindow} calendar days " +
-            $"for time zone '{zone.Id}' and target time of day '{targetTimeOfDay}'.");
+        ThrowHelper.ThrowInvalidOperation_LocalDayTimeFireInstantNotFound(
+            MaxDaySearchWindow, zone.Id, targetTimeOfDay.ToString());
+        return default;
     }
     //----------------------------------------------------------------------------
 }
