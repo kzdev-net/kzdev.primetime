@@ -4,10 +4,12 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Helpers;
 using KZDev.SystemClock.PrimeTime.Observability;
 
 namespace KZDev.SystemClock.PrimeTime;
 #else
+using KZDev.PrimeTime.Helpers;
 using KZDev.PrimeTime.Observability;
 
 namespace KZDev.PrimeTime;
@@ -199,7 +201,8 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
 
             default:
                 PrimeTimeEventSource.Log.ClockTimerUnsupportedCallbackKind((int)CallbackKind, "Interval");
-                throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
+                ThrowHelper.ThrowInvalidOperation_UnsupportedTimerCallbackKind(CallbackKind);
+                return;
         }
 
         OnCallbackCompleted(resetBefore, isRepeating);
@@ -349,7 +352,7 @@ internal sealed partial class ClockIntervalTimerRegistration : ClockTimerRegistr
             if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
             {
                 PrimeTimeEventSource.Log.IntervalTimerInvalidRepeatTransition();
-                throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
+                ThrowHelper.ThrowInvalidOperation_TimerNonRepeatingToRepeating();
             }
             InitialCallbackTimeSpan = nextInterval;
             RepeatTimeSpanInterval = repeatInterval;
