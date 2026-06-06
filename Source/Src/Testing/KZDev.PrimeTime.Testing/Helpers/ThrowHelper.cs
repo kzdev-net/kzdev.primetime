@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+
 using KZDev.PrimeTime.Testing.Resources;
 #if SYSTEMCLOCK
 using KZDev.SystemClock.PrimeTime;
@@ -20,6 +21,13 @@ namespace KZDev.PrimeTime.Testing.Helpers;
 //################################################################################
 internal static partial class ThrowHelper
 {
+    private const string InvalidOperation_RunnerStopJoinTimedOut_BlockedOperations =
+        "Start(), SetTime, Advance, and RunFor";
+
+    private const string InvalidOperation_RunnerStopJoinTimedOut_LikelyCause =
+        "The runner thread may still be executing and is typically blocked inside a ClockEvents subscriber "
+        + "or virtual-time dispatch callback.";
+
     #region InvalidOperation Errors
 
     //--------------------------------------------------------------------------------
@@ -33,7 +41,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_TimerNonRepeatingToRepeating() =>
+    internal static void ThrowInvalidOperation_TimerNonRepeatingToRepeating () =>
         throw new InvalidOperationException(TestingStrings.InvalidOperation_TimerNonRepeatingToRepeating);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -49,7 +57,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_UnsupportedTimerCallbackKind(TimerCallbackKind kind) =>
+    internal static void ThrowInvalidOperation_UnsupportedTimerCallbackKind (TimerCallbackKind kind) =>
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.CurrentCulture,
@@ -66,7 +74,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_VirtualTimeBackwardWhileRunning() =>
+    internal static void ThrowInvalidOperation_VirtualTimeBackwardWhileRunning () =>
         throw new InvalidOperationException(TestingStrings.InvalidOperation_VirtualTimeBackwardWhileRunning);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -79,7 +87,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive() =>
+    internal static void ThrowInvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive () =>
         throw new InvalidOperationException(TestingStrings.InvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -95,7 +103,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_RunnerStopJoinFailed(int stopJoinTimeoutSeconds) =>
+    internal static void ThrowInvalidOperation_RunnerStopJoinFailed (int stopJoinTimeoutSeconds) =>
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.InvariantCulture,
@@ -112,7 +120,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_VirtualTimeMutationDuringStopJoin() =>
+    internal static void ThrowInvalidOperation_VirtualTimeMutationDuringStopJoin () =>
         throw new InvalidOperationException(TestingStrings.InvalidOperation_VirtualTimeMutationDuringStopJoin);
     //--------------------------------------------------------------------------------
     /// <summary>
@@ -131,7 +139,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_StartWaitForOverlappingStopTimedOut(
+    internal static void ThrowInvalidOperation_StartWaitForOverlappingStopTimedOut (
         int maxWaitSeconds,
         int stopJoinTimeoutSeconds) =>
         throw new InvalidOperationException(
@@ -154,12 +162,22 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_RunnerStopJoinTimedOut(int stopJoinTimeoutSeconds) =>
-        throw new InvalidOperationException(
+    internal static void ThrowInvalidOperation_RunnerStopJoinTimedOut (int stopJoinTimeoutSeconds)
+    {
+        InvalidOperationException exception = new(
             string.Format(
                 CultureInfo.InvariantCulture,
                 TestingStrings.InvalidOperation_RunnerStopJoinTimedOut,
-                stopJoinTimeoutSeconds.ToString("g0", CultureInfo.InvariantCulture)));
+                stopJoinTimeoutSeconds.ToString("g0", CultureInfo.InvariantCulture)))
+        {
+            Data =
+            {
+                ["BlockedOperations"] = InvalidOperation_RunnerStopJoinTimedOut_BlockedOperations,
+                ["LikelyCause"] = InvalidOperation_RunnerStopJoinTimedOut_LikelyCause
+            }
+        };
+        throw exception;
+    }
 
     #endregion
 
@@ -176,7 +194,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowOverflowException_ScaledVirtualElapsedExceedsTimeSpanRange() =>
+    internal static void ThrowOverflowException_ScaledVirtualElapsedExceedsTimeSpanRange () =>
         throw new OverflowException(TestingStrings.Overflow_ScaledVirtualElapsedExceedsTimeSpanRange);
 
     #endregion
@@ -193,7 +211,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowArgumentNullException_Services() =>
+    internal static void ThrowArgumentNullException_Services () =>
         throw new ArgumentNullException("services", TestingStrings.Argument_ServicesNull);
 
     #endregion
@@ -214,7 +232,7 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowArgumentOutOfRangeException_StartRunRateOutOfRange(TimeSpan perSecondRate) =>
+    internal static void ThrowArgumentOutOfRangeException_StartRunRateOutOfRange (TimeSpan perSecondRate) =>
         throw new ArgumentOutOfRangeException(
             nameof(perSecondRate),
             perSecondRate,
