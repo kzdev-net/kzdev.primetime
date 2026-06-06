@@ -1,6 +1,8 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using KZDev.SystemClock.PrimeTime.Helpers;
+
 namespace KZDev.SystemClock.PrimeTime;
 
 //################################################################################
@@ -67,9 +69,8 @@ public static class PrimeTimeScheduleZoneExtensions
         {
             if (utcDateTime.Kind != DateTimeKind.Utc)
             {
-                throw new ArgumentException(
-                    "The value must use DateTimeKind.Utc so it represents an unambiguous absolute instant on the UTC timeline.",
-                    nameof(utcDateTime));
+                ThrowHelper.ThrowArgumentException_UtcDateTimeMustBeUtcKind(nameof(utcDateTime));
+                return default;
             }
 
             DateTimeOffset instant = new(utcDateTime, TimeSpan.Zero);
@@ -242,10 +243,8 @@ public static class PrimeTimeScheduleZoneExtensions
     {
         if (time is IPrimeClock clock)
             return clock;
-        throw new ArgumentException(
-            "Schedule-zone projection requires IPrimeClock so LocalScheduleTimeZone can be resolved. "
-            + "Use a clock implementation such as PrimeClock or PrimeTestClock; IPrimeTime-only contexts are not supported.",
-            paramName);
+        ThrowHelper.ThrowArgumentException_ScheduleZoneRequiresIPrimeClock(paramName);
+        return null!;
     }
     //----------------------------------------------------------------------------
 }

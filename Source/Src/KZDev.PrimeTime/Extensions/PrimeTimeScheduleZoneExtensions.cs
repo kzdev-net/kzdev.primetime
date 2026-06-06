@@ -1,6 +1,7 @@
 // Copyright (c) Kevin Zehrer
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
+using KZDev.PrimeTime.Helpers;
 using NodaTime;
 
 namespace KZDev.PrimeTime;
@@ -383,10 +384,8 @@ public static class PrimeTimeScheduleZoneExtensions
     {
         if (time is IPrimeClock clock)
             return clock;
-        throw new ArgumentException(
-            "Schedule-zone projection requires IPrimeClock so LocalScheduleDateTimeZone can be resolved. "
-            + "Use a clock implementation such as PrimeClock or PrimeTestClock; IPrimeTime-only contexts are not supported.",
-            paramName);
+        ThrowHelper.ThrowArgumentException_ScheduleZoneRequiresIPrimeClock(paramName);
+        return null!;
     }
     //----------------------------------------------------------------------------
 }
