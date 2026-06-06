@@ -98,4 +98,37 @@
 	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
+	<data name="InvalidOperation_TimerNonRepeatingToRepeating" xml:space="preserve">
+		<value>Cannot change a non-repeating timer to a repeating timer.</value>
+	</data>
+	<data name="InvalidOperation_UnsupportedTimerCallbackKind" xml:space="preserve">
+		<value>Unsupported callback kind: {0}</value>
+	</data>
+	<data name="Overflow_ScaledVirtualElapsedExceedsTimeSpanRange" xml:space="preserve">
+		<value>Scaled virtual elapsed time exceeds the representable TimeSpan range.</value>
+	</data>
+	<data name="InvalidOperation_VirtualTimeBackwardWhileRunning" xml:space="preserve">
+		<value>Cannot move the test clock's virtual time backward while it is running.</value>
+	</data>
+	<data name="InvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive" xml:space="preserve">
+		<value>Cannot move the test clock's virtual time backward while an interval timer registration is active.</value>
+	</data>
+	<data name="ArgumentOutOfRange_StartRunRateOutOfRange" xml:space="preserve">
+		<value>Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive.</value>
+	</data>
+	<data name="InvalidOperation_RunnerStopJoinFailed" xml:space="preserve">
+		<value>A previous Stop() returned false because the automatic runner did not join within {0} seconds, and the runner thread may still be executing. Start(), SetTime, Advance, and RunFor are blocked until that thread exits or this PrimeTestClock instance is discarded. This typically indicates the runner loop is blocked inside a ClockEvents subscriber or virtual-time dispatch callback.</value>
+	</data>
+	<data name="InvalidOperation_VirtualTimeMutationDuringStopJoin" xml:space="preserve">
+		<value>Virtual time cannot be changed while Stop() is joining the automatic runner. Wait for Stop() to complete before calling SetTime, Advance, or RunFor.</value>
+	</data>
+	<data name="InvalidOperation_StartWaitForOverlappingStopTimedOut" xml:space="preserve">
+		<value>Start waited for an overlapping Stop to finish joining the automatic runner, but Stop did not complete within {0} seconds ({1} second join timeout plus scheduling slack). This typically indicates the runner loop is blocked inside a ClockEvents subscriber or virtual-time dispatch callback.</value>
+	</data>
+	<data name="Argument_ServicesNull" xml:space="preserve">
+		<value>The service collection cannot be null.</value>
+	</data>
+	<data name="InvalidOperation_RunnerStopJoinTimedOut" xml:space="preserve">
+		<value>Timed out stopping the automatic runner after {0} seconds.</value>
+	</data>
 </root>

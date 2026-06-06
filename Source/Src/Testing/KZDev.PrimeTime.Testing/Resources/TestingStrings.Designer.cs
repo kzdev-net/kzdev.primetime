@@ -59,5 +59,104 @@ namespace KZDev.PrimeTime.Testing.Resources {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The service collection cannot be null..
+        /// </summary>
+        internal static string Argument_ServicesNull {
+            get {
+                return ResourceManager.GetString("Argument_ServicesNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive..
+        /// </summary>
+        internal static string ArgumentOutOfRange_StartRunRateOutOfRange {
+            get {
+                return ResourceManager.GetString("ArgumentOutOfRange_StartRunRateOutOfRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A previous Stop() returned false because the automatic runner did not join within {0} seconds, and the runner thread may still be executing. Start(), SetTime, Advance, and RunFor are blocked until that thread exits or this PrimeTestClock instance is discarded. This typically indicates the runner loop is blocked inside a ClockEvents subscriber or virtual-time dispatch callback..
+        /// </summary>
+        internal static string InvalidOperation_RunnerStopJoinFailed {
+            get {
+                return ResourceManager.GetString("InvalidOperation_RunnerStopJoinFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timed out stopping the automatic runner after {0} seconds..
+        /// </summary>
+        internal static string InvalidOperation_RunnerStopJoinTimedOut {
+            get {
+                return ResourceManager.GetString("InvalidOperation_RunnerStopJoinTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start waited for an overlapping Stop to finish joining the automatic runner, but Stop did not complete within {0} seconds ({1} second join timeout plus scheduling slack). This typically indicates the runner loop is blocked inside a ClockEvents subscriber or virtual-time dispatch callback..
+        /// </summary>
+        internal static string InvalidOperation_StartWaitForOverlappingStopTimedOut {
+            get {
+                return ResourceManager.GetString("InvalidOperation_StartWaitForOverlappingStopTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot change a non-repeating timer to a repeating timer..
+        /// </summary>
+        internal static string InvalidOperation_TimerNonRepeatingToRepeating {
+            get {
+                return ResourceManager.GetString("InvalidOperation_TimerNonRepeatingToRepeating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported callback kind: {0}.
+        /// </summary>
+        internal static string InvalidOperation_UnsupportedTimerCallbackKind {
+            get {
+                return ResourceManager.GetString("InvalidOperation_UnsupportedTimerCallbackKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot move the test clock&apos;s virtual time backward while an interval timer registration is active..
+        /// </summary>
+        internal static string InvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive {
+            get {
+                return ResourceManager.GetString("InvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot move the test clock&apos;s virtual time backward while it is running..
+        /// </summary>
+        internal static string InvalidOperation_VirtualTimeBackwardWhileRunning {
+            get {
+                return ResourceManager.GetString("InvalidOperation_VirtualTimeBackwardWhileRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual time cannot be changed while Stop() is joining the automatic runner. Wait for Stop() to complete before calling SetTime, Advance, or RunFor..
+        /// </summary>
+        internal static string InvalidOperation_VirtualTimeMutationDuringStopJoin {
+            get {
+                return ResourceManager.GetString("InvalidOperation_VirtualTimeMutationDuringStopJoin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scaled virtual elapsed time exceeds the representable TimeSpan range..
+        /// </summary>
+        internal static string Overflow_ScaledVirtualElapsedExceedsTimeSpanRange {
+            get {
+                return ResourceManager.GetString("Overflow_ScaledVirtualElapsedExceedsTimeSpanRange", resourceCulture);
+            }
+        }
     }
 }
