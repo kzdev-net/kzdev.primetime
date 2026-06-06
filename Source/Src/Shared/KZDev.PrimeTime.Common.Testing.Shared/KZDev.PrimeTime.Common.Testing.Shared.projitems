@@ -22,5 +22,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.VirtualDayTimeTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestClock.VirtualIntervalTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PrimeTestTimeBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ThrowHelper.cs" />
   </ItemGroup>
 </Project>
