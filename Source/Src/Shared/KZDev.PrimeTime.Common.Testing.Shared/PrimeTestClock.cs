@@ -2,7 +2,12 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
-using System.Globalization;
+
+#if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Testing.Helpers;
+#else
+using KZDev.PrimeTime.Testing.Helpers;
+#endif
 
 #if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
@@ -688,8 +693,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         if (scaledTicks > TimeSpan.MaxValue.Ticks || scaledTicks < TimeSpan.MinValue.Ticks)
         {
-            throw new OverflowException(
-                "Scaled virtual elapsed time exceeds the representable TimeSpan range.");
+            ThrowHelper.ThrowOverflowException_ScaledVirtualElapsedExceedsTimeSpanRange();
         }
     }
     //----------------------------------------------------------------------------
@@ -903,14 +907,12 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
 
         if (InternalIsRunning)
         {
-            throw new InvalidOperationException(
-                "Cannot move the test clock's virtual time backward while it is running.");
+            ThrowHelper.ThrowInvalidOperation_VirtualTimeBackwardWhileRunning();
         }
 
         if (AnyActiveIntervalTimerLocked())
         {
-            throw new InvalidOperationException(
-                "Cannot move the test clock's virtual time backward while an interval timer registration is active.");
+            ThrowHelper.ThrowInvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive();
         }
     }
     //----------------------------------------------------------------------------
@@ -1684,16 +1686,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
                 _runnerStopJoinFailed = true;
             }
 
-            InvalidOperationException joinTimeoutException = new(
-                "Timed out stopping the automatic runner after "
-                + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds.");
-            joinTimeoutException.Data["BlockedOperations"] =
-                "Start(), SetTime, Advance, and RunFor";
-            joinTimeoutException.Data["LikelyCause"] =
-                "The runner thread may still be executing and is typically blocked inside a ClockEvents subscriber "
-                + "or virtual-time dispatch callback.";
-            throw joinTimeoutException;
+            ThrowHelper.ThrowInvalidOperation_RunnerStopJoinTimedOut(StopJoinTimeout);
         }
 
         lock (Gate)
@@ -1720,9 +1713,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         if (perSecondRate < MinimumStartRunRate || perSecondRate > MaximumStartRunRate)
         {
-            throw new ArgumentOutOfRangeException(nameof(perSecondRate),
-                perSecondRate,
-                "Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive.");
+            ThrowHelper.ThrowArgumentOutOfRangeException_StartRunRateOutOfRange(perSecondRate);
         }
     }
     //----------------------------------------------------------------------------
@@ -1737,13 +1728,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
     {
         if (_runnerStopJoinFailed)
         {
-            throw new InvalidOperationException(
-                "A previous Stop() returned false because the automatic runner did not join within "
-                + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds, and the runner thread may still be executing. Start(), SetTime, Advance, and RunFor are "
-                + "blocked until that thread exits or this PrimeTestClock instance is discarded. This typically "
-                + "indicates the runner loop is blocked "
-                + "inside a ClockEvents subscriber or virtual-time dispatch callback.");
+            ThrowHelper.ThrowInvalidOperation_RunnerStopJoinFailed(StopJoinTimeout);
         }
     }
     //----------------------------------------------------------------------------
@@ -1759,9 +1744,7 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
         ThrowIfRunnerStopJoinFailedLocked();
         if (_runnerStopInProgress)
         {
-            throw new InvalidOperationException(
-                "Virtual time cannot be changed while Stop() is joining the automatic runner. Wait for Stop() to "
-                + "complete before calling SetTime, Advance, or RunFor.");
+            ThrowHelper.ThrowInvalidOperation_VirtualTimeMutationDuringStopJoin();
         }
     }
     //----------------------------------------------------------------------------
@@ -1790,14 +1773,9 @@ public sealed partial class PrimeTestClock : PrimeTestTimeBase, IPrimeTestClock
             TimeSpan remaining = MaximumWaitForOverlappingRunnerStop - waitStopwatch.Elapsed;
             if (remaining <= TimeSpan.Zero)
             {
-                throw new InvalidOperationException(
-                    "Start waited for an overlapping Stop to finish joining the automatic runner, "
-                    + "but Stop did not complete within "
-                    + MaximumWaitForOverlappingRunnerStop.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                    + " seconds ("
-                    + StopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                    + " second join timeout plus scheduling slack). This typically indicates the runner loop "
-                    + "is blocked inside a ClockEvents subscriber or virtual-time dispatch callback.");
+                ThrowHelper.ThrowInvalidOperation_StartWaitForOverlappingStopTimedOut(
+                    MaximumWaitForOverlappingRunnerStop,
+                    StopJoinTimeout);
             }
 
             _runnerStopCompletedEvent.Wait(remaining);

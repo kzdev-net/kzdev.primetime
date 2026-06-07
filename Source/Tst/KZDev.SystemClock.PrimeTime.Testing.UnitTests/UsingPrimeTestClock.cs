@@ -360,7 +360,8 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial);
         clock.Start(null);
         Action act = () => clock.SetTime(earlier);
-        act.Should().Throw<InvalidOperationException>().WithMessage("*running*");
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage(ThrowHelperContractMessages.InvalidOperation_VirtualTimeBackwardWhileRunning);
         clock.Stop().Should().BeTrue();
     }
     //----------------------------------------------------------------------------
@@ -379,7 +380,8 @@ public class UsingPrimeTestClock : UnitTestBase
                    TestContext.Current.CancellationToken))
         {
             Action act = () => clock.SetTime(earlier);
-            act.Should().Throw<InvalidOperationException>().WithMessage("*interval*");
+            act.Should().Throw<InvalidOperationException>()
+                .WithMessage(ThrowHelperContractMessages.InvalidOperation_VirtualTimeBackwardWhileIntervalTimerActive);
         }
     }
     //----------------------------------------------------------------------------
@@ -1035,7 +1037,9 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock();
         TimeSpan belowMinimum = MinimumAllowedStartRunRate - TimeSpan.FromTicks(1);
         Action act = () => clock.Start(belowMinimum);
-        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("perSecondRate");
+        act.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("perSecondRate")
+            .WithMessage($"{ThrowHelperContractMessages.ArgumentOutOfRange_StartRunRateOutOfRange}*");
         clock.IsRunning.Should().BeFalse();
     }
     //----------------------------------------------------------------------------

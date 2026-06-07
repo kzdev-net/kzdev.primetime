@@ -40,6 +40,7 @@
 			<RootNamespace />
 		</Compile>
 		<Compile Include="..\Shared\PrimeTestClockEventCaptureHelpers.cs" Link="PrimeTestClockEventCaptureHelpers.cs" />
+		<Compile Include="..\Shared\ThrowHelperContractMessages.cs" Link="ThrowHelperContractMessages.cs" />
 	</ItemGroup>
 
 </Project>

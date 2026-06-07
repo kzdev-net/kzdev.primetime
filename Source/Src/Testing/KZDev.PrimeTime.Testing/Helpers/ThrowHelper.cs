@@ -94,8 +94,8 @@ internal static partial class ThrowHelper
     ///   Throws an <see cref="InvalidOperationException"/> when a previous
     ///   <c>Stop()</c> did not join the automatic runner within the configured timeout.
     /// </summary>
-    /// <param name="stopJoinTimeoutSeconds">
-    ///   The stop join timeout, in seconds.
+    /// <param name="stopJoinTimeout">
+    ///   The stop join timeout.
     /// </param>
     /// <exception cref="InvalidOperationException">
     /// </exception>
@@ -103,12 +103,12 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_RunnerStopJoinFailed (int stopJoinTimeoutSeconds) =>
+    internal static void ThrowInvalidOperation_RunnerStopJoinFailed (TimeSpan stopJoinTimeout) =>
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.InvariantCulture,
                 TestingStrings.InvalidOperation_RunnerStopJoinFailed,
-                stopJoinTimeoutSeconds.ToString("g0", CultureInfo.InvariantCulture)));
+                stopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)));
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Throws an <see cref="InvalidOperationException"/> when virtual time is mutated
@@ -127,11 +127,11 @@ internal static partial class ThrowHelper
     ///   Throws an <see cref="InvalidOperationException"/> when <c>Start</c> timed out
     ///   waiting for an overlapping <c>Stop</c> to finish joining the automatic runner.
     /// </summary>
-    /// <param name="maxWaitSeconds">
-    ///   The maximum wait duration, in seconds.
+    /// <param name="maximumWaitForOverlappingRunnerStop">
+    ///   The maximum wait duration for an overlapping stop to finish joining the runner.
     /// </param>
-    /// <param name="stopJoinTimeoutSeconds">
-    ///   The stop join timeout, in seconds.
+    /// <param name="stopJoinTimeout">
+    ///   The stop join timeout.
     /// </param>
     /// <exception cref="InvalidOperationException">
     /// </exception>
@@ -140,21 +140,21 @@ internal static partial class ThrowHelper
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void ThrowInvalidOperation_StartWaitForOverlappingStopTimedOut (
-        int maxWaitSeconds,
-        int stopJoinTimeoutSeconds) =>
+        TimeSpan maximumWaitForOverlappingRunnerStop,
+        TimeSpan stopJoinTimeout) =>
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.InvariantCulture,
                 TestingStrings.InvalidOperation_StartWaitForOverlappingStopTimedOut,
-                maxWaitSeconds.ToString("g0", CultureInfo.InvariantCulture),
-                stopJoinTimeoutSeconds.ToString("g0", CultureInfo.InvariantCulture)));
+                maximumWaitForOverlappingRunnerStop.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture),
+                stopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)));
     //--------------------------------------------------------------------------------
     /// <summary>
     ///   Throws an <see cref="InvalidOperationException"/> when stopping the automatic
     ///   runner timed out.
     /// </summary>
-    /// <param name="stopJoinTimeoutSeconds">
-    ///   The stop join timeout, in seconds.
+    /// <param name="stopJoinTimeout">
+    ///   The stop join timeout.
     /// </param>
     /// <exception cref="InvalidOperationException">
     /// </exception>
@@ -162,13 +162,13 @@ internal static partial class ThrowHelper
     [DoesNotReturn]
 #endif
     [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowInvalidOperation_RunnerStopJoinTimedOut (int stopJoinTimeoutSeconds)
+    internal static void ThrowInvalidOperation_RunnerStopJoinTimedOut (TimeSpan stopJoinTimeout)
     {
         InvalidOperationException exception = new(
             string.Format(
                 CultureInfo.InvariantCulture,
                 TestingStrings.InvalidOperation_RunnerStopJoinTimedOut,
-                stopJoinTimeoutSeconds.ToString("g0", CultureInfo.InvariantCulture)))
+                stopJoinTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)))
         {
             Data =
             {
