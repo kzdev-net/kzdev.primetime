@@ -5,6 +5,12 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Testing.Helpers;
+#else
+using KZDev.PrimeTime.Testing.Helpers;
+#endif
+
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
 #else
 using NodaTime;
@@ -743,7 +749,8 @@ public sealed partial class PrimeTestClock
                         .AsTask().GetAwaiter().GetResult();
                     break;
                 default:
-                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
+                    ThrowHelper.ThrowInvalidOperation_UnsupportedTimerCallbackKind(CallbackKind);
+                    return;
             }
         }
         //------------------------------------------------------------------------

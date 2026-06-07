@@ -4,6 +4,12 @@
 using System.Diagnostics;
 
 #if SYSTEMCLOCK
+using KZDev.SystemClock.PrimeTime.Testing.Helpers;
+#else
+using KZDev.PrimeTime.Testing.Helpers;
+#endif
+
+#if SYSTEMCLOCK
 namespace KZDev.SystemClock.PrimeTime.Testing;
 #else
 using NodaTime;
@@ -386,7 +392,7 @@ public sealed partial class PrimeTestClock
                 if (Disposed || State == TimerState.Cancelled)
                     return false;
                 if (!IsRepeating && repeatInterval != Timeout.InfiniteTimeSpan && repeatInterval > TimeSpan.Zero)
-                    throw new InvalidOperationException("Cannot change a non-repeating timer to a repeating timer.");
+                    ThrowHelper.ThrowInvalidOperation_TimerNonRepeatingToRepeating();
                 InitialCallbackTime = nextInterval;
                 RepeatInterval = repeatInterval;
                 if (State == TimerState.Completed)
@@ -594,7 +600,8 @@ public sealed partial class PrimeTestClock
                         isRepeating);
                     return;
                 default:
-                    throw new InvalidOperationException($"Unsupported callback kind: {CallbackKind}");
+                    ThrowHelper.ThrowInvalidOperation_UnsupportedTimerCallbackKind(CallbackKind);
+                    return;
             }
 
             OnSyncCallbackCompleted(resetBefore, isRepeating);
