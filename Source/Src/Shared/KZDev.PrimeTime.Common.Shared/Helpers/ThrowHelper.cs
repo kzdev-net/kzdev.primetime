@@ -17,11 +17,4 @@ namespace KZDev.PrimeTime.Helpers;
 [ExcludeFromCodeCoverage]
 internal static partial class ThrowHelper
 {
-    #region InvalidOperation Errors
-
-    #endregion
-
-    #region Argument Errors
-
-    #endregion
 }

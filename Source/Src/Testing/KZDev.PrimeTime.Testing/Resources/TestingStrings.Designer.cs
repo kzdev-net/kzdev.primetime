@@ -61,15 +61,6 @@ namespace KZDev.PrimeTime.Testing.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The service collection cannot be null..
-        /// </summary>
-        internal static string Argument_ServicesNull {
-            get {
-                return ResourceManager.GetString("Argument_ServicesNull", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive..
         /// </summary>
         internal static string ArgumentOutOfRange_StartRunRateOutOfRange {

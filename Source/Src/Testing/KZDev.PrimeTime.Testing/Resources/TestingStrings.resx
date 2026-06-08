@@ -125,9 +125,6 @@
 	<data name="InvalidOperation_StartWaitForOverlappingStopTimedOut" xml:space="preserve">
 		<value>Start waited for an overlapping Stop to finish joining the automatic runner, but Stop did not complete within {0} seconds ({1} second join timeout plus scheduling slack). This typically indicates the runner loop is blocked inside a ClockEvents subscriber or virtual-time dispatch callback.</value>
 	</data>
-	<data name="Argument_ServicesNull" xml:space="preserve">
-		<value>The service collection cannot be null.</value>
-	</data>
 	<data name="InvalidOperation_RunnerStopJoinTimedOut" xml:space="preserve">
 		<value>Timed out stopping the automatic runner after {0} seconds.</value>
 	</data>

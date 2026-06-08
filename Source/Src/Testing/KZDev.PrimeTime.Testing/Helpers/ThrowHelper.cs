@@ -199,23 +199,6 @@ internal static partial class ThrowHelper
 
     #endregion
 
-    #region Argument Errors
-
-    //--------------------------------------------------------------------------------
-    /// <summary>
-    ///   Throws an <see cref="ArgumentNullException"/> when the service collection is null.
-    /// </summary>
-    /// <exception cref="ArgumentNullException">
-    /// </exception>
-#if !NETSTANDARD2_0
-    [DoesNotReturn]
-#endif
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    internal static void ThrowArgumentNullException_Services () =>
-        throw new ArgumentNullException("services", TestingStrings.Argument_ServicesNull);
-
-    #endregion
-
     #region ArgumentOutOfRange Errors
 
     //--------------------------------------------------------------------------------
