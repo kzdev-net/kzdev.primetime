@@ -45,14 +45,13 @@ Aggregated per-package release notes for this version (source: `Source/Docs/Note
 ## Version 0.0.7
 
 ### Added
-- Internal **`ThrowHelper`** and **`TestingStrings`** catalog (eleven localized messages) in **`KZDev.PrimeTime.Testing`**, with **`KZDev.SystemClock.PrimeTime.Testing`** linking the canonical implementation.
+- Internal **`ThrowHelper`** and **`TestingStrings`** catalog (ten localized messages) in **`KZDev.PrimeTime.Testing`**, with **`KZDev.SystemClock.PrimeTime.Testing`** linking the canonical implementation.
 - **`PrimeTestClock`** **`ClockEvents`** discriminated event model, bounded **`RunFor`**, deadline-driven automatic runner, persist-on-read virtual time, and stricter backward virtual-time rules.
 - In-repo contract coverage (**`UsingThrowHelper`**, shared **`ThrowHelperContractMessages`**) asserting exception types and resx-backed messages for overflow, backward-time guards, and start run-rate validation.
 
 ### Changed
-- Migratable **`PrimeTestClock`** inline throws (inventory T-01 through T-13) now call **`ThrowHelper`**; runner stop join timeout preserves **`Exception.Data`** keys **`BlockedOperations`** and **`LikelyCause`**.
+- Migratable **`PrimeTestClock`** inline throws (inventory T-01 through T-11) now call **`ThrowHelper`**; runner stop join timeout preserves **`Exception.Data`** keys **`BlockedOperations`** and **`LikelyCause`**. DI **`AddPrimeTestClock`** null guards remain idiomatic BCL **`ArgumentNullException`** at the call site (T-12/T-13 exempt).
 - Runner join failure throws format timeout seconds from **`TimeSpan.TotalSeconds`** with InvariantCulture **`g0`** (replacing **`(int)`** truncation at call sites).
-- **`AddPrimeTestClock`** null guard message is **`The service collection cannot be null.`** (replacing the BCL default).
 - Start run-rate **`ArgumentOutOfRangeException`** resx text uses **`100 milliseconds`** where inline code previously used **`100 ms`**.
 
 ### Fixed
