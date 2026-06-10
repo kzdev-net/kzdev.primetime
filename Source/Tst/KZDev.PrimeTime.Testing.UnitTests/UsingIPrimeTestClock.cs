@@ -2140,11 +2140,14 @@ public class UsingIPrimeTestClock : UnitTestBase
             stopElapsed.Elapsed.Should().BeGreaterThanOrEqualTo(StopJoinTimeoutLowerBound);
             clock.IsRunning.Should().BeFalse();
             Action startAct = () => clock.Start(Duration.FromSeconds(1));
-            startAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+            startAct.Should().Throw<InvalidOperationException>()
+                .WithMessage($"{ThrowHelperContractMessages.InvalidOperation_RunnerStopJoinFailed_Prefix}*");
             Action advanceAct = () => clock.Advance(Duration.FromSeconds(1));
-            advanceAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+            advanceAct.Should().Throw<InvalidOperationException>()
+                .WithMessage($"{ThrowHelperContractMessages.InvalidOperation_RunnerStopJoinFailed_Prefix}*");
             Action setInstantAct = () => clock.SetInstant(initial + Duration.FromHours(1));
-            setInstantAct.Should().Throw<InvalidOperationException>().WithMessage("*Stop() returned false*");
+            setInstantAct.Should().Throw<InvalidOperationException>()
+                .WithMessage($"{ThrowHelperContractMessages.InvalidOperation_RunnerStopJoinFailed_Prefix}*");
         }
         finally
         {

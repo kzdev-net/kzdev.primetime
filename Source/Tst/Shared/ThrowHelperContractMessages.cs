@@ -22,5 +22,11 @@ internal static class ThrowHelperContractMessages
 
     internal const string ArgumentOutOfRange_StartRunRateOutOfRange =
         "Virtual time per real second must be between 100 milliseconds and 1 hour, inclusive.";
+
+    // Resx key: InvalidOperation_RunnerStopJoinFailed (TestingStrings.resx)
+    // Static prefix only (through "Stop() returned false", before the "{0}" templated segment).
+    // Tests assert $"{InvalidOperation_RunnerStopJoinFailed_Prefix}*" for the formatted remainder.
+    internal const string InvalidOperation_RunnerStopJoinFailed_Prefix =
+        "A previous Stop() returned false";
 }
 //################################################################################
