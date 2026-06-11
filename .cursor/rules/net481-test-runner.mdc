@@ -1,0 +1,54 @@
+---
+description: Run net481 xUnit v3 tests via the built .exe in agent sessions; use dotnet test only for modern TFMs.
+globs: "**/*.csproj,**/*.sln,**/*.slnx,Source/Tst/**"
+alwaysApply: true
+---
+
+# net481 test execution (agent sessions)
+
+Test projects under `Source/Tst/` target `net10.0`, `net8.0`, and `net481` and use **xUnit v3 executables** (`OutputType=Exe`).
+
+In Cursor agent terminal sessions, `dotnet test` for **net481** often hangs during VSTest protocol negotiation (`Failed to negotiate protocol, waiting for response timed out`). The same tests run fine in Visual Studio/ReSharper and via the built xUnit in-process runner. **Treat VSTest timeouts on net481 as an environment limitation, not a product failure.**
+
+## How to run tests
+
+### Modern TFMs (`net8.0`, `net10.0`)
+
+Use `dotnet test` scoped to **one** TFM at a time (serial with other builds/tests in this workspace):
+
+```powershell
+dotnet build Source/Tst/<Project>/<Project>.csproj -c Debug
+dotnet test Source/Tst/<Project>/<Project>.csproj -c Debug -f net8.0 --no-build
+```
+
+Prefer `-f net8.0` (or `-f net10.0`) instead of unscoped `dotnet test`, which launches all TFMs and makes net481 hangs harder to diagnose.
+
+### net481 — run the xUnit v3 `.exe` directly
+
+After a successful build, invoke the in-process runner; do **not** use `dotnet test` for net481 in agent sessions.
+
+```powershell
+& "artifacts/bin/<Project>/debug_net481/<Project>.exe" -class "<FullyQualifiedTestClass>" -noColor
+```
+
+Examples:
+
+```powershell
+# All tests in a class
+& "artifacts/bin/KZDev.PrimeTime.Testing.UnitTests/debug_net481/KZDev.PrimeTime.Testing.UnitTests.exe" `
+  -class "KZDev.PrimeTime.Testing.UnitTests.UsingThrowHelper" -noColor
+
+# Single method (wildcard supported)
+& "artifacts/bin/KZDev.PrimeTime.Testing.UnitTests/debug_net481/KZDev.PrimeTime.Testing.UnitTests.exe" `
+  -method "*UsingThrowHelper.ThrowInvalidOperation_RunnerStopJoinTimedOut*" -noColor
+```
+
+Use `release_net481` instead of `debug_net481` when validating Release builds.
+
+## Agent discipline
+
+- **Build before test** after any code change; pass `--no-build` only when binaries are already current.
+- **Do not retry** net481 `dotnet test` with escalating `VSTEST_CONNECTION_TIMEOUT` — switch to the `.exe` runner.
+- **One build or test run at a time** (see `build-and-test-serialization` rule).
+- When reporting results, state which runner was used per TFM (e.g. `dotnet test -f net8.0` + exe for net481).
+- CI on Linux does not exercise net481; local exe-runner or IDE validation is the complement for that TFM.
