@@ -93,6 +93,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             TimerCallbackKind.SimpleAction, (Action)(() =>
             {
                 stopAfterFirstInvoke.Cancel();
+                // ReSharper disable once AccessToModifiedClosure
                 Interlocked.Increment(ref fired);
                 done.Set();
             }), null, null, stopAfterFirstInvoke.Token);

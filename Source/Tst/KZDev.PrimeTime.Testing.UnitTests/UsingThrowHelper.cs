@@ -6,7 +6,6 @@ using System.Globalization;
 
 using AwesomeAssertions;
 
-using KZDev.PrimeTime;
 using KZDev.PrimeTime.Testing.Helpers;
 using KZDev.PrimeTime.Tests;
 

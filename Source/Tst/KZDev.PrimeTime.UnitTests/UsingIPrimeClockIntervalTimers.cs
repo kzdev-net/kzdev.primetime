@@ -291,6 +291,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 int callbackIndex = Interlocked.Increment(ref callbacksStarted) - 1;
                 int runningCount = Interlocked.Increment(ref callbacksRunning);
                 if (callbackIndex < observedStates.Length)
+                    // ReSharper disable once AccessToModifiedClosure
                     observedStates[callbackIndex] = timer!.State;
                 if (callbackIndex == 0)
                     firstCallbackStarted.Set();

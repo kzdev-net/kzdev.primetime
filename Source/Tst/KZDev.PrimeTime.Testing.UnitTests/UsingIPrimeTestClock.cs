@@ -2418,6 +2418,7 @@ public class UsingIPrimeTestClock : UnitTestBase
         IClockDayTimeTimer? registration = null;
         registration = clock.RegisterTimeOfDay(threeAm, () =>
             {
+                // ReSharper disable once AccessToModifiedClosure
                 seenProcessing = registration!.CallbacksProcessing;
             },
             cancellationToken: TestContext.Current.CancellationToken);

@@ -43,10 +43,6 @@ public sealed partial class PrimeTestClock
         /// </summary>
         private readonly bool _isLocalTimeRepresentation;
 
-        /// <summary>
-        ///   When <c>true</c>, the next tick&apos;s countdown starts when the tick fires, before the callback completes.
-        /// </summary>
-        private readonly bool _resetBeforeCallback;
         //------------------------------------------------------------------------
         /// <summary>
         ///   Gets or sets the delay until the first or next rescheduled callback.
@@ -174,7 +170,7 @@ public sealed partial class PrimeTestClock
             CallbackState = callbackState;
             CancellationToken = cancellationToken;
             _isLocalTimeRepresentation = options?.LocalTimeRepresentation == true;
-            _resetBeforeCallback = options?.ResetIntervalBeforeCallback ?? false;
+            IsResetBeforeCallback = options?.ResetIntervalBeforeCallback ?? false;
             Id = Interlocked.Increment(ref _nextTimerId);
             DateTimeOffset now = clock.UtcNowDateTimeOffset;
             RegisteredTime = _isLocalTimeRepresentation ? clock.LocalNowDateTimeOffset : now;
@@ -209,7 +205,7 @@ public sealed partial class PrimeTestClock
         public bool IsRepeating => RepeatInterval != Timeout.InfiniteTimeSpan && RepeatInterval > TimeSpan.Zero;
         //------------------------------------------------------------------------
         /// <inheritdoc />
-        public bool IsResetBeforeCallback => _resetBeforeCallback && IsRepeating;
+        public bool IsResetBeforeCallback => field && IsRepeating;
         //------------------------------------------------------------------------
         /// <inheritdoc />
         public bool IsCancelled => State == TimerState.Cancelled;

@@ -441,6 +441,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
 
         void CallbackAction ()
         {
+            // ReSharper disable once AccessToModifiedClosure
             if (Interlocked.Increment(ref invokeCount) != 1)
             {
                 return;

@@ -405,6 +405,7 @@ public class UsingPrimeClockNodaTimerExtensions : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(start, DateTimeZone.Utc);
         using ManualResetEventSlim entered = new(false);
         LocalTime target = new(12, 0, 0, 640);
+        // ReSharper disable once AccessToDisposedClosure
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, true, target,
             TimerCallbackKind.SimpleAction, (Action)(() => entered.Set()), null, null, CancellationToken.None);
         MethodInfo onTimerTick = ClockTimerRegistrationTestReflection.GetDayTimeOnTimerTickMethod(

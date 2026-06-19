@@ -76,6 +76,7 @@ public sealed class UsingPrimeTestClockControlExamples
         void OnClockEvent (object? _, PrimeTestClockEvent clockEvent)
         {
             if (clockEvent.EventType == PrimeTestClockEventType.ClockStopped)
+                // ReSharper disable once AccessToDisposedClosure
                 stoppedSignal.Set();
         }
     }

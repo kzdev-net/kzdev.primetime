@@ -12,20 +12,11 @@ namespace KZDev.SystemClock.PrimeTime;
 internal sealed partial class ClockIntervalTimerRegistration
 {
     //----------------------------------------------------------------------------
-    /// <summary>
-    ///   Initial due-time basis backing <see cref="InitialCallbackTimeSpan"/>.
-    /// </summary>
-    private TimeSpan _initialCallbackTime;
 
     /// <summary>
     ///   Repeat interval backing <see cref="RepeatTimeSpanInterval"/>.
     /// </summary>
     private TimeSpan _repeatInterval;
-
-    /// <summary>
-    ///   Next scheduled callback instant (UTC-offset), backing <see cref="NextCallbackUtc"/>.
-    /// </summary>
-    private DateTimeOffset? _nextCallbackUtc;
 
     /// <summary>
     ///   Last callback start instant (UTC-offset), backing <see cref="LastCallbackUtc"/>.
@@ -35,7 +26,11 @@ internal sealed partial class ClockIntervalTimerRegistration
     /// <summary>
     ///   Initial delay and current per-tick delay basis (stack-specific partial).
     /// </summary>
-    private partial TimeSpan InitialCallbackTimeSpan { [DebuggerStepThrough] get => _initialCallbackTime; [DebuggerStepThrough] set => _initialCallbackTime = value; }
+    private partial TimeSpan InitialCallbackTimeSpan
+    {
+        [DebuggerStepThrough] get;
+        [DebuggerStepThrough] set => field = value;
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Repeat interval between callbacks, or infinite for one-shot.
@@ -45,7 +40,11 @@ internal sealed partial class ClockIntervalTimerRegistration
     /// <summary>
     ///   Next scheduled callback instant in UTC-offset form (partial).
     /// </summary>
-    private partial DateTimeOffset? NextCallbackUtc { [DebuggerStepThrough] get => _nextCallbackUtc; [DebuggerStepThrough] set => _nextCallbackUtc = value; }
+    private partial DateTimeOffset? NextCallbackUtc
+    {
+        [DebuggerStepThrough] get;
+        [DebuggerStepThrough] set => field = value;
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Last callback start instant in UTC-offset form (partial).
