@@ -795,7 +795,7 @@ public class UsingPrimeTestClock : UnitTestBase
     ///   callers make forward progress.
     /// </summary>
     [Fact]
-    public void RunFor_WhenConcurrentAdvanceCallsRaceAcrossStopHorizon_RaisesSingleClockStoppedAndMakesProgress ()
+    public async Task RunFor_WhenConcurrentAdvanceCallsRaceAcrossStopHorizon_RaisesSingleClockStoppedAndMakesProgress ()
     {
         DateTimeOffset initial = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
         TimeSpan runForDuration = TimeSpan.FromHours(6);
@@ -825,7 +825,7 @@ public class UsingPrimeTestClock : UnitTestBase
             cancellationToken,
             "Timed out waiting for concurrent Advance callers to be ready.");
         releaseConcurrentAdvances.Set();
-        Task.WaitAll([advanceCallerOne, advanceCallerTwo], cancellationToken);
+        await Task.WhenAll(advanceCallerOne, advanceCallerTwo);
         WaitUntilCondition(
             () => collector.Snapshot().Count(e => e.EventType == PrimeTestClockEventType.ClockStopped) == 1,
             RunForTestWaitTimeout,
