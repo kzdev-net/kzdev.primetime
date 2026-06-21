@@ -243,7 +243,6 @@ public static class PrimeClockNodaTimerExtensions
     ///   in order to use time-of-day timers. If you are using NodaTime, 
     ///   you can also use the base <see cref="IPrimeClock.RegisterTimeOfDay(LocalTime, Action{ClockTimerCallbackContext}, CancellationToken, object?, DayTimeTimerOptions?)"/> method directly.
     /// </summary>
-    /// /// <param name="clock">The clock on which to register the timer.</param>
     extension(IPrimeClock clock)
     {
         //----------------------------------------------------------------------------

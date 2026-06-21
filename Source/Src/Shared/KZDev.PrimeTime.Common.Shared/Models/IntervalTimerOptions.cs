@@ -11,7 +11,7 @@ namespace KZDev.PrimeTime;
 ///   Timer options for setting up interval callback timers.
 /// </summary>
 [DebuggerStepThrough]
-public record IntervalTimerOptions : TimerOptions
+public sealed record IntervalTimerOptions : TimerOptions
 {
     //----------------------------------------------------------------------------
     /// <summary>

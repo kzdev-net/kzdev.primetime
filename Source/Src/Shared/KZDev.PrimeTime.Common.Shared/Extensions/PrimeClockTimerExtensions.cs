@@ -28,7 +28,6 @@ public static class PrimeClockTimerExtensions
     /// <summary>
     ///  Registers a one-shot or repeating interval timer with a callback that receives context and cancellation token.
     /// </summary>
-    /// <param name="clock">The clock on which to register the timer.</param>
     extension(IPrimeClock clock)
     {
         //----------------------------------------------------------------------------
@@ -243,7 +242,6 @@ public static class PrimeClockTimerExtensions
     /// <summary>
     ///  Registers a time-of-day timer with a callback that receives context and cancellation token.
     /// </summary>
-    /// /// <param name="clock">The clock on which to register the timer.</param>
     extension(IPrimeClock clock)
     {
         //----------------------------------------------------------------------------

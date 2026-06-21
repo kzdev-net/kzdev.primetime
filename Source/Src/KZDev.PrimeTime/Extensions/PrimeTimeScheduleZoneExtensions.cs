@@ -25,7 +25,9 @@ public static class PrimeTimeScheduleZoneExtensions
     #region Instant → schedule zone
 
     //----------------------------------------------------------------------------
-    /// <param name="time">The time service used as context for the schedule zone.</param>
+    /// <summary>
+    ///   Extensions for mapping absolute instants to the local schedule zone of an <see cref="IPrimeClock"/> instance.
+    /// </summary>
     extension(IPrimeTime time)
     {
         /// <summary>
@@ -203,7 +205,9 @@ public static class PrimeTimeScheduleZoneExtensions
     #region ZonedDateTime → schedule zone
 
     //----------------------------------------------------------------------------
-    /// <param name="time">The time service used as context for the schedule zone.</param>
+    /// <summary>
+    ///  Extensions for mapping a <see cref="ZonedDateTime"/> in any zone to the local schedule zone of an <see cref="IPrimeClock"/>
+    /// </summary>
     extension(IPrimeTime time)
     {
         /// <summary>

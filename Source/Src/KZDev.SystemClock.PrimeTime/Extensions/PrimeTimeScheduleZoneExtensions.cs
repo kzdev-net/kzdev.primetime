@@ -24,7 +24,9 @@ public static class PrimeTimeScheduleZoneExtensions
     #region DateTimeOffset → schedule zone
 
     //----------------------------------------------------------------------------
-    /// <param name="time">The time service used as context for the schedule zone.</param>
+    /// <summary>
+    ///  Converts absolute timeline values to the schedule-local date and time in the schedule zone. The schedule zone is
+    /// </summary>
     extension(IPrimeTime time)
     {
         /// <summary>

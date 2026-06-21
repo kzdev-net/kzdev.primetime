@@ -19,7 +19,7 @@ namespace KZDev.PrimeTime;
 ///   </para>
 /// </remarks>
 [DebuggerStepThrough]
-public record DayTimeTimerOptions : TimerOptions
+public sealed record DayTimeTimerOptions : TimerOptions
 {
     //----------------------------------------------------------------------------
     /// <summary>
