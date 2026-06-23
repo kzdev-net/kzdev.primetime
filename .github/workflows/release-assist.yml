@@ -1,6 +1,7 @@
 # Release assist: validate, pack, aggregate release notes, optionally create a draft GitHub release, then (after
 # manual environment approval) publish the release. Does not push to nuget.org — see Source/Reference/release-assist.md
-# (Manual NuGet.org publish checklist). Configure Environment "primetime-release" with required reviewers before finalize.
+# (Manual NuGet.org publish checklist). Pack requires pwsh for testing-package README compose. Configure Environment
+# "primetime-release" with required reviewers before finalize.
 name: Release assist
 
 on:
@@ -95,8 +96,8 @@ jobs:
           }
           pack_one "Source/Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj"
           pack_one "Source/Src/KZDev.SystemClock.PrimeTime/KZDev.SystemClock.PrimeTime.csproj"
-          pack_one "Source/Src/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj"
-          pack_one "Source/Src/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj"
+          pack_one "Source/Src/Testing/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj"
+          pack_one "Source/Src/Testing/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj"
 
       - name: Aggregate release notes
         run: >

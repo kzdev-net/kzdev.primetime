@@ -9,13 +9,51 @@ The workflow definition lives at [.github/workflows/release-assist.yml](https://
 1. **Resolve version** — Uses the `version` workflow input if you provide one; otherwise reads `<Version>` from `Source/Src/Directory.Build.props`. The resolved value must match a `## Version …` section in each package release-notes file under `Source/Docs/Notes/`.
 2. **Guardrails before build** — Validates governance docs exist (`SECURITY.md`, `CONTRIBUTING.md`, `SUPPORT.md`) and validates all package release-notes sources for the resolved version.
 3. **Restore, build, and test** — Same solution as CI: `Source/KZDev.PrimeTime.slnx` in `Release`.
-4. **Pack** — Builds all four publishable packages with `IsPacking=true` and `ContinuousIntegrationBuild=true`. Packages and symbol packages are written under `artifacts/package/release/`.
+4. **Pack** — Builds all four publishable packages with `IsPacking=true` and `ContinuousIntegrationBuild=true`. Testing packages compose their NuGet README via `pwsh` during this step (see [Testing package README composition](#testing-package-readme-composition-powershell-7)). Packages and symbol packages are written under `artifacts/package/release/`.
 5. **Aggregate release notes** — Runs `KZDev.PrimeTime.ReleaseAggregation.Cli` to generate `release-body.md` at the workspace root (one combined document with each package’s version section).
 6. **Upload artifacts** — Always uploads NuGet packages, symbol packages, and `release-body.md` as a workflow artifact (name includes the resolved version).
 7. **Draft GitHub release** — Only when **dry run** is off: creates a **draft** release with tag `v{version}`, attaches all `.nupkg` and `.snupkg` files from `artifacts/package/release/`, and uses `release-body.md` as the release notes.
 8. **Finalize publish** — Only when **dry run** is off: a second job, gated by the **`primetime-release`** GitHub Environment, runs `gh release edit … --draft=false --latest` so a human approves before the release stops being a draft.
 
 The workflow does **not** push packages to nuget.org. A published GitHub release with `.nupkg` assets is **not** a completed public release until the steps in [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) are done.
+
+## Testing package README composition (PowerShell 7)
+
+The two testing packages (`KZDev.PrimeTime.Testing`, `KZDev.SystemClock.PrimeTime.Testing`) ship a composed NuGet README built from source templates, direct-dependency snippets, and shared fragments. During **Release** pack with `IsPacking=true`, MSBuild runs `ComposeTestingPackageReadme` (see [TestingPackageReadme.targets](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Src/Package/TestingPackageReadme.targets)) **before** `Pack`, which requires **PowerShell 7+** (`pwsh`).
+
+### Compose inputs and outputs
+
+| Role | Path (from repo root) |
+|------|------------------------|
+| Source template | `Source/Src/Package/{PackageId}.readme.src.md` |
+| Direct dependencies snippet | `Source/Src/Package/{PackageId}.requirements.direct-dependencies.md` |
+| Shared fragments | `Source/Src/Package/fragments/*.md` |
+| Compose script | `Source/Src/Package/ComposeTestingPackageReadme.ps1` |
+| **Committed output** (packed into the `.nupkg`) | `Source/Src/Package/{PackageId}.readme.md` |
+
+`Debug` and `Dev` configurations skip compose by default (`ComposeTestingPackageReadme=false`). **Release** pack (and `Configuration=Package`) compose automatically.
+
+### PowerShell requirement
+
+- **Default:** `pwsh` on `PATH` (MSBuild property `TestingReadmePwshPath` defaults to `pwsh`).
+- **Custom install location:** pass an explicit path when invoking pack, for example:
+  ```text
+  dotnet pack <testing-csproj> -c Release -p:IsPacking=true -p:TestingReadmePwshPath="C:\Program Files\PowerShell\7\pwsh.exe"
+  ```
+- **GitHub-hosted runners:** `ubuntu-latest` includes PowerShell 7; Release assist **Pack** uses it without extra setup.
+- **Windows:** install [PowerShell 7](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows) or set `TestingReadmePwshPath`. The compose script runs with `-NoProfile -File`; your execution policy must allow running this repo-local script (for example `RemoteSigned` on Windows).
+
+If `pwsh` is missing, pack fails with an MSBuild error naming the testing project.
+
+### Keep composed READMEs committed
+
+The composed `*.readme.md` files under `Source/Src/Package/` are **source-controlled**. When you change any compose input (`.readme.src.md`, `.requirements.direct-dependencies.md`, or `fragments/*.md`), regenerate and **commit** the outputs **before** tagging a release:
+
+1. Run Release assist with **dry_run = true**, or pack the testing projects locally (see [Local parity](#local-parity-optional)).
+2. Review `git diff` on `Source/Src/Package/KZDev.*.Testing.readme.md`.
+3. Commit output changes together with your compose-input edits.
+
+Pushing without committing stale composed READMEs ships outdated NuGet package readmes even when sources were updated.
 
 ## Manual NuGet.org publish checklist
 
@@ -133,7 +171,7 @@ The workflow requests `contents: write` so `gh` can create and update releases u
 1. Push the commit you want to release (typically on `main` or your release branch) to GitHub.
 2. Go to **Actions** → **Release assist** → **Run workflow**.
 3. Choose inputs:
-   - **version** (optional): e.g. `0.0.6`. Leave empty to use `Source/Src/Directory.Build.props`.
+   - **version** (optional): e.g. `1.0.0`. Leave empty to use `Source/Src/Directory.Build.props`.
    - **dry_run**:
      - **`true`** (default): restore, build, test, pack, aggregate notes, upload artifacts only. **No** GitHub release and **no** finalize job.
      - **`false`**: same as above, then creates a **draft** release and runs the finalize job after environment approval.
@@ -149,7 +187,9 @@ Confirm all of the following to avoid a failed run or a misleading draft:
 - `SECURITY.md`, `CONTRIBUTING.md`, and `SUPPORT.md` are present at repository root.
 - The **`primetime-release`** environment is configured if you want the second job to require approval.
 - The tag **`v{version}`** does not already point to a different release you care about; `gh release create` will fail if the release or tag already exists in a conflicting way.
-- You have planned the [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) for **after** the GitHub release is finalized (API key, ownership, `.nupkg` + `.snupkg` push).
+- **PowerShell 7** (`pwsh`) is available on the runner (included on `ubuntu-latest`) or on your machine for local pack; see [Testing package README composition](#testing-package-readme-composition-powershell-7).
+- If compose inputs changed, **`Source/Src/Package/KZDev.*.Testing.readme.md`** are committed and match a fresh Release pack (or a **dry_run** artifact build).
+- You have planned the [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) for **after** the GitHub release is finalized (API key, ownership, `.nupkg` + `.snupkg` push). **NuGet.org push remains manual** — this workflow never uploads to the registry.
 
 ## Local parity (optional)
 
@@ -169,13 +209,23 @@ dotnet run --project Source/Tools/KZDev.PrimeTime.ReleaseAggregation.Cli/KZDev.P
   validate --repository-root <repo-root> [--version <x.y.z>]
 ```
 
-Packing locally matches `Source/Src/package.cmd` patterns: `dotnet pack` on each of the four package projects with `-c Release -p:IsPacking=true -p:ContinuousIntegrationBuild=true`.
+Packing locally matches `Source/Src/package.cmd` (all four packages) or individual `dotnet pack` invocations:
+
+```text
+dotnet pack Source/Src/KZDev.PrimeTime/KZDev.PrimeTime.csproj -c Release -p:IsPacking=true -p:ContinuousIntegrationBuild=true
+dotnet pack Source/Src/KZDev.SystemClock.PrimeTime/KZDev.SystemClock.PrimeTime.csproj -c Release -p:IsPacking=true -p:ContinuousIntegrationBuild=true
+dotnet pack Source/Src/Testing/KZDev.PrimeTime.Testing/KZDev.PrimeTime.Testing.csproj -c Release -p:IsPacking=true -p:ContinuousIntegrationBuild=true
+dotnet pack Source/Src/Testing/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj -c Release -p:IsPacking=true -p:ContinuousIntegrationBuild=true
+```
+
+The two testing projects require `pwsh` for README compose during pack. Outputs land under `artifacts/package/release/` (`.nupkg` and `.snupkg`).
 
 ## Related sources
 
 - Per-package release notes: `Source/Docs/Notes/`
 - Version and pack-time note extraction: `Source/Src/Directory.Build.props` (MSBuild task in `KZDev.PrimeTime.ReleaseAggregation`)
 - Aggregation tests: `Source/Tst/KZDev.PrimeTime.Tools.UnitTests/UsingReleaseNotesMarkdownAggregator.cs`
+- Testing README compose: `Source/Src/Package/TestingPackageReadme.targets`, `ComposeTestingPackageReadme.ps1`, `fragments/`
 - GitHub Pages (`.github/workflows/docfx-publish.yml`): runs the **same** `validate` and `aggregate` steps as
   this workflow, writing `Source/Docs/articles/release-notes.md` before `docfx build`, so hosted release notes
   stay aligned with the aggregated markdown used for GitHub release bodies here.
