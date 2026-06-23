@@ -1,6 +1,6 @@
 # Choosing a PrimeTime package
 
-PrimeTime ships as **two production NuGet packages** (and two matching **testing** packages — four package IDs in total). They share one **design** (clock abstraction, timers, test clock) but differ in **namespace**, **time stack**, and **API surface**. For virtual time in tests, see [Testing packages](../testing-packages.md).
+PrimeTime ships as **two production NuGet packages** (and two matching **testing** packages — four package IDs in total). They share one **design** (clock abstraction, timers, test clock) but differ in **namespace**, **time stack**, and **API surface**. All four packages target `net10.0`, `net8.0`, and `netstandard2.0`; see [Supported platforms and test coverage](https://github.com/kzdev-net/kzdev.primetime/blob/main/README.md#supported-platforms-and-test-coverage) for CI vs local .NET Framework coverage. For virtual time in tests, see [Testing packages](../testing-packages.md).
 
 ## Rules
 

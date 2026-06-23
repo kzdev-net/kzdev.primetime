@@ -28,7 +28,17 @@ dotnet add package KZDev.SystemClock.PrimeTime
 
 ### Target frameworks
 
-All four packages target **`net10.0`**, **`net8.0`**, and **`netstandard2.0`** (with BCL polyfills on `netstandard2.0` where required).
+All four packages target **`net10.0`**, **`net8.0`**, and **`netstandard2.0`** (with BCL polyfills on `netstandard2.0` where required). The `netstandard2.0` binaries support .NET Framework **4.8.1** and later consumers via the standard compatibility surface.
+
+### Supported platforms and test coverage
+
+| Area | What is covered |
+|------|-----------------|
+| **Shipped package TFMs** | `net10.0`, `net8.0`, `netstandard2.0` (unchanged across all four packages) |
+| **CI-validated** | Unit and integration tests on **`net8.0`** and **`net10.0`** on `ubuntu-latest` ([ci.yml](.github/workflows/ci.yml)) |
+| **.NET Framework / net481** | Package consumption via `netstandard2.0` is supported; repository **test projects** also target **`net481`**, but that TFM is **not** exercised in CI. Validate on **Windows** locally (Visual Studio, ReSharper, or the xUnit v3 `.exe` runner — see [Local net481 testing](Source/Reference/local-net481-testing.md)). |
+
+This matrix is **best-effort** for .NET Framework: there is no Windows CI job and no guarantee of automated net481 regression coverage on every change.
 
 ### Dependency injection (same entry point name, different assembly)
 
