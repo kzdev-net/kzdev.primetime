@@ -1,88 +1,95 @@
-# KZDev PrimeTime 0.0.7
+# KZDev PrimeTime 1.0.0
 
 Aggregated per-package release notes for this version (source: `Source/Docs/Notes/*.release-notes.md`).
 
 ## KZDev.PrimeTime
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Internal **`ThrowHelper`** and **`ProductionStrings`** resource catalog for centralized production exception messages (timers, schedule-zone validation, and related guard paths).
+- First public release of the **NodaTime superset** production package: injectable **`IPrimeClock`** / **`PrimeClock`** with BCL and NodaTime APIs (`Instant`, `Duration`, `LocalTime`, zoned projections).
+- **Interval** and **time-of-day** timers with explicit daylight-saving policy.
+- Schedule-zone conversion extensions, persistence helpers, and NodaTime/BCL interop utilities (`LocalScheduleDateTimeZone`, `PrimeTimeScheduleZoneExtensions`, and related conversion types).
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
-- Production inline throws in shared clock/timer code now call **`ThrowHelper`**; user-visible exception **types** are unchanged and **messages** are sourced from **`ProductionStrings`** (wording largely preserved, now centralized for consistency and future localization).
+- None.
 
 ### Fixed
 - None.
 
 ### Notes
-- **`ThrowHelper`** remains **`internal`**; no public member signatures changed for this migration.
+- Pair with **`KZDev.PrimeTime.Testing`** in test projects for deterministic virtual time.
+- Documentation: [PrimeTime overview](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/overview.md) and [choosing a package](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/concepts/choosing-a-package.md).
 
 ### Package
-- KZDev.PrimeTime v0.0.7 centralizes production exception messages via **`ThrowHelper`** and **`ProductionStrings`**.
+- **KZDev.PrimeTime** v1.0.0 — testable clocks and timers with full NodaTime support.
 
 ## KZDev.SystemClock.PrimeTime
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Internal **`ThrowHelper`** and **`ProductionStrings`** resource catalog for centralized production exception messages (timers, schedule-zone validation, and related guard paths).
+- First public release of the **BCL foundation** production package: injectable **`IPrimeClock`** / **`PrimeClock`** backed by **`TimeProvider`** and BCL date/time types (`DateTimeOffset`, `TimeSpan`, `DateOnly`, `TimeOnly` where applicable).
+- **Interval** and **time-of-day** timers with explicit daylight-saving policy.
+- Schedule-zone conversion extensions and BCL-oriented persistence helpers (`LocalScheduleTimeZone`, `PrimeTimeScheduleZoneExtensions`).
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
-- Production inline throws in shared clock/timer code now call **`ThrowHelper`**; user-visible exception **types** are unchanged and **messages** are sourced from **`ProductionStrings`** (wording largely preserved, now centralized for consistency and future localization).
+- None.
 
 ### Fixed
 - None.
 
 ### Notes
-- **`ThrowHelper`** remains **`internal`**; no public member signatures changed for this migration.
+- Pair with **`KZDev.SystemClock.PrimeTime.Testing`** in test projects for deterministic virtual time.
+- Documentation: [PrimeTime overview](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/overview.md) and [choosing a package](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/concepts/choosing-a-package.md).
 
 ### Package
-- KZDev.SystemClock.PrimeTime v0.0.7 centralizes production exception messages via **`ThrowHelper`** and **`ProductionStrings`**.
+- **KZDev.SystemClock.PrimeTime** v1.0.0 — testable clocks and timers with minimal BCL dependencies.
 
 ## KZDev.PrimeTime.Testing
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Internal **`ThrowHelper`** and **`TestingStrings`** catalog (ten localized messages) in **`KZDev.PrimeTime.Testing`**, with **`KZDev.SystemClock.PrimeTime.Testing`** linking the canonical implementation.
-- **`PrimeTestClock`** **`ClockEvents`** discriminated event model, bounded **`RunFor`**, deadline-driven automatic runner, persist-on-read virtual time, and stricter backward virtual-time rules.
-- In-repo contract coverage (**`UsingThrowHelper`**, shared **`ThrowHelperContractMessages`**) asserting exception types and resx-backed messages for overflow, backward-time guards, and start run-rate validation.
+- First public release of the **NodaTime-track** testing package: **`IPrimeTestClock`** / **`PrimeTestClock`** for deterministic virtual time (`Instant`, `Duration`, and related NodaTime types).
+- **`ClockEvents`** discriminated event model, bounded **`RunFor`**, deadline-driven automatic runner, and persist-on-read virtual time.
+- **`AddPrimeTestClock`** dependency-injection helpers for substituting virtual clocks in tests.
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
-- Migratable **`PrimeTestClock`** inline throws (inventory T-01 through T-11) now call **`ThrowHelper`**; runner stop join timeout preserves **`Exception.Data`** keys **`BlockedOperations`** and **`LikelyCause`**. DI **`AddPrimeTestClock`** null guards remain idiomatic BCL **`ArgumentNullException`** at the call site (T-12/T-13 exempt).
-- Runner join failure throws format timeout seconds from **`TimeSpan.TotalSeconds`** with InvariantCulture **`g0`** (replacing **`(int)`** truncation at call sites).
-- Start run-rate **`ArgumentOutOfRangeException`** resx text uses **`100 milliseconds`** where inline code previously used **`100 ms`**.
+- None.
 
 ### Fixed
 - None.
 
 ### Notes
-- Forward-march reconcile diagnostic throws (deferred D-01) remain inline in **`PrimeTestClock`** for a later phase.
-- Contract tests reference expected messages via **`ThrowHelperContractMessages`** because both Testing assemblies embed **`TestingStrings`**.
+- Pair with **`KZDev.PrimeTime`** in production code; do not reference both production packages in the same app.
+- Documentation: [Testing packages](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/testing-packages.md).
 
 ### Package
-- KZDev.PrimeTime.Testing v0.0.7 ships centralized testing exception messages, **`PrimeTestClock`** throw migration, and matching contract tests.
+- **KZDev.PrimeTime.Testing** v1.0.0 — virtual clocks and deterministic timer testing for the NodaTime superset stack.
 
 ## KZDev.SystemClock.PrimeTime.Testing
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Linked canonical **`ThrowHelper`** and **`TestingStrings`** from **`KZDev.PrimeTime.Testing`** (same eleven-message catalog and shared **`PrimeTestClock`** throw migration as the NodaTime testing package).
-- In-repo contract coverage (**`UsingThrowHelper`** via linked tests, shared **`ThrowHelperContractMessages`**) asserting exception types and resx-backed messages on representative **`PrimeTestClock`** paths.
+- First public release of the **BCL-track** testing package: **`IPrimeTestClock`** / **`PrimeTestClock`** for deterministic virtual time using **`TimeProvider`** and BCL date/time types.
+- Shared **`PrimeTestClock`** implementation with the NodaTime testing package (`ClockEvents`, bounded **`RunFor`**, automatic runner, persist-on-read virtual time).
+- **`AddPrimeTestClock`** dependency-injection helpers for substituting virtual clocks in tests.
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
-- Shared **`PrimeTestClock`** migratable throws now call **`ThrowHelper`**; runner stop join timeout preserves **`Exception.Data`** keys **`BlockedOperations`** and **`LikelyCause`**.
-- Runner join failure throws format timeout seconds from **`TimeSpan.TotalSeconds`** with InvariantCulture **`g0`**.
-- **`AddPrimeTestClock`** null guard message is **`The service collection cannot be null.`**
-- Start run-rate **`ArgumentOutOfRangeException`** resx text uses **`100 milliseconds`** where inline code previously used **`100 ms`**.
+- None.
 
 ### Fixed
 - None.
 
 ### Notes
-- BCL-track testing shares the same shared partial **`PrimeTestClock`** sources and linked **`ThrowHelper`** as **`KZDev.PrimeTime.Testing`**.
+- Pair with **`KZDev.SystemClock.PrimeTime`** in production code; do not reference both production packages in the same app.
+- Documentation: [Testing packages](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/testing-packages.md).
 
 ### Package
-- KZDev.SystemClock.PrimeTime.Testing v0.0.7 aligns with the NodaTime testing package on centralized throws and contract-tested exception messages.
+- **KZDev.SystemClock.PrimeTime.Testing** v1.0.0 — virtual clocks and deterministic timer testing for the BCL stack.

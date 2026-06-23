@@ -10,12 +10,12 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Configurations>Debug;Release;Package</Configurations>
         <TargetFrameworks>net10.0;net8.0;netstandard2.0</TargetFrameworks>
-        <Version>0.0.7</Version>
+        <Version>1.0.0</Version>
         <Authors>Kevin Zehrer</Authors>
         <Copyright>Copyright © 2026 Kevin Zehrer. All rights reserved.</Copyright>
         <Product>KZDev PrimeTime</Product>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <PackageReleaseNotes>Version $(Version). Pre-release package; see the repository for changes and release history.</PackageReleaseNotes>
+        <PackageReleaseNotes>Version $(Version). See the repository for changes and release history.</PackageReleaseNotes>
     </PropertyGroup>
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>

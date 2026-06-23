@@ -11,30 +11,13 @@
 - Use `- None.` for categories without entries.
 - In `### Package`, inline Markdown (bold, code) is allowed; NuGet pack strips it to plain text for the nuspec `releaseNotes` field. GitHub release bodies and DocFX keep full Markdown from these files.
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Internal **`ThrowHelper`** and **`ProductionStrings`** resource catalog for centralized production exception messages (timers, schedule-zone validation, and related guard paths).
-
-### Changed
-- Production inline throws in shared clock/timer code now call **`ThrowHelper`**; user-visible exception **types** are unchanged and **messages** are sourced from **`ProductionStrings`** (wording largely preserved, now centralized for consistency and future localization).
-
-### Fixed
-- None.
-
-### Notes
-- **`ThrowHelper`** remains **`internal`**; no public member signatures changed for this migration.
-
-### Package
-- KZDev.PrimeTime v0.0.7 centralizes production exception messages via **`ThrowHelper`** and **`ProductionStrings`**.
-
-## Version 0.0.6
-
-### Added
-- Schedule-zone conversion extensions on **`IPrimeTime`** (**`PrimeTimeScheduleZoneExtensions`**) for **`Instant`** and **`ZonedDateTime`**, using **`IPrimeClock.LocalScheduleDateTimeZone`**.
-- **`PrimeTimeOfDayConversion`**, **`NodaDurationBclConversion`**, and **`NodaDateTimeZoneBclConversion`** for NodaTime/BCL interop where PrimeTime encodes non-obvious policy (for example delay **`TimeSpan`** clamping).
-- **`IPrimeClock.LocalScheduleDateTimeZone`** (**`DateTimeZone`**) alongside the existing BCL schedule zone.
-- DocFx concept article **Persistence and time conversions** and PrimeTime track example pages (production and testing) with runnable snippets.
+- First public release of the **NodaTime superset** production package: injectable **`IPrimeClock`** / **`PrimeClock`** with BCL and NodaTime APIs (`Instant`, `Duration`, `LocalTime`, zoned projections).
+- **Interval** and **time-of-day** timers with explicit daylight-saving policy.
+- Schedule-zone conversion extensions, persistence helpers, and NodaTime/BCL interop utilities (`LocalScheduleDateTimeZone`, `PrimeTimeScheduleZoneExtensions`, and related conversion types).
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
 - None.
@@ -43,24 +26,8 @@
 - None.
 
 ### Notes
-- See `Source/Docs/articles/concepts/persistence-and-conversions.md` for persistence shapes and when to use these helpers versus raw NodaTime APIs.
+- Pair with **`KZDev.PrimeTime.Testing`** in test projects for deterministic virtual time.
+- Documentation: [PrimeTime overview](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/overview.md) and [choosing a package](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/concepts/choosing-a-package.md).
 
 ### Package
-- KZDev.PrimeTime v0.0.6 adds public conversion helpers, **`LocalScheduleDateTimeZone`**, and documentation for persistence and schedule-zone projections.
-
-## Version 0.0.5
-
-### Added
-- Initial per-package release-notes baseline established for public release traceability.
-
-### Changed
-- None.
-
-### Fixed
-- None.
-
-### Notes
-- Baseline entry represents the currently shipped package state at version `0.0.5`.
-
-### Package
-- KZDev.PrimeTime package baseline release summary for version `0.0.5`.
+- **KZDev.PrimeTime** v1.0.0 — testable clocks and timers with full NodaTime support.

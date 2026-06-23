@@ -11,28 +11,13 @@
 - Use `- None.` for categories without entries.
 - In `### Package`, inline Markdown (bold, code) is allowed; NuGet pack strips it to plain text for the nuspec `releaseNotes` field. GitHub release bodies and DocFX keep full Markdown from these files.
 
-## Version 0.0.7
+## Version 1.0.0
 
 ### Added
-- Internal **`ThrowHelper`** and **`ProductionStrings`** resource catalog for centralized production exception messages (timers, schedule-zone validation, and related guard paths).
-
-### Changed
-- Production inline throws in shared clock/timer code now call **`ThrowHelper`**; user-visible exception **types** are unchanged and **messages** are sourced from **`ProductionStrings`** (wording largely preserved, now centralized for consistency and future localization).
-
-### Fixed
-- None.
-
-### Notes
-- **`ThrowHelper`** remains **`internal`**; no public member signatures changed for this migration.
-
-### Package
-- KZDev.SystemClock.PrimeTime v0.0.7 centralizes production exception messages via **`ThrowHelper`** and **`ProductionStrings`**.
-
-## Version 0.0.6
-
-### Added
-- Schedule-zone conversion extensions on **`IPrimeTime`** (**`PrimeTimeScheduleZoneExtensions`**) for **`DateTimeOffset`** and UTC **`DateTime`**, using **`IPrimeClock.LocalScheduleTimeZone`** (BCL **`DateOnly`**, **`TimeOnly`**, and wall **`DateTime`** helpers).
-- DocFx concept article **Persistence and time conversions** and System Clock track example pages (production and testing) with runnable snippets.
+- First public release of the **BCL foundation** production package: injectable **`IPrimeClock`** / **`PrimeClock`** backed by **`TimeProvider`** and BCL date/time types (`DateTimeOffset`, `TimeSpan`, `DateOnly`, `TimeOnly` where applicable).
+- **Interval** and **time-of-day** timers with explicit daylight-saving policy.
+- Schedule-zone conversion extensions and BCL-oriented persistence helpers (`LocalScheduleTimeZone`, `PrimeTimeScheduleZoneExtensions`).
+- Multi-target binaries: `net10.0`, `net8.0`, and `netstandard2.0`.
 
 ### Changed
 - None.
@@ -41,24 +26,8 @@
 - None.
 
 ### Notes
-- See `Source/Docs/articles/concepts/persistence-and-conversions.md` for persistence shapes and BCL-oriented schedule-zone projection.
+- Pair with **`KZDev.SystemClock.PrimeTime.Testing`** in test projects for deterministic virtual time.
+- Documentation: [PrimeTime overview](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/overview.md) and [choosing a package](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Docs/articles/concepts/choosing-a-package.md).
 
 ### Package
-- KZDev.SystemClock.PrimeTime v0.0.6 adds public BCL schedule-zone conversion helpers and matching documentation.
-
-## Version 0.0.5
-
-### Added
-- Initial per-package release-notes baseline established for public release traceability.
-
-### Changed
-- None.
-
-### Fixed
-- None.
-
-### Notes
-- Baseline entry represents the currently shipped package state at version `0.0.5`.
-
-### Package
-- KZDev.SystemClock.PrimeTime package baseline release summary for version `0.0.5`.
+- **KZDev.SystemClock.PrimeTime** v1.0.0 — testable clocks and timers with minimal BCL dependencies.
