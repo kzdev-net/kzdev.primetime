@@ -63,11 +63,6 @@ project.fragment.lock.json
 artifacts/*
 !artifacts/.gitkeep
 
-# AI Agent generated artifact files
-agent-research/
-agent-plans/
-agent-reviews/
-
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
