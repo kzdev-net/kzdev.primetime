@@ -1,8 +1,8 @@
 <Project>
     <PropertyGroup>
         <TestingReadmePwshPath Condition="'$(TestingReadmePwshPath)' == ''">pwsh</TestingReadmePwshPath>
-        <!-- Default off on Debug/Dev (local dev); on for Release, Package, and other configurations. Set ComposeTestingPackageReadme=true to force. -->
-        <ComposeTestingPackageReadme Condition="'$(ComposeTestingPackageReadme)' == '' AND '$(Configuration)' != 'Debug' AND '$(Configuration)' != 'Dev'">true</ComposeTestingPackageReadme>
+        <!-- Default off on Debug (local dev); on for Release, Package, and other configurations. Set ComposeTestingPackageReadme=true to force. -->
+        <ComposeTestingPackageReadme Condition="'$(ComposeTestingPackageReadme)' == '' AND '$(Configuration)' != 'Debug'">true</ComposeTestingPackageReadme>
         <ComposeTestingPackageReadme Condition="'$(ComposeTestingPackageReadme)' == ''">false</ComposeTestingPackageReadme>
         <!-- Multi-target projects: compose once on Pack (outer) or on the first inner TFM below—not per inner build in parallel. -->
         <TestingReadmeComposeTargetFramework Condition="'$(TestingReadmeComposeTargetFramework)' == ''">net10.0</TestingReadmeComposeTargetFramework>

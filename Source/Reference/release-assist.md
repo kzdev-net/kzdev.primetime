@@ -19,7 +19,7 @@ The workflow does **not** push packages to nuget.org. A published GitHub release
 
 ## Testing package README composition (PowerShell 7)
 
-The two testing packages (`KZDev.PrimeTime.Testing`, `KZDev.SystemClock.PrimeTime.Testing`) ship a composed NuGet README built from source templates, direct-dependency snippets, and shared fragments. During **Release** pack with `IsPacking=true`, MSBuild runs `ComposeTestingPackageReadme` (see [TestingPackageReadme.targets](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Src/Package/TestingPackageReadme.targets)) **before** `Pack`, which requires **PowerShell 7+** (`pwsh`).
+The two testing packages (`KZDev.PrimeTime.Testing`, `KZDev.SystemClock.PrimeTime.Testing`) ship a composed NuGet README built from source templates, direct-dependency snippets, and shared fragments. During **Release** pack with `IsPacking=true`, MSBuild runs the **`ComposeTestingPackageReadme` target** (gated by the homonymous MSBuild property in [TestingPackageReadme.targets](https://github.com/kzdev-net/kzdev.primetime/blob/main/Source/Src/Package/TestingPackageReadme.targets)) **before** `Pack`, which requires **PowerShell 7+** (`pwsh`).
 
 ### Compose inputs and outputs
 
@@ -31,7 +31,7 @@ The two testing packages (`KZDev.PrimeTime.Testing`, `KZDev.SystemClock.PrimeTim
 | Compose script | `Source/Src/Package/ComposeTestingPackageReadme.ps1` |
 | **Committed output** (packed into the `.nupkg`) | `Source/Src/Package/{PackageId}.readme.md` |
 
-`Debug` and `Dev` configurations skip compose by default (`ComposeTestingPackageReadme=false`). **Release** pack (and `Configuration=Package`) compose automatically.
+The MSBuild property **`ComposeTestingPackageReadme`** is defined in `Source/Src/Package/TestingPackageReadme.targets` (imported via `TestingPackageReadme.props` under testing projects—not in individual `.csproj` files). It defaults to **false** for **`Debug`** and **true** for **`Release`** and **`Package`**. Solution build configurations are **`Debug`**, **`Package`**, and **`Release`** (`Source/KZDev.PrimeTime.slnx`). Override with `-p:ComposeTestingPackageReadme=true` or `false`. Release assist packs with `-c Release` and `-p:IsPacking=true`; **`Package`** configuration also sets `IsPacking=true` via `Source/Src/Directory.Build.props` without passing that property explicitly.
 
 ### PowerShell requirement
 
@@ -176,7 +176,7 @@ The workflow requests `contents: write` so `gh` can create and update releases u
      - **`true`** (default): restore, build, test, pack, aggregate notes, upload artifacts only. **No** GitHub release and **no** finalize job.
      - **`false`**: same as above, then creates a **draft** release and runs the finalize job after environment approval.
 
-4. Open the workflow run: confirm **Test** and **Pack** succeeded; download the **release assist** artifact if you want to inspect packages or `release-body.md` locally.
+4. Open the workflow run: confirm **Test** and **Pack packages** succeeded; download the **release-assist-{version}** artifact if you want to inspect packages or `release-body.md` locally.
 
 ## Before `dry_run = false`
 
@@ -225,7 +225,7 @@ The two testing projects require `pwsh` for README compose during pack. Outputs 
 - Per-package release notes: `Source/Docs/Notes/`
 - Version and pack-time note extraction: `Source/Src/Directory.Build.props` (MSBuild task in `KZDev.PrimeTime.ReleaseAggregation`)
 - Aggregation tests: `Source/Tst/KZDev.PrimeTime.Tools.UnitTests/UsingReleaseNotesMarkdownAggregator.cs`
-- Testing README compose: `Source/Src/Package/TestingPackageReadme.targets`, `ComposeTestingPackageReadme.ps1`, `fragments/`
+- Testing README compose: `Source/Src/Package/TestingPackageReadme.props`, `TestingPackageReadme.targets`, `ComposeTestingPackageReadme.ps1`, `fragments/`
 - GitHub Pages (`.github/workflows/docfx-publish.yml`): runs the **same** `validate` and `aggregate` steps as
   this workflow, writing `Source/Docs/articles/release-notes.md` before `docfx build`, so hosted release notes
   stay aligned with the aggregated markdown used for GitHub release bodies here.
