@@ -84,6 +84,7 @@
     <File Path="../.github/ISSUE_TEMPLATE/feature_request.md" />
   </Folder>
   <Folder Name="/GitHub/Workflows/">
+    <File Path="../.github/workflows/ci.yml" />
     <File Path="../.github/workflows/docfx-publish.yml" />
     <File Path="../.github/workflows/release-assist.yml" />
   </Folder>

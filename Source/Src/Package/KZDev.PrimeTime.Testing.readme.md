@@ -13,10 +13,7 @@ Use the namespace **`KZDev.PrimeTime`**.
 
 ## Installation
 
-Install both packages:
-
 ```bash
-dotnet add package KZDev.PrimeTime
 dotnet add package KZDev.PrimeTime.Testing
 ```
 
