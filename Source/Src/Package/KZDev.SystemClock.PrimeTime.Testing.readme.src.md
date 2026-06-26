@@ -7,10 +7,7 @@ Use the namespace **`KZDev.SystemClock.PrimeTime`**.
 {{REQUIREMENTS}}
 ## Installation
 
-Install both packages:
-
 ```bash
-dotnet add package KZDev.SystemClock.PrimeTime
 dotnet add package KZDev.SystemClock.PrimeTime.Testing
 ```
 

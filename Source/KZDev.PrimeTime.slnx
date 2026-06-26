@@ -88,9 +88,23 @@
     <File Path="../.github/workflows/release-assist.yml" />
   </Folder>
   <Folder Name="/Package/">
+    <File Path="Src/Package/ComposeTestingPackageReadme.ps1" />
     <File Path="Src/Package/KZDev.PrimeTime.readme.md" />
+    <File Path="Src/Package/KZDev.PrimeTime.Testing.readme.md" />
+    <File Path="Src/Package/KZDev.PrimeTime.Testing.readme.src.md" />
+    <File Path="Src/Package/KZDev.PrimeTime.Testing.requirements.direct-dependencies.md" />
     <File Path="Src/Package/KZDev.SystemClock.PrimeTime.readme.md" />
+    <File Path="Src/Package/KZDev.SystemClock.PrimeTime.Testing.readme.md" />
+    <File Path="Src/Package/KZDev.SystemClock.PrimeTime.Testing.readme.src.md" />
+    <File Path="Src/Package/KZDev.SystemClock.PrimeTime.Testing.requirements.direct-dependencies.md" />
     <File Path="Src/Package/nuget.icon.png" />
+    <File Path="Src/Package/TestingPackageReadme.props" />
+    <File Path="Src/Package/TestingPackageReadme.targets" />
+  </Folder>
+  <Folder Name="/Package/Fragments/">
+    <File Path="Src/Package/fragments/testing-readme-netstandard2-polyfills.md" />
+    <File Path="Src/Package/fragments/testing-readme-target-frameworks.md" />
+    <File Path="Src/Package/fragments/testing-readme-version-pairing.template.md" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="../.gitignore" />
@@ -152,6 +166,7 @@
     <Project Path="Src/Testing/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <File Path="Src/Directory.Packages.props" />
     <File Path="Tst/Directory.Build.props" />
     <File Path="Tst/Directory.Packages.props" />
     <Project Path="Tst/KZDev.PrimeTime.TestBase/KZDev.PrimeTime.TestBase.csproj">
