@@ -628,6 +628,7 @@ public class UsingPrimeTestClock : UnitTestBase
         IPrimeTestClock clock = new PrimeTestClock(initial);
         using ClockEventCollector collector = new(clock);
         object advanceFromRunnerCallbackSync = new();
+        bool advanceFromRunnerCallbackStarted = false;
         bool advancedFromRunnerCallback = false;
         DateTimeOffset advanceTargetUtc = initial;
         clock.ClockEvents += (_, e) =>
@@ -639,16 +640,21 @@ public class UsingPrimeTestClock : UnitTestBase
 
             lock (advanceFromRunnerCallbackSync)
             {
-                if (advancedFromRunnerCallback)
+                if (advanceFromRunnerCallbackStarted)
                 {
                     return;
                 }
 
-                advancedFromRunnerCallback = true;
+                advanceFromRunnerCallbackStarted = true;
                 advanceTargetUtc = clock.UtcNowDateTimeOffset + advanceDuration;
             }
 
             clock.Advance(advanceDuration);
+
+            lock (advanceFromRunnerCallbackSync)
+            {
+                advancedFromRunnerCallback = true;
+            }
         };
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
         clock.RunFor(runForDuration, RunForTestFastPerSecondRate).Should().BeTrue();

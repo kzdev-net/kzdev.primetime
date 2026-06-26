@@ -140,6 +140,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         {
             ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim enteredFirstCallback = new(false);
         using ManualResetEventSlim releaseFirstCallback = new(false);
         int invokeCount = 0;
@@ -151,7 +152,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             }
 
             enteredFirstCallback.Set();
-            releaseFirstCallback.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.Record(() =>
+                releaseFirstCallback.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue());
         };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
             TimerCallbackKind.SimpleAction, userCallback, null, options, TestContext.Current.CancellationToken);
@@ -161,6 +163,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         onTimerTick.Invoke(registration, [null]);
         releaseFirstCallback.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref invokeCount) >= 2, WaitMargin).Should().BeTrue();
+        callbackAssertions.ThrowIfRecorded();
     }
 
     /// <summary>
@@ -178,6 +181,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         {
             ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim innerStarted = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
         int callCount = 0;
@@ -190,7 +194,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             }
 
             innerStarted.Set();
-            allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.Record(() =>
+                allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue());
 
             return default;
         };
@@ -202,6 +207,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref callCount) >= 2, WaitMargin).Should().BeTrue();
+        callbackAssertions.ThrowIfRecorded();
     }
 
     /// <summary>
@@ -218,6 +224,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         {
             ConcurrentTriggerProcessing = ConcurrentTriggerProcessing.RunSequentially
         };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim enteredAsyncBody = new(false);
         using ManualResetEventSlim allowSecondTick = new(false);
         int enteredCount = 0;
@@ -229,7 +236,8 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
             }
 
             enteredAsyncBody.Set();
-            allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.Record(() =>
+                allowSecondTick.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue());
             await Task.Delay(50, TestContext.Current.CancellationToken).ConfigureAwait(false);
         };
         using IClockDayTimeTimer registration = new ClockDayTimeTimerRegistration(clock, new UtcTimeOfDay(target),
@@ -240,6 +248,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         onTimerTick.Invoke(registration, [null]);
         allowSecondTick.Set();
         SpinWait.SpinUntil(() => Volatile.Read(ref enteredCount) >= 2, WaitMargin).Should().BeTrue();
+        callbackAssertions.ThrowIfRecorded();
     }
 
     /// <summary>

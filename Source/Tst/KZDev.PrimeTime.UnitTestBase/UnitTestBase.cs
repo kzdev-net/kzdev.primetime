@@ -104,6 +104,18 @@ public abstract class UnitTestBase : TestBase
     }
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Computes the wall-clock wait budget for overlapping real-clock interval callbacks to start
+    ///   or release under CI thread-pool load.
+    /// </summary>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <param name="repeatInterval">Repeat interval for the overlapping timer registration.</param>
+    /// <returns>
+    ///   <paramref name="waitMargin"/> + <paramref name="repeatInterval"/> + <paramref name="waitMargin"/>.
+    /// </returns>
+    protected static TimeSpan GetOverlapSynchronizationWait (TimeSpan waitMargin, TimeSpan repeatInterval) =>
+        waitMargin + repeatInterval + waitMargin;
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses, waiting between
     ///   attempts so the loop does not busy-spin.
     /// </summary>

@@ -47,6 +47,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>
     private static readonly TimeSpan CallbackSettle = TimeSpan.FromMilliseconds(50);
+
+    /// <summary>
+    ///   Wait budget for overlapping interval callbacks to start or release under CI thread-pool load.
+    /// </summary>
+    private static readonly TimeSpan OverlapSynchronizationWait =
+        GetOverlapSynchronizationWait(WaitMargin, RepeatInterval);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -249,6 +255,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim firstCallbackStarted = new(false);
         using ManualResetEventSlim overlapObserved = new(false);
         using ManualResetEventSlim releaseCallbacks = new(false);
@@ -275,8 +282,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
                 try
                 {
-                    releaseCallbacks.Wait(WaitMargin + RepeatInterval + WaitMargin,
-                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    callbackAssertions.Record(() =>
+                        releaseCallbacks.Wait(OverlapSynchronizationWait,
+                            TestContext.Current.CancellationToken).Should().BeTrue());
                 }
                 finally
                 {
@@ -290,14 +298,16 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait(ShortDelay + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-            overlapObserved.Wait(RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            overlapObserved.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
             timer.State.Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[0].Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[1].Should().Be(TimerState.RepeatProcessingCallback);
             timer.CallbacksProcessing.Should().BeTrue();
 
             releaseCallbacks.Set();
-            callbacksCompleted.Wait(WaitMargin + RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbacksCompleted.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
         }
     }
     //----------------------------------------------------------------------------
@@ -313,6 +323,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim firstCallbackStarted = new(false);
         using ManualResetEventSlim secondCallbackStarted = new(false);
         using ManualResetEventSlim firstCallbackMayExit = new(false);
@@ -329,8 +340,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 if (callbackIndex == 1)
                 {
                     firstCallbackStarted.Set();
-                    firstCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
-                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    callbackAssertions.Record(() =>
+                        firstCallbackMayExit.Wait(OverlapSynchronizationWait,
+                            TestContext.Current.CancellationToken).Should().BeTrue());
                     firstCallbackCompleted.Set();
                     return;
                 }
@@ -341,15 +353,17 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 }
 
                 secondCallbackStarted.Set();
-                secondCallbackMayExit.Wait(WaitMargin + RepeatInterval + WaitMargin,
-                    TestContext.Current.CancellationToken).Should().BeTrue();
+                callbackAssertions.Record(() =>
+                    secondCallbackMayExit.Wait(OverlapSynchronizationWait,
+                        TestContext.Current.CancellationToken).Should().BeTrue());
             },
             TestContext.Current.CancellationToken,
             timerOptions: timerOptions);
         using (timer)
         {
             firstCallbackStarted.Wait(ShortDelay + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
-            secondCallbackStarted.Wait(RepeatInterval + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            secondCallbackStarted.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
 
             firstCallbackMayExit.Set();
 
@@ -357,10 +371,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             SpinWait.SpinUntil(() => timer.State == TimerState.ProcessingCallback,
                 WaitMargin).Should().BeTrue();
             timer.CallbacksProcessing.Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
 
             secondCallbackMayExit.Set();
             SpinWait.SpinUntil(() => timer.State == TimerState.RepeatCycle,
                 WaitMargin).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
         }
     }
     //----------------------------------------------------------------------------

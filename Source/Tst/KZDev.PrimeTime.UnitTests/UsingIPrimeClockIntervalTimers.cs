@@ -46,6 +46,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>
     private static readonly Duration CallbackSettle = Duration.FromMilliseconds(50);
+
+    /// <summary>
+    ///   Wait budget for overlapping interval callbacks to start or release under CI thread-pool load.
+    /// </summary>
+    private static readonly Duration OverlapSynchronizationWait =
+        Duration.FromTimeSpan(GetOverlapSynchronizationWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan()));
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -274,6 +280,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim firstCallbackStarted = new(false);
         using ManualResetEventSlim overlapObserved = new(false);
         using ManualResetEventSlim releaseCallbacks = new(false);
@@ -300,8 +307,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
                 try
                 {
-                    releaseCallbacks.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
-                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    callbackAssertions.Record(() =>
+                        releaseCallbacks.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                            TestContext.Current.CancellationToken).Should().BeTrue());
                 }
                 finally
                 {
@@ -315,15 +323,17 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-            overlapObserved.Wait((RepeatInterval + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            overlapObserved.Wait(OverlapSynchronizationWait.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
             timer.State.Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[0].Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[1].Should().Be(TimerState.RepeatProcessingCallback);
             timer.CallbacksProcessing.Should().BeTrue();
 
             releaseCallbacks.Set();
-            callbacksCompleted.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
+            callbacksCompleted.Wait(OverlapSynchronizationWait.ToTimeSpan(),
                 TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
         }
     }
     //----------------------------------------------------------------------------
@@ -339,6 +349,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     {
         IPrimeClock clock = new PrimeClock();
         IntervalTimerOptions timerOptions = new() { ResetIntervalBeforeCallback = true };
+        using CallbackAssertionCapture callbackAssertions = new();
         using ManualResetEventSlim firstCallbackStarted = new(false);
         using ManualResetEventSlim secondCallbackStarted = new(false);
         using ManualResetEventSlim firstCallbackMayExit = new(false);
@@ -355,8 +366,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 if (callbackIndex == 1)
                 {
                     firstCallbackStarted.Set();
-                    firstCallbackMayExit.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
-                        TestContext.Current.CancellationToken).Should().BeTrue();
+                    callbackAssertions.Record(() =>
+                        firstCallbackMayExit.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                            TestContext.Current.CancellationToken).Should().BeTrue());
                     firstCallbackCompleted.Set();
                     return;
                 }
@@ -367,15 +379,17 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 }
 
                 secondCallbackStarted.Set();
-                secondCallbackMayExit.Wait((WaitMargin + RepeatInterval + WaitMargin).ToTimeSpan(),
-                    TestContext.Current.CancellationToken).Should().BeTrue();
+                callbackAssertions.Record(() =>
+                    secondCallbackMayExit.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                        TestContext.Current.CancellationToken).Should().BeTrue());
             },
             TestContext.Current.CancellationToken,
             timerOptions: timerOptions);
         using (timer)
         {
             firstCallbackStarted.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-            secondCallbackStarted.Wait((RepeatInterval + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            secondCallbackStarted.Wait(OverlapSynchronizationWait.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
 
             firstCallbackMayExit.Set();
 
@@ -383,10 +397,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             SpinWait.SpinUntil(() => timer.State == TimerState.ProcessingCallback,
                 WaitMargin.ToTimeSpan()).Should().BeTrue();
             timer.CallbacksProcessing.Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
 
             secondCallbackMayExit.Set();
             SpinWait.SpinUntil(() => timer.State == TimerState.RepeatCycle,
                 WaitMargin.ToTimeSpan()).Should().BeTrue();
+            callbackAssertions.ThrowIfRecorded();
         }
     }
     //----------------------------------------------------------------------------
