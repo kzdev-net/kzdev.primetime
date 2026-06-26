@@ -30,6 +30,10 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     /// </summary>
     private static readonly TimeSpan WaitMargin = TimeSpan.FromMilliseconds(450);
     /// <summary>
+    ///   Wall-clock wait budget for a callback that is expected to fire after <see cref="ShortDelay"/>.
+    /// </summary>
+    private static readonly TimeSpan CallbackWaitTimeout = ShortDelay + WaitMargin;
+    /// <summary>
     ///   Allowed tolerance when asserting callback timing.
     /// </summary>
     private static readonly TimeSpan TimingTolerance = TimeSpan.FromMilliseconds(200);
@@ -75,7 +79,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         DateTimeOffset start = clock.LocalNowDateTimeOffset;
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         TimeSpan elapsed = firedAt!.Value - start;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
@@ -109,7 +113,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         timer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.RunConcurrently);
         timer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);
         timer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunFirst);
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
 
     #endregion Local time-of-day — fire and contract
@@ -136,7 +140,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         DateTimeOffset start = clock.UtcNowDateTimeOffset;
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
     }
@@ -156,7 +160,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.IsLocalTimeRepresentation.Should().BeFalse();
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
 
     #endregion UTC time-of-day — fire and contract
@@ -184,7 +188,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             receivedReg = callbackContext.Registration;
             signal.Set();
         }, TestContext.Current.CancellationToken, state);
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
     }
@@ -208,7 +212,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             return default;
         }, cancellationToken: TestContext.Current.CancellationToken);
         DateTimeOffset start = clock.UtcNowDateTimeOffset;
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
     }
 
@@ -237,7 +241,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         TimeOnly newTarget = TimeOnly.FromDateTime((clock.LocalNowDateTimeOffset + ShortDelay).DateTime);
         timer.Change(new LocalTimeOfDay(newTarget)).Should().BeTrue();
         DateTimeOffset afterChange = clock.LocalNowDateTimeOffset;
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - afterChange).Should().BeCloseTo(ShortDelay, TimingTolerance);
     }
 
@@ -256,7 +260,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Change(new UtcTimeOfDay(new TimeOnly(0, 0, 0))).Should().BeFalse();
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
 
     /// <summary>
@@ -274,7 +278,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(timeOfDay, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Change(new LocalTimeOfDay(new TimeOnly(0, 0, 0))).Should().BeFalse();
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
 
     #endregion Change(LocalTimeOfDay) / Change(UtcTimeOfDay)
@@ -318,7 +322,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         timer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);
         timer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);
         timer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunLast);
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
 
     #endregion Cancel and options

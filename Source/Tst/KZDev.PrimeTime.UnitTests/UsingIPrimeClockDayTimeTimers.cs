@@ -31,6 +31,11 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     private static readonly Duration WaitMargin = Duration.FromMilliseconds(450);
 
     /// <summary>
+    ///   Wall-clock wait budget for a callback that is expected to fire after <see cref="ShortDelay"/>.
+    /// </summary>
+    private static readonly Duration CallbackWaitTimeout = ShortDelay + WaitMargin;
+
+    /// <summary>
     ///   Allowed tolerance when asserting callback timing.
     /// </summary>
     private static readonly Duration TimingTolerance = Duration.FromMilliseconds(180);
@@ -78,7 +83,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         Duration elapsed = firedAt!.Value - start;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
@@ -114,7 +119,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         dayTimer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.RunConcurrently);
         dayTimer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);
         dayTimer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunFirst);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
     //----------------------------------------------------------------------------
 
@@ -142,7 +147,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             receivedReg = (IClockDayTimeTimer)callbackContext.Registration;
             signal.Set();
         }, TestContext.Current.CancellationToken, state);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
     }
@@ -167,7 +172,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         Duration elapsed = firedAt!.Value - start;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(WaitMargin));
@@ -200,7 +205,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         LocalTime newTarget = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
         timer.Change(newTarget).Should().BeTrue();
         Instant afterChange = clock.NowInstant;
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         Duration elapsed = firedAt!.Value - afterChange;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
@@ -251,7 +256,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         dayTimer.ConcurrentTriggerProcessing.Should().Be(ConcurrentTriggerProcessing.Skip);
         dayTimer.SkippedTimeBehavior.Should().Be(SkippedTimeBehavior.RunAfter);
         dayTimer.DuplicateTimeBehavior.Should().Be(DuplicateTimeBehavior.RunLast);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(CallbackWaitTimeout.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
     }
     //----------------------------------------------------------------------------
 
