@@ -60,6 +60,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         GetOverlapCallbackReleaseWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan());
 
     /// <summary>
+    ///   Wait budget for a subsequent overlapping callback to start after the first has entered user code.
+    /// </summary>
+    private static readonly TimeSpan OverlapSecondCallbackStartWaitTimeout =
+        GetOverlapSecondCallbackStartWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan());
+
+    /// <summary>
     ///   Wait budget for the first overlapping interval callback to start under CI thread-pool load.
     /// </summary>
     private static readonly TimeSpan FirstCallbackWaitTimeout =
@@ -345,7 +351,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-            overlapObserved.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
+            overlapObserved.Wait(OverlapSecondCallbackStartWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
             timer.State.Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[0].Should().Be(TimerState.RepeatProcessingCallback);
@@ -410,20 +416,26 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-            secondCallbackStarted.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
+            secondCallbackStarted.Wait(OverlapSecondCallbackStartWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
 
             firstCallbackMayExit.Set();
 
             firstCallbackCompleted.Wait(GetCallbackWaitTimeout(RepeatInterval.ToTimeSpan(), WaitMargin.ToTimeSpan()), TestContext.Current.CancellationToken).Should().BeTrue();
-            SpinWait.SpinUntil(() => timer.State == TimerState.ProcessingCallback,
-                StateSettleWaitTimeout).Should().BeTrue();
+            WaitUntilCondition(
+                () => timer.State == TimerState.ProcessingCallback,
+                StateSettleWaitTimeout,
+                "Timed out waiting for timer state to settle to ProcessingCallback.",
+                TestContext.Current.CancellationToken);
             timer.CallbacksProcessing.Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
 
             secondCallbackMayExit.Set();
-            SpinWait.SpinUntil(() => timer.State == TimerState.RepeatCycle,
-                StateSettleWaitTimeout).Should().BeTrue();
+            WaitUntilCondition(
+                () => timer.State == TimerState.RepeatCycle,
+                StateSettleWaitTimeout,
+                "Timed out waiting for timer state to settle to RepeatCycle.",
+                TestContext.Current.CancellationToken);
             callbackAssertions.ThrowIfRecorded();
         }
     }
@@ -773,7 +785,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
         callbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         cts.Cancel();
-        SpinWait.SpinUntil(() => timer.IsCancelled, StateSettleWaitTimeout).Should().BeTrue();
+        WaitUntilCondition(
+            () => timer.IsCancelled,
+            StateSettleWaitTimeout,
+            "Timed out waiting for timer to report cancelled.",
+            TestContext.Current.CancellationToken);
         timer.CallbacksProcessing.Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
         allowCallbackToExit.Release();
@@ -874,7 +890,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
             Action act = () => timer.Dispose();
             act.Should().NotThrow();
-            SpinWait.SpinUntil(() => !timer.CallbacksProcessing, StateSettleWaitTimeout).Should().BeTrue();
+            WaitUntilCondition(
+                () => !timer.CallbacksProcessing,
+                StateSettleWaitTimeout,
+                "Timed out waiting for CallbacksProcessing to become false.",
+                TestContext.Current.CancellationToken);
             timer.State.Should().Be(TimerState.Disposed);
             allowExit.Release();
         }

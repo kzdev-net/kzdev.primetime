@@ -129,6 +129,26 @@ public abstract class UnitTestBase : TestBase
         GetOverlapSynchronizationWait(waitMargin, repeatInterval) + waitMargin;
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Computes the wall-clock wait budget for a subsequent overlapping interval callback to enter
+    ///   user code after the first overlapping callback has already started, under CI thread-pool load.
+    /// </summary>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <param name="repeatInterval">Repeat interval for the overlapping timer registration.</param>
+    /// <returns>
+    ///   <see cref="GetOverlapSynchronizationWait"/> + <paramref name="waitMargin"/>.
+    /// </returns>
+    /// <remarks>
+    ///   Adds a third wait margin because the first overlapping callback may hold a thread-pool worker
+    ///   blocked while the second callback waits to be scheduled.
+    /// </remarks>
+    protected static TimeSpan GetOverlapSecondCallbackStartWait (TimeSpan waitMargin, TimeSpan repeatInterval)
+    {
+        ValidateNonNegativeTimeSpan(waitMargin, nameof(waitMargin));
+        ValidateNonNegativeTimeSpan(repeatInterval, nameof(repeatInterval));
+        return AddCheckedTimeSpans(GetOverlapSynchronizationWait(waitMargin, repeatInterval), waitMargin);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Validates that <paramref name="value"/> is not less than <see cref="TimeSpan.Zero"/>.
     /// </summary>
     /// <param name="value">The time span to validate.</param>

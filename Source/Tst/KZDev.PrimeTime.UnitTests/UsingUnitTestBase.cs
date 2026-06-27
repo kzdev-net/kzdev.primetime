@@ -106,4 +106,43 @@ public sealed class UsingUnitTestBase : UnitTestBase
         act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("waitMargin");
     }
     //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="UnitTestBase.GetOverlapSecondCallbackStartWait"/> adds a third wait margin
+    ///   beyond <see cref="UnitTestBase.GetOverlapSynchronizationWait"/>.
+    /// </summary>
+    [Fact]
+    public void GetOverlapSecondCallbackStartWait_AddsThirdWaitMarginBeyondOverlapSynchronizationWait ()
+    {
+        TimeSpan waitMargin = TimeSpan.FromMilliseconds(400);
+        TimeSpan repeatInterval = TimeSpan.FromMilliseconds(60);
+
+        GetOverlapSecondCallbackStartWait(waitMargin, repeatInterval)
+            .Should().Be(GetOverlapSynchronizationWait(waitMargin, repeatInterval) + waitMargin);
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="UnitTestBase.GetOverlapSecondCallbackStartWait"/> rejects a negative wait margin.
+    /// </summary>
+    [Fact]
+    public void GetOverlapSecondCallbackStartWait_NegativeWaitMargin_ThrowsArgumentOutOfRangeException ()
+    {
+        Action act = () => GetOverlapSecondCallbackStartWait(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(60));
+
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("waitMargin");
+    }
+    //----------------------------------------------------------------------------
+
+    /// <summary>
+    ///   Verifies that <see cref="UnitTestBase.GetOverlapSecondCallbackStartWait"/> rejects a negative repeat interval.
+    /// </summary>
+    [Fact]
+    public void GetOverlapSecondCallbackStartWait_NegativeRepeatInterval_ThrowsArgumentOutOfRangeException ()
+    {
+        Action act = () => GetOverlapSecondCallbackStartWait(TimeSpan.FromMilliseconds(400), TimeSpan.FromMilliseconds(-1));
+
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("repeatInterval");
+    }
+    //----------------------------------------------------------------------------
 }
