@@ -32,7 +32,11 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     /// <summary>
     ///   Wall-clock wait budget for a callback that is expected to fire after <see cref="ShortDelay"/>.
     /// </summary>
-    private static readonly TimeSpan CallbackWaitTimeout = ShortDelay + WaitMargin;
+    private static readonly TimeSpan CallbackWaitTimeout = GetFirstCallbackWaitTimeout(ShortDelay, WaitMargin);
+    /// <summary>
+    ///   Upper bound when asserting a callback fired soon after registration (not a synchronization wait).
+    /// </summary>
+    private static readonly TimeSpan CallbackTimingUpperBound = ShortDelay + WaitMargin;
     /// <summary>
     ///   Allowed tolerance when asserting callback timing.
     /// </summary>
@@ -83,7 +87,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         firedAt.Should().NotBeNull();
         TimeSpan elapsed = firedAt!.Value - start;
         elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
-        elapsed.Should().BeLessThanOrEqualTo(ShortDelay + WaitMargin);
+        elapsed.Should().BeLessThanOrEqualTo(CallbackTimingUpperBound);
     }
 
     /// <summary>

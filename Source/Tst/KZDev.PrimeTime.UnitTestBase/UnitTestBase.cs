@@ -129,6 +129,67 @@ public abstract class UnitTestBase : TestBase
         GetOverlapSynchronizationWait(waitMargin, repeatInterval) + waitMargin;
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Validates that <paramref name="value"/> is not less than <see cref="TimeSpan.Zero"/>.
+    /// </summary>
+    /// <param name="value">The time span to validate.</param>
+    /// <param name="paramName">The parameter name for exception reporting.</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="value"/> is less than <see cref="TimeSpan.Zero"/>.
+    /// </exception>
+    private static void ValidateNonNegativeTimeSpan (TimeSpan value, string paramName)
+    {
+        if (value < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(paramName, value,
+                "Value must be greater than or equal to TimeSpan.Zero.");
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Adds two non-negative time spans using checked tick arithmetic.
+    /// </summary>
+    /// <param name="first">The first summand.</param>
+    /// <param name="second">The second summand.</param>
+    /// <returns>The sum of <paramref name="first"/> and <paramref name="second"/>.</returns>
+    /// <exception cref="OverflowException">
+    ///   Thrown when the sum exceeds <see cref="TimeSpan"/> range.
+    /// </exception>
+    private static TimeSpan AddCheckedTimeSpans (TimeSpan first, TimeSpan second)
+    {
+        checked
+        {
+            return TimeSpan.FromTicks(first.Ticks + second.Ticks);
+        }
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes a wall-clock wait budget for a real-clock timer callback expected after
+    ///   <paramref name="expectedDelay"/>.
+    /// </summary>
+    /// <param name="expectedDelay">Expected elapsed time before the callback should enter user code.</param>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <returns>
+    ///   <paramref name="expectedDelay"/> + 2 × <paramref name="waitMargin"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="expectedDelay"/> or <paramref name="waitMargin"/> is less than
+    ///   <see cref="TimeSpan.Zero"/>.
+    /// </exception>
+    /// <exception cref="OverflowException">
+    ///   Thrown when the computed timeout exceeds <see cref="TimeSpan"/> range.
+    /// </exception>
+    /// <remarks>
+    ///   Two margins are used: one for slack beyond the expected delay, and a second for CI
+    ///   thread-pool scheduling latency before the callback enters user code.
+    /// </remarks>
+    protected static TimeSpan GetCallbackWaitTimeout (TimeSpan expectedDelay, TimeSpan waitMargin)
+    {
+        ValidateNonNegativeTimeSpan(expectedDelay, nameof(expectedDelay));
+        ValidateNonNegativeTimeSpan(waitMargin, nameof(waitMargin));
+        return AddCheckedTimeSpans(expectedDelay, AddCheckedTimeSpans(waitMargin, waitMargin));
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Computes the wall-clock wait budget for the first real-clock interval callback to start
     ///   under CI thread-pool load.
     /// </summary>
@@ -137,12 +198,35 @@ public abstract class UnitTestBase : TestBase
     /// <returns>
     ///   <paramref name="shortDelay"/> + 2 × <paramref name="waitMargin"/>.
     /// </returns>
-    /// <remarks>
-    ///   Two margins are used: one for slack beyond the expected initial delay, and a second for CI
-    ///   thread-pool scheduling latency before the first callback enters user code.
-    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="shortDelay"/> or <paramref name="waitMargin"/> is less than
+    ///   <see cref="TimeSpan.Zero"/>.
+    /// </exception>
+    /// <exception cref="OverflowException">
+    ///   Thrown when the computed timeout exceeds <see cref="TimeSpan"/> range.
+    /// </exception>
     protected static TimeSpan GetFirstCallbackWaitTimeout (TimeSpan shortDelay, TimeSpan waitMargin) =>
-        shortDelay + waitMargin + waitMargin;
+        GetCallbackWaitTimeout(shortDelay, waitMargin);
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Computes a wall-clock wait budget for timer state to settle after a callback completes
+    ///   under CI thread-pool load.
+    /// </summary>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <returns>
+    ///   2 × <paramref name="waitMargin"/>.
+    /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///   Thrown when <paramref name="waitMargin"/> is less than <see cref="TimeSpan.Zero"/>.
+    /// </exception>
+    /// <exception cref="OverflowException">
+    ///   Thrown when the computed timeout exceeds <see cref="TimeSpan"/> range.
+    /// </exception>
+    protected static TimeSpan GetStateSettleWaitTimeout (TimeSpan waitMargin)
+    {
+        ValidateNonNegativeTimeSpan(waitMargin, nameof(waitMargin));
+        return AddCheckedTimeSpans(waitMargin, waitMargin);
+    }
     //----------------------------------------------------------------------------
     /// <summary>
     ///   Polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses, waiting between

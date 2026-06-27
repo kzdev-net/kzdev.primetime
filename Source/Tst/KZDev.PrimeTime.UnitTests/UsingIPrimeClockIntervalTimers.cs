@@ -64,6 +64,18 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// </summary>
     private static readonly TimeSpan FirstCallbackWaitTimeout =
         GetFirstCallbackWaitTimeout(ShortDelay.ToTimeSpan(), WaitMargin.ToTimeSpan());
+
+    /// <summary>
+    ///   Wait budget for timer state to settle after a callback under CI thread-pool load.
+    /// </summary>
+    private static readonly TimeSpan StateSettleWaitTimeout =
+        GetStateSettleWaitTimeout(WaitMargin.ToTimeSpan());
+
+    /// <summary>
+    ///   Wait budget for the second firing of a repeating timer under CI thread-pool load.
+    /// </summary>
+    private static readonly TimeSpan SecondRepeatingCallbackWaitTimeout =
+        GetCallbackWaitTimeout((ShortDelay + RepeatInterval).ToTimeSpan(), WaitMargin.ToTimeSpan());
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -115,7 +127,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
@@ -145,7 +157,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             receivedReg = (IClockIntervalTimer)callbackContext.Registration;
             signal.Set();
         }, TestContext.Current.CancellationToken, state);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedReg.Should().BeSameAs(timer);
     }
@@ -169,7 +181,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 signal.Set();
             },
             cts.Token);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cts.Token);
     }
@@ -247,8 +259,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             }
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
-        signal.Wait((WaitMargin + ShortDelay + RepeatInterval + WaitMargin).ToTimeSpan(),
-            TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(SecondRepeatingCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         count.Should().BeGreaterThan(1);
         (firstCallbackTime - start).Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
         (secondCallbackTime - firstCallbackTime).Should().BeGreaterThanOrEqualTo(RepeatInterval.Minus(TimingTolerance));
@@ -275,8 +286,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             if (count >= 2)
                 signal.Set();
         }, TestContext.Current.CancellationToken);
-        signal.Wait((WaitMargin + ShortDelay + RepeatInterval + WaitMargin).ToTimeSpan(),
-            TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(SecondRepeatingCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(1);
         (times[1] - times[0]).Should().BeGreaterThanOrEqualTo(RepeatInterval.Minus(TimingTolerance));
     }
@@ -405,15 +415,15 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
             firstCallbackMayExit.Set();
 
-            firstCallbackCompleted.Wait((WaitMargin + RepeatInterval).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            firstCallbackCompleted.Wait(GetCallbackWaitTimeout(RepeatInterval.ToTimeSpan(), WaitMargin.ToTimeSpan()), TestContext.Current.CancellationToken).Should().BeTrue();
             SpinWait.SpinUntil(() => timer.State == TimerState.ProcessingCallback,
-                WaitMargin.ToTimeSpan()).Should().BeTrue();
+                StateSettleWaitTimeout).Should().BeTrue();
             timer.CallbacksProcessing.Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
 
             secondCallbackMayExit.Set();
             SpinWait.SpinUntil(() => timer.State == TimerState.RepeatCycle,
-                WaitMargin.ToTimeSpan()).Should().BeTrue();
+                StateSettleWaitTimeout).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
         }
     }
@@ -446,7 +456,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.Change(newInterval).Should().BeTrue();
         timer.State.Should().Be(TimerState.Active);
         Instant afterChange = clock.NowInstant;
-        signal.Wait((WaitMargin + newInterval).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(GetFirstCallbackWaitTimeout(newInterval.ToTimeSpan(), WaitMargin.ToTimeSpan()), TestContext.Current.CancellationToken).Should().BeTrue();
         (firedAt!.Value - afterChange).Should().BeGreaterThanOrEqualTo(newInterval.Minus(TimingTolerance));
     }
     //----------------------------------------------------------------------------
@@ -469,7 +479,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             if (count == 1 || count == 2)
                 signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         signal.Reset();
@@ -510,7 +520,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(ShortDelay);
         timer.Change(newFirst, newRepeat).Should().BeTrue();
         Instant start = clock.NowInstant;
-        signal.Wait((WaitMargin + newFirst + newRepeat + newRepeat + WaitMargin).ToTimeSpan(),
+        signal.Wait(GetCallbackWaitTimeout((newFirst + newRepeat + newRepeat).ToTimeSpan(), WaitMargin.ToTimeSpan()),
             TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(TargetCount - 1);
         (times[0] - start).Should().BeGreaterThanOrEqualTo(newFirst.Minus(TimingTolerance));
@@ -560,7 +570,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.Change(ShortDelay).Should().BeTrue();
         timer.Start().Should().BeTrue();
         timer.State.Should().Be(TimerState.Active);
-        signal.Wait((WaitMargin + ShortDelay).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
     }
     //----------------------------------------------------------------------------
 
@@ -586,7 +596,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             return default;
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         (firedAt!.Value - start).Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
@@ -611,7 +621,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             null,
             TestContext.Current.CancellationToken);
 
-        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        callbackInvoked.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
@@ -646,7 +656,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             null,
             cancellationTokenSource.Token);
 
-        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        callbackInvoked.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cancellationTokenSource.Token);
@@ -673,7 +683,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             signal.Set();
             return default;
         }, TestContext.Current.CancellationToken, state);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         receivedState.Should().BeSameAs(state);
     }
     //----------------------------------------------------------------------------
@@ -702,7 +712,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             null,
             TestContext.Current.CancellationToken);
 
-        callbackInvoked.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        callbackInvoked.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
     }
@@ -731,7 +741,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                     signal.Set();
             },
             TestContext.Current.CancellationToken);
-        signal.Wait((ShortDelay + asyncWork + RepeatInterval + WaitMargin).ToTimeSpan(),
+        signal.Wait(GetCallbackWaitTimeout((ShortDelay + asyncWork + RepeatInterval).ToTimeSpan(), WaitMargin.ToTimeSpan()),
             TestContext.Current.CancellationToken).Should().BeTrue();
         callbackStarts.Count.Should().BeGreaterThan(1);
         Duration betweenFirstAndSecond = callbackStarts[1] - callbackStarts[0];
@@ -761,9 +771,9 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             },
             cts.Token);
 
-        callbackStarted.Wait((WaitMargin + ShortDelay).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        callbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         cts.Cancel();
-        SpinWait.SpinUntil(() => timer.IsCancelled, WaitMargin.ToTimeSpan()).Should().BeTrue();
+        SpinWait.SpinUntil(() => timer.IsCancelled, StateSettleWaitTimeout).Should().BeTrue();
         timer.CallbacksProcessing.Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
         allowCallbackToExit.Release();
@@ -791,10 +801,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             ct => Callback(secondEntered, ct),
             TestContext.Current.CancellationToken);
 
-        TimeSpan waitTimeout = (WaitMargin + Duration.FromMilliseconds(200)).ToTimeSpan();
-        firstEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+        TimeSpan concurrentTimerWaitTimeout =
+            GetFirstCallbackWaitTimeout(Duration.FromMilliseconds(30).ToTimeSpan(), WaitMargin.ToTimeSpan());
+        firstEntered.Wait(concurrentTimerWaitTimeout, TestContext.Current.CancellationToken)
             .Should().BeTrue();
-        secondEntered.Wait(waitTimeout, TestContext.Current.CancellationToken)
+        secondEntered.Wait(concurrentTimerWaitTimeout, TestContext.Current.CancellationToken)
             .Should().BeTrue();
         overlapObserved.Wait(Duration.FromSeconds(1).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
         maxInFlight.Should().BeGreaterThan(1);
@@ -859,11 +870,11 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             cts.Token);
         using (timer)
         {
-            callbackStarted.Wait((WaitMargin + ShortDelay).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            callbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
 
             Action act = () => timer.Dispose();
             act.Should().NotThrow();
-            SpinWait.SpinUntil(() => !timer.CallbacksProcessing, WaitMargin.ToTimeSpan()).Should().BeTrue();
+            SpinWait.SpinUntil(() => !timer.CallbacksProcessing, StateSettleWaitTimeout).Should().BeTrue();
             timer.State.Should().Be(TimerState.Disposed);
             allowExit.Release();
         }
@@ -914,7 +925,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         (clock.NowInstant - timer.RegisteredInstant).Should().BeLessThan(Duration.FromSeconds(5));
         timer.ElapsedTime.Should().Be(-1);
         timer.TimeUntilNextCallback.Should().BeInRange(0L, (long)(ShortDelay + WaitMargin).TotalMilliseconds);
-        signal.Wait(WaitMargin.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.ElapsedTime.Should().BeGreaterThanOrEqualTo(0);
     }

@@ -27,10 +27,10 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     private static readonly TimeSpan WaitMargin = TimeSpan.FromMilliseconds(400);
 
     /// <summary>
-    ///   Wall-clock wait budget for a one-shot callback registered with
-    ///   <see cref="ShortDelay"/>: <see cref="ShortDelay"/> + <see cref="WaitMargin"/>.
+    ///   Wall-clock wait budget for the first one-shot callback to start under CI thread-pool load.
     /// </summary>
-    private static readonly TimeSpan ShortDelayCallbackWaitTimeout = ShortDelay + WaitMargin;
+    private static readonly TimeSpan FirstCallbackWaitTimeout =
+        GetFirstCallbackWaitTimeout(ShortDelay, WaitMargin);
 
     /// <summary>
     ///   Allowed tolerance when asserting callback timing.
@@ -76,7 +76,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             },
             cts.Token);
         DateTimeOffset start = clock.UtcNowDateTimeOffset;
-        signal.Wait(ShortDelayCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+        signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         (firedAt!.Value - start).Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
         receivedToken.Should().NotBeNull();
