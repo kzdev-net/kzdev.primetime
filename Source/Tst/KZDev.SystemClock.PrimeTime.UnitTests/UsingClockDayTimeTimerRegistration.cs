@@ -311,7 +311,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         DateTimeOffset afterChange = clock.LocalNowDateTimeOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
-        (firedAt!.Value - afterChange).Should().BeCloseTo(ShortDelay, TimeSpan.FromMilliseconds(400));
+        AssertWallClockCallbackElapsedNotBefore(firedAt!.Value - afterChange, ShortDelay, TimeSpan.FromMilliseconds(400));
     }
 
     /// <summary>
@@ -336,7 +336,7 @@ public class UsingClockDayTimeTimerRegistration : UnitTestBase
         DateTimeOffset afterChange = clock.UtcNowDateTimeOffset;
         signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
-        (firedAt!.Value - afterChange).Should().BeCloseTo(ShortDelay, TimeSpan.FromMilliseconds(400));
+        AssertWallClockCallbackElapsedNotBefore(firedAt!.Value - afterChange, ShortDelay, TimeSpan.FromMilliseconds(400));
     }
 
     /// <summary>

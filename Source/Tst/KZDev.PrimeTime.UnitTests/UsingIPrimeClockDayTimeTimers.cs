@@ -16,6 +16,10 @@ namespace KZDev.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimeOfDay and RegisterAsyncTimeOfDay
 ///   (day-time timers) and <see cref="IClockDayTimeTimer"/> (Change(LocalTime), options).
 /// </summary>
+/// <remarks>
+///   Wall-clock tests assert callback timing with a lower bound only; schedule math and upper-bound timing
+///   are covered by <see cref="PrimeTestClock"/> tests in the Testing assembly.
+/// </remarks>
 [ExcludeFromCodeCoverage]
 public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
@@ -37,12 +41,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         GetFirstCallbackWaitTimeout(ShortDelay.ToTimeSpan(), WaitMargin.ToTimeSpan());
 
     /// <summary>
-    ///   Upper bound when asserting a callback fired soon after registration (not a synchronization wait).
-    /// </summary>
-    private static readonly Duration CallbackTimingUpperBound = ShortDelay + WaitMargin;
-
-    /// <summary>
-    ///   Allowed tolerance when asserting callback timing.
+    ///   Allowed shortfall when asserting callback timing (wall-clock lower bound only).
     /// </summary>
     private static readonly Duration TimingTolerance = Duration.FromMilliseconds(180);
 
@@ -91,9 +90,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         Instant start = clock.NowInstant;
         signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
-        Duration elapsed = firedAt!.Value - start;
-        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
-        elapsed.Should().BeLessThanOrEqualTo(CallbackTimingUpperBound);
+        AssertWallClockCallbackElapsedNotBefore(
+            (firedAt!.Value - start).ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 
@@ -179,9 +177,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         }, cancellationToken: TestContext.Current.CancellationToken);
         Instant start = clock.NowInstant;
         signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-        Duration elapsed = firedAt!.Value - start;
-        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
-        elapsed.Should().BeLessThanOrEqualTo(CallbackTimingUpperBound);
+        AssertWallClockCallbackElapsedNotBefore(
+            (firedAt!.Value - start).ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 
@@ -213,8 +210,8 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         Instant afterChange = clock.NowInstant;
         signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         Duration elapsed = firedAt!.Value - afterChange;
-        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
-        elapsed.Should().BeLessThanOrEqualTo(CallbackTimingUpperBound);
+        AssertWallClockCallbackElapsedNotBefore(
+            elapsed.ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 

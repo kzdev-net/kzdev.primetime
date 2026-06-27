@@ -3,4 +3,7 @@
         <ProjectReference Include="..\..\Src\Testing\KZDev.PrimeTime.Testing\KZDev.PrimeTime.Testing.csproj" />
         <ProjectReference Include="..\KZDev.PrimeTime.TestBase\KZDev.PrimeTime.TestBase.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AwesomeAssertions" />
+    </ItemGroup>
 </Project>

@@ -137,9 +137,8 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
-        Duration elapsed = firedAt!.Value - start;
-        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay.Minus(TimingTolerance));
-        elapsed.Should().BeLessThanOrEqualTo(ShortDelay.Plus(TimingTolerance));
+        AssertWallClockCallbackElapsedNotBefore(
+            (firedAt!.Value - start).ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 

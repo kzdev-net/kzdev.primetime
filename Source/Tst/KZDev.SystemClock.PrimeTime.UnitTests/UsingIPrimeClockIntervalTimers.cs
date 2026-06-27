@@ -23,6 +23,10 @@ namespace KZDev.SystemClock.PrimeTime.UnitTests;
 ///   Unit tests for <see cref="IPrimeClock"/> RegisterTimer and RegisterAsyncTimer
 ///   (interval timers) and <see cref="IClockIntervalTimer"/> (one-shot, repeating, Change, Unsafe).
 /// </summary>
+/// <remarks>
+///   Wall-clock tests assert callback timing with a lower bound only; precise schedule spacing is covered by
+///   <see cref="PrimeTestClock"/> and <c>FakeTimeProvider</c> tests in the Testing assemblies.
+/// </remarks>
 [ExcludeFromCodeCoverage]
 public class UsingIPrimeClockIntervalTimers : UnitTestBase
 {
@@ -137,9 +141,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
         firedAt.Should().NotBeNull();
-        TimeSpan elapsed = firedAt!.Value - start;
-        elapsed.Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
-        elapsed.Should().BeLessThanOrEqualTo(WaitMargin);
+        AssertWallClockCallbackElapsedNotBefore(firedAt!.Value - start, ShortDelay, TimingTolerance);
     }
     //----------------------------------------------------------------------------
 
@@ -241,8 +243,8 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         DateTimeOffset start = clock.UtcNowDateTimeOffset;
         signal.Wait(SecondRepeatingCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         count.Should().BeGreaterThan(1);
-        (firstCallbackTime - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
-        (secondCallbackTime - firstCallbackTime).Should().BeCloseTo(RepeatInterval, TimingTolerance);
+        AssertWallClockCallbackElapsedNotBefore(firstCallbackTime - start, ShortDelay, TimingTolerance);
+        AssertWallClockCallbackElapsedNotBefore(secondCallbackTime - firstCallbackTime, RepeatInterval, TimingTolerance);
         WaitUntilCondition(
             () => timer.State == TimerState.RepeatCycle || timer.State == TimerState.ProcessingCallback,
             StateSettleWaitTimeout,
@@ -272,7 +274,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         }, TestContext.Current.CancellationToken);
         signal.Wait(SecondRepeatingCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         times.Count.Should().BeGreaterThan(1);
-        (times[1] - times[0]).Should().BeCloseTo(RepeatInterval, TimingTolerance);
+        AssertWallClockCallbackElapsedNotBefore(times[1] - times[0], RepeatInterval, TimingTolerance);
     }
     //----------------------------------------------------------------------------
 
@@ -444,7 +446,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         timer.State.Should().Be(TimerState.Active);
         DateTimeOffset afterChange = clock.UtcNowDateTimeOffset;
         signal.Wait(GetFirstCallbackWaitTimeout(newInterval, WaitMargin), TestContext.Current.CancellationToken).Should().BeTrue();
-        (firedAt!.Value - afterChange).Should().BeCloseTo(newInterval, TimingTolerance);
+        AssertWallClockCallbackElapsedNotBefore(firedAt!.Value - afterChange, newInterval, TimingTolerance);
     }
     //----------------------------------------------------------------------------
 
@@ -590,7 +592,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         signal.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         clock.Sleep(CallbackSettle);
         timer.State.Should().Be(TimerState.Completed);
-        (firedAt!.Value - start).Should().BeCloseTo(ShortDelay, TimingTolerance);
+        AssertWallClockCallbackElapsedNotBefore(firedAt!.Value - start, ShortDelay, TimingTolerance);
     }
     //----------------------------------------------------------------------------
 

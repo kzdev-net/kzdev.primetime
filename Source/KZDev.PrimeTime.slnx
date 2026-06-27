@@ -167,6 +167,7 @@
     <Project Path="Src/Testing/KZDev.SystemClock.PrimeTime.Testing/KZDev.SystemClock.PrimeTime.Testing.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <File Path="../scripts/test-wall-clock-constrained.ps1" />
     <File Path="Src/Directory.Packages.props" />
     <File Path="Tst/Directory.Build.props" />
     <File Path="Tst/Directory.Packages.props" />

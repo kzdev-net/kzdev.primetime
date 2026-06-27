@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
+using AwesomeAssertions;
 using Xunit;
 
 namespace KZDev.PrimeTime.Tests;
@@ -246,6 +247,34 @@ public abstract class UnitTestBase : TestBase
     {
         ValidateNonNegativeTimeSpan(waitMargin, nameof(waitMargin));
         return AddCheckedTimeSpans(waitMargin, waitMargin);
+    }
+    //----------------------------------------------------------------------------
+    /// <summary>
+    ///   Asserts that a wall-clock callback elapsed time is not before the expected delay minus tolerance.
+    /// </summary>
+    /// <param name="elapsed">Measured elapsed time from registration (or reschedule) to callback entry.</param>
+    /// <param name="expectedDelay">Expected delay before the callback should enter user code.</param>
+    /// <param name="earlyTolerance">Allowed shortfall below <paramref name="expectedDelay"/>; values larger than
+    ///   <paramref name="expectedDelay"/> clamp the minimum elapsed time to <see cref="TimeSpan.Zero"/>.</param>
+    /// <remarks>
+    ///   Wall-clock integration tests intentionally omit an upper bound: CI thread-pool scheduling can delay
+    ///   callback entry while the test synchronization wait already proves the callback fired within budget.
+    ///   Precise timer timing belongs in <c>PrimeTestClock</c> and <c>FakeTimeProvider</c> tests.
+    /// </remarks>
+    protected static void AssertWallClockCallbackElapsedNotBefore (
+        TimeSpan elapsed,
+        TimeSpan expectedDelay,
+        TimeSpan earlyTolerance)
+    {
+        ValidateNonNegativeTimeSpan(expectedDelay, nameof(expectedDelay));
+        ValidateNonNegativeTimeSpan(earlyTolerance, nameof(earlyTolerance));
+        TimeSpan minimumElapsed = expectedDelay - earlyTolerance;
+        if (minimumElapsed < TimeSpan.Zero)
+        {
+            minimumElapsed = TimeSpan.Zero;
+        }
+
+        elapsed.Should().BeGreaterThanOrEqualTo(minimumElapsed);
     }
     //----------------------------------------------------------------------------
     /// <summary>
