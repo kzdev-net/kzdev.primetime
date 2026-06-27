@@ -53,6 +53,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// </summary>
     private static readonly TimeSpan OverlapSynchronizationWait =
         GetOverlapSynchronizationWait(WaitMargin, RepeatInterval);
+
+    /// <summary>
+    ///   Wait budget for a blocked overlapping callback until the test thread releases it.
+    /// </summary>
+    private static readonly TimeSpan OverlapCallbackReleaseWait =
+        GetOverlapCallbackReleaseWait(WaitMargin, RepeatInterval);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -283,7 +289,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 try
                 {
                     callbackAssertions.Record(() =>
-                        releaseCallbacks.Wait(OverlapSynchronizationWait,
+                        releaseCallbacks.Wait(OverlapCallbackReleaseWait,
                             TestContext.Current.CancellationToken).Should().BeTrue());
                 }
                 finally
@@ -341,7 +347,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 {
                     firstCallbackStarted.Set();
                     callbackAssertions.Record(() =>
-                        firstCallbackMayExit.Wait(OverlapSynchronizationWait,
+                        firstCallbackMayExit.Wait(OverlapCallbackReleaseWait,
                             TestContext.Current.CancellationToken).Should().BeTrue());
                     firstCallbackCompleted.Set();
                     return;
@@ -354,7 +360,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
                 secondCallbackStarted.Set();
                 callbackAssertions.Record(() =>
-                    secondCallbackMayExit.Wait(OverlapSynchronizationWait,
+                    secondCallbackMayExit.Wait(OverlapCallbackReleaseWait,
                         TestContext.Current.CancellationToken).Should().BeTrue());
             },
             TestContext.Current.CancellationToken,

@@ -50,8 +50,14 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// <summary>
     ///   Wait budget for overlapping interval callbacks to start or release under CI thread-pool load.
     /// </summary>
-    private static readonly Duration OverlapSynchronizationWait =
-        Duration.FromTimeSpan(GetOverlapSynchronizationWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan()));
+    private static readonly TimeSpan OverlapSynchronizationWait =
+        GetOverlapSynchronizationWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan());
+
+    /// <summary>
+    ///   Wait budget for a blocked overlapping callback until the test thread releases it.
+    /// </summary>
+    private static readonly TimeSpan OverlapCallbackReleaseWait =
+        GetOverlapCallbackReleaseWait(WaitMargin.ToTimeSpan(), RepeatInterval.ToTimeSpan());
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -308,7 +314,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 try
                 {
                     callbackAssertions.Record(() =>
-                        releaseCallbacks.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                        releaseCallbacks.Wait(OverlapCallbackReleaseWait,
                             TestContext.Current.CancellationToken).Should().BeTrue());
                 }
                 finally
@@ -323,7 +329,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-            overlapObserved.Wait(OverlapSynchronizationWait.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            overlapObserved.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
             timer.State.Should().Be(TimerState.RepeatProcessingCallback);
             observedStates[0].Should().Be(TimerState.RepeatProcessingCallback);
@@ -331,7 +337,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             timer.CallbacksProcessing.Should().BeTrue();
 
             releaseCallbacks.Set();
-            callbacksCompleted.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+            callbacksCompleted.Wait(OverlapSynchronizationWait,
                 TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
         }
@@ -367,7 +373,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
                 {
                     firstCallbackStarted.Set();
                     callbackAssertions.Record(() =>
-                        firstCallbackMayExit.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                        firstCallbackMayExit.Wait(OverlapCallbackReleaseWait,
                             TestContext.Current.CancellationToken).Should().BeTrue());
                     firstCallbackCompleted.Set();
                     return;
@@ -380,7 +386,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
 
                 secondCallbackStarted.Set();
                 callbackAssertions.Record(() =>
-                    secondCallbackMayExit.Wait(OverlapSynchronizationWait.ToTimeSpan(),
+                    secondCallbackMayExit.Wait(OverlapCallbackReleaseWait,
                         TestContext.Current.CancellationToken).Should().BeTrue());
             },
             TestContext.Current.CancellationToken,
@@ -388,7 +394,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         using (timer)
         {
             firstCallbackStarted.Wait((ShortDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
-            secondCallbackStarted.Wait(OverlapSynchronizationWait.ToTimeSpan(), TestContext.Current.CancellationToken).Should().BeTrue();
+            secondCallbackStarted.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
 
             firstCallbackMayExit.Set();

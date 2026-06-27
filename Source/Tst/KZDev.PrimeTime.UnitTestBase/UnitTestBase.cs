@@ -116,6 +116,19 @@ public abstract class UnitTestBase : TestBase
         waitMargin + repeatInterval + waitMargin;
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Computes the wall-clock wait budget for an overlapping callback blocked until the test thread
+    ///   releases it. Must exceed <see cref="GetOverlapSynchronizationWait"/> so the main thread can
+    ///   finish observing overlap and run assertions before the callback-side wait times out.
+    /// </summary>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <param name="repeatInterval">Repeat interval for the overlapping timer registration.</param>
+    /// <returns>
+    ///   <see cref="GetOverlapSynchronizationWait"/> + <paramref name="waitMargin"/>.
+    /// </returns>
+    protected static TimeSpan GetOverlapCallbackReleaseWait (TimeSpan waitMargin, TimeSpan repeatInterval) =>
+        GetOverlapSynchronizationWait(waitMargin, repeatInterval) + waitMargin;
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses, waiting between
     ///   attempts so the loop does not busy-spin.
     /// </summary>
