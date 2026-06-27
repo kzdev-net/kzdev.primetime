@@ -25,6 +25,17 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     ///   Extra wait time beyond expected delay to avoid flaky failures.
     /// </summary>
     private static readonly TimeSpan WaitMargin = TimeSpan.FromMilliseconds(400);
+
+    /// <summary>
+    ///   Wall-clock wait budget for a one-shot callback registered with
+    ///   <see cref="ShortDelay"/>: <see cref="ShortDelay"/> + <see cref="WaitMargin"/>.
+    /// </summary>
+    private static readonly TimeSpan ShortDelayCallbackWaitTimeout = ShortDelay + WaitMargin;
+
+    /// <summary>
+    ///   Allowed tolerance when asserting callback timing.
+    /// </summary>
+    private static readonly TimeSpan TimingTolerance = TimeSpan.FromMilliseconds(150);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -55,14 +66,19 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
         ManualResetEventSlim signal = new(false);
         using CancellationTokenSource cts = new();
         CancellationToken? receivedToken = null;
+        DateTimeOffset? firedAt = null;
         using IClockIntervalTimer timer = clock.RegisterTimer(ShortDelay,
             (ClockTimerCallbackContext _, CancellationToken ct) =>
             {
                 receivedToken = ct;
+                firedAt = clock.UtcNowDateTimeOffset;
                 signal.Set();
             },
             cts.Token);
-        signal.Wait(WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+        DateTimeOffset start = clock.UtcNowDateTimeOffset;
+        signal.Wait(ShortDelayCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
+        firedAt.Should().NotBeNull();
+        (firedAt!.Value - start).Should().BeGreaterThanOrEqualTo(ShortDelay - TimingTolerance);
         receivedToken.Should().NotBeNull();
         receivedToken!.Value.Should().Be(cts.Token);
     }
