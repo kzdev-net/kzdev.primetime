@@ -2,9 +2,11 @@
 // Licensed under the MIT License. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 
 using AwesomeAssertions;
 
+using KZDev.PrimeTime.Testing;
 using KZDev.PrimeTime.Tests;
 
 using NodaTime;
@@ -25,9 +27,10 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
 {
     //----------------------------------------------------------------------------
     /// <summary>
-    ///   Short delay from "now" used to compute a time-of-day that fires soon.
+    ///   Lead time when computing a local time-of-day target for wall-clock tests. Must exceed worst-case
+    ///   registration delay on CI so the next occurrence stays on today's calendar date.
     /// </summary>
-    private static readonly Duration ShortDelay = Duration.FromMilliseconds(120);
+    private static readonly Duration ScheduleLeadTime = Duration.FromSeconds(1);
 
     /// <summary>
     ///   Extra wait time beyond expected delay to avoid flaky failures.
@@ -35,10 +38,10 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     private static readonly Duration WaitMargin = Duration.FromMilliseconds(450);
 
     /// <summary>
-    ///   Wall-clock wait budget for a callback that is expected to fire after <see cref="ShortDelay"/>.
+    ///   Wall-clock wait budget for a callback that is expected to fire after <see cref="ScheduleLeadTime"/>.
     /// </summary>
     private static readonly TimeSpan CallbackWaitTimeout =
-        GetFirstCallbackWaitTimeout(ShortDelay.ToTimeSpan(), WaitMargin.ToTimeSpan());
+        GetFirstCallbackWaitTimeout(ScheduleLeadTime.ToTimeSpan(), WaitMargin.ToTimeSpan());
 
     /// <summary>
     ///   Allowed shortfall when asserting callback timing (wall-clock lower bound only).
@@ -49,6 +52,20 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     ///   Brief wait after callback to let state settle before assertions.
     /// </summary>
     private static readonly Duration CallbackSettle = Duration.FromMilliseconds(50);
+
+    /// <summary>
+    ///   How far ahead the cancel-before-fire test schedules its target time-of-day.
+    /// </summary>
+    private static readonly Duration CancelBeforeFireDelay = Duration.FromSeconds(5);
+
+    /// <summary>
+    ///   Returns a local time-of-day that is <paramref name="leadTime"/> after <paramref name="clock"/>'s current instant.
+    /// </summary>
+    /// <param name="clock">Clock used to read the current instant and local zone.</param>
+    /// <param name="leadTime">How far ahead to place the target on today's local calendar.</param>
+    /// <returns>The local time-of-day for the next timer registration.</returns>
+    private static LocalTime GetSoonLocalTimeOfDay (IPrimeClock clock, Duration leadTime) =>
+        (clock.NowInstant + leadTime).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -78,7 +95,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTime_CallbackFiresNearTargetTime ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime targetTime = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
+        LocalTime targetTime = GetSoonLocalTimeOfDay(clock, ScheduleLeadTime);
         ManualResetEventSlim signal = new(false);
         Instant? firedAt = null;
 
@@ -91,7 +108,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
         signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         firedAt.Should().NotBeNull();
         AssertWallClockCallbackElapsedNotBefore(
-            (firedAt!.Value - start).ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
+            (firedAt!.Value - start).ToTimeSpan(), ScheduleLeadTime.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 
@@ -104,7 +121,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_LocalTime_ReturnsTimerWithCorrectContractProperties ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = GetSoonLocalTimeOfDay(clock, ScheduleLeadTime);
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
@@ -139,7 +156,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_WithContext_CallbackReceivesStateAndRegistration ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = GetSoonLocalTimeOfDay(clock, ScheduleLeadTime);
         object state = new();
         ManualResetEventSlim signal = new(false);
         object? receivedState = null;
@@ -158,27 +175,31 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     //----------------------------------------------------------------------------
 
     /// <summary>
-    ///   Verifies that RegisterAsyncTimeOfDay invokes the async callback and completes.
+    ///   Verifies that <see cref="IPrimeClock.RegisterAsyncTimeOfDay"/> invokes the async callback when virtual
+    ///   time reaches the target local time of day, and does not fire again on further advance within the same day.
     /// </summary>
     [Fact]
-    public void RegisterAsyncTimeOfDay_LocalTime_CallbackFiresNearTargetTime ()
+    public void RegisterAsyncTimeOfDay_LocalTime_WhenAdvanceReachesTarget_CallbackFires ()
     {
-        IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
-        ManualResetEventSlim signal = new(false);
-        Instant? firedAt = null;
+        Instant initial = Instant.FromUtc(2025, 6, 15, 10, 0, 0);
+        IPrimeTestClock clock = new PrimeTestClock(initial, DateTimeZone.Utc);
+        Duration lead = Duration.FromMilliseconds(120);
+        LocalTime target = (initial + lead).InZone(DateTimeZone.Utc).LocalDateTime.TimeOfDay;
+        int fireCount = 0;
 
         using IClockDayTimeTimer timer = clock.RegisterAsyncTimeOfDay(target, ct =>
         {
-            firedAt = clock.NowInstant;
-            signal.Set();
-            return default; // completed ValueTask; use default for .NET Standard 2.0 compatibility where ValueTask.CompletedTask is unavailable
-
+            Interlocked.Increment(ref fireCount);
+            return default;
         }, cancellationToken: TestContext.Current.CancellationToken);
-        Instant start = clock.NowInstant;
-        signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
-        AssertWallClockCallbackElapsedNotBefore(
-            (firedAt!.Value - start).ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
+
+        clock.Advance(lead - Duration.FromMilliseconds(1));
+        fireCount.Should().Be(0);
+        clock.Advance(Duration.FromMilliseconds(1));
+        fireCount.Should().Be(1);
+        clock.Advance(Duration.FromMinutes(5));
+        fireCount.Should().Be(1);
+        timer.IsLocalTimeRepresentation.Should().BeTrue();
     }
     //----------------------------------------------------------------------------
 
@@ -205,13 +226,13 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
             firedAt = clock.NowInstant;
             signal.Set();
         }, cancellationToken: TestContext.Current.CancellationToken);
-        LocalTime newTarget = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
+        LocalTime newTarget = GetSoonLocalTimeOfDay(clock, ScheduleLeadTime);
         timer.Change(newTarget).Should().BeTrue();
         Instant afterChange = clock.NowInstant;
         signal.Wait(CallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
         Duration elapsed = firedAt!.Value - afterChange;
         AssertWallClockCallbackElapsedNotBefore(
-            elapsed.ToTimeSpan(), ShortDelay.ToTimeSpan(), TimingTolerance.ToTimeSpan());
+            elapsed.ToTimeSpan(), ScheduleLeadTime.ToTimeSpan(), TimingTolerance.ToTimeSpan());
     }
     //----------------------------------------------------------------------------
 
@@ -227,14 +248,14 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_CancelBeforeFire_StateCancelled ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + Duration.FromSeconds(5)).InZone(clock.LocalZonedNowInstant.Zone)
+        LocalTime target = (clock.NowInstant + CancelBeforeFireDelay).InZone(clock.LocalZonedNowInstant.Zone)
             .LocalDateTime.TimeOfDay;
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
             cancellationToken: TestContext.Current.CancellationToken);
         timer.Cancel();
-        signal.Wait((ShortDelay + CallbackSettle).ToTimeSpan(), TestContext.Current.CancellationToken)
+        signal.Wait((CancelBeforeFireDelay + WaitMargin).ToTimeSpan(), TestContext.Current.CancellationToken)
             .Should().BeFalse();
         timer.State.Should().Be(TimerState.Cancelled);
         timer.IsCancelled.Should().BeTrue();
@@ -250,7 +271,7 @@ public class UsingIPrimeClockDayTimeTimers : UnitTestBase
     public void RegisterTimeOfDay_WithDefaultOptions_RegistrationExposesDefaultBehaviors ()
     {
         IPrimeClock clock = new PrimeClock();
-        LocalTime target = (clock.NowInstant + ShortDelay).InZone(clock.LocalZonedNowInstant.Zone).LocalDateTime.TimeOfDay;
+        LocalTime target = GetSoonLocalTimeOfDay(clock, ScheduleLeadTime);
         ManualResetEventSlim signal = new(false);
 
         using IClockDayTimeTimer timer = clock.RegisterTimeOfDay(target, signal.Set,
