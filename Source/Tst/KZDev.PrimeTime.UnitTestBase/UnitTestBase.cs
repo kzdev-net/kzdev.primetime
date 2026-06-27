@@ -44,14 +44,14 @@ public abstract class UnitTestBase : TestBase
     /// </summary>
     /// <param name="conditionMet">Returns whether the wait condition is satisfied.</param>
     /// <param name="timeout">Maximum real time to wait.</param>
-    /// <param name="cancellationToken">Cancellation token for the test run.</param>
     /// <param name="timeoutMessage">Message for the thrown <see cref="TimeoutException"/>.</param>
+    /// <param name="cancellationToken">Cancellation token for the test run.</param>
     /// <returns>A task that completes when the condition is met.</returns>
     /// <exception cref="TimeoutException">
     ///   Thrown when <paramref name="conditionMet"/> remains <c>false</c> until the timeout elapses.
     /// </exception>
     private static async Task WaitUntilConditionAsync (Func<bool> conditionMet,
-        TimeSpan timeout, CancellationToken cancellationToken, string timeoutMessage)
+        TimeSpan timeout, string timeoutMessage, CancellationToken cancellationToken)
     {
         Stopwatch elapsed = Stopwatch.StartNew();
         while (!conditionMet())
@@ -129,18 +129,34 @@ public abstract class UnitTestBase : TestBase
         GetOverlapSynchronizationWait(waitMargin, repeatInterval) + waitMargin;
     //----------------------------------------------------------------------------
     /// <summary>
+    ///   Computes the wall-clock wait budget for the first real-clock interval callback to start
+    ///   under CI thread-pool load.
+    /// </summary>
+    /// <param name="shortDelay">Initial timer delay before the first callback.</param>
+    /// <param name="waitMargin">Extra wait time beyond expected delay to avoid flaky failures.</param>
+    /// <returns>
+    ///   <paramref name="shortDelay"/> + 2 × <paramref name="waitMargin"/>.
+    /// </returns>
+    /// <remarks>
+    ///   Two margins are used: one for slack beyond the expected initial delay, and a second for CI
+    ///   thread-pool scheduling latency before the first callback enters user code.
+    /// </remarks>
+    protected static TimeSpan GetFirstCallbackWaitTimeout (TimeSpan shortDelay, TimeSpan waitMargin) =>
+        shortDelay + waitMargin + waitMargin;
+    //----------------------------------------------------------------------------
+    /// <summary>
     ///   Polls until <paramref name="conditionMet"/> returns <c>true</c> or the timeout elapses, waiting between
     ///   attempts so the loop does not busy-spin.
     /// </summary>
     /// <param name="conditionMet">Returns whether the wait condition is satisfied.</param>
     /// <param name="timeout">Maximum real time to wait.</param>
-    /// <param name="cancellationToken">Cancellation token for the test run.</param>
     /// <param name="timeoutMessage">Message for the thrown <see cref="TimeoutException"/>.</param>
+    /// <param name="cancellationToken">Cancellation token for the test run.</param>
     /// <exception cref="TimeoutException">
     ///   Thrown when <paramref name="conditionMet"/> remains <c>false</c> until the timeout elapses.
     /// </exception>
     protected static void WaitUntilCondition (Func<bool> conditionMet, TimeSpan timeout,
-        CancellationToken cancellationToken, string timeoutMessage)
+        string timeoutMessage, CancellationToken cancellationToken)
     {
         Stopwatch elapsed = Stopwatch.StartNew();
         while (!conditionMet())
@@ -202,10 +218,10 @@ public abstract class UnitTestBase : TestBase
         WaitUntilCondition(
             () => !isRunning(),
             timeout,
-            cancellationToken,
             "Timed out waiting for the test clock to stop running after "
                 + timeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds.");
+                + " seconds.",
+            cancellationToken);
     }
     //----------------------------------------------------------------------------
     /// <summary>
@@ -228,10 +244,10 @@ public abstract class UnitTestBase : TestBase
         return WaitUntilConditionAsync(
             () => !isRunning(),
             timeout,
-            cancellationToken,
             "Timed out waiting for the test clock to stop running after "
                 + timeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds.");
+                + " seconds.",
+            cancellationToken);
     }
     //----------------------------------------------------------------------------
 

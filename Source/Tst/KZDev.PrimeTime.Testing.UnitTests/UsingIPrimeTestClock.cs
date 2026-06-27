@@ -775,10 +775,10 @@ public class UsingIPrimeTestClock : UnitTestBase
         WaitUntilCondition(
             () => eventTypes.ContainsEventType(PrimeTestClockEventType.ClockStopped),
             RunForTestWaitTimeout,
-            cancellationToken,
             "Timed out waiting for ClockStopped after "
                 + RunForTestWaitTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds.");
+                + " seconds.",
+            cancellationToken);
         List<PrimeTestClockEventType> snapshot = eventTypes.Snapshot();
         int startedIndex = snapshot.IndexOf(PrimeTestClockEventType.ClockStarted);
         int stoppedIndex = snapshot.LastIndexOf(PrimeTestClockEventType.ClockStopped);
@@ -868,8 +868,8 @@ public class UsingIPrimeTestClock : UnitTestBase
                 }
             },
             RunForTestWaitTimeout,
-            cancellationToken,
-            "Timed out waiting for Advance from a ClockEvents handler on the runner thread.");
+            "Timed out waiting for Advance from a ClockEvents handler on the runner thread.",
+            cancellationToken);
         Instant expectedAdvanceTargetInstant;
         lock (advanceFromRunnerCallbackSync)
         {
@@ -939,8 +939,8 @@ public class UsingIPrimeTestClock : UnitTestBase
                 }
             },
             RunForTestWaitTimeout,
-            cancellationToken,
-            "Timed out waiting for overlapping RunFor attempt from a ClockEvents handler.");
+            "Timed out waiting for overlapping RunFor attempt from a ClockEvents handler.",
+            cancellationToken);
         clock.Advance(advancePastHorizon);
         Instant advanceTargetInstant = clock.NowInstant;
         PrimeTestClockBoundedRunAssertionHelpers.AssertBoundedRunCompletedWithSingleClockStoppedAtHorizon(
@@ -987,8 +987,8 @@ public class UsingIPrimeTestClock : UnitTestBase
         WaitUntilCondition(
             () => collector.Snapshot().Count(e => e.EventType == PrimeTestClockEventType.ClockStopped) == 2,
             RunForTestWaitTimeout,
-            cancellationToken,
-            "Timed out waiting for ClockStopped from the second bounded RunFor.");
+            "Timed out waiting for ClockStopped from the second bounded RunFor.",
+            cancellationToken);
         clock.IsRunning.Should().BeFalse();
         clock.NowInstant.Should().Be(afterSecondRunCommittedInstant);
         List<PrimeTestClockEvent> snapshot = collector.Snapshot();
@@ -1033,15 +1033,15 @@ public class UsingIPrimeTestClock : UnitTestBase
         WaitUntilCondition(
             () => Volatile.Read(ref readyAdvanceCallers) == 2,
             RunForTestWaitTimeout,
-            cancellationToken,
-            "Timed out waiting for concurrent Advance callers to be ready.");
+            "Timed out waiting for concurrent Advance callers to be ready.",
+            cancellationToken);
         releaseConcurrentAdvances.Set();
         await Task.WhenAll(advanceCallerOne, advanceCallerTwo);
         WaitUntilCondition(
             () => collector.Snapshot().Count(e => e.EventType == PrimeTestClockEventType.ClockStopped) == 1,
             RunForTestWaitTimeout,
-            cancellationToken,
-            "Timed out waiting for bounded completion after concurrent Advance calls.");
+            "Timed out waiting for bounded completion after concurrent Advance calls.",
+            cancellationToken);
         clock.IsRunning.Should().BeFalse();
         clock.NowInstant.Should().BeGreaterThan(initial);
         List<PrimeTestClockEvent> snapshot = collector.Snapshot();
@@ -1728,10 +1728,10 @@ public class UsingIPrimeTestClock : UnitTestBase
         WaitUntilCondition(
             () => capture.Any(e => e.ClockInstant == expected),
             RunForTestWaitTimeout,
-            cancellationToken,
             "Timed out waiting for NewTime at the RunFor stop instant after "
                 + RunForTestWaitTimeout.TotalSeconds.ToString("g0", CultureInfo.InvariantCulture)
-                + " seconds.");
+                + " seconds.",
+            cancellationToken);
         clock.NowInstant.Should().Be(expected);
         capture.Snapshot().Should().Contain(e => e.ClockInstant == expected);
     }

@@ -59,6 +59,12 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
     /// </summary>
     private static readonly TimeSpan OverlapCallbackReleaseWait =
         GetOverlapCallbackReleaseWait(WaitMargin, RepeatInterval);
+
+    /// <summary>
+    ///   Wait budget for the first overlapping interval callback to start under CI thread-pool load.
+    /// </summary>
+    private static readonly TimeSpan FirstCallbackWaitTimeout =
+        GetFirstCallbackWaitTimeout(ShortDelay, WaitMargin);
     //----------------------------------------------------------------------------
 
     #region Constructors/Finalizers
@@ -303,7 +309,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             timerOptions: timerOptions);
         using (timer)
         {
-            firstCallbackStarted.Wait(ShortDelay + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            firstCallbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
             overlapObserved.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
             timer.State.Should().Be(TimerState.RepeatProcessingCallback);
@@ -367,7 +373,7 @@ public class UsingIPrimeClockIntervalTimers : UnitTestBase
             timerOptions: timerOptions);
         using (timer)
         {
-            firstCallbackStarted.Wait(ShortDelay + WaitMargin, TestContext.Current.CancellationToken).Should().BeTrue();
+            firstCallbackStarted.Wait(FirstCallbackWaitTimeout, TestContext.Current.CancellationToken).Should().BeTrue();
             secondCallbackStarted.Wait(OverlapSynchronizationWait, TestContext.Current.CancellationToken).Should().BeTrue();
             callbackAssertions.ThrowIfRecorded();
 
