@@ -49,7 +49,7 @@ The BCL package adds **`IPrimeClock.LocalScheduleTimeZone`** for local calendar 
 
 ## Documentation and source
 
-- **[Product documentation](https://kzdev-net.github.io/kzdev.primetime/)** (DocFX site, including package comparison and guides).
+- **[Product documentation](https://kzdev-net.github.io/kzdev.primetime/)** (package comparison and guides).
 - **Source and issues:** [github.com/kzdev-net/kzdev.primetime](https://github.com/kzdev-net/kzdev.primetime)
 - **License:** MIT (see package metadata and repository `LICENSE`).
 
