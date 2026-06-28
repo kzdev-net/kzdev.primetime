@@ -8,7 +8,7 @@ The workflow definition lives at [.github/workflows/release-assist.yml](https://
 
 1. **Resolve version** — Uses the `version` workflow input if you provide one; otherwise reads `<Version>` from `Source/Src/Directory.Build.props`. The resolved value must match a `## Version …` section in each package release-notes file under `Source/Docs/Notes/`.
 2. **Guardrails before build** — Validates governance docs exist (`SECURITY.md`, `CONTRIBUTING.md`, `SUPPORT.md`) and validates all package release-notes sources for the resolved version.
-3. **Restore, build, and test** — Same solution as CI: `Source/KZDev.PrimeTime.slnx` in `Release`.
+3. **Restore, build, and test** — Same solution and test scope as CI: `Source/KZDev.PrimeTime.slnx` in `Release`, with `dotnet test` scoped to **`net8.0`** and **`net10.0`** only. **`net481` is not run on GitHub-hosted Linux runners** (see [Local net481 testing](local-net481-testing.md)); validate .NET Framework locally on Windows before release.
 4. **Pack** — Builds all four publishable packages with `IsPacking=true` and `ContinuousIntegrationBuild=true`. Testing packages compose their NuGet README via `pwsh` during this step (see [Testing package README composition](#testing-package-readme-composition-powershell-7)). Packages and symbol packages are written under `artifacts/package/release/`.
 5. **Aggregate release notes** — Runs `KZDev.PrimeTime.ReleaseAggregation.Cli` to generate `release-body.md` at the workspace root (one combined document with each package’s version section).
 6. **Upload artifacts** — Always uploads NuGet packages, symbol packages, and `release-body.md` as a workflow artifact (name includes the resolved version).

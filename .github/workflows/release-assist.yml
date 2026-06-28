@@ -85,8 +85,11 @@ jobs:
       - name: Build
         run: dotnet build "Source/KZDev.PrimeTime.slnx" -c Release --no-restore
 
-      - name: Test
-        run: dotnet test "Source/KZDev.PrimeTime.slnx" -c Release --no-build
+      - name: Test (net8.0)
+        run: dotnet test "Source/KZDev.PrimeTime.slnx" -c Release --no-build -f net8.0
+
+      - name: Test (net10.0)
+        run: dotnet test "Source/KZDev.PrimeTime.slnx" -c Release --no-build -f net10.0
 
       - name: Pack packages
         shell: bash
