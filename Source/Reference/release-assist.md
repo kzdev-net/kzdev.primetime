@@ -13,7 +13,7 @@ The workflow definition lives at [.github/workflows/release-assist.yml](https://
 5. **Aggregate release notes** — Runs `KZDev.PrimeTime.ReleaseAggregation.Cli` to generate `release-body.md` at the workspace root (one combined document with each package’s version section).
 6. **Upload artifacts** — Always uploads NuGet packages, symbol packages, and `release-body.md` as a workflow artifact (name includes the resolved version).
 7. **Draft GitHub release** — Only when **dry run** is off: creates a **draft** release with tag `v{version}`, attaches all `.nupkg` and `.snupkg` files from `artifacts/package/release/`, and uses `release-body.md` as the release notes.
-8. **Finalize publish** — Only when **dry run** is off: a second job, gated by the **`primetime-release`** GitHub Environment, runs `gh release edit … --draft=false --latest` so a human approves before the release stops being a draft.
+8. **Finalize publish** — Only when **dry run** is off: a second job, gated by the **`primetime-release`** GitHub Environment, runs `gh release edit … --draft=false --latest --discussion-category Announcements` so a human approves before the release stops being a draft and a linked **Announcements** discussion is created automatically.
 
 The workflow does **not** push packages to nuget.org. A published GitHub release with `.nupkg` assets is **not** a completed public release until the steps in [Manual NuGet.org publish checklist](#manual-nugetorg-publish-checklist) are done.
 
@@ -164,7 +164,9 @@ Without this environment, or with no reviewers, behavior depends on your organiz
 
 ### Permissions
 
-The workflow requests `contents: write` so `gh` can create and update releases using `GITHUB_TOKEN`. No extra secrets are required for the default release flow on GitHub-hosted runners.
+The workflow requests `contents: write` and `discussions: write` so `gh` can create and update releases and post a linked **Announcements** discussion when the draft is published, using `GITHUB_TOKEN`. No extra secrets are required for the default release flow on GitHub-hosted runners.
+
+The repository must have **Discussions** enabled and an **Announcements** category (the default when Discussions is turned on). The finalize step passes `--discussion-category "Announcements"` to `gh release edit`; if that category is missing or renamed, publish will fail until the category exists or the workflow is updated.
 
 ## How to run it
 
@@ -174,7 +176,7 @@ The workflow requests `contents: write` so `gh` can create and update releases u
    - **version** (optional): e.g. `1.0.0`. Leave empty to use `Source/Src/Directory.Build.props`.
    - **dry_run**:
      - **`true`** (default): restore, build, test, pack, aggregate notes, upload artifacts only. **No** GitHub release and **no** finalize job.
-     - **`false`**: same as above, then creates a **draft** release and runs the finalize job after environment approval.
+     - **`false`**: same as above, then creates a **draft** release and runs the finalize job after environment approval; finalize publishes the release and opens a linked **Announcements** discussion.
 
 4. Open the workflow run: confirm **Test** and **Pack packages** succeeded; download the **release-assist-{version}** artifact if you want to inspect packages or `release-body.md` locally.
 
