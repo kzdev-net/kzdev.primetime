@@ -13,7 +13,7 @@
 		<Title>KZDev SystemClock PrimeTime Testing</Title>
 		<PackageId>KZDev.SystemClock.PrimeTime.Testing</PackageId>
 		<PackageReleaseNotesSourceFile>..\..\..\Docs\Notes\KZDev.SystemClock.PrimeTime.Testing.release-notes.md</PackageReleaseNotesSourceFile>
-		<PackageTags>KZDev,Utilities,Time,Timer,Testing</PackageTags>
+		<PackageTags>KZDev,Utilities,Time,Timer,TimeProvider,Testing</PackageTags>
 		<PackageReadmeFile>docs\README.md</PackageReadmeFile>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

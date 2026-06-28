@@ -11,7 +11,7 @@
 		<Title>KZDev PrimeTime</Title>
 		<PackageId>KZDev.PrimeTime</PackageId>
 		<PackageReleaseNotesSourceFile>..\..\Docs\Notes\KZDev.PrimeTime.release-notes.md</PackageReleaseNotesSourceFile>
-		<PackageTags>KZDev,Utilities,Time,Timer</PackageTags>
+		<PackageTags>KZDev,Utilities,Time,Timer,NodaTime</PackageTags>
 		<PackageReadmeFile>docs\README.md</PackageReadmeFile>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

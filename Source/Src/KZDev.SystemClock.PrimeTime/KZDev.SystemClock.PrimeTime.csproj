@@ -12,7 +12,7 @@
 		<Title>KZDev SystemClock PrimeTime</Title>
 		<PackageId>KZDev.SystemClock.PrimeTime</PackageId>
 		<PackageReleaseNotesSourceFile>..\..\Docs\Notes\KZDev.SystemClock.PrimeTime.release-notes.md</PackageReleaseNotesSourceFile>
-		<PackageTags>KZDev,Utilities,Time,Timer</PackageTags>
+		<PackageTags>KZDev,Utilities,Time,Timer,TimeProvider</PackageTags>
 		<PackageReadmeFile>docs\README.md</PackageReadmeFile>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
