@@ -49,8 +49,7 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
 
 ## Documentation
 
-- **Hosted docs (DocFX):** [kzdev-net.github.io/kzdev.primetime](https://kzdev-net.github.io/kzdev.primetime/)
-- **Articles in repo:** [Source/Docs/articles](Source/Docs/articles/) — start with [Choosing a package](Source/Docs/articles/concepts/choosing-a-package.md), then the guide for [SystemClock](Source/Docs/articles/system-clock/systemclock-package.md) or [PrimeTime superset](Source/Docs/articles/primetime/primetime-superset.md).
+**Hosted docs :** [kzdev-net.github.io/kzdev.primetime](https://kzdev-net.github.io/kzdev.primetime/)
 
 ## Support, lifecycle, security, and contributing
 
@@ -62,7 +61,7 @@ Each package exposes **`AddPrimeClock`** on **`IServiceCollection`**:
   - [KZDev.SystemClock.PrimeTime](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.release-notes.md)
   - [KZDev.PrimeTime.Testing](Source/Docs/Notes/KZDev.PrimeTime.Testing.release-notes.md)
   - [KZDev.SystemClock.PrimeTime.Testing](Source/Docs/Notes/KZDev.SystemClock.PrimeTime.Testing.release-notes.md)
-- **Index (DocFX):** [Release notes](Source/Docs/articles/release-notes.md).
+- **Index :** [Release notes](Source/Docs/articles/release-notes.md).
 
 ### Compatibility and maintenance cadence
 
